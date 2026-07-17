@@ -1,0 +1,31 @@
+import type { ReactNode } from "react";
+
+type InfoCardProps = {
+  icon: ReactNode;
+  title: string;
+  value: string;
+};
+
+function InfoCard({
+  icon,
+  title,
+  value,
+}: InfoCardProps) {
+  return (
+    <div className="rounded-3xl bg-zinc-900 p-6 text-center">
+      <div className="mb-4 flex justify-center text-3xl">
+        {icon}
+      </div>
+
+      <p className="text-sm text-zinc-400">
+        {title}
+      </p>
+
+      <h2 className="mt-2 text-xl font-semibold">
+        {value}
+      </h2>
+    </div>
+  );
+}
+
+export default InfoCard;
