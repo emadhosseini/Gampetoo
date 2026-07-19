@@ -4,12 +4,24 @@ import MealCard from "../components/nutrition/MealCard";
 import FreeMealCard from "../components/nutrition/FreeMealCard";
 import WorkoutHeader from "../components/WorkoutHeader";
 
-import { getCurrentMealPlan } from "../utils/programEngine";
+import {
+  getActiveProgram,
+  getCurrentMealPlan,
+  hasProgramStarted,
+} from "../utils/programEngine";
 
 export default function NutritionPage() {
   const navigate = useNavigate();
 
-  const plan = getCurrentMealPlan();
+  const started = hasProgramStarted();
+
+  const plan = started
+    ? getCurrentMealPlan()
+    : getActiveProgram().nutrition.rest;
+
+  const title = started
+    ? plan.title
+    : "تغذیه در روز بدون برنامه ورزشی";
 
   const enabledMeals = plan.meals.filter((meal) => meal.enabled ?? true);
 
@@ -20,7 +32,7 @@ export default function NutritionPage() {
   if (!hasSelections) {
     return (
       <div className="mx-auto max-w-3xl space-y-6 px-4 py-6">
-        <WorkoutHeader subtitle="🍽 تغذیه امروز" title={plan.title} />
+        <WorkoutHeader subtitle="🍽 تغذیه امروز" title={title} />
 
         <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6 text-center">
           <p className="text-zinc-300">
@@ -40,7 +52,7 @@ export default function NutritionPage() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-6 px-4 py-6">
-      <WorkoutHeader subtitle="🍽 تغذیه امروز" title={plan.title} />
+      <WorkoutHeader subtitle="🍽 تغذیه امروز" title={title} />
 
       {enabledMeals.map((meal) => (
         <MealCard key={meal.id} meal={meal} />

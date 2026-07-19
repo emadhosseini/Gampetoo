@@ -43,8 +43,8 @@ export default function SetupProgramPage() {
 
   if (!nameConfirmed) {
     return (
-      <div className="min-h-screen bg-zinc-950 px-6 py-10">
-        <div className="mx-auto flex max-w-xl flex-col space-y-8">
+      <div className="flex min-h-screen flex-col items-center justify-center bg-zinc-950 px-6 py-10">
+        <div className="mx-auto flex w-full max-w-xl flex-col space-y-8">
           <div className="text-center">
             <h1 className="text-3xl font-bold text-white">
               برنامه روزانه
@@ -168,7 +168,7 @@ function ProgramCycleSetup() {
           </h1>
 
           <p className="mt-2 text-zinc-400">
-            برنامه روزانه خودت رو بساز
+            برنامه تمرینی روزانه خودت رو بساز
           </p>
         </div>
 
@@ -225,6 +225,20 @@ function ProgramCycleSetup() {
           )}
                     <button
             onClick={() => {
+              if (activity === null) {
+                window.alert(
+                  "لطفاً یکی از گزینه‌های تمرین یا استراحت رو انتخاب کن."
+                );
+                return;
+              }
+
+              if (activity === "workout" && !selectedWorkout) {
+                window.alert(
+                  "باید حتماً یک تمرین رو انتخاب کنی."
+                );
+                return;
+              }
+
               if (activity === "walk") {
                 addWalkDay();
               }
@@ -291,7 +305,7 @@ function ProgramCycleSetup() {
       type="date"
       value={startDate}
       onChange={(e) => setStartDate(e.target.value)}
-      className="w-full rounded-xl border border-zinc-700 bg-zinc-800 p-4 text-white"
+      className="w-full rounded-xl border border-zinc-700 bg-zinc-800 p-4 text-center text-white [&::-webkit-date-and-time-value]:text-center"
     />
   </div>
 )}

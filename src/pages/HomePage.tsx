@@ -12,7 +12,9 @@ import { getSession } from "@/utils/sessionEngine";
 import {
   getCurrentProgramDay,
   getCurrentWorkoutType,
+  getDaysUntilStart,
   getProgramDay,
+  hasProgramStarted,
   getWorkoutTypeForDate,
 } from "@/utils/programEngine";
 
@@ -31,8 +33,13 @@ const workout = workoutType
 
   const isWorkout = day.activity === "workout";
 
+  const started = hasProgramStarted();
+  const daysUntilStart = getDaysUntilStart();
+
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
+
+  const tomorrowStarted = hasProgramStarted(tomorrow);
 
   const tomorrowDay = getProgramDay(tomorrow);
 
@@ -51,38 +58,56 @@ const workout = workoutType
       <section className="space-y-4 px-6">
         <HeroCard
           title="برنامه امروز"
-          emoji={isWorkout ? "🏋️" : "🚶"}
+          emoji={!started ? "🗓" : isWorkout ? "🏋️" : "🚶"}
           status={
-            isWorkout
-              ? workout?.title || day.title
-              : "روز استراحت"
+            !started
+              ? "امروز برنامه‌ای نداری"
+              : isWorkout
+                ? workout?.title || day.title
+                : "روز استراحت"
           }
           description={
-            isWorkout
-              ? undefined
-              : "استراحت و پیاده روی سبک به مدت ۴۵ تا ۶۰ دقیقه"
+            !started
+              ? daysUntilStart === 1
+                ? "اولین برنامه فردا شروع می‌شه"
+                : `اولین برنامه از ${daysUntilStart} روز دیگه شروع می‌شه`
+              : isWorkout
+                ? undefined
+                : "استراحت و پیاده روی سبک به مدت ۴۵ تا ۶۰ دقیقه"
           }
         />
 
         <InfoCard
-          icon={isTomorrowWorkout ? <Dumbbell /> : <Footprints />}
+          icon={
+            !tomorrowStarted ? (
+              <Footprints />
+            ) : isTomorrowWorkout ? (
+              <Dumbbell />
+            ) : (
+              <Footprints />
+            )
+          }
           title="برنامه فردا"
           value={
-            isTomorrowWorkout
-              ? tomorrowWorkout?.title ?? tomorrowDay.title
-              : "استراحت و پیاده روی سبک\nبه مدت ۴۵ تا ۶۰ دقیقه"
+            !tomorrowStarted
+              ? "فردا برنامه‌ای نداری\nاستراحت و پیاده روی کن"
+              : isTomorrowWorkout
+                ? tomorrowWorkout?.title ?? tomorrowDay.title
+                : "استراحت و پیاده روی سبک\nبه مدت ۴۵ تا ۶۰ دقیقه"
           }
         />
 
-        <InfoCard
-          icon={<ClipboardList />}
-          title="وضعیت برنامه امروز"
-          value={
-            session.completed
-              ? "انجام شده ✅"
-              : "انجام نشده"
-          }
-        />
+        {started && (
+          <InfoCard
+            icon={<ClipboardList />}
+            title="وضعیت برنامه امروز"
+            value={
+              session.completed
+                ? "انجام شده ✅"
+                : "انجام نشده"
+            }
+          />
+        )}
       </section>
     </div>
   );

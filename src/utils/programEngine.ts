@@ -247,6 +247,41 @@ export function getCurrentWorkoutType(): WorkoutType | null {
   return getWorkoutTypeForDate();
 }
 
+export function hasProgramStarted(date = new Date()): boolean {
+  const program = getActiveProgram();
+
+  if (!program.startDate) {
+    return false;
+  }
+
+  const start = new Date(program.startDate);
+  start.setHours(0, 0, 0, 0);
+
+  const current = new Date(date);
+  current.setHours(0, 0, 0, 0);
+
+  return current.getTime() >= start.getTime();
+}
+
+export function getDaysUntilStart(date = new Date()): number {
+  const program = getActiveProgram();
+
+  if (!program.startDate) {
+    return 0;
+  }
+
+  const start = new Date(program.startDate);
+  start.setHours(0, 0, 0, 0);
+
+  const current = new Date(date);
+  current.setHours(0, 0, 0, 0);
+
+  return Math.max(
+    0,
+    Math.round((start.getTime() - current.getTime()) / 86400000)
+  );
+}
+
 export function getMealPlanForDate(
   date = new Date()
 ) {

@@ -8,6 +8,7 @@ import CompleteWorkoutButton from "@/components/CompleteWorkoutButton";
 import {
   getCurrentProgramDay,
   getCurrentWorkoutType,
+  hasProgramStarted,
 } from "@/utils/programEngine";
 
 import { getWorkout } from "@/store/workoutLibraryStore";
@@ -32,6 +33,18 @@ const workout = workoutType
   : undefined;
 
   const isWorkout = day.activity === "workout";
+
+  if (!hasProgramStarted()) {
+    return (
+      <div className="px-5 pb-5 pt-10">
+        <div className="rounded-3xl bg-zinc-900 p-6 text-center">
+          <p className="text-xl font-bold text-white">
+            امروز تمرینی نداری
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (!isWorkout) {
     return (
