@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-A mobile-first, single-user personal fitness/nutrition tracker ("Movana") built as a client-only React SPA — no backend, no auth. All state lives in the browser's `localStorage`. The UI is Persian (fa) with RTL layout (`Vazirmatn` font, `direction: rtl` set globally in `src/index.css`); some strings in the codebase are still English, so don't assume one language throughout.
+A mobile-first, single-user personal fitness/nutrition tracker ("Gampetoo") built as a client-only React SPA — no backend, no auth. All state lives in the browser's `localStorage`. The UI is Persian (fa) with RTL layout (`Vazirmatn` font, `direction: rtl` set globally in `src/index.css`); some strings in the codebase are still English, so don't assume one language throughout.
 
 ## Commands
 

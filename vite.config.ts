@@ -16,8 +16,8 @@ export default defineConfig({
       ],
       manifest: {
         id: "/",
-        name: "Movana",
-        short_name: "Movana",
+        name: "Gampetoo",
+        short_name: "Gampetoo",
         description: "برنامه تمرینی و غذایی روزانه",
         lang: "fa",
         dir: "rtl",

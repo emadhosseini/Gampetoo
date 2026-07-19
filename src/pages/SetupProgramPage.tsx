@@ -47,7 +47,7 @@ export default function SetupProgramPage() {
         <div className="mx-auto flex w-full max-w-xl flex-col space-y-8">
           <div className="text-center">
             <h1 className="text-3xl font-bold text-white">
-              Movana
+              Gampetoo
             </h1>
 
             <p className="mt-2 text-zinc-400">
@@ -164,7 +164,7 @@ function ProgramCycleSetup() {
       <div className="mx-auto flex max-w-xl flex-col space-y-8">
         <div className="text-center">
           <h1 className="text-3xl font-bold text-white">
-            Movana
+            Gampetoo
           </h1>
 
           <p className="mt-2 text-zinc-400">
