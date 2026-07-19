@@ -4,6 +4,7 @@ export interface FoodItem {
   id: string;
   name: string;
   amount: string;
+  calories?: number;
 }
 
 export interface MealSection {
@@ -14,6 +15,7 @@ export interface MealSection {
   calories?: number;
   protein?: number;
   notes?: string[];
+  enabled?: boolean;
 }
 
 export interface FoodSubstitution {

@@ -1,4 +1,7 @@
-import MealItem from "./ٖMealItem";
+import { ChevronDown } from "lucide-react";
+import { useState } from "react";
+
+import MealItem from "./MealItem";
 import type { MealSection } from "../../types/nutrition";
 
 interface MealCardProps {
@@ -6,54 +9,73 @@ interface MealCardProps {
 }
 
 export default function MealCard({ meal }: MealCardProps) {
+  const [isOpen, setIsOpen] = useState(false);
+
   return (
-    <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5 space-y-4">
-      <div className="flex items-center gap-3">
-        <span className="text-2xl">{meal.icon}</span>
+    <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5">
+      <button
+        onClick={() => setIsOpen((prev) => !prev)}
+        className="grid w-full grid-cols-[24px_1fr_24px] items-center"
+      >
+        <span />
 
-        <h2 className="text-lg font-semibold text-white">
-          {meal.title}
-        </h2>
-      </div>
+        <span className="flex items-center justify-center gap-3">
+          <span className="text-2xl">{meal.icon}</span>
 
-      <div className="space-y-2">
-        {meal.foods.map((food) => (
-          <MealItem key={food.id} item={food} />
-        ))}
-      </div>
+          <h2 className="text-lg font-semibold text-white">
+            {meal.title}
+          </h2>
+        </span>
 
-      {(meal.calories || meal.protein) && (
-        <div className="flex items-center gap-4 pt-2 text-sm">
-          {meal.calories && (
-            <span className="text-orange-400">
-              {meal.calories} kcal
-            </span>
-          )}
+        <ChevronDown
+          className={`h-5 w-5 text-zinc-400 transition-transform ${
+            isOpen ? "rotate-180" : ""
+          }`}
+        />
+      </button>
 
-          {meal.protein && (
-            <span className="text-emerald-400">
-              {meal.protein} g پروتئین
-            </span>
-          )}
-        </div>
-      )}
-
-      {meal.notes && meal.notes.length > 0 && (
-        <div className="rounded-xl bg-zinc-800/60 p-3">
-          <div className="mb-2 text-xs font-semibold text-zinc-400">
-            نکات
+      {isOpen && (
+        <div className="mt-4 space-y-4">
+          <div className="space-y-2">
+            {meal.foods.map((food) => (
+              <MealItem key={food.id} item={food} />
+            ))}
           </div>
 
-          <ul className="space-y-1">
-            {meal.notes.map((note, index) => (
-              <li
-                key={index}
-                className="text-sm text-zinc-200"
-              >
-                • {note}
-              </li>
-            ))}
-          </ul>
+          {(meal.calories || meal.protein) && (
+            <div className="flex items-center gap-4 pt-2 text-sm">
+              {meal.calories && (
+                <span className="text-orange-400">
+                  {meal.calories} کیلوکالری
+                </span>
+              )}
+
+              {meal.protein && (
+                <span className="text-emerald-400">
+                  {meal.protein} گرم پروتئین
+                </span>
+              )}
+            </div>
+          )}
+
+          {meal.notes && meal.notes.length > 0 && (
+            <div className="rounded-xl bg-zinc-800/60 p-3">
+              <div className="mb-2 text-xs font-semibold text-zinc-400">
+                نکات
+              </div>
+
+              <ul className="space-y-1">
+                {meal.notes.map((note, index) => (
+                  <li
+                    key={index}
+                    className="text-sm text-zinc-200"
+                  >
+                    • {note}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       )}
     </div>

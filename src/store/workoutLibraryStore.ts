@@ -1,34 +1,93 @@
 import { workoutLibrary } from "../data/workoutLibrary";
+import { scopedKey } from "../utils/userEngine";
 
 import type {
-  WorkoutDefinition,
   Exercise,
+  ExerciseGroup,
+  WorkoutDefinition,
 } from "../data/workoutLibrary";
 
-const STORAGE_KEY = "emad-workout-library";
+const STORAGE_KEY = "emad-workout-library-overrides";
 
-function clone<T>(value: T): T {
-  return JSON.parse(JSON.stringify(value));
+function storageKey() {
+  return scopedKey(STORAGE_KEY);
 }
 
-let library: WorkoutDefinition[] = loadLibrary();
+interface ExerciseOverride {
+  sets?: number;
+  reps?: number;
+  enabled?: boolean;
+}
 
-function loadLibrary(): WorkoutDefinition[] {
+type OverridesMap = Record<string, ExerciseOverride>;
+
+function overrideKey(
+  workoutId: string,
+  groupId: string,
+  exerciseId: string,
+) {
+  return `${workoutId}:${groupId}:${exerciseId}`;
+}
+
+function getOverrides(): OverridesMap {
+  const saved = localStorage.getItem(storageKey());
+
+  if (!saved) {
+    return {};
+  }
+
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-
-    if (!stored) {
-      return clone(workoutLibrary);
-    }
-
-    return JSON.parse(stored) as WorkoutDefinition[];
+    return JSON.parse(saved) as OverridesMap;
   } catch {
-    return clone(workoutLibrary);
+    return {};
   }
 }
 
-function saveLibrary() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(library));
+function saveOverrides(overrides: OverridesMap) {
+  localStorage.setItem(storageKey(), JSON.stringify(overrides));
+}
+
+export function resetLibraryOverrides() {
+  localStorage.removeItem(storageKey());
+}
+
+function applyOverrides(
+  library: WorkoutDefinition[],
+  overrides: OverridesMap,
+): WorkoutDefinition[] {
+  return library.map((workout) => ({
+    ...workout,
+    groups: workout.groups.map((group) => ({
+      ...group,
+      exercises: group.exercises.map((exercise) => {
+        const override =
+          overrides[
+            overrideKey(workout.id, group.id, exercise.id)
+          ];
+
+        return override
+          ? { ...exercise, ...override }
+          : exercise;
+      }),
+    })),
+  }));
+}
+
+function updateExercise(
+  workoutId: string,
+  groupId: string,
+  exerciseId: string,
+  patch: ExerciseOverride,
+) {
+  const overrides = getOverrides();
+  const key = overrideKey(workoutId, groupId, exerciseId);
+
+  overrides[key] = {
+    ...overrides[key],
+    ...patch,
+  };
+
+  saveOverrides(overrides);
 }
 
 function findExercise(
@@ -36,25 +95,34 @@ function findExercise(
   groupId: string,
   exerciseId: string,
 ): Exercise | undefined {
-  const workout = library.find((w) => w.id === workoutId);
+  const workout = getWorkout(workoutId);
 
-  if (!workout) return;
+  const group = workout?.groups.find(
+    (group) => group.id === groupId,
+  );
 
-  const group = workout.groups.find((g) => g.id === groupId);
-
-  if (!group) return;
-
-  return group.exercises.find((e) => e.id === exerciseId);
+  return group?.exercises.find(
+    (exercise) => exercise.id === exerciseId,
+  );
 }
 
 export function getLibrary(): WorkoutDefinition[] {
-  return library;
+  return applyOverrides(workoutLibrary, getOverrides());
 }
 
 export function getWorkout(
   workoutId: string,
 ): WorkoutDefinition | undefined {
-  return library.find((w) => w.id === workoutId);
+  return getLibrary().find(
+    (workout) => workout.id === workoutId,
+  );
+}
+
+export function getWorkoutOptions() {
+  return workoutLibrary.map((workout) => ({
+    id: workout.id,
+    title: workout.title,
+  }));
 }
 
 export function toggleExercise(
@@ -62,17 +130,11 @@ export function toggleExercise(
   groupId: string,
   exerciseId: string,
 ) {
-  const exercise = findExercise(
-    workoutId,
-    groupId,
-    exerciseId,
-  );
+  const exercise = findExercise(workoutId, groupId, exerciseId);
 
-  if (!exercise) return;
-
-  exercise.enabled = !exercise.enabled;
-
-  saveLibrary();
+  updateExercise(workoutId, groupId, exerciseId, {
+    enabled: !(exercise?.enabled ?? true),
+  });
 }
 
 export function updateSets(
@@ -81,17 +143,9 @@ export function updateSets(
   exerciseId: string,
   sets: number,
 ) {
-  const exercise = findExercise(
-    workoutId,
-    groupId,
-    exerciseId,
-  );
-
-  if (!exercise) return;
-
-  exercise.sets = sets;
-
-  saveLibrary();
+  updateExercise(workoutId, groupId, exerciseId, {
+    sets: Math.max(1, sets),
+  });
 }
 
 export function updateReps(
@@ -100,25 +154,26 @@ export function updateReps(
   exerciseId: string,
   reps: number,
 ) {
-  const exercise = findExercise(
-    workoutId,
-    groupId,
-    exerciseId,
-  );
-
-  if (!exercise) return;
-
-  exercise.reps = reps;
-
-  saveLibrary();
+  updateExercise(workoutId, groupId, exerciseId, {
+    reps: Math.max(1, reps),
+  });
 }
 
-export function reloadLibrary() {
-  library = loadLibrary();
-}
+export function saveWorkoutExercises(
+  workoutId: string,
+  groups: ExerciseGroup[],
+) {
+  const overrides = getOverrides();
 
-export function resetLibrary() {
-  library = clone(workoutLibrary);
+  for (const group of groups) {
+    for (const exercise of group.exercises) {
+      overrides[overrideKey(workoutId, group.id, exercise.id)] = {
+        sets: exercise.sets,
+        reps: exercise.reps,
+        enabled: exercise.enabled,
+      };
+    }
+  }
 
-  saveLibrary();
+  saveOverrides(overrides);
 }

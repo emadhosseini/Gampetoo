@@ -11,17 +11,38 @@ import {
 import { getSession } from "@/utils/sessionEngine";
 import {
   getCurrentProgramDay,
-  getCurrentWorkout,
+  getCurrentWorkoutType,
+  getProgramDay,
+  getWorkoutTypeForDate,
 } from "@/utils/programEngine";
+
+import { getWorkout } from "@/store/workoutLibraryStore";
 
 function HomePage() {
   const session = getSession();
 
   const day = getCurrentProgramDay();
 
-  const workout = getCurrentWorkout();
+  const workoutType = getCurrentWorkoutType();
+
+const workout = workoutType
+  ? getWorkout(workoutType)
+  : undefined;
 
   const isWorkout = day.activity === "workout";
+
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  const tomorrowDay = getProgramDay(tomorrow);
+
+  const tomorrowWorkoutType = getWorkoutTypeForDate(tomorrow);
+
+  const tomorrowWorkout = tomorrowWorkoutType
+    ? getWorkout(tomorrowWorkoutType)
+    : undefined;
+
+  const isTomorrowWorkout = tomorrowDay.activity === "workout";
 
   return (
     <div className="pb-32">
@@ -29,43 +50,37 @@ function HomePage() {
 
       <section className="space-y-4 px-6">
         <HeroCard
-          title="Today's Activity"
+          title="برنامه امروز"
           emoji={isWorkout ? "🏋️" : "🚶"}
           status={
             isWorkout
-              ? workout?.title ?? day.title
-              : "Recovery Walk"
+              ? workout?.title || day.title
+              : "روز استراحت"
           }
           description={
             isWorkout
-              ? `Today's workout is ${
-                  workout?.title ?? day.title
-                }.`
-              : "Walk for 45–60 minutes."
+              ? undefined
+              : "استراحت و پیاده روی سبک به مدت ۴۵ تا ۶۰ دقیقه"
           }
         />
 
         <InfoCard
-          icon={isWorkout ? <Dumbbell /> : <Footprints />}
-          title={
-            isWorkout
-              ? "Workout"
-              : "Recovery"
-          }
+          icon={isTomorrowWorkout ? <Dumbbell /> : <Footprints />}
+          title="برنامه فردا"
           value={
-            isWorkout
-              ? workout?.title ?? day.title
-              : "45–60 min walk"
+            isTomorrowWorkout
+              ? tomorrowWorkout?.title ?? tomorrowDay.title
+              : "استراحت و پیاده روی سبک\nبه مدت ۴۵ تا ۶۰ دقیقه"
           }
         />
 
         <InfoCard
           icon={<ClipboardList />}
-          title="Today's Status"
+          title="وضعیت برنامه امروز"
           value={
             session.completed
-              ? "Completed ✅"
-              : "Not completed"
+              ? "انجام شده ✅"
+              : "انجام نشده"
           }
         />
       </section>

@@ -1,4 +1,4 @@
-import { type Exercise } from "@/data/programs";
+import type { Exercise } from "@/data/workoutLibrary";
 
 type ExerciseCardProps = {
   exercise: Exercise;
@@ -8,12 +8,12 @@ export default function ExerciseCard({
   exercise,
 }: ExerciseCardProps) {
   return (
-    <div className="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm">
-      <h2 className="text-lg font-bold">
+    <div className="rounded-3xl bg-zinc-900 p-4">
+      <h2 className="text-lg font-bold text-white">
         {exercise.name}
       </h2>
 
-      <div className="mt-4 flex justify-between text-sm text-gray-500">
+      <div className="mt-2 flex justify-between text-sm text-zinc-400">
         <span>{exercise.sets} ست</span>
         <span>{exercise.reps} تکرار</span>
       </div>

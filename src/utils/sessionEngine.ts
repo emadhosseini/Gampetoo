@@ -1,6 +1,11 @@
 import { getCurrentProgramDay } from "./programEngine";
+import { scopedKey } from "./userEngine";
 
 const STORAGE_KEY = "emad-session";
+
+function storageKey() {
+  return scopedKey(STORAGE_KEY);
+}
 
 export type ActivityType = "workout" | "walk";
 
@@ -21,7 +26,7 @@ function createSession(): SessionState {
 }
 
 export function getSession() {
-  const saved = localStorage.getItem(STORAGE_KEY);
+  const saved = localStorage.getItem(storageKey());
 
   if (!saved) {
     const session = createSession();
@@ -51,12 +56,12 @@ export function getSession() {
 }
 
 export function saveSession(session: SessionState) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
+  localStorage.setItem(storageKey(), JSON.stringify(session));
 }
 
 export function completeWorkout() {
   const session: SessionState = JSON.parse(
-    localStorage.getItem(STORAGE_KEY) ?? JSON.stringify(createSession())
+    localStorage.getItem(storageKey()) ?? JSON.stringify(createSession())
   );
 
   session.completed = true;
@@ -66,7 +71,7 @@ export function completeWorkout() {
 
 export function completeWalk() {
   const session: SessionState = JSON.parse(
-    localStorage.getItem(STORAGE_KEY) ?? JSON.stringify(createSession())
+    localStorage.getItem(storageKey()) ?? JSON.stringify(createSession())
   );
 
   session.completed = true;
@@ -75,5 +80,5 @@ export function completeWalk() {
 }
 
 export function resetSession() {
-  localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem(storageKey());
 }

@@ -12,18 +12,7 @@ export type WorkoutType =
   | "cardio"
   | "custom";
 
-export interface Exercise {
-  id: string;
-  name: string;
-  sets: number;
-  reps: string;
-}
 
-export interface Workout {
-  id: WorkoutType;
-  title: string;
-  exercises: Exercise[];
-}
 
 export interface WorkoutDay {
   id: string;
@@ -34,7 +23,6 @@ export interface WorkoutDay {
 
 export interface WorkoutCycle {
   days: WorkoutDay[];
-  workouts: Workout[];
 }
 
 export interface ProgramSettings {

@@ -2,7 +2,7 @@ type HeroCardProps = {
   title: string;
   emoji: string;
   status: string;
-  description: string;
+  description?: string;
 };
 
 function HeroCard({
@@ -25,9 +25,11 @@ function HeroCard({
         {status}
       </h2>
 
-      <p className="mt-4 text-sm leading-7 text-zinc-400">
-        {description}
-      </p>
+      {description && (
+        <p className="mt-4 text-sm leading-7 text-zinc-400">
+          {description}
+        </p>
+      )}
     </div>
   );
 }

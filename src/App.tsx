@@ -1,4 +1,10 @@
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import {
+  BrowserRouter,
+  Navigate,
+  Route,
+  Routes,
+  useLocation,
+} from "react-router-dom";
 
 import Layout from "@/components/Layout";
 
@@ -9,8 +15,12 @@ import SettingsPage from "@/pages/SettingsPage";
 import SetupProgramPage from "@/pages/SetupProgramPage";
 import WorkoutLibraryPage from "@/pages/WorkoutLibraryPage";
 import WorkoutDetailPage from "@/pages/WorkoutDetailPage";
+import ProgramBuilderPage from "@/pages/ProgramBuilderPage";
+import NutritionPlanLibraryPage from "@/pages/NutritionPlanLibraryPage";
+import NutritionPlanDetailPage from "@/pages/NutritionPlanDetailPage";
 
 import { hasStartDate } from "@/utils/programEngine";
+import { hasCurrentUser } from "@/utils/userEngine";
 
 export default function App() {
   return (
@@ -21,7 +31,9 @@ export default function App() {
 }
 
 function AppRoutes() {
-  const initialized = hasStartDate();
+  useLocation();
+
+  const initialized = hasCurrentUser() && hasStartDate();
 
   if (!initialized) {
     return (
@@ -70,6 +82,21 @@ function AppRoutes() {
         <Route
           path="/settings/workouts/:id"
           element={<WorkoutDetailPage />}
+        />
+
+        <Route
+          path="/settings/program"
+          element={<ProgramBuilderPage />}
+        />
+
+        <Route
+          path="/settings/nutrition"
+          element={<NutritionPlanLibraryPage />}
+        />
+
+        <Route
+          path="/settings/nutrition/:type"
+          element={<NutritionPlanDetailPage />}
         />
       </Route>
 

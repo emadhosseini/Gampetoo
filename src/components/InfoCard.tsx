@@ -21,7 +21,7 @@ function InfoCard({
         {title}
       </p>
 
-      <h2 className="mt-2 text-xl font-semibold">
+      <h2 className="mt-2 whitespace-pre-line text-xl font-semibold">
         {value}
       </h2>
     </div>

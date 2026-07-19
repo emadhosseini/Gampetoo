@@ -1,23 +1,48 @@
+import { useNavigate } from "react-router-dom";
+
 import MealCard from "../components/nutrition/MealCard";
+import FreeMealCard from "../components/nutrition/FreeMealCard";
+import WorkoutHeader from "../components/WorkoutHeader";
 
 import { getCurrentMealPlan } from "../utils/programEngine";
 
 export default function NutritionPage() {
+  const navigate = useNavigate();
+
   const plan = getCurrentMealPlan();
+
+  const enabledMeals = plan.meals.filter((meal) => meal.enabled ?? true);
+
+  const hasSelections = enabledMeals.some(
+    (meal) => meal.foods.length > 0,
+  );
+
+  if (!hasSelections) {
+    return (
+      <div className="mx-auto max-w-3xl space-y-6 px-4 py-6">
+        <WorkoutHeader subtitle="🍽 تغذیه امروز" title={plan.title} />
+
+        <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6 text-center">
+          <p className="text-zinc-300">
+            شما برنامه غذایی انتخاب نکردین
+          </p>
+
+          <button
+            onClick={() => navigate("/settings/nutrition")}
+            className="mt-4 rounded-xl bg-emerald-500 px-5 py-3 text-sm font-semibold text-black"
+          >
+            رفتن به تنظیمات برنامه غذایی
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-3xl space-y-6 px-4 py-6">
-      <div>
-        <h1 className="text-3xl font-bold text-white">
-          🍽 تغذیه امروز
-        </h1>
+      <WorkoutHeader subtitle="🍽 تغذیه امروز" title={plan.title} />
 
-        <p className="mt-2 text-sm text-zinc-400">
-          {plan.title}
-        </p>
-      </div>
-
-      {plan.meals.map((meal) => (
+      {enabledMeals.map((meal) => (
         <MealCard key={meal.id} meal={meal} />
       ))}
 
@@ -43,15 +68,7 @@ export default function NutritionPage() {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-amber-700/40 bg-amber-500/10 p-5">
-        <h2 className="mb-3 text-xl font-semibold text-amber-400">
-          🍕 وعده آزاد
-        </h2>
-
-        <p className="text-zinc-200">
-          {plan.freeMeal}
-        </p>
-      </div>
+      <FreeMealCard message={plan.freeMeal} />
     </div>
   );
 }

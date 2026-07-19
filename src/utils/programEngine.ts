@@ -1,33 +1,31 @@
 import type {
   Program,
   ProgramsState,
-  Workout,
   WorkoutDay,
+  WorkoutType,
 } from "../types/program";
 
 import { defaultProgram } from "../data/program/defaultProgram";
+import { scopedKey } from "./userEngine";
+import { generateId } from "./id";
 
 const STORAGE_KEY = "emad-programs";
+
+function storageKey() {
+  return scopedKey(STORAGE_KEY);
+}
 
 function cloneDefaultProgram(): Program {
   return {
     ...defaultProgram,
 
-    id: crypto.randomUUID(),
+    id: generateId(),
 
     workout: {
-      days: defaultProgram.workout.days.map((day) => ({
-        ...day,
-      })),
-
-      workouts: defaultProgram.workout.workouts.map((workout) => ({
-        ...workout,
-
-        exercises: workout.exercises.map((exercise) => ({
-          ...exercise,
-        })),
-      })),
-    },
+  days: defaultProgram.workout.days.map((day) => ({
+    ...day,
+  })),
+},
 
     nutrition: {
       workout: structuredClone(defaultProgram.nutrition.workout),
@@ -50,11 +48,11 @@ function createProgramsState(): ProgramsState {
 }
 
 export function savePrograms(state: ProgramsState) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  localStorage.setItem(storageKey(), JSON.stringify(state));
 }
 
 export function getPrograms(): ProgramsState {
-  const saved = localStorage.getItem(STORAGE_KEY);
+  const saved = localStorage.getItem(storageKey());
 
   if (!saved) {
     const state = createProgramsState();
@@ -154,7 +152,7 @@ export function deleteProgram(programId: string) {
 }
 
 export function resetPrograms() {
-  localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem(storageKey());
 }
 
 export function hasStartDate(): boolean {
@@ -237,26 +235,16 @@ export function getCurrentProgramDay(): WorkoutDay {
   return getProgramDay();
 }
 
-export function getWorkoutForDate(
+export function getWorkoutTypeForDate(
   date = new Date()
-): Workout | null {
-  const program = getActiveProgram();
-
+): WorkoutType | null {
   const day = getProgramDay(date);
 
-  if (!day.workoutId) {
-    return null;
-  }
-
-  return (
-    program.workout.workouts.find(
-      (workout) => workout.id === day.workoutId
-    ) ?? null
-  );
+  return day.workoutId;
 }
 
-export function getCurrentWorkout(): Workout | null {
-  return getWorkoutForDate();
+export function getCurrentWorkoutType(): WorkoutType | null {
+  return getWorkoutTypeForDate();
 }
 
 export function getMealPlanForDate(
