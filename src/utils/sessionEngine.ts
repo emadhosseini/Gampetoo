@@ -25,8 +25,18 @@ function createSession(): SessionState {
   };
 }
 
+function parseSession(saved: string | null): SessionState | null {
+  if (!saved) return null;
+
+  try {
+    return JSON.parse(saved) as SessionState;
+  } catch {
+    return null;
+  }
+}
+
 export function getSession() {
-  const saved = localStorage.getItem(storageKey());
+  const saved = parseSession(localStorage.getItem(storageKey()));
 
   if (!saved) {
     const session = createSession();
@@ -39,7 +49,7 @@ export function getSession() {
     };
   }
 
-  const session: SessionState = JSON.parse(saved);
+  const session: SessionState = saved;
 
   if (session.lastDate !== today()) {
     session.completed = false;
@@ -60,9 +70,7 @@ export function saveSession(session: SessionState) {
 }
 
 export function completeWorkout() {
-  const session: SessionState = JSON.parse(
-    localStorage.getItem(storageKey()) ?? JSON.stringify(createSession())
-  );
+  const session = parseSession(localStorage.getItem(storageKey())) ?? createSession();
 
   session.completed = true;
 
@@ -70,9 +78,7 @@ export function completeWorkout() {
 }
 
 export function completeWalk() {
-  const session: SessionState = JSON.parse(
-    localStorage.getItem(storageKey()) ?? JSON.stringify(createSession())
-  );
+  const session = parseSession(localStorage.getItem(storageKey())) ?? createSession();
 
   session.completed = true;
 

@@ -54,15 +54,19 @@ export function savePrograms(state: ProgramsState) {
 export function getPrograms(): ProgramsState {
   const saved = localStorage.getItem(storageKey());
 
-  if (!saved) {
-    const state = createProgramsState();
-
-    savePrograms(state);
-
-    return state;
+  if (saved) {
+    try {
+      return JSON.parse(saved) as ProgramsState;
+    } catch {
+      // Corrupted storage — fall through and reseed rather than crash.
+    }
   }
 
-  return JSON.parse(saved) as ProgramsState;
+  const state = createProgramsState();
+
+  savePrograms(state);
+
+  return state;
 }
 
 export function getActiveProgram(): Program {
