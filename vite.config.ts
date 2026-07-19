@@ -16,8 +16,8 @@ export default defineConfig({
       ],
       manifest: {
         id: "/",
-        name: "برنامه روزانه",
-        short_name: "برنامه روزانه",
+        name: "Movana",
+        short_name: "Movana",
         description: "برنامه تمرینی و غذایی روزانه",
         lang: "fa",
         dir: "rtl",
