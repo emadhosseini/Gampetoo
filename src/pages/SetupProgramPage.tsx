@@ -303,6 +303,7 @@ function ProgramCycleSetup() {
 
     <input
       type="date"
+      dir="ltr"
       value={startDate}
       onChange={(e) => setStartDate(e.target.value)}
       className="w-full rounded-xl border border-zinc-700 bg-zinc-800 p-4 text-center text-white [&::-webkit-date-and-time-value]:text-center"

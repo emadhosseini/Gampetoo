@@ -29,7 +29,7 @@ function buildInitialPlan(type: MealPlanType): MealPlan {
     existing.meals.map((meal) => [meal.id, meal]),
   );
 
-  const meals: MealSection[] = getMealSlots(type).map((slot) => {
+  const meals: MealSection[] = getMealSlots().map((slot) => {
     const found = existingById.get(slot.id);
 
     if (found) {

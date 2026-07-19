@@ -3,19 +3,31 @@ import { useState } from "react";
 import { useParams } from "react-router-dom";
 
 import { getWorkout, saveWorkoutExercises } from "@/store/workoutLibraryStore";
+import {
+  getSpecializedWarmup,
+  saveWarmupGroups,
+} from "@/store/warmupLibraryStore";
 
 import type { ExerciseGroup } from "@/data/workoutLibrary";
+import type { WarmupGroup } from "@/data/warmupLibrary";
 
 export default function WorkoutDetailPage() {
   const { id } = useParams();
 
   const workout = id ? getWorkout(id) : undefined;
+  const specializedWarmup = id ? getSpecializedWarmup(id) : undefined;
 
   const [groups, setGroups] = useState<ExerciseGroup[]>(
     () => workout?.groups ?? [],
   );
 
+  const [warmupGroups, setWarmupGroups] = useState<WarmupGroup[]>(
+    () => specializedWarmup?.groups ?? [],
+  );
+
   const [openGroupId, setOpenGroupId] = useState<string | null>(null);
+
+  const [warmupSectionOpen, setWarmupSectionOpen] = useState(false);
 
   const [saved, setSaved] = useState(false);
 
@@ -24,6 +36,18 @@ export default function WorkoutDetailPage() {
       <div className="py-10 text-center">
         تمرین پیدا نشد.
       </div>
+    );
+  }
+
+  function toggleWarmupGroup(groupId: string) {
+    setSaved(false);
+
+    setWarmupGroups((prev) =>
+      prev.map((group) =>
+        group.id !== groupId
+          ? group
+          : { ...group, enabled: !group.enabled },
+      ),
     );
   }
 
@@ -52,6 +76,11 @@ export default function WorkoutDetailPage() {
 
   function handleSave() {
     saveWorkoutExercises(workout!.id, groups);
+
+    if (specializedWarmup) {
+      saveWarmupGroups(specializedWarmup.workoutType, warmupGroups);
+    }
+
     setSaved(true);
   }
 
@@ -62,6 +91,62 @@ export default function WorkoutDetailPage() {
       </h1>
 
       <div className="space-y-3">
+        {specializedWarmup && (
+          <div className="rounded-2xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
+            <button
+              onClick={() => setWarmupSectionOpen((prev) => !prev)}
+              className="flex w-full items-center justify-between"
+            >
+              <h2 className="text-lg font-semibold">
+                گرم کردن تخصصی
+              </h2>
+
+              <ChevronDown
+                className={`h-5 w-5 text-zinc-400 transition-transform ${
+                  warmupSectionOpen ? "rotate-180" : ""
+                }`}
+              />
+            </button>
+
+            {warmupSectionOpen && (
+              <div className="mt-4 space-y-3">
+                {warmupGroups.map((group) => (
+                  <div
+                    key={group.id}
+                    className="rounded-xl border border-zinc-100 p-4 dark:border-zinc-800"
+                  >
+                    <button
+                      onClick={() => toggleWarmupGroup(group.id)}
+                      className="flex w-full items-center justify-between"
+                    >
+                      <span className="font-medium">
+                        {group.title}
+                      </span>
+
+                      <span className="text-2xl">
+                        {group.enabled ? "✅" : "⬜"}
+                      </span>
+                    </button>
+
+                    {group.enabled && (
+                      <ul className="mt-3 space-y-2">
+                        {group.exercises.map((exercise) => (
+                          <li
+                            key={exercise.id}
+                            className="rounded-lg bg-zinc-50 px-3 py-2 text-sm dark:bg-zinc-800"
+                          >
+                            {exercise.name}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {groups.map((group) => {
           const isOpen = openGroupId === group.id;
 
@@ -100,7 +185,9 @@ export default function WorkoutDetailPage() {
                             enabled: !exercise.enabled,
                           })
                         }
-                        className="mb-4 flex w-full items-center justify-between"
+                        className={`flex w-full items-center justify-between ${
+                          workout.id === "warmup" ? "" : "mb-4"
+                        }`}
                       >
                         <span className="font-medium">
                           {exercise.name}
@@ -111,71 +198,73 @@ export default function WorkoutDetailPage() {
                         </span>
                       </button>
 
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <div className="mb-2 text-sm text-zinc-500">
-                            ست
+                      {workout.id !== "warmup" && (
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <div className="mb-2 text-sm text-zinc-500">
+                              ست
+                            </div>
+
+                            <div className="flex items-center justify-between rounded-xl border p-2">
+                              <button
+                                onClick={() => {
+                                  if (exercise.sets <= 1) return;
+
+                                  updateExercise(group.id, exercise.id, {
+                                    sets: exercise.sets - 1,
+                                  });
+                                }}
+                              >
+                                <Minus size={18} />
+                              </button>
+
+                              <span>{exercise.sets}</span>
+
+                              <button
+                                onClick={() =>
+                                  updateExercise(group.id, exercise.id, {
+                                    sets: exercise.sets + 1,
+                                  })
+                                }
+                              >
+                                <Plus size={18} />
+                              </button>
+                            </div>
                           </div>
 
-                          <div className="flex items-center justify-between rounded-xl border p-2">
-                            <button
-                              onClick={() => {
-                                if (exercise.sets <= 1) return;
+                          <div>
+                            <div className="mb-2 text-sm text-zinc-500">
+                              تکرار
+                            </div>
 
-                                updateExercise(group.id, exercise.id, {
-                                  sets: exercise.sets - 1,
-                                });
-                              }}
-                            >
-                              <Minus size={18} />
-                            </button>
+                            <div className="flex items-center justify-between rounded-xl border p-2">
+                              <button
+                                onClick={() => {
+                                  if (exercise.reps <= 1) return;
 
-                            <span>{exercise.sets}</span>
+                                  updateExercise(group.id, exercise.id, {
+                                    reps: exercise.reps - 1,
+                                  });
+                                }}
+                              >
+                                <Minus size={18} />
+                              </button>
 
-                            <button
-                              onClick={() =>
-                                updateExercise(group.id, exercise.id, {
-                                  sets: exercise.sets + 1,
-                                })
-                              }
-                            >
-                              <Plus size={18} />
-                            </button>
+                              <span>{exercise.reps}</span>
+
+                              <button
+                                onClick={() =>
+                                  updateExercise(group.id, exercise.id, {
+                                    reps: exercise.reps + 1,
+                                  })
+                                }
+                              >
+                                <Plus size={18} />
+                              </button>
+                            </div>
                           </div>
                         </div>
-
-                        <div>
-                          <div className="mb-2 text-sm text-zinc-500">
-                            تکرار
-                          </div>
-
-                          <div className="flex items-center justify-between rounded-xl border p-2">
-                            <button
-                              onClick={() => {
-                                if (exercise.reps <= 1) return;
-
-                                updateExercise(group.id, exercise.id, {
-                                  reps: exercise.reps - 1,
-                                });
-                              }}
-                            >
-                              <Minus size={18} />
-                            </button>
-
-                            <span>{exercise.reps}</span>
-
-                            <button
-                              onClick={() =>
-                                updateExercise(group.id, exercise.id, {
-                                  reps: exercise.reps + 1,
-                                })
-                              }
-                            >
-                              <Plus size={18} />
-                            </button>
-                          </div>
-                        </div>
-                      </div>
+                      )}
                     </div>
                   ))}
                 </div>

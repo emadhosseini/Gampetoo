@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 
 import MealCard from "../components/nutrition/MealCard";
 import FreeMealCard from "../components/nutrition/FreeMealCard";
+import SubstitutionsCard from "../components/nutrition/SubstitutionsCard";
 import WorkoutHeader from "../components/WorkoutHeader";
 
 import {
@@ -23,11 +24,11 @@ export default function NutritionPage() {
     ? plan.title
     : "تغذیه در روز بدون برنامه ورزشی";
 
-  const enabledMeals = plan.meals.filter((meal) => meal.enabled ?? true);
-
-  const hasSelections = enabledMeals.some(
-    (meal) => meal.foods.length > 0,
+  const enabledMeals = plan.meals.filter(
+    (meal) => (meal.enabled ?? true) && meal.foods.length > 0,
   );
+
+  const hasSelections = enabledMeals.length > 0;
 
   if (!hasSelections) {
     return (
@@ -58,27 +59,7 @@ export default function NutritionPage() {
         <MealCard key={meal.id} meal={meal} />
       ))}
 
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5">
-        <h2 className="mb-4 text-xl font-semibold text-white">
-          🔄 جایگزین‌های غذایی
-        </h2>
-
-        <div className="space-y-5">
-          {plan.substitutions.map((group) => (
-            <div key={group.title}>
-              <h3 className="mb-2 font-medium text-emerald-400">
-                {group.title}
-              </h3>
-
-              <ul className="space-y-1 text-zinc-300">
-                {group.foods.map((food) => (
-                  <li key={food}>• {food}</li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-      </div>
+      <SubstitutionsCard substitutions={plan.substitutions} />
 
       <FreeMealCard message={plan.freeMeal} />
     </div>

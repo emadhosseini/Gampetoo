@@ -10,6 +10,7 @@ export type WorkoutType =
   | "lower"
   | "full_body"
   | "cardio"
+  | "warmup"
   | "custom";
 
 

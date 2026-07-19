@@ -29,12 +29,13 @@ function formatToday() {
   });
 
   const weekday = jalali.format("dddd");
-  const jalaliDate = jalali.format("D MMMM");
+  const jalaliDay = jalali.format("D");
+  const jalaliMonth = jalali.format("MMMM");
 
   const gregorianDay = now.getDate().toLocaleString("fa-IR");
   const gregorianMonth = gregorianMonthNamesFa[now.getMonth()];
 
-  return `${weekday}، ${jalaliDate} و ${gregorianDay} ${gregorianMonth}`;
+  return `${weekday}، ${gregorianDay} ${gregorianMonth} (${jalaliDay} ${jalaliMonth}ماه)`;
 }
 
 function Header() {

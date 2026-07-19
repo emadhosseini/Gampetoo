@@ -14,7 +14,7 @@ export const mealPlans: Record<"workout" | "rest", MealPlan> = {
           {
             id: "water",
             name: "آب",
-            amount: "700 میلی‌لیتر",
+            amount: "3 لیوان",
             calories: 0,
           },
           {

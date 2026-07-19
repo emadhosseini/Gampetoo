@@ -4,6 +4,8 @@ import WorkoutHeader from "@/components/WorkoutHeader";
 import WorkoutSummary from "@/components/WorkoutSummary";
 import ExerciseCard from "@/components/ExerciseCard";
 import CompleteWorkoutButton from "@/components/CompleteWorkoutButton";
+import WarmupBlock from "@/components/WarmupBlock";
+import SpecializedWarmupBlock from "@/components/SpecializedWarmupBlock";
 
 import {
   getCurrentProgramDay,
@@ -12,6 +14,7 @@ import {
 } from "@/utils/programEngine";
 
 import { getWorkout } from "@/store/workoutLibraryStore";
+import { getSpecializedWarmup } from "@/store/warmupLibraryStore";
 
 import {
   getSession,
@@ -33,6 +36,20 @@ const workout = workoutType
   : undefined;
 
   const isWorkout = day.activity === "workout";
+
+  const warmupExercises = (
+    getWorkout("warmup")?.groups?.flatMap(
+      (group) => group.exercises ?? []
+    ) ?? []
+  ).filter((exercise) => exercise.enabled);
+
+  const specializedWarmup = workoutType
+    ? getSpecializedWarmup(workoutType)
+    : undefined;
+
+  const enabledSpecializedWarmupGroups = (
+    specializedWarmup?.groups ?? []
+  ).filter((group) => group.enabled);
 
   if (!hasProgramStarted()) {
     return (
@@ -132,6 +149,15 @@ const workout = workoutType
   return (
     <div className="space-y-6 px-5 pb-5 pt-10">
       <WorkoutHeader title={workout.title} />
+
+      <WarmupBlock exercises={warmupExercises} />
+
+      {specializedWarmup && (
+        <SpecializedWarmupBlock
+          title={`🎯 ${specializedWarmup.title}`}
+          groups={enabledSpecializedWarmupGroups}
+        />
+      )}
 
       <p className="text-center text-sm text-zinc-400">
         خلاصه تمرین امروز
