@@ -13,7 +13,7 @@ export default function SubstitutionsCard({
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="rounded-2xl border border-navy-600 bg-navy-700 p-5">
+    <div className="glass-panel rounded-2xl p-5">
       <button
         onClick={() => setIsOpen((prev) => !prev)}
         className="grid w-full grid-cols-[24px_1fr_24px] items-center"

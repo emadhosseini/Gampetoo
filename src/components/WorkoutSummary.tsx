@@ -8,7 +8,7 @@ export default function WorkoutSummary({
   sets,
 }: WorkoutSummaryProps) {
   return (
-    <div className="rounded-3xl border border-white/5 bg-navy-900 p-5 text-white">
+    <div className="glass-panel rounded-3xl p-5 text-white">
       <div className="flex justify-between">
         <div>
           <p className="text-sm opacity-70">حرکت</p>

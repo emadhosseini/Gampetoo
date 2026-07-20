@@ -20,7 +20,7 @@ export default function WorkoutLibraryPage() {
             onClick={() =>
               navigate(`/settings/workouts/${workout.id}`)
             }
-            className="flex w-full items-center justify-between rounded-2xl border border-navy-600 bg-navy-700 p-4 shadow-sm transition hover:border-navy-500 hover:shadow-md"
+            className="glass-panel flex w-full items-center justify-between rounded-2xl p-4"
           >
             <div className="text-right">
               <h2 className="text-lg font-semibold">

@@ -190,7 +190,7 @@ export default function NutritionPlanDetailPage() {
           return (
             <div
               key={meal.id}
-              className="rounded-2xl border border-navy-600 bg-navy-700 p-4"
+              className="glass-panel rounded-2xl p-4"
             >
               <div className="grid grid-cols-[24px_1fr_24px] items-center gap-2">
                 <input
@@ -236,7 +236,7 @@ export default function NutritionPlanDetailPage() {
                     return (
                       <div
                         key={entry.name}
-                        className="flex items-center gap-3 rounded-xl border border-navy-600 p-3"
+                        className="glass-chip flex items-center gap-3 rounded-xl p-3"
                       >
                         <input
                           type="checkbox"
@@ -296,7 +296,7 @@ export default function NutritionPlanDetailPage() {
 
       <button
         onClick={handleSave}
-        className="w-full rounded-2xl bg-navy-900 py-4 text-lg font-semibold text-white"
+        className="glass-tap w-full rounded-2xl bg-navy-900/80 backdrop-blur-xl py-4 text-lg font-semibold text-white"
       >
         {saved ? "ذخیره شد ✅" : "ذخیره"}
       </button>

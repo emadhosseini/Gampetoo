@@ -90,7 +90,7 @@ function ProgramBuilderPage() {
       {days.map((day, index) => (
         <div
           key={day.id}
-          className="rounded-2xl border border-white/5 bg-navy-900 p-4 shadow-sm"
+          className="glass-panel rounded-2xl p-4"
         >
           <div className="flex items-center justify-between">
             <div className="font-semibold">
@@ -107,7 +107,7 @@ function ProgramBuilderPage() {
           </div>
 
           <select
-            className="mt-3 w-full rounded-xl border border-zinc-300 p-3 text-zinc-500"
+            className="mt-3 w-full rounded-xl border border-navy-500 bg-navy-600 p-3 text-white"
             value={day.workoutId ?? ""}
             onChange={(e) => {
               updateDayWorkout(
@@ -134,7 +134,7 @@ function ProgramBuilderPage() {
 
       <button
         onClick={addDay}
-        className="w-full rounded-2xl border border-dashed border-zinc-600 py-4 text-center font-semibold text-zinc-300"
+        className="glass-tap w-full rounded-2xl border border-dashed border-navy-500 py-4 text-center font-semibold text-zinc-300"
       >
         + افزودن روز تمرینی
       </button>

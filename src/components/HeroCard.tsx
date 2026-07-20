@@ -12,7 +12,7 @@ function HeroCard({
   description,
 }: HeroCardProps) {
   return (
-    <div className="rounded-[32px] bg-navy-700 p-8 text-center">
+    <div className="glass-panel rounded-[32px] p-8 text-center">
       <p className="text-sm text-zinc-400">
         {title}
       </p>

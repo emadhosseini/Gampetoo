@@ -92,7 +92,7 @@ export default function WorkoutDetailPage() {
 
       <div className="space-y-3">
         {specializedWarmup && (
-          <div className="rounded-2xl border border-navy-600 bg-navy-700 p-4">
+          <div className="glass-panel rounded-2xl p-4">
             <button
               onClick={() => setWarmupSectionOpen((prev) => !prev)}
               className="flex w-full items-center justify-between"
@@ -113,7 +113,7 @@ export default function WorkoutDetailPage() {
                 {warmupGroups.map((group) => (
                   <div
                     key={group.id}
-                    className="rounded-xl border border-navy-600 p-4"
+                    className="glass-chip rounded-xl p-4"
                   >
                     <button
                       onClick={() => toggleWarmupGroup(group.id)}
@@ -133,7 +133,7 @@ export default function WorkoutDetailPage() {
                         {group.exercises.map((exercise) => (
                           <li
                             key={exercise.id}
-                            className="rounded-lg bg-navy-600 px-3 py-2 text-sm"
+                            className="glass-chip rounded-lg px-3 py-2 text-sm"
                           >
                             {exercise.name}
                           </li>
@@ -153,7 +153,7 @@ export default function WorkoutDetailPage() {
           return (
             <div
               key={group.id}
-              className="rounded-2xl border border-navy-600 bg-navy-700 p-4"
+              className="glass-panel rounded-2xl p-4"
             >
               <button
                 onClick={() =>
@@ -177,7 +177,7 @@ export default function WorkoutDetailPage() {
                   {group.exercises.map((exercise) => (
                     <div
                       key={exercise.id}
-                      className="rounded-xl border border-navy-600 p-4"
+                      className="glass-chip rounded-xl p-4"
                     >
                       <button
                         onClick={() =>
@@ -276,7 +276,7 @@ export default function WorkoutDetailPage() {
 
       <button
         onClick={handleSave}
-        className="w-full rounded-2xl bg-navy-900 py-4 text-lg font-semibold text-white"
+        className="glass-tap w-full rounded-2xl bg-navy-900/80 backdrop-blur-xl py-4 text-lg font-semibold text-white"
       >
         {saved ? "ذخیره شد ✅" : "ذخیره"}
       </button>

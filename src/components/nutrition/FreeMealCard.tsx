@@ -21,7 +21,7 @@ export default function FreeMealCard({ message }: FreeMealCardProps) {
   }
 
   return (
-    <div className="rounded-2xl border border-amber-700/40 bg-amber-500/10 p-5 text-center">
+    <div className="glass-tap rounded-2xl border border-amber-700/40 bg-amber-500/10 backdrop-blur-xl p-5 text-center">
       {locked ? (
         <p className="text-lg font-semibold text-amber-400">
           شما در این هفته وعده آزاد ندارید
