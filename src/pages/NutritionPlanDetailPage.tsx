@@ -21,6 +21,10 @@ function parseQuantity(amount: string, fallback: number): number {
   return match ? Number(match[1]) : fallback;
 }
 
+function mealCalories(meal: MealSection): number {
+  return meal.foods.reduce((sum, food) => sum + (food.calories ?? 0), 0);
+}
+
 function buildInitialPlan(type: MealPlanType): MealPlan {
   const program = getActiveProgram();
   const existing = program.nutrition[type];
@@ -192,13 +196,14 @@ export default function NutritionPlanDetailPage() {
         {plan.meals.map((meal) => {
           const isOpen = openMealId === meal.id;
           const enabled = meal.enabled ?? true;
+          const calories = mealCalories(meal);
 
           return (
             <div
               key={meal.id}
               className="rounded-2xl border border-zinc-800 bg-zinc-900 p-4"
             >
-              <div className="grid grid-cols-[24px_1fr_24px] items-center gap-2">
+              <div className="grid grid-cols-[24px_1fr_auto_24px] items-center gap-2">
                 <input
                   type="checkbox"
                   checked={enabled}
@@ -218,6 +223,12 @@ export default function NutritionPlanDetailPage() {
                     {meal.title}
                   </span>
                 </button>
+
+                {calories > 0 && (
+                  <span className="whitespace-nowrap text-sm font-medium text-orange-400">
+                    {calories} کیلوکالری
+                  </span>
+                )}
 
                 <button
                   onClick={() =>
@@ -298,6 +309,19 @@ export default function NutritionPlanDetailPage() {
             </div>
           );
         })}
+      </div>
+
+      <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-4 text-center">
+        <p className="text-sm text-zinc-400">
+          مجموع کالری روز
+        </p>
+
+        <p className="mt-1 text-xl font-bold text-orange-400">
+          {plan.meals
+            .filter((meal) => meal.enabled ?? true)
+            .reduce((sum, meal) => sum + mealCalories(meal), 0)}{" "}
+          کیلوکالری
+        </p>
       </div>
 
       <button
