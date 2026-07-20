@@ -1,6 +1,34 @@
 import { useState } from "react";
 
+import DatePickerImport, { DateObject } from "react-multi-date-picker";
+import persianCalendar from "react-date-object/calendars/persian";
+
+// react-multi-date-picker ships as CommonJS; depending on the bundler's interop
+// the default import can arrive as the module namespace rather than the component.
+const DatePicker =
+  (DatePickerImport as unknown as { default?: typeof DatePickerImport })
+    .default ?? DatePickerImport;
+import persian_fa from "react-date-object/locales/persian_fa";
+import "react-multi-date-picker/styles/backgrounds/bg-dark.css";
+import "react-multi-date-picker/styles/colors/green.css";
+
 import InstallHint from "@/components/InstallHint";
+
+// startDate is stored as a Gregorian ISO date (YYYY-MM-DD). These convert to and
+// from a local JS Date without the UTC-parsing off-by-one that new Date("...") has.
+function isoToLocalDate(iso: string): Date {
+  const [y, m, d] = iso.split("-").map(Number);
+
+  return new Date(y, m - 1, d);
+}
+
+function dateToISO(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+
+  return `${y}-${m}-${d}`;
+}
 
 
 const persianDays = [
@@ -23,6 +51,7 @@ import type {
 
 import {
   getActiveProgram,
+  hasStartDate,
   updateProgram,
 } from "@/utils/programEngine";
 
@@ -30,65 +59,142 @@ import { resetSession } from "@/utils/sessionEngine";
 import { getWorkoutOptions } from "@/store/workoutLibraryStore";
 import {
   getCurrentUserName,
+  hasCurrentUsername,
+  hasLegacyData,
+  migrateLegacyDataTo,
+  setCurrentUsername,
   setCurrentUserName,
 } from "@/utils/userEngine";
 import { generateId } from "@/utils/id";
 
+// Username must be English only (letters, digits, and . _ - separators).
+const USERNAME_PATTERN = /^[A-Za-z0-9._-]+$/;
+
 export default function SetupProgramPage() {
-  const [userName, setUserNameInput] = useState(
-    () => getCurrentUserName() ?? ""
+  const [step, setStep] = useState<"account" | "program">(
+    () => (hasCurrentUsername() ? "program" : "account")
   );
 
-  const [nameConfirmed, setNameConfirmed] = useState(
-    () => !!getCurrentUserName()
-  );
-
-  if (!nameConfirmed) {
-    return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-zinc-950 px-6 py-10">
-        <div className="mx-auto flex w-full max-w-xl flex-col space-y-8">
-          <InstallHint />
-
-          <div className="text-center">
-            <h1 className="text-3xl font-bold text-white">
-              Gampetoo
-            </h1>
-
-            <p className="mt-2 text-zinc-400">
-              اول از همه، اسمت رو وارد کن
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6 space-y-5 text-center">
-            <input
-              type="text"
-              value={userName}
-              onChange={(e) => setUserNameInput(e.target.value)}
-              placeholder="اسم شما"
-              className="w-full rounded-xl border border-zinc-700 bg-zinc-800 p-4 text-center text-white"
-            />
-
-            <button
-              onClick={() => {
-                const trimmed = userName.trim();
-
-                if (!trimmed) return;
-
-                setCurrentUserName(trimmed);
-                setNameConfirmed(true);
-              }}
-              disabled={!userName.trim()}
-              className="w-full rounded-2xl bg-emerald-500 py-4 text-xl font-bold text-black disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              ادامه
-            </button>
-          </div>
-        </div>
-      </div>
-    );
+  if (step === "account") {
+    return <AccountStep onNewAccount={() => setStep("program")} />;
   }
 
   return <ProgramCycleSetup />;
+}
+
+function SetupBrand() {
+  return (
+    <div className="flex flex-col items-center text-center">
+      <img
+        src="/icon.png"
+        alt="Gampetoo"
+        className="mb-4 h-20 w-20 rounded-2xl"
+      />
+
+      <h1 className="text-3xl font-bold text-white">
+        Gampetoo
+      </h1>
+    </div>
+  );
+}
+
+function AccountStep({
+  onNewAccount,
+}: {
+  onNewAccount: () => void;
+}) {
+  const [name, setName] = useState(
+    () => getCurrentUserName() ?? ""
+  );
+
+  const [username, setUsername] = useState("");
+
+  const canSubmit =
+    name.trim().length > 0 && username.trim().length > 0;
+
+  function submit() {
+    const trimmedName = name.trim();
+    const trimmedUsername = username.trim();
+
+    if (!trimmedName || !trimmedUsername) return;
+
+    if (!USERNAME_PATTERN.test(trimmedUsername)) {
+      window.alert(
+        "نام کاربری باید فقط با حروف و اعداد انگلیسی باشد."
+      );
+      return;
+    }
+
+    // Existing users from the old name-scoped scheme carry their data over to
+    // the username they pick here.
+    const wasLegacy = hasLegacyData();
+
+    setCurrentUsername(trimmedUsername);
+
+    if (wasLegacy) {
+      migrateLegacyDataTo(trimmedUsername);
+    }
+
+    setCurrentUserName(trimmedName);
+
+    // A username that already has a configured program (existing or migrated
+    // account) goes straight into the app — no re-setup.
+    if (hasStartDate()) {
+      window.location.replace("/");
+      return;
+    }
+
+    onNewAccount();
+  }
+
+  return (
+    <div className="pt-safe flex min-h-screen flex-col items-center justify-center bg-zinc-950 px-6 py-10">
+      <div className="mx-auto flex w-full max-w-xl flex-col space-y-8">
+        <InstallHint />
+
+        <SetupBrand />
+
+        <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6 space-y-4 text-center">
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") submit();
+            }}
+            placeholder="اسم خودت رو وارد کن"
+            className="w-full rounded-xl border border-zinc-700 bg-zinc-800 p-4 text-center text-white"
+          />
+
+          <input
+            type="text"
+            value={username}
+            onChange={(e) =>
+              // Strip anything that isn't English so the username stays valid.
+              setUsername(e.target.value.replace(/[^A-Za-z0-9._-]/g, ""))
+            }
+            onKeyDown={(e) => {
+              if (e.key === "Enter") submit();
+            }}
+            placeholder="نام کاربری خودت رو وارد کن"
+            dir="ltr"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+            className="w-full rounded-xl border border-zinc-700 bg-zinc-800 p-4 text-center text-white"
+          />
+
+          <button
+            onClick={submit}
+            disabled={!canSubmit}
+            className="w-full rounded-2xl bg-emerald-500 py-4 text-xl font-bold text-black disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            ادامه
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function ProgramCycleSetup() {
@@ -164,7 +270,7 @@ function ProgramCycleSetup() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 px-6 py-10">
+    <div className="pt-safe min-h-screen bg-zinc-950 px-6 py-10">
       <div className="mx-auto flex max-w-xl flex-col space-y-8">
         <div className="text-center">
           <h1 className="text-3xl font-bold text-white">
@@ -305,12 +411,27 @@ function ProgramCycleSetup() {
      از چه تاریخی این چرخه آغاز شود؟
     </label>
 
-    <input
-      type="date"
-      dir="ltr"
-      value={startDate}
-      onChange={(e) => setStartDate(e.target.value)}
-      className="w-full rounded-xl border border-zinc-700 bg-zinc-800 p-4 text-center text-white [&::-webkit-date-and-time-value]:text-center"
+    <DatePicker
+      value={
+        new DateObject({
+          date: isoToLocalDate(startDate),
+          calendar: persianCalendar,
+          locale: persian_fa,
+        })
+      }
+      onChange={(date) => {
+        if (date instanceof DateObject) {
+          setStartDate(dateToISO(date.toDate()));
+        }
+      }}
+      calendar={persianCalendar}
+      locale={persian_fa}
+      calendarPosition="top-center"
+      editable={false}
+      format="D MMMM YYYY"
+      className="bg-dark green"
+      containerClassName="w-full"
+      inputClass="w-full rounded-xl border border-zinc-700 bg-zinc-800 p-4 text-center text-white"
     />
   </div>
 )}

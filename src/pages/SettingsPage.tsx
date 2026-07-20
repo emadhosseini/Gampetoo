@@ -1,8 +1,25 @@
 import { useNavigate } from "react-router-dom";
 import { resetApplication } from "../domain/reset/resetApplication.ts";
+import { logoutCurrentUser } from "@/utils/userEngine";
 
 export default function SettingsPage() {
   const navigate = useNavigate();
+
+  function handleSwitchUser() {
+    const confirmed = window.confirm(
+      "از این حساب خارج می‌شوی و می‌تونی نام کاربری دیگه‌ای وارد کنی. اطلاعات این حساب پاک نمی‌شه و هر وقت دوباره همین نام کاربری رو وارد کنی برمی‌گرده.\n\nادامه می‌دی؟"
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    logoutCurrentUser();
+
+    navigate("/setup", {
+      replace: true,
+    });
+  }
 
   function handleReset() {
     const confirmed = window.confirm(
@@ -70,6 +87,20 @@ export default function SettingsPage() {
 
             <p className="text-sm text-zinc-500">
               انتخاب وعده‌ها و غذاهای برنامه تمرین و استراحت
+            </p>
+          </div>
+        </button>
+        <button
+          onClick={handleSwitchUser}
+          className="w-full rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm transition hover:border-blue-500 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900"
+        >
+          <div className="text-center">
+            <h2 className="text-lg font-semibold">
+              تغییر کاربر
+            </h2>
+
+            <p className="text-sm text-zinc-500">
+              خروج از این حساب و ورود با نام کاربری دیگر
             </p>
           </div>
         </button>

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Share, SquarePlus, X } from "lucide-react";
+import { Share, SquarePlus } from "lucide-react";
 
 const DISMISS_KEY = "gampetoo-install-hint-dismissed";
 
@@ -36,32 +36,33 @@ export default function InstallHint() {
   }
 
   return (
-    <div className="relative mx-auto w-full max-w-xl rounded-2xl border border-zinc-800 bg-zinc-900 p-4 text-center">
-      <button
-        onClick={dismiss}
-        aria-label="بستن"
-        className="absolute left-3 top-3 text-zinc-500 hover:text-zinc-300"
-      >
-        <X size={18} />
-      </button>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-6 backdrop-blur-sm">
+      <div className="w-full max-w-sm rounded-2xl border border-zinc-800 bg-zinc-900 p-6 text-center shadow-2xl">
+        <p className="text-base font-bold text-white">
+          برای دسترسی راحت‌تر به برنامه
+        </p>
 
-      <p className="text-sm font-medium text-white">
-        برای دسترسی راحت‌تر به برنامه
-      </p>
+        <p className="mt-3 text-sm leading-8 text-zinc-400">
+          روی دکمه
+          <span className="mx-1 inline-flex items-center gap-1 align-middle font-medium text-white">
+            <Share size={16} />
+            Share
+          </span>
+          کلیک کرده و
+          <span className="mx-1 inline-flex items-center gap-1 align-middle font-medium text-white">
+            <SquarePlus size={16} />
+            Add to Home Screen
+          </span>
+          را بزنید
+        </p>
 
-      <p className="mt-2 text-sm leading-7 text-zinc-400">
-        روی دکمه
-        <span className="mx-1 inline-flex items-center gap-1 align-middle font-medium text-white">
-          <Share size={16} />
-          Share
-        </span>
-        کلیک کرده و
-        <span className="mx-1 inline-flex items-center gap-1 align-middle font-medium text-white">
-          <SquarePlus size={16} />
-          Add to Home Screen
-        </span>
-        را بزنید
-      </p>
+        <button
+          onClick={dismiss}
+          className="mt-6 w-full rounded-2xl bg-emerald-500 py-3 text-lg font-bold text-black"
+        >
+          متوجه شدم
+        </button>
+      </div>
     </div>
   );
 }

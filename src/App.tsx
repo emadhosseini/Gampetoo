@@ -20,7 +20,7 @@ import NutritionPlanLibraryPage from "@/pages/NutritionPlanLibraryPage";
 import NutritionPlanDetailPage from "@/pages/NutritionPlanDetailPage";
 
 import { hasStartDate } from "@/utils/programEngine";
-import { hasCurrentUser } from "@/utils/userEngine";
+import { hasCurrentUsername } from "@/utils/userEngine";
 
 export default function App() {
   return (
@@ -33,7 +33,7 @@ export default function App() {
 function AppRoutes() {
   useLocation();
 
-  const initialized = hasCurrentUser() && hasStartDate();
+  const initialized = hasCurrentUsername() && hasStartDate();
 
   if (!initialized) {
     return (
