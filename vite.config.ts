@@ -18,6 +18,17 @@ const currentVersionEntry = versionData.history.find(
   (entry: { version: string }) => entry.version === versionData.current
 );
 
+// Definitive proof of what the build process actually saw — check the
+// Cloudflare Pages build log for this exact line after a deploy.
+console.log(
+  "[build-check] VITE_SUPABASE_URL =",
+  JSON.stringify(process.env.VITE_SUPABASE_URL),
+  "| VITE_SUPABASE_ANON_KEY =",
+  process.env.VITE_SUPABASE_ANON_KEY
+    ? `${process.env.VITE_SUPABASE_ANON_KEY.slice(0, 12)}…(set)`
+    : "undefined"
+);
+
 export default defineConfig({
   define: {
     __APP_VERSION__: JSON.stringify(versionData.current),
