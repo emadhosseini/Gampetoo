@@ -1,15 +1,35 @@
+import { readFileSync } from "node:fs";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import { VitePWA } from "vite-plugin-pwa";
 import { fileURLToPath, URL } from "node:url";
 
+// Bake the version (and its release highlights) that's current at build time
+// into the bundle, so a running app instance always knows its own version and
+// changelog even after a newer one is deployed.
+const versionData = JSON.parse(
+  readFileSync(
+    fileURLToPath(new URL("./public/version.json", import.meta.url)),
+    "utf-8"
+  )
+);
+const currentVersionEntry = versionData.history.find(
+  (entry: { version: string }) => entry.version === versionData.current
+);
+
 export default defineConfig({
+  define: {
+    __APP_VERSION__: JSON.stringify(versionData.current),
+    __APP_CHANGELOG__: JSON.stringify(currentVersionEntry?.highlights ?? []),
+  },
+
   plugins: [
     react(),
     tailwindcss(),
     VitePWA({
-      registerType: "autoUpdate",
+      registerType: "prompt",
+      injectRegister: false,
       includeAssets: [
         "favicon.ico",
         "apple-touch-icon-180x180.png",
@@ -52,6 +72,11 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff,woff2}"],
+        // Wait for the user to accept the update (prompt), but once the new
+        // worker activates, claim the page so it reliably reloads into the new
+        // version instead of leaving the update banner lingering.
+        skipWaiting: false,
+        clientsClaim: true,
       },
     }),
   ],

@@ -1,0 +1,19 @@
+{
+  "current": "1.1.0",
+  "history": [
+    {
+      "version": "1.1.0",
+      "date": "2026-07-20",
+      "description": "UI polish (safe-area insets for the installed app, first-run install hint popup, combined setup form, Jalali date picker) and multi-user accounts: username-based login with automatic migration for existing name-scoped users, account switching in Settings, and a production PWA update system with an in-app changelog.",
+      "highlights": [
+        "✨ رفع ایرادهای ظاهری و بهبود تجربه کاربری",
+        "👤 اضافه شدن قابلیت انتخاب و نمایش نام کاربری (Username)"
+      ]
+    },
+    {
+      "version": "1.0.0",
+      "date": "2026-07-20",
+      "description": "First public release, rebranded as Gampetoo. Workout library (Push/Pull/Legs/Upper/Lower/Full Body) with per-exercise selection, general and per-workout specialized warm-up blocks, full nutrition plan editor (workout/rest day meal plans, food catalog, free-meal weekly lock), PWA support (installable, offline-capable, app icons), and hardened local-storage persistence."
+    }
+  ]
+}
