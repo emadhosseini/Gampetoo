@@ -12,7 +12,7 @@ export default function MealCard({ meal }: MealCardProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5">
+    <div className="glass-panel rounded-2xl p-5">
       <button
         onClick={() => setIsOpen((prev) => !prev)}
         className="grid w-full grid-cols-[24px_1fr_24px] items-center"
@@ -59,7 +59,7 @@ export default function MealCard({ meal }: MealCardProps) {
           )}
 
           {meal.notes && meal.notes.length > 0 && (
-            <div className="rounded-xl bg-zinc-800/60 p-3">
+            <div className="glass-chip rounded-xl p-3">
               <div className="mb-2 text-xs font-semibold text-zinc-400">
                 نکات
               </div>

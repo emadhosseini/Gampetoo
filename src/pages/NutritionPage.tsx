@@ -35,7 +35,7 @@ export default function NutritionPage() {
       <div className="mx-auto max-w-3xl space-y-6 px-4 py-6">
         <WorkoutHeader subtitle="🍽 تغذیه امروز" title={title} />
 
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6 text-center">
+        <div className="glass-panel rounded-2xl p-6 text-center">
           <p className="text-zinc-300">
             شما برنامه غذایی انتخاب نکردین
           </p>

@@ -18,7 +18,7 @@ export default function WhatsNewModal({
 
   return (
     <div className="pt-safe fixed inset-0 z-[70] flex items-center justify-center bg-black/70 px-6 backdrop-blur-sm">
-      <div className="w-full max-w-sm rounded-2xl border border-zinc-800 bg-zinc-900 p-6 text-center shadow-2xl">
+      <div className="w-full max-w-sm rounded-2xl border border-navy-600 bg-navy-700 p-6 text-center shadow-2xl">
         <h2 className="text-lg font-bold text-white">
           🎉 تغییرات این نسخه
         </h2>
@@ -31,7 +31,7 @@ export default function WhatsNewModal({
           {highlights.map((item) => (
             <li
               key={item}
-              className="rounded-xl bg-zinc-800/60 px-4 py-3 text-right text-sm text-zinc-200"
+              className="rounded-xl bg-navy-600/60 px-4 py-3 text-right text-sm text-zinc-200"
             >
               {item}
             </li>

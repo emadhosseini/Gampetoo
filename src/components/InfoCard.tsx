@@ -12,7 +12,7 @@ function InfoCard({
   value,
 }: InfoCardProps) {
   return (
-    <div className="rounded-3xl bg-zinc-900 p-6 text-center">
+    <div className="glass-panel rounded-3xl p-6 text-center">
       <div className="mb-4 flex justify-center text-3xl">
         {icon}
       </div>

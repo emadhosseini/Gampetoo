@@ -49,8 +49,10 @@ export default class ErrorBoundary extends Component<Props, State> {
     }
 
     return (
-      <div className="pt-safe flex min-h-screen flex-col items-center justify-center bg-zinc-950 px-6">
-        <div className="w-full max-w-sm rounded-2xl border border-zinc-800 bg-zinc-900 p-6 text-center">
+      <div className="app-gradient-bg pt-safe relative flex min-h-screen flex-col items-center justify-center px-6">
+        <div className="light-sweep" aria-hidden="true" />
+
+        <div className="relative z-10 w-full max-w-sm rounded-2xl border border-navy-600 bg-navy-700 p-6 text-center">
           <h1 className="text-lg font-bold text-white">
             مشکلی پیش اومد
           </h1>

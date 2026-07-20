@@ -22,7 +22,7 @@ export default function WarmupBlock({
   }
 
   return (
-    <div className="rounded-3xl bg-zinc-900 p-4">
+    <div className="glass-panel rounded-3xl p-4">
       <button
         onClick={() => setIsOpen((prev) => !prev)}
         className="flex w-full items-center justify-between"
@@ -43,7 +43,7 @@ export default function WarmupBlock({
           {exercises.map((exercise) => (
             <li
               key={exercise.id}
-              className="rounded-xl bg-zinc-800/60 px-4 py-3 text-sm text-zinc-100"
+              className="glass-chip rounded-xl px-4 py-3 text-sm text-zinc-100"
             >
               {exercise.name}
             </li>

@@ -103,11 +103,11 @@ export default function WeightTrackerPage() {
           min: initialWindow.min,
           max: initialWindow.max,
           ticks: { color: "#a1a1aa" },
-          grid: { color: "#27272a" },
+          grid: { color: "#1e2542" },
         },
         y: {
           ticks: { color: "#a1a1aa" },
-          grid: { color: "#27272a" },
+          grid: { color: "#1e2542" },
         },
       },
       plugins: {
@@ -139,7 +139,7 @@ export default function WeightTrackerPage() {
         ثبت وزن
       </h1>
 
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-4 text-center">
+      <div className="glass-panel rounded-2xl p-4 text-center">
         <label className="mb-3 block text-sm text-zinc-400">
           {alreadyLoggedToday ? "وزن امروزت رو ویرایش کن" : "وزن امروزت رو وارد کن"}
         </label>
@@ -157,7 +157,7 @@ export default function WeightTrackerPage() {
             }}
             placeholder="۰٫۰۰"
             dir="ltr"
-            className="w-32 rounded-xl border border-zinc-700 bg-zinc-800 p-4 text-center text-lg text-white"
+            className="glass-chip w-32 rounded-xl p-4 text-center text-lg text-white"
           />
 
           <span className="text-zinc-400">کیلوگرم</span>
@@ -171,7 +171,7 @@ export default function WeightTrackerPage() {
         </button>
       </div>
 
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-4">
+      <div className="glass-panel rounded-2xl p-4">
         <p className="mb-3 text-center text-sm text-zinc-400">
           نمودار وزن
         </p>

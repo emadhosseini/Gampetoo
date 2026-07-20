@@ -54,7 +54,7 @@ export default function SettingsPage() {
 
         <button
           onClick={() => navigate("/settings/workouts")}
-          className="w-full rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm transition hover:border-blue-500 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900"
+          className="glass-panel w-full rounded-2xl p-5"
         >
           <div className="text-center">
             <h2 className="text-lg font-semibold">
@@ -69,7 +69,7 @@ export default function SettingsPage() {
 
         <button
           onClick={() => navigate("/settings/program")}
-          className="w-full rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm transition hover:border-blue-500 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900"
+          className="glass-panel w-full rounded-2xl p-5"
         >
           <div className="text-center">
             <h2 className="text-lg font-semibold">
@@ -84,7 +84,7 @@ export default function SettingsPage() {
 
         <button
           onClick={() => navigate("/settings/nutrition")}
-          className="w-full rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm transition hover:border-blue-500 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900"
+          className="glass-panel w-full rounded-2xl p-5"
         >
           <div className="text-center">
             <h2 className="text-lg font-semibold">
@@ -99,7 +99,7 @@ export default function SettingsPage() {
 
         <button
           onClick={() => navigate("/settings/weight")}
-          className="w-full rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm transition hover:border-blue-500 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900"
+          className="glass-panel w-full rounded-2xl p-5"
         >
           <div className="text-center">
             <h2 className="text-lg font-semibold">
@@ -114,7 +114,7 @@ export default function SettingsPage() {
         {SHOW_SWITCH_USER_BUTTON && (
           <button
             onClick={handleSwitchUser}
-            className="w-full rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm transition hover:border-blue-500 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900"
+            className="glass-panel w-full rounded-2xl p-5"
           >
             <div className="text-center">
               <h2 className="text-lg font-semibold">
@@ -131,7 +131,7 @@ export default function SettingsPage() {
 
       <button
         onClick={() => void handleReset()}
-        className="mx-auto mt-auto w-fit rounded-xl border border-red-300 bg-red-50 p-3 text-center text-red-600 shadow-sm transition hover:bg-red-100 dark:border-red-900 dark:bg-red-950/30 dark:text-red-400"
+        className="glass-tap mx-auto mt-auto w-fit rounded-xl border border-red-900 bg-red-950/30 backdrop-blur-xl p-3 text-center text-red-400 transition hover:bg-red-950/50"
       >
         <h2 className="whitespace-nowrap text-sm font-semibold">
           شروع دوباره

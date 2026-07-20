@@ -8,7 +8,7 @@ const variantClasses: Record<
   NonNullable<CompleteWorkoutButtonProps["variant"]>,
   string
 > = {
-  primary: "bg-black text-white",
+  primary: "bg-navy-900 text-white",
   accent: "bg-orange-500 text-black",
 };
 

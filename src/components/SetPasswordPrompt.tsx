@@ -88,7 +88,7 @@ export default function SetPasswordPrompt() {
   if (success) {
     return (
       <div className="pt-safe fixed inset-0 z-[65] flex items-center justify-center bg-black/70 px-6 backdrop-blur-sm">
-        <div className="w-full max-w-sm rounded-2xl border border-zinc-800 bg-zinc-900 p-6 text-center shadow-2xl">
+        <div className="w-full max-w-sm rounded-2xl border border-navy-600 bg-navy-700 p-6 text-center shadow-2xl">
           <p className="text-lg font-bold text-white">
             رمز عبورت با موفقیت تنظیم شد ✅
           </p>
@@ -111,7 +111,7 @@ export default function SetPasswordPrompt() {
 
   return (
     <div className="pt-safe fixed inset-0 z-[65] flex items-center justify-center bg-black/70 px-6 backdrop-blur-sm">
-      <div className="w-full max-w-sm rounded-2xl border border-zinc-800 bg-zinc-900 p-6 text-center shadow-2xl">
+      <div className="w-full max-w-sm rounded-2xl border border-navy-600 bg-navy-700 p-6 text-center shadow-2xl">
         <p className="text-lg font-bold text-white">
           رمز عبور تنظیم کن
         </p>
@@ -132,7 +132,7 @@ export default function SetPasswordPrompt() {
             }}
             placeholder={`رمز عبور (حداقل ${MIN_PIN_LENGTH} کاراکتر)`}
             dir="ltr"
-            className="w-full rounded-xl border border-zinc-700 bg-zinc-800 p-4 text-center text-white"
+            className="w-full rounded-xl border border-navy-500 bg-navy-600 p-4 text-center text-white"
           />
 
           <input
@@ -144,7 +144,7 @@ export default function SetPasswordPrompt() {
             }}
             placeholder="تکرار رمز عبور"
             dir="ltr"
-            className="w-full rounded-xl border border-zinc-700 bg-zinc-800 p-4 text-center text-white"
+            className="w-full rounded-xl border border-navy-500 bg-navy-600 p-4 text-center text-white"
           />
         </div>
 
@@ -158,7 +158,7 @@ export default function SetPasswordPrompt() {
           <button
             onClick={() => setDismissed(true)}
             disabled={busy}
-            className="flex-1 rounded-2xl bg-zinc-800 py-3 font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
+            className="flex-1 rounded-2xl bg-navy-600 py-3 font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
           >
             بعداً
           </button>

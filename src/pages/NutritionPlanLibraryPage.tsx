@@ -13,7 +13,7 @@ export default function NutritionPlanLibraryPage() {
       <div className="space-y-3">
         <button
           onClick={() => navigate("/settings/nutrition/workout")}
-          className="flex w-full items-center justify-between rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm transition hover:border-blue-500 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900"
+          className="glass-panel flex w-full items-center justify-between rounded-2xl p-4"
         >
           <h2 className="text-lg font-semibold">
             برنامه غذایی روزهای تمرین
@@ -24,7 +24,7 @@ export default function NutritionPlanLibraryPage() {
 
         <button
           onClick={() => navigate("/settings/nutrition/rest")}
-          className="flex w-full items-center justify-between rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm transition hover:border-blue-500 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900"
+          className="glass-panel flex w-full items-center justify-between rounded-2xl p-4"
         >
           <h2 className="text-lg font-semibold">
             برنامه غذایی روزهای استراحت

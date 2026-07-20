@@ -13,7 +13,6 @@ import "react-multi-date-picker/styles/backgrounds/bg-dark.css";
 import "react-multi-date-picker/styles/colors/green.css";
 
 import InstallHint from "@/components/InstallHint";
-import AnimatedBackground from "@/components/background/AnimatedBackground";
 
 // startDate is stored as a Gregorian ISO date (YYYY-MM-DD). These convert to and
 // from a local JS Date without the UTC-parsing off-by-one that new Date("...") has.
@@ -188,13 +187,15 @@ function AccountStep({
   }
 
   return (
-    <AnimatedBackground className="pt-safe flex flex-col items-center justify-center px-6 py-10">
-      <div className="mx-auto flex w-full max-w-xl flex-col space-y-8">
+    <div className="app-gradient-bg pt-safe relative flex min-h-screen flex-col items-center justify-center px-6 py-10">
+      <div className="light-sweep" aria-hidden="true" />
+
+      <div className="relative z-10 mx-auto flex w-full max-w-xl flex-col space-y-8">
         <InstallHint />
 
         <SetupBrand />
 
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6 space-y-4 text-center">
+        <div className="glass-panel rounded-2xl p-6 space-y-4 text-center">
           <input
             type="text"
             value={name}
@@ -203,7 +204,7 @@ function AccountStep({
               if (e.key === "Enter") void submit();
             }}
             placeholder="اسم خودت رو وارد کن"
-            className="w-full rounded-xl border border-zinc-700 bg-zinc-800 p-4 text-center text-white"
+            className="glass-chip w-full rounded-xl p-4 text-center text-white"
           />
 
           <input
@@ -221,7 +222,7 @@ function AccountStep({
             autoCapitalize="none"
             autoCorrect="off"
             spellCheck={false}
-            className="w-full rounded-xl border border-zinc-700 bg-zinc-800 p-4 text-center text-white"
+            className="glass-chip w-full rounded-xl p-4 text-center text-white"
           />
 
           {syncEnabled && (
@@ -235,20 +236,20 @@ function AccountStep({
               }}
               placeholder={`رمز خودت رو وارد کن (حداقل ${MIN_PIN_LENGTH} کاراکتر)`}
               dir="ltr"
-              className="w-full rounded-xl border border-zinc-700 bg-zinc-800 p-4 text-center text-white"
+              className="glass-chip w-full rounded-xl p-4 text-center text-white"
             />
           )}
 
           <button
             onClick={() => void submit()}
             disabled={!canSubmit}
-            className="w-full rounded-2xl bg-emerald-500 py-4 text-xl font-bold text-black disabled:cursor-not-allowed disabled:opacity-40"
+            className="glass-tap w-full rounded-2xl bg-emerald-500 py-4 text-xl font-bold text-black disabled:cursor-not-allowed disabled:opacity-40"
           >
             {busy ? "..." : "ادامه"}
           </button>
         </div>
       </div>
-    </AnimatedBackground>
+    </div>
   );
 }
 
@@ -333,8 +334,10 @@ function ProgramCycleSetup() {
   }
 
   return (
-    <AnimatedBackground className="pt-safe px-6 py-10">
-      <div className="mx-auto flex max-w-xl flex-col space-y-8">
+    <div className="app-gradient-bg pt-safe relative min-h-screen px-6 py-10">
+      <div className="light-sweep" aria-hidden="true" />
+
+      <div className="relative z-10 mx-auto flex max-w-xl flex-col space-y-8">
         <div className="text-center">
           <h1 className="text-3xl font-bold text-white">
             Gampetoo
@@ -345,7 +348,7 @@ function ProgramCycleSetup() {
           </p>
         </div>
 
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6 space-y-5 text-center">
+        <div className="glass-panel rounded-2xl p-6 space-y-5 text-center">
           <h2 className="text-xl font-bold text-white">
             روز {persianDays[days.length] ?? `${days.length + 1}`}
           </h2>
@@ -353,10 +356,10 @@ function ProgramCycleSetup() {
           <div className="grid grid-cols-2 gap-3">
             <button
               onClick={() => setActivity("workout")}
-              className={`rounded-xl py-4 font-bold transition-colors ${
+              className={`glass-tap rounded-xl py-4 font-bold transition-colors ${
                 activity === "workout"
                   ? "bg-emerald-500 text-black"
-                  : "bg-zinc-800 text-white"
+                  : "bg-navy-600 text-white"
               }`}
             >
               تمرین
@@ -364,10 +367,10 @@ function ProgramCycleSetup() {
 
             <button
               onClick={() => setActivity("walk")}
-              className={`rounded-xl py-4 font-bold transition-colors ${
+              className={`glass-tap rounded-xl py-4 font-bold transition-colors ${
                 activity === "walk"
                   ? "bg-emerald-500 text-black"
-                  : "bg-zinc-800 text-white"
+                  : "bg-navy-600 text-white"
               }`}
             >
               استراحت
@@ -384,10 +387,10 @@ function ProgramCycleSetup() {
                   <button
                     key={item.id}
                     onClick={() => setSelectedWorkout(item.id)}
-                    className={`rounded-xl py-3 font-bold transition-colors ${
+                    className={`glass-tap rounded-xl py-3 font-bold transition-colors ${
                       selectedWorkout === item.id
                         ? "bg-emerald-500 text-black"
-                        : "bg-zinc-800 text-white"
+                        : "bg-navy-600 text-white"
                     }`}
                   >
                     {item.title}
@@ -426,14 +429,14 @@ function ProgramCycleSetup() {
               setActivity(null);
               setSelectedWorkout(null);
             }}
-            className="w-full rounded-xl bg-amber-500 py-4 font-bold text-black"
+            className="glass-tap w-full rounded-xl bg-amber-500 py-4 font-bold text-black"
           >
           روز بعدی!
           </button>
         </div>
 
         {days.length > 0 && (
-  <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6 text-center">
+  <div className="glass-panel rounded-2xl p-6 text-center">
     <h2 className="mb-4 text-xl font-bold text-white">
       {/* میخوام تعداد روز انتخاب شدهرو اینجا بنویسه */}
       چرخه برنامه
@@ -443,7 +446,7 @@ function ProgramCycleSetup() {
       {days.map((day, index) => (
         <div
           key={day.id}
-          className="flex items-center justify-between rounded-xl bg-zinc-800 p-4"
+          className="glass-chip flex items-center justify-between rounded-xl p-4"
         >
           <div className="flex-1 text-right">
             <p className="font-bold text-white">
@@ -469,7 +472,7 @@ function ProgramCycleSetup() {
   </div>
 )}
   {days.length > 0 && (
-  <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6">
+  <div className="glass-panel rounded-2xl p-6">
     <label className="mb-3 block text-center text-sm font-medium text-zinc-400">
      از چه تاریخی این چرخه آغاز شود؟
     </label>
@@ -494,18 +497,18 @@ function ProgramCycleSetup() {
       format="D MMMM YYYY"
       className="bg-dark green"
       containerClassName="w-full"
-      inputClass="w-full rounded-xl border border-zinc-700 bg-zinc-800 p-4 text-center text-white"
+      inputClass="glass-chip w-full rounded-xl p-4 text-center text-white"
     />
   </div>
 )}
         <button
   onClick={() => void handleFinish()}
   disabled={days.length === 0 || !startDate}
-  className="w-full rounded-2xl bg-emerald-500 py-4 text-xl font-bold text-black disabled:cursor-not-allowed disabled:opacity-40"
+  className="glass-tap w-full rounded-2xl bg-emerald-500 py-4 text-xl font-bold text-black disabled:cursor-not-allowed disabled:opacity-40"
 >
   شروع برنامه
 </button>
       </div>
-    </AnimatedBackground>
+    </div>
   );
 }

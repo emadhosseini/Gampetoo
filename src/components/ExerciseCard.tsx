@@ -8,7 +8,7 @@ export default function ExerciseCard({
   exercise,
 }: ExerciseCardProps) {
   return (
-    <div className="rounded-3xl bg-zinc-900 p-4">
+    <div className="glass-panel rounded-3xl p-4">
       <h2 className="text-lg font-bold text-white">
         {exercise.name}
       </h2>
