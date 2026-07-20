@@ -23,6 +23,9 @@ import NutritionPlanDetailPage from "@/pages/NutritionPlanDetailPage";
 
 import { hasStartDate } from "@/utils/programEngine";
 import { hasCurrentUsername } from "@/utils/userEngine";
+import { initSync } from "@/sync/remoteSync";
+
+initSync();
 
 export default function App() {
   return (

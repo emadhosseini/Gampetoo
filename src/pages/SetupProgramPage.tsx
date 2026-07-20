@@ -66,6 +66,9 @@ import {
   setCurrentUserName,
 } from "@/utils/userEngine";
 import { generateId } from "@/utils/id";
+import { isSyncConfigured } from "@/lib/supabaseClient";
+import { MIN_PIN_LENGTH, signInOrSignUp } from "@/auth/authEngine";
+import { syncAfterLogin } from "@/sync/remoteSync";
 
 // Username must be English only (letters, digits, and . _ - separators).
 const USERNAME_PATTERN = /^[A-Za-z0-9._-]+$/;
@@ -103,16 +106,41 @@ function AccountStep({
 }: {
   onNewAccount: () => void;
 }) {
+  const syncEnabled = isSyncConfigured();
+
   const [name, setName] = useState(
     () => getCurrentUserName() ?? ""
   );
 
   const [username, setUsername] = useState("");
+  const [pin, setPin] = useState("");
+  const [busy, setBusy] = useState(false);
 
   const canSubmit =
-    name.trim().length > 0 && username.trim().length > 0;
+    !busy &&
+    name.trim().length > 0 &&
+    username.trim().length > 0 &&
+    (!syncEnabled || pin.length >= MIN_PIN_LENGTH);
 
-  function submit() {
+  function applyLocalAccount(trimmedName: string, trimmedUsername: string) {
+    // Existing users from the old name-scoped scheme carry their data over to
+    // the username they pick here. This must happen BEFORE syncAfterLogin
+    // below — otherwise a brand-new remote account would bootstrap-push an
+    // empty snapshot (nothing exists yet under the new username-scoped keys)
+    // moments before the migrated data lands, and the page navigates away
+    // before that data ever gets uploaded.
+    const wasLegacy = hasLegacyData();
+
+    setCurrentUsername(trimmedUsername);
+
+    if (wasLegacy) {
+      migrateLegacyDataTo(trimmedUsername);
+    }
+
+    setCurrentUserName(trimmedName);
+  }
+
+  async function submit() {
     const trimmedName = name.trim();
     const trimmedUsername = username.trim();
 
@@ -125,20 +153,30 @@ function AccountStep({
       return;
     }
 
-    // Existing users from the old name-scoped scheme carry their data over to
-    // the username they pick here.
-    const wasLegacy = hasLegacyData();
+    if (syncEnabled) {
+      setBusy(true);
 
-    setCurrentUsername(trimmedUsername);
+      const result = await signInOrSignUp(trimmedUsername, pin);
 
-    if (wasLegacy) {
-      migrateLegacyDataTo(trimmedUsername);
+      if (!result.ok) {
+        setBusy(false);
+        window.alert(result.error ?? "ورود ناموفق بود.");
+        return;
+      }
     }
 
-    setCurrentUserName(trimmedName);
+    applyLocalAccount(trimmedName, trimmedUsername);
 
-    // A username that already has a configured program (existing or migrated
-    // account) goes straight into the app — no re-setup.
+    if (syncEnabled) {
+      // On a brand-new remote account this uploads the (now-migrated) local
+      // data as the initial snapshot; on a returning account logging in from
+      // a fresh device, this pulls its existing data down instead.
+      await syncAfterLogin(trimmedUsername);
+      setBusy(false);
+    }
+
+    // A username that already has a configured program (existing, migrated,
+    // or just pulled down from the server) goes straight into the app.
     if (hasStartDate()) {
       window.location.replace("/");
       return;
@@ -160,7 +198,7 @@ function AccountStep({
             value={name}
             onChange={(e) => setName(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter") submit();
+              if (e.key === "Enter") void submit();
             }}
             placeholder="اسم خودت رو وارد کن"
             className="w-full rounded-xl border border-zinc-700 bg-zinc-800 p-4 text-center text-white"
@@ -174,7 +212,7 @@ function AccountStep({
               setUsername(e.target.value.replace(/[^A-Za-z0-9._-]/g, ""))
             }
             onKeyDown={(e) => {
-              if (e.key === "Enter") submit();
+              if (e.key === "Enter") void submit();
             }}
             placeholder="نام کاربری خودت رو وارد کن"
             dir="ltr"
@@ -184,12 +222,27 @@ function AccountStep({
             className="w-full rounded-xl border border-zinc-700 bg-zinc-800 p-4 text-center text-white"
           />
 
+          {syncEnabled && (
+            <input
+              type="password"
+              inputMode="numeric"
+              value={pin}
+              onChange={(e) => setPin(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") void submit();
+              }}
+              placeholder={`رمز خودت رو وارد کن (حداقل ${MIN_PIN_LENGTH} کاراکتر)`}
+              dir="ltr"
+              className="w-full rounded-xl border border-zinc-700 bg-zinc-800 p-4 text-center text-white"
+            />
+          )}
+
           <button
-            onClick={submit}
+            onClick={() => void submit()}
             disabled={!canSubmit}
             className="w-full rounded-2xl bg-emerald-500 py-4 text-xl font-bold text-black disabled:cursor-not-allowed disabled:opacity-40"
           >
-            ادامه
+            {busy ? "..." : "ادامه"}
           </button>
         </div>
       </div>

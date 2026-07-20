@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { resetApplication } from "../domain/reset/resetApplication.ts";
 import { logoutCurrentUser } from "@/utils/userEngine";
+import { signOutRemote } from "@/auth/authEngine";
 
 // Hidden for now (not ready to expose to users yet) — keep the handler/markup
 // in place so it can be turned back on with a one-line flip.
@@ -18,6 +19,7 @@ export default function SettingsPage() {
       return;
     }
 
+    void signOutRemote();
     logoutCurrentUser();
 
     navigate("/setup", {
