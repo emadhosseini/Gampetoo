@@ -7,6 +7,8 @@ import {
 } from "react-router-dom";
 
 import Layout from "@/components/Layout";
+import PwaUpdater from "@/components/PwaUpdater";
+import WhatsNewNotifier from "@/components/WhatsNewNotifier";
 
 import HomePage from "@/pages/HomePage";
 import WorkoutPage from "@/pages/WorkoutPage";
@@ -25,6 +27,8 @@ import { hasCurrentUsername } from "@/utils/userEngine";
 export default function App() {
   return (
     <BrowserRouter>
+      <PwaUpdater />
+      <WhatsNewNotifier />
       <AppRoutes />
     </BrowserRouter>
   );
