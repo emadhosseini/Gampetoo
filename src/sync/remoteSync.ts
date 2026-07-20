@@ -12,6 +12,7 @@ const SYNCED_BASE_KEYS = [
   "emad-warmup-library-overrides",
   "emad-free-meal",
   "emad-user-name",
+  "emad-weight-log",
 ];
 
 const PUSH_DEBOUNCE_MS = 1000;

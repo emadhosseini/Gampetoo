@@ -96,6 +96,21 @@ export default function SettingsPage() {
             </p>
           </div>
         </button>
+
+        <button
+          onClick={() => navigate("/settings/weight")}
+          className="w-full rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm transition hover:border-blue-500 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900"
+        >
+          <div className="text-center">
+            <h2 className="text-lg font-semibold">
+              ثبت وزن و نمودار وزنی
+            </h2>
+
+            <p className="text-sm text-zinc-500">
+              ثبت وزن روزانه و مشاهده روند تغییرات
+            </p>
+          </div>
+        </button>
         {SHOW_SWITCH_USER_BUTTON && (
           <button
             onClick={handleSwitchUser}

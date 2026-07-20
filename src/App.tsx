@@ -21,6 +21,7 @@ import WorkoutDetailPage from "@/pages/WorkoutDetailPage";
 import ProgramBuilderPage from "@/pages/ProgramBuilderPage";
 import NutritionPlanLibraryPage from "@/pages/NutritionPlanLibraryPage";
 import NutritionPlanDetailPage from "@/pages/NutritionPlanDetailPage";
+import WeightTrackerPage from "@/pages/WeightTrackerPage";
 
 import { hasStartDate } from "@/utils/programEngine";
 import { hasCurrentUsername } from "@/utils/userEngine";
@@ -106,6 +107,11 @@ function AppRoutes() {
         <Route
           path="/settings/nutrition/:type"
           element={<NutritionPlanDetailPage />}
+        />
+
+        <Route
+          path="/settings/weight"
+          element={<WeightTrackerPage />}
         />
       </Route>
 
