@@ -1,12 +1,14 @@
+import AnimatedBackground from "./background/AnimatedBackground";
+
 type MobileContainerProps = {
   children: React.ReactNode;
 };
 
 function MobileContainer({ children }: MobileContainerProps) {
   return (
-    <div className="pt-safe mx-auto min-h-screen max-w-md bg-zinc-950 shadow-2xl">
+    <AnimatedBackground className="pt-safe mx-auto max-w-md shadow-2xl">
       {children}
-    </div>
+    </AnimatedBackground>
   );
 }
 

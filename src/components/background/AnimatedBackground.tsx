@@ -16,7 +16,9 @@ export interface AnimatedBackgroundProps {
   children?: ReactNode;
 }
 
-const DEFAULT_COLORS = ["#0a0a0f", "#151022", "#05060a"];
+// Close to the app's existing zinc-950 (#09090b) so this reads as "the same
+// dark theme, alive" rather than a different palette.
+const DEFAULT_COLORS = ["#0b0b0e", "#141418", "#050505"];
 
 const SECONDARY_GLOW_DEFAULTS: LightSweepConfig = {
   color: "rgba(120, 170, 255, 0.85)",

@@ -13,6 +13,7 @@ import "react-multi-date-picker/styles/backgrounds/bg-dark.css";
 import "react-multi-date-picker/styles/colors/green.css";
 
 import InstallHint from "@/components/InstallHint";
+import AnimatedBackground from "@/components/background/AnimatedBackground";
 
 // startDate is stored as a Gregorian ISO date (YYYY-MM-DD). These convert to and
 // from a local JS Date without the UTC-parsing off-by-one that new Date("...") has.
@@ -187,7 +188,7 @@ function AccountStep({
   }
 
   return (
-    <div className="pt-safe flex min-h-screen flex-col items-center justify-center bg-zinc-950 px-6 py-10">
+    <AnimatedBackground className="pt-safe flex flex-col items-center justify-center px-6 py-10">
       <div className="mx-auto flex w-full max-w-xl flex-col space-y-8">
         <InstallHint />
 
@@ -247,7 +248,7 @@ function AccountStep({
           </button>
         </div>
       </div>
-    </div>
+    </AnimatedBackground>
   );
 }
 
@@ -332,7 +333,7 @@ function ProgramCycleSetup() {
   }
 
   return (
-    <div className="pt-safe min-h-screen bg-zinc-950 px-6 py-10">
+    <AnimatedBackground className="pt-safe px-6 py-10">
       <div className="mx-auto flex max-w-xl flex-col space-y-8">
         <div className="text-center">
           <h1 className="text-3xl font-bold text-white">
@@ -505,6 +506,6 @@ function ProgramCycleSetup() {
   شروع برنامه
 </button>
       </div>
-    </div>
+    </AnimatedBackground>
   );
 }
