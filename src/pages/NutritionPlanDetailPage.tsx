@@ -104,6 +104,9 @@ export default function NutritionPlanDetailPage() {
 
           return {
             ...meal,
+            // Selecting a food is enough on its own — no need to separately
+            // flip the meal's own checkbox too.
+            enabled: exists ? meal.enabled : true,
             foods: exists
               ? meal.foods.filter((food) => food.name !== entry.name)
               : [
