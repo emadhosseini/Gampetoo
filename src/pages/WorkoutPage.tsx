@@ -21,6 +21,21 @@ import {
   completeWorkout,
   completeWalk,
 } from "@/utils/sessionEngine";
+import { getCurrentUsername } from "@/utils/userEngine";
+import { flushPendingSync } from "@/sync/remoteSync";
+
+// A full page navigation tears down the JS context before the sync engine's
+// debounced push would otherwise fire — flush first so today's completed
+// status actually reaches the server instead of only staying local.
+async function goHomeAfterCompleting() {
+  const username = getCurrentUsername();
+
+  if (username) {
+    await flushPendingSync(username);
+  }
+
+  window.location.href = "/";
+}
 
 function WorkoutPage() {
   const navigate = useNavigate();
@@ -86,7 +101,7 @@ const workout = workoutType
             label="پیاده روی امروز رو انجام دادم 💪🏻"
             onClick={() => {
               completeWalk();
-              window.location.href = "/";
+              void goHomeAfterCompleting();
             }}
           />
         )}
@@ -183,7 +198,7 @@ const workout = workoutType
           label="تمرین امروز رو انجام دادم 💪🏻"
           onClick={() => {
             completeWorkout();
-            window.location.href = "/";
+            void goHomeAfterCompleting();
           }}
         />
       )}
