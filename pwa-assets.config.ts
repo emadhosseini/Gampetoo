@@ -17,5 +17,5 @@ export default defineConfig({
       resizeOptions: { background: THEME_BACKGROUND, fit: "contain" },
     },
   },
-  images: ["public/icon.png"],
+  images: ["public/Gampetoo.png"],
 });

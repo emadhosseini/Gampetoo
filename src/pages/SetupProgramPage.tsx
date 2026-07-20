@@ -86,9 +86,9 @@ function SetupBrand() {
   return (
     <div className="flex flex-col items-center text-center">
       <img
-        src="/icon.png"
+        src="/Gampetoo.png"
         alt="Gampetoo"
-        className="mb-4 h-20 w-20 rounded-2xl"
+        className="mb-4 h-24 w-24 object-contain"
       />
 
       <h1 className="text-3xl font-bold text-white">
