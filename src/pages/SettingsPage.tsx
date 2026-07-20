@@ -2,6 +2,10 @@ import { useNavigate } from "react-router-dom";
 import { resetApplication } from "../domain/reset/resetApplication.ts";
 import { logoutCurrentUser } from "@/utils/userEngine";
 
+// Hidden for now (not ready to expose to users yet) — keep the handler/markup
+// in place so it can be turned back on with a one-line flip.
+const SHOW_SWITCH_USER_BUTTON = false;
+
 export default function SettingsPage() {
   const navigate = useNavigate();
 
@@ -90,20 +94,22 @@ export default function SettingsPage() {
             </p>
           </div>
         </button>
-        <button
-          onClick={handleSwitchUser}
-          className="w-full rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm transition hover:border-blue-500 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900"
-        >
-          <div className="text-center">
-            <h2 className="text-lg font-semibold">
-              تغییر کاربر
-            </h2>
+        {SHOW_SWITCH_USER_BUTTON && (
+          <button
+            onClick={handleSwitchUser}
+            className="w-full rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm transition hover:border-blue-500 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900"
+          >
+            <div className="text-center">
+              <h2 className="text-lg font-semibold">
+                تغییر کاربر
+              </h2>
 
-            <p className="text-sm text-zinc-500">
-              خروج از این حساب و ورود با نام کاربری دیگر
-            </p>
-          </div>
-        </button>
+              <p className="text-sm text-zinc-500">
+                خروج از این حساب و ورود با نام کاربری دیگر
+              </p>
+            </div>
+          </button>
+        )}
       </div>
 
       <button
