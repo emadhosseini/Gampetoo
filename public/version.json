@@ -1,6 +1,15 @@
 {
-  "current": "1.1.0",
+  "current": "1.1.1",
   "history": [
+    {
+      "version": "1.1.1",
+      "date": "2026-07-20",
+      "description": "Verified and hardened the PWA update system for installed home-screen apps: added a cache-control header for version.json (Vercel's edge could otherwise serve a stale deployed-version number) and a pageshow listener alongside visibilitychange/focus so iOS Safari's back-forward-cache restores reliably trigger an update check too.",
+      "highlights": [
+        "✨ رفع ایرادهای ظاهری و بهبود تجربه کاربری",
+        "👤 اضافه شدن قابلیت انتخاب و نمایش نام کاربری (Username)"
+      ]
+    },
     {
       "version": "1.1.0",
       "date": "2026-07-20",

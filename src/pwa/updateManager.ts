@@ -92,6 +92,10 @@ function init() {
 
       document.addEventListener("visibilitychange", checkForUpdate);
       window.addEventListener("focus", checkForUpdate);
+      // iOS Safari (including installed/standalone PWAs) restores pages from
+      // the back-forward cache on reopen without reliably firing
+      // visibilitychange/focus first — pageshow catches that case too.
+      window.addEventListener("pageshow", checkForUpdate);
       setInterval(checkForUpdate, BACKGROUND_CHECK_INTERVAL_MS);
     },
   });
