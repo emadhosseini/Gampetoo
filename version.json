@@ -1,0 +1,10 @@
+{
+  "current": "1.0.0",
+  "history": [
+    {
+      "version": "1.0.0",
+      "date": "2026-07-20",
+      "description": "First public release, rebranded as Gampetoo. Workout library (Push/Pull/Legs/Upper/Lower/Full Body) with per-exercise selection, general and per-workout specialized warm-up blocks, full nutrition plan editor (workout/rest day meal plans, food catalog, free-meal weekly lock), PWA support (installable, offline-capable, app icons), and hardened local-storage persistence."
+    }
+  ]
+}
