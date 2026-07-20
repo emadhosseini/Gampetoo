@@ -102,22 +102,25 @@ export default function NutritionPlanDetailPage() {
             (food) => food.name === entry.name,
           );
 
+          const foods = exists
+            ? meal.foods.filter((food) => food.name !== entry.name)
+            : [
+                ...meal.foods,
+                {
+                  id: entry.name,
+                  name: entry.name,
+                  amount: entry.defaultAmount,
+                  calories: entry.calories,
+                },
+              ];
+
           return {
             ...meal,
-            // Selecting a food is enough on its own — no need to separately
-            // flip the meal's own checkbox too.
-            enabled: exists ? meal.enabled : true,
-            foods: exists
-              ? meal.foods.filter((food) => food.name !== entry.name)
-              : [
-                  ...meal.foods,
-                  {
-                    id: entry.name,
-                    name: entry.name,
-                    amount: entry.defaultAmount,
-                    calories: entry.calories,
-                  },
-                ],
+            // Selecting a food is enough to include the meal, and emptying it
+            // back out drops it again — no separate checkbox step needed
+            // either way. Still manually overridable via the meal checkbox.
+            enabled: foods.length > 0,
+            foods,
           };
         }),
       };
