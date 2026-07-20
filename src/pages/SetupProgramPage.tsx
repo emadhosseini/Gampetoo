@@ -1,5 +1,7 @@
 import { useState } from "react";
 
+import InstallHint from "@/components/InstallHint";
+
 
 const persianDays = [
   "اول",
@@ -45,6 +47,8 @@ export default function SetupProgramPage() {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-zinc-950 px-6 py-10">
         <div className="mx-auto flex w-full max-w-xl flex-col space-y-8">
+          <InstallHint />
+
           <div className="text-center">
             <h1 className="text-3xl font-bold text-white">
               Gampetoo
