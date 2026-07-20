@@ -1,6 +1,15 @@
 {
-  "current": "1.1.1",
+  "current": "1.2.0",
   "history": [
+    {
+      "version": "1.2.0",
+      "date": "2026-07-20",
+      "description": "Cross-device account sync via Supabase: username + PIN login now backs up program, session, workout/warmup overrides, and free-meal state to the server, so the same account picks up right where it left off on any device. Existing local-only accounts upload automatically on first login with a PIN. Offline use keeps working — changes queue locally and sync once back online.",
+      "highlights": [
+        "☁️ همگام‌سازی اطلاعات با سرور از طریق نام کاربری و رمز",
+        "📱 دسترسی به برنامه از هر دستگاهی با یک حساب"
+      ]
+    },
     {
       "version": "1.1.1",
       "date": "2026-07-20",
