@@ -4,7 +4,7 @@ type MobileContainerProps = {
 
 function MobileContainer({ children }: MobileContainerProps) {
   return (
-    <div className="mx-auto min-h-screen max-w-md bg-zinc-950 shadow-2xl">
+    <div className="pt-safe mx-auto min-h-screen max-w-md bg-zinc-950 shadow-2xl">
       {children}
     </div>
   );

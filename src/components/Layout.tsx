@@ -5,7 +5,7 @@ import BottomNavigation from "./BottomNavigation";
 function Layout() {
   return (
     <MobileContainer>
-      <main className="pb-24">
+      <main className="pb-28">
         <Outlet />
       </main>
 

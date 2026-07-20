@@ -1,5 +1,15 @@
 @import "tailwindcss";
 
+/* Respect the iOS notch / Dynamic Island / home-indicator when installed to the
+   home screen (standalone + viewport-fit=cover). No-op in browsers without insets. */
+@utility pt-safe {
+  padding-top: env(safe-area-inset-top);
+}
+
+@utility pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
 html {
   direction: rtl;
 }
