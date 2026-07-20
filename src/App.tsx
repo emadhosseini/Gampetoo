@@ -9,6 +9,7 @@ import {
 import Layout from "@/components/Layout";
 import PwaUpdater from "@/components/PwaUpdater";
 import WhatsNewNotifier from "@/components/WhatsNewNotifier";
+import SetPasswordPrompt from "@/components/SetPasswordPrompt";
 
 import HomePage from "@/pages/HomePage";
 import WorkoutPage from "@/pages/WorkoutPage";
@@ -32,6 +33,7 @@ export default function App() {
     <BrowserRouter>
       <PwaUpdater />
       <WhatsNewNotifier />
+      <SetPasswordPrompt />
       <AppRoutes />
     </BrowserRouter>
   );
