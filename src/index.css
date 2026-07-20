@@ -1,5 +1,15 @@
 @import "tailwindcss";
 
+/* Very dark, desaturated navy — the app's base color. Never pure black. */
+@theme {
+  --color-navy-950: #05070d;
+  --color-navy-900: #090d18;
+  --color-navy-800: #10152a;
+  --color-navy-700: #161c35;
+  --color-navy-600: #1e2542;
+  --color-navy-500: #2b3355;
+}
+
 /* Respect the iOS notch / Dynamic Island / home-indicator when installed to the
    home screen (standalone + viewport-fit=cover). No-op in browsers without insets. */
 @utility pt-safe {
@@ -17,6 +27,60 @@ html {
 body {
   margin: 0;
   font-family: "Vazirmatn", sans-serif;
-  background: #18181b;
+  background: var(--color-navy-950);
   color: #ffffff;
+}
+
+/* Soft top-to-bottom navy gradient: a touch lighter at the top, deepening
+   toward the bottom. Used for full-screen surfaces (the phone shell and the
+   pre-setup gate screens). */
+.app-gradient-bg {
+  position: relative;
+  background: linear-gradient(
+    180deg,
+    var(--color-navy-800) 0%,
+    var(--color-navy-900) 45%,
+    var(--color-navy-950) 100%
+  );
+}
+
+/* A slow, very soft diagonal sheen that drifts across the gradient — the
+   "light sweep". Purely decorative, so it sits behind content and never
+   captures pointer events. */
+.light-sweep {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.light-sweep::before {
+  content: "";
+  position: absolute;
+  inset: -20% -60%;
+  background: linear-gradient(
+    100deg,
+    transparent 42%,
+    rgb(255 255 255 / 5%) 49%,
+    rgb(255 255 255 / 9%) 50%,
+    rgb(255 255 255 / 5%) 51%,
+    transparent 58%
+  );
+  animation: light-sweep 9s ease-in-out infinite;
+}
+
+@keyframes light-sweep {
+  0%,
+  100% {
+    transform: translate3d(-35%, -15%, 0);
+  }
+  50% {
+    transform: translate3d(35%, 15%, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .light-sweep::before {
+    animation: none;
+  }
 }

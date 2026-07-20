@@ -90,7 +90,7 @@ function ProgramBuilderPage() {
       {days.map((day, index) => (
         <div
           key={day.id}
-          className="rounded-2xl bg-black p-4 shadow-sm"
+          className="rounded-2xl border border-white/5 bg-navy-900 p-4 shadow-sm"
         >
           <div className="flex items-center justify-between">
             <div className="font-semibold">

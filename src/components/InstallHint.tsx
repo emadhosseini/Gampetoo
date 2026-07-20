@@ -37,7 +37,7 @@ export default function InstallHint() {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-6 backdrop-blur-sm">
-      <div className="w-full max-w-sm rounded-2xl border border-zinc-800 bg-zinc-900 p-6 text-center shadow-2xl">
+      <div className="w-full max-w-sm rounded-2xl border border-navy-600 bg-navy-700 p-6 text-center shadow-2xl">
         <p className="text-base font-bold text-white">
           برای دسترسی راحت‌تر به برنامه
         </p>

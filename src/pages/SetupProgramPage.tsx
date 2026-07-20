@@ -187,13 +187,15 @@ function AccountStep({
   }
 
   return (
-    <div className="pt-safe flex min-h-screen flex-col items-center justify-center bg-zinc-950 px-6 py-10">
-      <div className="mx-auto flex w-full max-w-xl flex-col space-y-8">
+    <div className="app-gradient-bg pt-safe relative flex min-h-screen flex-col items-center justify-center px-6 py-10">
+      <div className="light-sweep" aria-hidden="true" />
+
+      <div className="relative z-10 mx-auto flex w-full max-w-xl flex-col space-y-8">
         <InstallHint />
 
         <SetupBrand />
 
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6 space-y-4 text-center">
+        <div className="rounded-2xl border border-navy-600 bg-navy-700 p-6 space-y-4 text-center">
           <input
             type="text"
             value={name}
@@ -202,7 +204,7 @@ function AccountStep({
               if (e.key === "Enter") void submit();
             }}
             placeholder="اسم خودت رو وارد کن"
-            className="w-full rounded-xl border border-zinc-700 bg-zinc-800 p-4 text-center text-white"
+            className="w-full rounded-xl border border-navy-500 bg-navy-600 p-4 text-center text-white"
           />
 
           <input
@@ -220,7 +222,7 @@ function AccountStep({
             autoCapitalize="none"
             autoCorrect="off"
             spellCheck={false}
-            className="w-full rounded-xl border border-zinc-700 bg-zinc-800 p-4 text-center text-white"
+            className="w-full rounded-xl border border-navy-500 bg-navy-600 p-4 text-center text-white"
           />
 
           {syncEnabled && (
@@ -234,7 +236,7 @@ function AccountStep({
               }}
               placeholder={`رمز خودت رو وارد کن (حداقل ${MIN_PIN_LENGTH} کاراکتر)`}
               dir="ltr"
-              className="w-full rounded-xl border border-zinc-700 bg-zinc-800 p-4 text-center text-white"
+              className="w-full rounded-xl border border-navy-500 bg-navy-600 p-4 text-center text-white"
             />
           )}
 
@@ -332,8 +334,10 @@ function ProgramCycleSetup() {
   }
 
   return (
-    <div className="pt-safe min-h-screen bg-zinc-950 px-6 py-10">
-      <div className="mx-auto flex max-w-xl flex-col space-y-8">
+    <div className="app-gradient-bg pt-safe relative min-h-screen px-6 py-10">
+      <div className="light-sweep" aria-hidden="true" />
+
+      <div className="relative z-10 mx-auto flex max-w-xl flex-col space-y-8">
         <div className="text-center">
           <h1 className="text-3xl font-bold text-white">
             Gampetoo
@@ -344,7 +348,7 @@ function ProgramCycleSetup() {
           </p>
         </div>
 
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6 space-y-5 text-center">
+        <div className="rounded-2xl border border-navy-600 bg-navy-700 p-6 space-y-5 text-center">
           <h2 className="text-xl font-bold text-white">
             روز {persianDays[days.length] ?? `${days.length + 1}`}
           </h2>
@@ -355,7 +359,7 @@ function ProgramCycleSetup() {
               className={`rounded-xl py-4 font-bold transition-colors ${
                 activity === "workout"
                   ? "bg-emerald-500 text-black"
-                  : "bg-zinc-800 text-white"
+                  : "bg-navy-600 text-white"
               }`}
             >
               تمرین
@@ -366,7 +370,7 @@ function ProgramCycleSetup() {
               className={`rounded-xl py-4 font-bold transition-colors ${
                 activity === "walk"
                   ? "bg-emerald-500 text-black"
-                  : "bg-zinc-800 text-white"
+                  : "bg-navy-600 text-white"
               }`}
             >
               استراحت
@@ -386,7 +390,7 @@ function ProgramCycleSetup() {
                     className={`rounded-xl py-3 font-bold transition-colors ${
                       selectedWorkout === item.id
                         ? "bg-emerald-500 text-black"
-                        : "bg-zinc-800 text-white"
+                        : "bg-navy-600 text-white"
                     }`}
                   >
                     {item.title}
@@ -432,7 +436,7 @@ function ProgramCycleSetup() {
         </div>
 
         {days.length > 0 && (
-  <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6 text-center">
+  <div className="rounded-2xl border border-navy-600 bg-navy-700 p-6 text-center">
     <h2 className="mb-4 text-xl font-bold text-white">
       {/* میخوام تعداد روز انتخاب شدهرو اینجا بنویسه */}
       چرخه برنامه
@@ -442,7 +446,7 @@ function ProgramCycleSetup() {
       {days.map((day, index) => (
         <div
           key={day.id}
-          className="flex items-center justify-between rounded-xl bg-zinc-800 p-4"
+          className="flex items-center justify-between rounded-xl bg-navy-600 p-4"
         >
           <div className="flex-1 text-right">
             <p className="font-bold text-white">
@@ -468,7 +472,7 @@ function ProgramCycleSetup() {
   </div>
 )}
   {days.length > 0 && (
-  <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6">
+  <div className="rounded-2xl border border-navy-600 bg-navy-700 p-6">
     <label className="mb-3 block text-center text-sm font-medium text-zinc-400">
      از چه تاریخی این چرخه آغاز شود؟
     </label>
@@ -493,7 +497,7 @@ function ProgramCycleSetup() {
       format="D MMMM YYYY"
       className="bg-dark green"
       containerClassName="w-full"
-      inputClass="w-full rounded-xl border border-zinc-700 bg-zinc-800 p-4 text-center text-white"
+      inputClass="w-full rounded-xl border border-navy-500 bg-navy-600 p-4 text-center text-white"
     />
   </div>
 )}

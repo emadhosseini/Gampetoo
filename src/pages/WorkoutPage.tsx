@@ -54,7 +54,7 @@ const workout = workoutType
   if (!hasProgramStarted()) {
     return (
       <div className="px-5 pb-5 pt-10">
-        <div className="rounded-3xl bg-zinc-900 p-6 text-center">
+        <div className="rounded-3xl bg-navy-700 p-6 text-center">
           <p className="text-xl font-bold text-white">
             امروز تمرینی نداری
           </p>
@@ -68,7 +68,7 @@ const workout = workoutType
       <div className="space-y-6 px-5 pb-5 pt-10">
         <WorkoutHeader title="روز استراحت" />
 
-        <div className="rounded-3xl bg-zinc-900 p-6 text-center">
+        <div className="rounded-3xl bg-navy-700 p-6 text-center">
           <div className="text-3xl">🚶</div>
 
           <h2 className="mt-3 text-xl font-bold text-white">

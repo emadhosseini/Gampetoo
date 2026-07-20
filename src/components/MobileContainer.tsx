@@ -4,8 +4,9 @@ type MobileContainerProps = {
 
 function MobileContainer({ children }: MobileContainerProps) {
   return (
-    <div className="pt-safe mx-auto min-h-screen max-w-md bg-zinc-950 shadow-2xl">
-      {children}
+    <div className="app-gradient-bg pt-safe relative mx-auto min-h-screen max-w-md shadow-2xl">
+      <div className="light-sweep" aria-hidden="true" />
+      <div className="relative z-10">{children}</div>
     </div>
   );
 }
