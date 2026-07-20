@@ -5,21 +5,26 @@ import { resetWarmupLibraryOverrides } from "../../store/warmupLibraryStore";
 import { getCurrentUsername, resetCurrentUser } from "../../utils/userEngine";
 import { resetFreeMeal } from "../../utils/freeMealEngine";
 import { signOutRemote } from "../../auth/authEngine";
-import { resetSyncMarkers } from "../../sync/remoteSync";
+import { flushPendingSync, resetSyncMarkers } from "../../sync/remoteSync";
 
-export function resetApplication() {
+// Async so every caller awaits this before navigating away — a caller that
+// does a full window.location reload right after would otherwise tear down
+// the JS context before the server-side data is cleared, leaving the old
+// snapshot to reappear if this account ever logs back in.
+export async function resetApplication() {
   const username = getCurrentUsername();
-
-  if (username) {
-    resetSyncMarkers(username);
-  }
-
-  void signOutRemote();
 
   resetSession();
   resetPrograms();
   resetLibraryOverrides();
   resetWarmupLibraryOverrides();
-  resetCurrentUser();
   resetFreeMeal();
+
+  if (username) {
+    await flushPendingSync(username);
+    resetSyncMarkers(username);
+  }
+
+  await signOutRemote();
+  resetCurrentUser();
 }

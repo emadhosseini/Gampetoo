@@ -59,6 +59,7 @@ import { resetSession } from "@/utils/sessionEngine";
 import { getWorkoutOptions } from "@/store/workoutLibraryStore";
 import {
   getCurrentUserName,
+  getCurrentUsername,
   hasCurrentUsername,
   hasLegacyData,
   migrateLegacyDataTo,
@@ -68,7 +69,7 @@ import {
 import { generateId } from "@/utils/id";
 import { isSyncConfigured } from "@/lib/supabaseClient";
 import { MIN_PIN_LENGTH, signInOrSignUp } from "@/auth/authEngine";
-import { syncAfterLogin } from "@/sync/remoteSync";
+import { flushPendingSync, syncAfterLogin } from "@/sync/remoteSync";
 
 // Username must be English only (letters, digits, and . _ - separators).
 const USERNAME_PATTERN = /^[A-Za-z0-9._-]+$/;
@@ -304,7 +305,7 @@ function ProgramCycleSetup() {
     setDays((prev) => prev.filter((d) => d.id !== id));
   }
 
-  function handleFinish() {
+  async function handleFinish() {
     if (!startDate) return;
     if (days.length === 0) return;
 
@@ -318,6 +319,14 @@ function ProgramCycleSetup() {
     });
 
     resetSession();
+
+    // A full reload tears down the JS context before the normal debounced
+    // push would fire — flush the just-created program up first.
+    const username = getCurrentUsername();
+
+    if (username) {
+      await flushPendingSync(username);
+    }
 
     window.location.replace("/");
   }
@@ -489,7 +498,7 @@ function ProgramCycleSetup() {
   </div>
 )}
         <button
-  onClick={handleFinish}
+  onClick={() => void handleFinish()}
   disabled={days.length === 0 || !startDate}
   className="w-full rounded-2xl bg-emerald-500 py-4 text-xl font-bold text-black disabled:cursor-not-allowed disabled:opacity-40"
 >

@@ -27,7 +27,7 @@ export default function SettingsPage() {
     });
   }
 
-  function handleReset() {
+  async function handleReset() {
     const confirmed = window.confirm(
       "تمام اطلاعات برنامه، جلسات ثبت‌شده و پیشرفت شما حذف می‌شود و امکان بازگردانی وجود ندارد.\n\nآیا مطمئن هستید؟"
     );
@@ -36,7 +36,7 @@ export default function SettingsPage() {
       return;
     }
 
-    resetApplication();
+    await resetApplication();
 
     navigate("/setup", {
       replace: true,
@@ -115,7 +115,7 @@ export default function SettingsPage() {
       </div>
 
       <button
-        onClick={handleReset}
+        onClick={() => void handleReset()}
         className="mx-auto mt-auto w-fit rounded-xl border border-red-300 bg-red-50 p-3 text-center text-red-600 shadow-sm transition hover:bg-red-100 dark:border-red-900 dark:bg-red-950/30 dark:text-red-400"
       >
         <h2 className="whitespace-nowrap text-sm font-semibold">

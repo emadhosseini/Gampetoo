@@ -30,7 +30,7 @@ export default class ErrorBoundary extends Component<Props, State> {
     this.setState({ hasError: false });
   };
 
-  handleReset = () => {
+  handleReset = async () => {
     const confirmed = window.confirm(
       "تمام اطلاعات برنامه، جلسات ثبت‌شده و پیشرفت شما حذف می‌شود و امکان بازگردانی وجود ندارد.\n\nآیا مطمئن هستید؟"
     );
@@ -39,7 +39,7 @@ export default class ErrorBoundary extends Component<Props, State> {
       return;
     }
 
-    resetApplication();
+    await resetApplication();
     window.location.replace("/setup");
   };
 

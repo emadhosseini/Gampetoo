@@ -222,3 +222,18 @@ export function resetSyncMarkers(username: string) {
   originalRemoveItem(pendingKey(username));
   originalRemoveItem(lastSyncedKey(username));
 }
+
+/**
+ * Cancels any pending debounced push and pushes immediately instead. Call
+ * this — awaited — before any `window.location.replace/reload` that follows
+ * a mutation, since a full reload tears down the JS context (and any pending
+ * setTimeout) before the normal 1s debounce would otherwise fire.
+ */
+export async function flushPendingSync(username: string): Promise<void> {
+  if (pushTimer) {
+    clearTimeout(pushTimer);
+    pushTimer = null;
+  }
+
+  await pushToServer(username);
+}
