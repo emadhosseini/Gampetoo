@@ -1,6 +1,15 @@
 {
-  "current": "1.2.0",
+  "current": "1.2.2",
   "history": [
+    {
+      "version": "1.2.2",
+      "date": "2026-07-20",
+      "description": "Cross-device account sync verified end-to-end and deployed: username + password now backs up and restores program, session, and preferences across devices, with existing local-only accounts prompted to set a password without losing any data. Fixed a race that could drop a write made right before the app reloaded, and added Cloudflare Pages deployment config (SPA routing, cache headers) alongside the existing Vercel setup.",
+      "highlights": [
+        "✨ رفع ایرادهای ظاهری و بهبود تجربه کاربری",
+        "👤 اضافه شدن قابلیت انتخاب و نمایش نام کاربری و پسوورد"
+      ]
+    },
     {
       "version": "1.2.0",
       "date": "2026-07-20",
