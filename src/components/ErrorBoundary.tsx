@@ -1,5 +1,6 @@
 import { Component, type ReactNode } from "react";
 
+import MeshGradientBackground from "@/components/background/MeshGradientBackground";
 import { resetApplication } from "@/domain/reset/resetApplication";
 
 interface Props {
@@ -50,7 +51,7 @@ export default class ErrorBoundary extends Component<Props, State> {
 
     return (
       <div className="app-gradient-bg pt-safe relative flex min-h-screen flex-col items-center justify-center px-6">
-        <div className="light-sweep" aria-hidden="true" />
+        <MeshGradientBackground colorA="#3b9149" colorB="#faea5c" />
 
         <div className="relative z-10 w-full max-w-sm rounded-2xl border border-forest-600 bg-forest-700 p-6 text-center">
           <h1 className="text-lg font-bold text-white">

@@ -12,6 +12,7 @@ import persian_fa from "react-date-object/locales/persian_fa";
 import "react-multi-date-picker/styles/backgrounds/bg-dark.css";
 import "react-multi-date-picker/styles/colors/green.css";
 
+import MeshGradientBackground from "@/components/background/MeshGradientBackground";
 import InstallHint from "@/components/InstallHint";
 
 // startDate is stored as a Gregorian ISO date (YYYY-MM-DD). These convert to and
@@ -188,7 +189,7 @@ function AccountStep({
 
   return (
     <div className="app-gradient-bg pt-safe relative flex min-h-screen flex-col items-center justify-center px-6 py-10">
-      <div className="light-sweep" aria-hidden="true" />
+      <MeshGradientBackground colorA="#3b9149" colorB="#faea5c" />
 
       <div className="relative z-10 mx-auto flex w-full max-w-xl flex-col space-y-8">
         <InstallHint />
@@ -335,7 +336,7 @@ function ProgramCycleSetup() {
 
   return (
     <div className="app-gradient-bg pt-safe relative min-h-screen px-6 py-10">
-      <div className="light-sweep" aria-hidden="true" />
+      <MeshGradientBackground colorA="#3b9149" colorB="#faea5c" />
 
       <div className="relative z-10 mx-auto flex max-w-xl flex-col space-y-8">
         <div className="text-center">

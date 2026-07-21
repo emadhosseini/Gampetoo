@@ -35,58 +35,12 @@ body {
   color: #ffffff;
 }
 
-/* Soft top-to-bottom forest-green gradient: a touch lighter at the top, deepening
-   toward the bottom. Used for full-screen surfaces (the phone shell and the
-   pre-setup gate screens). */
+/* Flat forest-green base — kept uniform (not fading darker toward the
+   bottom) so the mesh-gradient glow layer stays consistent across the full
+   page instead of being swallowed by a dark fade near the bottom. */
 .app-gradient-bg {
   position: relative;
-  background: linear-gradient(
-    180deg,
-    var(--color-forest-800) 0%,
-    var(--color-forest-900) 45%,
-    var(--color-forest-950) 100%
-  );
-}
-
-/* A slow, very soft diagonal sheen that drifts across the gradient — the
-   "light sweep". Purely decorative, so it sits behind content and never
-   captures pointer events. */
-.light-sweep {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  pointer-events: none;
-}
-
-.light-sweep::before {
-  content: "";
-  position: absolute;
-  inset: -20% -60%;
-  background: linear-gradient(
-    100deg,
-    transparent 32%,
-    rgb(255 255 255 / 5%) 45%,
-    rgb(255 255 255 / 9%) 50%,
-    rgb(255 255 255 / 5%) 55%,
-    transparent 68%
-  );
-  animation: light-sweep 90s ease-in-out infinite;
-}
-
-@keyframes light-sweep {
-  0%,
-  100% {
-    transform: translate3d(-35%, -15%, 0);
-  }
-  50% {
-    transform: translate3d(35%, 15%, 0);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .light-sweep::before {
-    animation: none;
-  }
+  background: var(--color-forest-800);
 }
 
 /* iOS-style frosted glass blocks. .glass-panel is a full translucent card
