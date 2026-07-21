@@ -31,7 +31,7 @@ const items = [
 
 export default function BottomNavigation() {
   return (
-    <nav className="pb-safe fixed bottom-0 left-0 right-0 border-t border-white/5 bg-navy-950/90 backdrop-blur-xl">
+    <nav className="pb-safe fixed bottom-0 left-0 right-0 border-t border-white/5 bg-forest-950/90 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-md items-center justify-around">
         {items.map((item) => {
           const Icon = item.icon;
@@ -43,7 +43,7 @@ export default function BottomNavigation() {
               className={({ isActive }) =>
                 `flex flex-col items-center gap-1 text-xs transition-colors ${
                   isActive
-                    ? "text-emerald-400"
+                    ? "text-avocado-yellow"
                     : "text-zinc-500"
                 }`
               }

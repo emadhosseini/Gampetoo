@@ -36,7 +36,7 @@ export default function FreeMealCard({ message }: FreeMealCardProps) {
 
           <button
             onClick={handleClick}
-            className="mt-4 rounded-xl bg-amber-500 px-5 py-2 text-sm font-semibold text-black"
+            className="mt-4 rounded-xl bg-avocado-yellow px-5 py-2 text-sm font-semibold text-black"
           >
             وعده آزادم رو امروز خوردم
           </button>

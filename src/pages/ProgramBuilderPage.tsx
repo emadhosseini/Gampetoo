@@ -107,7 +107,7 @@ function ProgramBuilderPage() {
           </div>
 
           <select
-            className="mt-3 w-full rounded-xl border border-navy-500 bg-navy-600 p-3 text-white"
+            className="mt-3 w-full rounded-xl border border-forest-500 bg-forest-600 p-3 text-white"
             value={day.workoutId ?? ""}
             onChange={(e) => {
               updateDayWorkout(
@@ -134,14 +134,14 @@ function ProgramBuilderPage() {
 
       <button
         onClick={addDay}
-        className="glass-tap w-full rounded-2xl border border-dashed border-navy-500 py-4 text-center font-semibold text-zinc-300"
+        className="glass-tap w-full rounded-2xl border border-dashed border-forest-500 py-4 text-center font-semibold text-zinc-300"
       >
         + افزودن روز تمرینی
       </button>
 
       <button
         onClick={handleSave}
-        className="w-full rounded-2xl bg-emerald-500 py-4 text-lg font-bold text-black"
+        className="w-full rounded-2xl bg-avocado-yellow py-4 text-lg font-bold text-black"
       >
         ذخیره تغییرات
       </button>

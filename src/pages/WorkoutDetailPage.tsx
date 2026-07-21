@@ -276,7 +276,7 @@ export default function WorkoutDetailPage() {
 
       <button
         onClick={handleSave}
-        className="glass-tap w-full rounded-2xl bg-navy-900/80 backdrop-blur-xl py-4 text-lg font-semibold text-white"
+        className="glass-tap w-full rounded-2xl bg-forest-900/80 backdrop-blur-xl py-4 text-lg font-semibold text-white"
       >
         {saved ? "ذخیره شد ✅" : "ذخیره"}
       </button>

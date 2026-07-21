@@ -25,8 +25,8 @@ export default function UpdateModal({
 
   return (
     <div className="pt-safe fixed inset-0 z-[70] flex items-center justify-center bg-black/70 px-6 backdrop-blur-sm">
-      <div className="w-full max-w-sm rounded-2xl border border-navy-600 bg-navy-700 p-6 text-center shadow-2xl">
-        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-400">
+      <div className="w-full max-w-sm rounded-2xl border border-forest-600 bg-forest-700 p-6 text-center shadow-2xl">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-avocado-yellow/10 text-avocado-yellow">
           <RefreshCw size={22} />
         </div>
 
@@ -40,7 +40,7 @@ export default function UpdateModal({
           برای استفاده از آخرین امکانات و رفع باگ‌ها برنامه را بروزرسانی کنید.
         </p>
 
-        <div className="mt-4 flex items-center justify-center gap-6 rounded-xl bg-navy-600/60 py-3">
+        <div className="mt-4 flex items-center justify-center gap-6 rounded-xl bg-forest-600/60 py-3">
           <div className="text-center">
             <p className="text-xs text-zinc-500">نسخه فعلی</p>
             <p dir="ltr" className="mt-1 font-bold text-white">
@@ -62,7 +62,7 @@ export default function UpdateModal({
           <button
             onClick={onLater}
             disabled={updating}
-            className="flex-1 rounded-2xl bg-navy-600 py-3 font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
+            className="flex-1 rounded-2xl bg-forest-600 py-3 font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
           >
             بعداً
           </button>
@@ -70,7 +70,7 @@ export default function UpdateModal({
           <button
             onClick={onUpdate}
             disabled={updating}
-            className="flex-1 rounded-2xl bg-emerald-500 py-3 font-bold text-black disabled:cursor-not-allowed disabled:opacity-40"
+            className="flex-1 rounded-2xl bg-avocado-yellow py-3 font-bold text-black disabled:cursor-not-allowed disabled:opacity-40"
           >
             {updating ? "..." : "بروزرسانی"}
           </button>

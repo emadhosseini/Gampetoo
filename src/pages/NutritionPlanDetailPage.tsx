@@ -289,7 +289,7 @@ export default function NutritionPlanDetailPage() {
                                     Number(e.target.value),
                                   )
                                 }
-                                className="w-16 rounded-lg border border-navy-500 bg-navy-600 px-2 py-1 text-center text-sm text-white"
+                                className="w-16 rounded-lg border border-forest-500 bg-forest-600 px-2 py-1 text-center text-sm text-white"
                               />
 
                               <span className="text-sm text-zinc-400">
@@ -326,7 +326,7 @@ export default function NutritionPlanDetailPage() {
 
       <button
         onClick={handleSave}
-        className="glass-tap w-full rounded-2xl bg-navy-900/80 backdrop-blur-xl py-4 text-lg font-semibold text-white"
+        className="glass-tap w-full rounded-2xl bg-forest-900/80 backdrop-blur-xl py-4 text-lg font-semibold text-white"
       >
         {saved ? "ذخیره شد ✅" : "ذخیره"}
       </button>

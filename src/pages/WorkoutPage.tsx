@@ -107,7 +107,7 @@ const workout = workoutType
         )}
 
         {session.completed && (
-          <div className="mt-6 rounded-2xl bg-green-500 py-4 text-center text-lg font-semibold text-black">
+          <div className="mt-6 rounded-2xl bg-avocado-yellow py-4 text-center text-lg font-semibold text-black">
             تمرین امروز رو انجام دادی☺️
           </div>
         )}
@@ -148,7 +148,7 @@ const workout = workoutType
         )}
 
         {session.completed && (
-          <div className="mt-6 rounded-2xl bg-green-500 py-4 text-center text-lg font-semibold text-black">
+          <div className="mt-6 rounded-2xl bg-avocado-yellow py-4 text-center text-lg font-semibold text-black">
             تمرین امروز رو انجام دادی ☺️
           </div>
         )}
@@ -204,7 +204,7 @@ const workout = workoutType
       )}
 
       {session.completed && (
-        <div className="mt-6 rounded-2xl bg-green-500 py-4 text-center text-lg font-semibold text-black">
+        <div className="mt-6 rounded-2xl bg-avocado-yellow py-4 text-center text-lg font-semibold text-black">
           تمرین امروز رو انجام دادی☺️
         </div>
       )}

@@ -52,7 +52,7 @@ export default class ErrorBoundary extends Component<Props, State> {
       <div className="app-gradient-bg pt-safe relative flex min-h-screen flex-col items-center justify-center px-6">
         <div className="light-sweep" aria-hidden="true" />
 
-        <div className="relative z-10 w-full max-w-sm rounded-2xl border border-navy-600 bg-navy-700 p-6 text-center">
+        <div className="relative z-10 w-full max-w-sm rounded-2xl border border-forest-600 bg-forest-700 p-6 text-center">
           <h1 className="text-lg font-bold text-white">
             مشکلی پیش اومد
           </h1>
@@ -65,7 +65,7 @@ export default class ErrorBoundary extends Component<Props, State> {
           <div className="mt-6 flex flex-col gap-3">
             <button
               onClick={this.handleRetry}
-              className="w-full rounded-2xl bg-emerald-500 py-3 font-bold text-black"
+              className="w-full rounded-2xl bg-avocado-yellow py-3 font-bold text-black"
             >
               تلاش دوباره
             </button>

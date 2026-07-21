@@ -1,13 +1,17 @@
 @import "tailwindcss";
 
-/* Very dark, desaturated navy — the app's base color. Never pure black. */
+/* Dark forest green — the app's base color, matched to the mascot icon's
+   own dark green (forest-900 is that exact color). Never pure black. */
 @theme {
-  --color-navy-950: #05070d;
-  --color-navy-900: #090d18;
-  --color-navy-800: #10152a;
-  --color-navy-700: #161c35;
-  --color-navy-600: #1e2542;
-  --color-navy-500: #2b3355;
+  --color-forest-950: #132f18;
+  --color-forest-900: #1d4724;
+  --color-forest-800: #23572c;
+  --color-forest-700: #296533;
+  --color-forest-600: #327b3e;
+  --color-forest-500: #3b9149;
+
+  /* The mascot icon's yellow (its avocado flesh) — the app's button/accent color. */
+  --color-avocado-yellow: #faea5c;
 }
 
 /* Respect the iOS notch / Dynamic Island / home-indicator when installed to the
@@ -27,20 +31,20 @@ html {
 body {
   margin: 0;
   font-family: "Vazirmatn", sans-serif;
-  background: var(--color-navy-950);
+  background: var(--color-forest-950);
   color: #ffffff;
 }
 
-/* Soft top-to-bottom navy gradient: a touch lighter at the top, deepening
+/* Soft top-to-bottom forest-green gradient: a touch lighter at the top, deepening
    toward the bottom. Used for full-screen surfaces (the phone shell and the
    pre-setup gate screens). */
 .app-gradient-bg {
   position: relative;
   background: linear-gradient(
     180deg,
-    var(--color-navy-800) 0%,
-    var(--color-navy-900) 45%,
-    var(--color-navy-950) 100%
+    var(--color-forest-800) 0%,
+    var(--color-forest-900) 45%,
+    var(--color-forest-950) 100%
   );
 }
 
@@ -145,7 +149,7 @@ body {
 
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .glass-panel {
-    background-color: var(--color-navy-700);
+    background-color: var(--color-forest-700);
     background-image: none;
   }
 }

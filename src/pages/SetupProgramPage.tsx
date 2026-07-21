@@ -243,7 +243,7 @@ function AccountStep({
           <button
             onClick={() => void submit()}
             disabled={!canSubmit}
-            className="glass-tap w-full rounded-2xl bg-emerald-500 py-4 text-xl font-bold text-black disabled:cursor-not-allowed disabled:opacity-40"
+            className="glass-tap w-full rounded-2xl bg-avocado-yellow py-4 text-xl font-bold text-black disabled:cursor-not-allowed disabled:opacity-40"
           >
             {busy ? "..." : "ادامه"}
           </button>
@@ -358,8 +358,8 @@ function ProgramCycleSetup() {
               onClick={() => setActivity("workout")}
               className={`glass-tap rounded-xl py-4 font-bold transition-colors ${
                 activity === "workout"
-                  ? "bg-emerald-500 text-black"
-                  : "bg-navy-600 text-white"
+                  ? "bg-avocado-yellow text-black"
+                  : "bg-forest-600 text-white"
               }`}
             >
               تمرین
@@ -369,8 +369,8 @@ function ProgramCycleSetup() {
               onClick={() => setActivity("walk")}
               className={`glass-tap rounded-xl py-4 font-bold transition-colors ${
                 activity === "walk"
-                  ? "bg-emerald-500 text-black"
-                  : "bg-navy-600 text-white"
+                  ? "bg-avocado-yellow text-black"
+                  : "bg-forest-600 text-white"
               }`}
             >
               استراحت
@@ -389,8 +389,8 @@ function ProgramCycleSetup() {
                     onClick={() => setSelectedWorkout(item.id)}
                     className={`glass-tap rounded-xl py-3 font-bold transition-colors ${
                       selectedWorkout === item.id
-                        ? "bg-emerald-500 text-black"
-                        : "bg-navy-600 text-white"
+                        ? "bg-avocado-yellow text-black"
+                        : "bg-forest-600 text-white"
                     }`}
                   >
                     {item.title}
@@ -429,7 +429,7 @@ function ProgramCycleSetup() {
               setActivity(null);
               setSelectedWorkout(null);
             }}
-            className="glass-tap w-full rounded-xl bg-amber-500 py-4 font-bold text-black"
+            className="glass-tap w-full rounded-xl bg-avocado-yellow py-4 font-bold text-black"
           >
           روز بعدی!
           </button>
@@ -504,7 +504,7 @@ function ProgramCycleSetup() {
         <button
   onClick={() => void handleFinish()}
   disabled={days.length === 0 || !startDate}
-  className="glass-tap w-full rounded-2xl bg-emerald-500 py-4 text-xl font-bold text-black disabled:cursor-not-allowed disabled:opacity-40"
+  className="glass-tap w-full rounded-2xl bg-avocado-yellow py-4 text-xl font-bold text-black disabled:cursor-not-allowed disabled:opacity-40"
 >
   شروع برنامه
 </button>

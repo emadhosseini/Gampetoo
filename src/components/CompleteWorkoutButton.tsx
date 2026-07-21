@@ -8,8 +8,8 @@ const variantClasses: Record<
   NonNullable<CompleteWorkoutButtonProps["variant"]>,
   string
 > = {
-  primary: "bg-navy-900 text-white",
-  accent: "bg-orange-500 text-black",
+  primary: "bg-forest-900 text-white",
+  accent: "bg-avocado-yellow text-black",
 };
 
 export default function CompleteWorkoutButton({
