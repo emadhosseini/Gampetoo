@@ -201,7 +201,7 @@ export default function NutritionPlanDetailPage() {
           return (
             <div
               key={meal.id}
-              className="glass-panel rounded-2xl p-4"
+              className="glass-panel glass-static rounded-2xl p-4"
             >
               <div className="grid grid-cols-[24px_1fr_auto_24px] items-center gap-2">
                 <input
@@ -253,7 +253,7 @@ export default function NutritionPlanDetailPage() {
                     return (
                       <div
                         key={entry.name}
-                        className="glass-chip flex items-center gap-3 rounded-xl p-3"
+                        className="glass-chip glass-static flex items-center gap-3 rounded-xl p-3"
                       >
                         <input
                           type="checkbox"
