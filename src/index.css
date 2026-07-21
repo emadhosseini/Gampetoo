@@ -135,6 +135,14 @@ body {
   background-color: rgb(255 255 255 / 10%);
 }
 
+/* Cancel the press-motion for glass blocks that directly wrap a native form
+   control (checkbox, number input). Scaling the row shifts the control out
+   from under the finger mid-tap, which silently drops the tap/check on
+   touch devices — keep the glass look, drop the transform. */
+.glass-static:active {
+  transform: none;
+}
+
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .glass-panel {
     background-color: var(--color-navy-700);

@@ -177,7 +177,7 @@ export default function WorkoutDetailPage() {
                   {group.exercises.map((exercise) => (
                     <div
                       key={exercise.id}
-                      className="glass-chip rounded-xl p-4"
+                      className="glass-chip glass-static rounded-xl p-4"
                     >
                       <button
                         onClick={() =>
