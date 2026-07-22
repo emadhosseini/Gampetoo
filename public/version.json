@@ -1,6 +1,14 @@
 {
-  "current": "1.2.6",
+  "current": "1.2.7",
   "history": [
+    {
+      "version": "1.2.7",
+      "date": "2026-07-22",
+      "description": "Fixed weight-log (and other synced) data appearing to get wiped after applying an in-app update: the PWA update flow reloaded the page to activate the new version without flushing a pending debounced sync push first, unlike every other reload path in the app. An edit made in the second before tapping \"بروزرسانی\" could fail to reach the server, and in a race, a stale in-flight push from the old page could even overwrite fresher local data right as the new page loaded.",
+      "highlights": [
+        "🐛 رفع گم شدن اطلاعات (مثل سابقه وزن) هنگام بروزرسانی برنامه"
+      ]
+    },
     {
       "version": "1.2.6",
       "date": "2026-07-22",
