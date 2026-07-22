@@ -13,6 +13,7 @@ import "react-multi-date-picker/styles/backgrounds/bg-dark.css";
 import "react-multi-date-picker/styles/colors/green.css";
 
 import MeshGradientBackground from "@/components/background/MeshGradientBackground";
+import ChromaKeyVideo from "@/components/ChromaKeyVideo";
 import InstallHint from "@/components/InstallHint";
 
 // startDate is stored as a Gregorian ISO date (YYYY-MM-DD). These convert to and
@@ -90,19 +91,7 @@ export default function SetupProgramPage() {
 function SetupBrand() {
   return (
     <div className="flex flex-col items-center text-center">
-      <video
-        src="/Gampetoo.webm"
-        autoPlay
-        loop
-        muted
-        playsInline
-        preload="auto"
-        // The source clip has no real alpha channel — its background is
-        // baked-in black. mix-blend-mode: screen drops pure-black pixels
-        // against the page's own background instead of showing a black box.
-        style={{ mixBlendMode: "screen" }}
-        className="mb-4 h-24 w-24 object-contain"
-      />
+      <ChromaKeyVideo src="/Gampetoo.webm" size={96} className="mb-4" />
 
       <h1 className="text-3xl font-bold text-white">
         Gampetoo
