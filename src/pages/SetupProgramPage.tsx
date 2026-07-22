@@ -90,9 +90,13 @@ export default function SetupProgramPage() {
 function SetupBrand() {
   return (
     <div className="flex flex-col items-center text-center">
-      <img
-        src="/Gampetoo.png"
-        alt="Gampetoo"
+      <video
+        src="/Gampetoo.webm"
+        autoPlay
+        loop
+        muted
+        playsInline
+        preload="auto"
         className="mb-4 h-24 w-24 object-contain"
       />
 
