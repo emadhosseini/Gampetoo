@@ -90,12 +90,20 @@ export default function ChromaKeyVideo({
   }, [size]);
 
   return (
-    <div className={`relative ${className}`} style={{ width: size, height: size }}>
-      {/* iOS Safari can promote an autoplaying <video> to its own hardware
-          compositor layer, which ignores CSS opacity/visibility — so an
-          opacity-0 video sitting on top of the canvas still painted its raw
-          black frame over it. Moving it fully outside the viewport (rather
-          than hiding it in place) sidesteps that entirely. */}
+    <div
+      className={`relative overflow-hidden ${className}`}
+      style={{ width: size, height: size }}
+    >
+      {/* Moving this off-screen (position: fixed, far outside the
+          viewport) made iOS suspend its playback entirely — the canvas kept
+          showing whatever single frame was last decoded before the browser
+          paused it. And opacity: 0 on the video itself hit a separate iOS
+          bug where a hardware-composited <video> layer ignores CSS opacity,
+          painting its raw (black) frame over the canvas regardless. Keeping
+          it plainly on-screen, in-flow, and letting the canvas simply paint
+          over it afterward in normal DOM order avoids both: the video stays
+          "visible" enough to keep decoding, and normal stacking (not a CSS
+          hiding trick) is what hides it. */}
       <video
         ref={videoRef}
         src={src}
@@ -104,18 +112,8 @@ export default function ChromaKeyVideo({
         muted
         playsInline
         preload="auto"
-        style={
-          broken
-            ? { width: size, height: size, mixBlendMode: "screen" }
-            : {
-                position: "fixed",
-                top: -9999,
-                left: -9999,
-                width: size,
-                height: size,
-                pointerEvents: "none",
-              }
-        }
+        className="absolute inset-0 h-full w-full"
+        style={broken ? { mixBlendMode: "screen" } : undefined}
       />
 
       {!broken && (
