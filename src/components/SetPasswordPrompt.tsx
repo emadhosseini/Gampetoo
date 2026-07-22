@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { hasStartDate } from "@/utils/programEngine";
 import { getCurrentUsername, hasCurrentUsername } from "@/utils/userEngine";
 import { isSyncConfigured } from "@/lib/supabaseClient";
-import { getRemoteUserId, MIN_PIN_LENGTH, signInOrSignUp } from "@/auth/authEngine";
+import { hasRemotePassword, MIN_PIN_LENGTH, signInOrSignUp } from "@/auth/authEngine";
 import { syncAfterLogin } from "@/sync/remoteSync";
 
 // Prompts an existing local-only account (created before server sync existed)
@@ -24,27 +24,23 @@ export default function SetPasswordPrompt() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    let cancelled = false;
+    const username = getCurrentUsername();
 
-    async function check() {
-      if (!isSyncConfigured() || !hasCurrentUsername() || !hasStartDate()) {
-        if (!cancelled) setChecked(true);
-        return;
-      }
+    // Whether the account has a password is tracked as a persisted local
+    // flag (see authEngine.ts) rather than "is there a live session right
+    // now" — a session can go missing for reasons unrelated to whether a
+    // password was ever set (an access-token refresh hiccup around a PWA
+    // update, for instance), which used to re-offer this prompt to people
+    // who'd already set a password.
+    const needsPassword =
+      isSyncConfigured() &&
+      hasCurrentUsername() &&
+      hasStartDate() &&
+      !!username &&
+      !hasRemotePassword(username);
 
-      const userId = await getRemoteUserId();
-
-      if (!cancelled) {
-        setNeedsPassword(userId === null);
-        setChecked(true);
-      }
-    }
-
-    void check();
-
-    return () => {
-      cancelled = true;
-    };
+    setNeedsPassword(needsPassword);
+    setChecked(true);
   }, []);
 
   async function submit() {

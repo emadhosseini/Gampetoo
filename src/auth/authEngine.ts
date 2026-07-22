@@ -12,6 +12,23 @@ function usernameToEmail(username: string): string {
   return `${username.toLowerCase()}@${EMAIL_DOMAIN}`;
 }
 
+// Whether THIS username has ever successfully authenticated with a password,
+// tracked separately from the live Supabase session. A session can go
+// missing for reasons that have nothing to do with the account actually
+// having a password (an expired access token whose refresh hiccups right
+// around a PWA update/reload, for instance) — checking the live session
+// there wrongly re-offered "set a password" to someone who already had one.
+// This flag only ever needs to be set once and never expires client-side.
+const HAS_PASSWORD_KEY = "emad-has-remote-password";
+
+function markPasswordConfirmed(username: string) {
+  localStorage.setItem(`${HAS_PASSWORD_KEY}:${username}`, "1");
+}
+
+export function hasRemotePassword(username: string): boolean {
+  return localStorage.getItem(`${HAS_PASSWORD_KEY}:${username}`) === "1";
+}
+
 export interface AuthResult {
   ok: boolean;
   error?: string;
@@ -45,6 +62,7 @@ export async function signInOrSignUp(
   });
 
   if (!signInResult.error) {
+    markPasswordConfirmed(username);
     return { ok: true };
   }
 
@@ -54,6 +72,7 @@ export async function signInOrSignUp(
   });
 
   if (!signUpResult.error) {
+    markPasswordConfirmed(username);
     return { ok: true };
   }
 
@@ -91,6 +110,7 @@ export async function signIn(username: string, pin: string): Promise<AuthResult>
     return { ok: false, error: "نام کاربری یا رمز اشتباه است." };
   }
 
+  markPasswordConfirmed(username);
   return { ok: true };
 }
 
@@ -126,20 +146,10 @@ export async function signUp(username: string, pin: string): Promise<AuthResult>
     return { ok: false, error: error.message };
   }
 
+  markPasswordConfirmed(username);
   return { ok: true };
 }
 
 export async function signOutRemote(): Promise<void> {
   await supabase?.auth.signOut();
-}
-
-/** The Supabase auth user id for the active session, or null if signed out
- * or sync isn't configured. Used by the sync engine to address the
- * user_data row — RLS still enforces this server-side regardless. */
-export async function getRemoteUserId(): Promise<string | null> {
-  if (!supabase) return null;
-
-  const { data } = await supabase.auth.getSession();
-
-  return data.session?.user.id ?? null;
 }
