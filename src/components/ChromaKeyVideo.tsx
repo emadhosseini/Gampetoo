@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface ChromaKeyVideoProps {
   src: string;
@@ -44,6 +44,7 @@ export default function ChromaKeyVideo({
 }: ChromaKeyVideoProps) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [broken, setBroken] = useState(false);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -64,11 +65,20 @@ export default function ChromaKeyVideo({
 
     function draw() {
       if (video && ctx && video.readyState >= video.HAVE_CURRENT_DATA) {
-        ctx.drawImage(video, 0, 0, canvas!.width, canvas!.height);
+        try {
+          ctx.drawImage(video, 0, 0, canvas!.width, canvas!.height);
 
-        const frame = ctx.getImageData(0, 0, canvas!.width, canvas!.height);
-        lumaKeyFrame(frame);
-        ctx.putImageData(frame, 0, 0);
+          const frame = ctx.getImageData(0, 0, canvas!.width, canvas!.height);
+          lumaKeyFrame(frame);
+          ctx.putImageData(frame, 0, 0);
+        } catch {
+          // A device/browser that can't read video pixels back onto a
+          // canvas (some older WebKit builds treat this as a tainted
+          // canvas) — bail out to the plain <video> instead of looping on
+          // an operation that will keep failing every frame.
+          setBroken(true);
+          return;
+        }
       }
 
       rafId = requestAnimationFrame(draw);
@@ -81,6 +91,11 @@ export default function ChromaKeyVideo({
 
   return (
     <div className={`relative ${className}`} style={{ width: size, height: size }}>
+      {/* iOS Safari can promote an autoplaying <video> to its own hardware
+          compositor layer, which ignores CSS opacity/visibility — so an
+          opacity-0 video sitting on top of the canvas still painted its raw
+          black frame over it. Moving it fully outside the viewport (rather
+          than hiding it in place) sidesteps that entirely. */}
       <video
         ref={videoRef}
         src={src}
@@ -89,10 +104,23 @@ export default function ChromaKeyVideo({
         muted
         playsInline
         preload="auto"
-        className="absolute inset-0 h-full w-full opacity-0"
+        style={
+          broken
+            ? { width: size, height: size, mixBlendMode: "screen" }
+            : {
+                position: "fixed",
+                top: -9999,
+                left: -9999,
+                width: size,
+                height: size,
+                pointerEvents: "none",
+              }
+        }
       />
 
-      <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
+      {!broken && (
+        <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
+      )}
     </div>
   );
 }
