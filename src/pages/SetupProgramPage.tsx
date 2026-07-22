@@ -97,6 +97,10 @@ function SetupBrand() {
         muted
         playsInline
         preload="auto"
+        // The source clip has no real alpha channel — its background is
+        // baked-in black. mix-blend-mode: screen drops pure-black pixels
+        // against the page's own background instead of showing a black box.
+        style={{ mixBlendMode: "screen" }}
         className="mb-4 h-24 w-24 object-contain"
       />
 
