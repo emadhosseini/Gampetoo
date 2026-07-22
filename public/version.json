@@ -1,6 +1,14 @@
 {
-  "current": "1.2.7",
+  "current": "1.2.8",
   "history": [
+    {
+      "version": "1.2.8",
+      "date": "2026-07-22",
+      "description": "Split the first-run account screen into an explicit choice between \"ورود\" (login: username + password only, checked against the existing account) and \"ثبت نام\" (signup: name + username + password + confirm password), replacing the single combined form that silently signed up or logged in behind the scenes.",
+      "highlights": [
+        "👤 جداسازی صفحه ورود و ثبت نام در اولین اجرای برنامه"
+      ]
+    },
     {
       "version": "1.2.7",
       "date": "2026-07-22",
