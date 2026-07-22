@@ -81,7 +81,7 @@ const workout = workoutType
   if (!isWorkout) {
     return (
       <div className="space-y-6 px-5 pb-5 pt-10">
-        <WorkoutHeader title="روز استراحت" />
+        <WorkoutHeader title="روز استراحت" showForgotButton />
 
         <div className="glass-panel rounded-3xl p-6 text-center">
           <div className="text-3xl">🚶</div>
@@ -124,7 +124,7 @@ const workout = workoutType
   if (!workout || exercises.length === 0) {
     return (
       <div className="space-y-6 px-5 pb-5 pt-10">
-        <WorkoutHeader title={day.title} />
+        <WorkoutHeader title={day.title} showForgotButton />
 
         <div className="glass-panel rounded-3xl p-2 text-center">
 
@@ -163,7 +163,7 @@ const workout = workoutType
 
   return (
     <div className="space-y-6 px-5 pb-5 pt-10">
-      <WorkoutHeader title={workout.title} />
+      <WorkoutHeader title={workout.title} showForgotButton />
 
       <WarmupBlock exercises={warmupExercises} />
 

@@ -6,11 +6,16 @@ import { resetSession } from "@/utils/sessionEngine";
 type WorkoutHeaderProps = {
   title: string;
   subtitle?: string;
+  // WorkoutHeader is also reused on NutritionPage — the forgot-to-log
+  // button only makes sense on the actual workout page, so it's opt-in
+  // rather than always-on.
+  showForgotButton?: boolean;
 };
 
 export default function WorkoutHeader({
   title,
   subtitle = "برنامه امروز",
+  showForgotButton = false,
 }: WorkoutHeaderProps) {
   const [open, setOpen] = useState(false);
 
@@ -26,13 +31,15 @@ export default function WorkoutHeader({
 
   return (
     <div className="relative mb-6 mt-4 text-center">
-      <button
-        onClick={() => setOpen(true)}
-        aria-label="فراموشی ثبت اتمام تمرین روز گذشته"
-        className="glass-chip absolute end-0 top-0 flex h-10 w-10 items-center justify-center rounded-full text-xl"
-      >
-        🤦
-      </button>
+      {showForgotButton && (
+        <button
+          onClick={() => setOpen(true)}
+          aria-label="فراموشی ثبت اتمام تمرین روز گذشته"
+          className="glass-chip absolute end-0 top-0 flex h-10 w-10 items-center justify-center rounded-full text-xl"
+        >
+          🤦
+        </button>
+      )}
 
       <p className="text-sm text-white">{subtitle}</p>
 
@@ -40,7 +47,7 @@ export default function WorkoutHeader({
         {title}
       </h1>
 
-      {open && (
+      {showForgotButton && open && (
         <div className="pt-safe fixed inset-0 z-[70] flex items-center justify-center bg-black/70 px-6 backdrop-blur-sm">
           <div className="w-full max-w-sm rounded-2xl border border-forest-600 bg-forest-700 p-6 text-center shadow-2xl">
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-avocado-yellow/10 text-2xl">
