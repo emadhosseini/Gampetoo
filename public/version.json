@@ -1,6 +1,14 @@
 {
-  "current": "1.2.5",
+  "current": "1.2.6",
   "history": [
+    {
+      "version": "1.2.6",
+      "date": "2026-07-22",
+      "description": "1.2.5's plain on-screen stacking brought the black box back on real iOS Safari — confirming the video's hardware compositor layer really does float above normal DOM stacking there, not just bypass opacity. Reverted to the 1.2.4 off-screen approach: no black box, but the mascot is a static frame on iOS instead of animating, which is the preferred trade-off over a black box.",
+      "highlights": [
+        "🎨 رفع مجدد مشکل مربع مشکی لوگو در سافاری موبایل"
+      ]
+    },
     {
       "version": "1.2.5",
       "date": "2026-07-22",
