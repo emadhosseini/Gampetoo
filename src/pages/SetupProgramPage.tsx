@@ -70,7 +70,7 @@ import {
 } from "@/utils/userEngine";
 import { generateId } from "@/utils/id";
 import { isSyncConfigured } from "@/lib/supabaseClient";
-import { MIN_PIN_LENGTH, signInOrSignUp } from "@/auth/authEngine";
+import { MIN_PIN_LENGTH, signIn, signUp } from "@/auth/authEngine";
 import { flushPendingSync, syncAfterLogin } from "@/sync/remoteSync";
 
 // Username must be English only (letters, digits, and . _ - separators).
@@ -107,21 +107,100 @@ function AccountStep({
 }) {
   const syncEnabled = isSyncConfigured();
 
+  // Without a configured server there are no accounts to check credentials
+  // against, so skip straight to the (password-less) signup form — same as
+  // this screen's original behaviour in that mode.
+  const [mode, setMode] = useState<"choose" | "login" | "signup">(
+    () => (syncEnabled ? "choose" : "signup")
+  );
+
   const [name, setName] = useState(
     () => getCurrentUserName() ?? ""
   );
 
   const [username, setUsername] = useState("");
   const [pin, setPin] = useState("");
+  const [confirmPin, setConfirmPin] = useState("");
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const canSubmit =
-    !busy &&
-    name.trim().length > 0 &&
-    username.trim().length > 0 &&
-    (!syncEnabled || pin.length >= MIN_PIN_LENGTH);
+  function goToMode(next: "choose" | "login" | "signup") {
+    setMode(next);
+    setError(null);
+  }
 
-  function applyLocalAccount(trimmedName: string, trimmedUsername: string) {
+  async function afterAuthSuccess(trimmedUsername: string) {
+    if (syncEnabled) {
+      // On a brand-new remote account this uploads the (now-migrated) local
+      // data as the initial snapshot; on a returning account logging in from
+      // a fresh device, this pulls its existing data (including the display
+      // name) down instead.
+      await syncAfterLogin(trimmedUsername);
+    }
+
+    setBusy(false);
+
+    // A username that already has a configured program (existing, migrated,
+    // or just pulled down from the server) goes straight into the app.
+    if (hasStartDate()) {
+      window.location.replace("/");
+      return;
+    }
+
+    onNewAccount();
+  }
+
+  async function submitLogin() {
+    setError(null);
+
+    const trimmedUsername = username.trim();
+
+    if (!trimmedUsername) return;
+
+    setBusy(true);
+
+    const result = await signIn(trimmedUsername, pin);
+
+    if (!result.ok) {
+      setBusy(false);
+      setError(result.error ?? "ورود ناموفق بود.");
+      return;
+    }
+
+    setCurrentUsername(trimmedUsername);
+    await afterAuthSuccess(trimmedUsername);
+  }
+
+  async function submitSignup() {
+    setError(null);
+
+    const trimmedName = name.trim();
+    const trimmedUsername = username.trim();
+
+    if (!trimmedName || !trimmedUsername) return;
+
+    if (!USERNAME_PATTERN.test(trimmedUsername)) {
+      setError("نام کاربری باید فقط با حروف و اعداد انگلیسی باشد.");
+      return;
+    }
+
+    if (syncEnabled && pin !== confirmPin) {
+      setError("تکرار رمز مطابقت ندارد.");
+      return;
+    }
+
+    setBusy(true);
+
+    if (syncEnabled) {
+      const result = await signUp(trimmedUsername, pin);
+
+      if (!result.ok) {
+        setBusy(false);
+        setError(result.error ?? "ثبت‌نام ناموفق بود.");
+        return;
+      }
+    }
+
     // Existing users from the old name-scoped scheme carry their data over to
     // the username they pick here. This must happen BEFORE syncAfterLogin
     // below — otherwise a brand-new remote account would bootstrap-push an
@@ -137,52 +216,19 @@ function AccountStep({
     }
 
     setCurrentUserName(trimmedName);
+
+    await afterAuthSuccess(trimmedUsername);
   }
 
-  async function submit() {
-    const trimmedName = name.trim();
-    const trimmedUsername = username.trim();
+  const canSubmitLogin =
+    !busy && username.trim().length > 0 && pin.length >= MIN_PIN_LENGTH;
 
-    if (!trimmedName || !trimmedUsername) return;
-
-    if (!USERNAME_PATTERN.test(trimmedUsername)) {
-      window.alert(
-        "نام کاربری باید فقط با حروف و اعداد انگلیسی باشد."
-      );
-      return;
-    }
-
-    if (syncEnabled) {
-      setBusy(true);
-
-      const result = await signInOrSignUp(trimmedUsername, pin);
-
-      if (!result.ok) {
-        setBusy(false);
-        window.alert(result.error ?? "ورود ناموفق بود.");
-        return;
-      }
-    }
-
-    applyLocalAccount(trimmedName, trimmedUsername);
-
-    if (syncEnabled) {
-      // On a brand-new remote account this uploads the (now-migrated) local
-      // data as the initial snapshot; on a returning account logging in from
-      // a fresh device, this pulls its existing data down instead.
-      await syncAfterLogin(trimmedUsername);
-      setBusy(false);
-    }
-
-    // A username that already has a configured program (existing, migrated,
-    // or just pulled down from the server) goes straight into the app.
-    if (hasStartDate()) {
-      window.location.replace("/");
-      return;
-    }
-
-    onNewAccount();
-  }
+  const canSubmitSignup =
+    !busy &&
+    name.trim().length > 0 &&
+    username.trim().length > 0 &&
+    (!syncEnabled ||
+      (pin.length >= MIN_PIN_LENGTH && confirmPin.length > 0));
 
   return (
     <div className="app-gradient-bg pt-safe relative flex min-h-screen flex-col items-center justify-center px-6 py-10">
@@ -194,57 +240,180 @@ function AccountStep({
         <SetupBrand />
 
         <div className="glass-panel rounded-2xl p-6 space-y-4 text-center">
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") void submit();
-            }}
-            placeholder="اسم خودت رو وارد کن"
-            className="glass-chip w-full rounded-xl p-4 text-center text-white"
-          />
+          {mode === "choose" && (
+            <div className="space-y-3">
+              <button
+                onClick={() => goToMode("login")}
+                className="glass-tap w-full rounded-2xl bg-avocado-yellow py-4 text-xl font-bold text-black"
+              >
+                ورود
+              </button>
 
-          <input
-            type="text"
-            value={username}
-            onChange={(e) =>
-              // Strip anything that isn't English so the username stays valid.
-              setUsername(e.target.value.replace(/[^A-Za-z0-9._-]/g, ""))
-            }
-            onKeyDown={(e) => {
-              if (e.key === "Enter") void submit();
-            }}
-            placeholder="نام کاربری خودت رو وارد کن"
-            dir="ltr"
-            autoCapitalize="none"
-            autoCorrect="off"
-            spellCheck={false}
-            className="glass-chip w-full rounded-xl p-4 text-center text-white"
-          />
-
-          {syncEnabled && (
-            <input
-              type="password"
-              inputMode="numeric"
-              value={pin}
-              onChange={(e) => setPin(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") void submit();
-              }}
-              placeholder={`رمز خودت رو وارد کن (حداقل ${MIN_PIN_LENGTH} کاراکتر)`}
-              dir="ltr"
-              className="glass-chip w-full rounded-xl p-4 text-center text-white"
-            />
+              <button
+                onClick={() => goToMode("signup")}
+                className="glass-tap w-full rounded-2xl bg-forest-600 py-4 text-xl font-bold text-white"
+              >
+                ثبت نام
+              </button>
+            </div>
           )}
 
-          <button
-            onClick={() => void submit()}
-            disabled={!canSubmit}
-            className="glass-tap w-full rounded-2xl bg-avocado-yellow py-4 text-xl font-bold text-black disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            {busy ? "..." : "ادامه"}
-          </button>
+          {mode === "login" && (
+            <>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => {
+                  // Strip anything that isn't English so the username stays valid.
+                  setUsername(e.target.value.replace(/[^A-Za-z0-9._-]/g, ""));
+                  setError(null);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") void submitLogin();
+                }}
+                placeholder="نام کاربری خودت رو وارد کن"
+                dir="ltr"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+                className="glass-chip w-full rounded-xl p-4 text-center text-white"
+              />
+
+              <input
+                type="password"
+                inputMode="numeric"
+                value={pin}
+                onChange={(e) => {
+                  setPin(e.target.value);
+                  setError(null);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") void submitLogin();
+                }}
+                placeholder="رمز عبورت رو وارد کن"
+                dir="ltr"
+                className="glass-chip w-full rounded-xl p-4 text-center text-white"
+              />
+
+              {error && (
+                <p className="text-sm text-red-400">
+                  {error}
+                </p>
+              )}
+
+              <button
+                onClick={() => void submitLogin()}
+                disabled={!canSubmitLogin}
+                className="glass-tap w-full rounded-2xl bg-avocado-yellow py-4 text-xl font-bold text-black disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {busy ? "..." : "ورود"}
+              </button>
+
+              <button
+                onClick={() => goToMode("choose")}
+                disabled={busy}
+                className="w-full text-sm text-zinc-400 underline disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                بازگشت
+              </button>
+            </>
+          )}
+
+          {mode === "signup" && (
+            <>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  setError(null);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") void submitSignup();
+                }}
+                placeholder="اسم خودت رو وارد کن"
+                className="glass-chip w-full rounded-xl p-4 text-center text-white"
+              />
+
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => {
+                  setUsername(e.target.value.replace(/[^A-Za-z0-9._-]/g, ""));
+                  setError(null);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") void submitSignup();
+                }}
+                placeholder="نام کاربری خودت رو وارد کن"
+                dir="ltr"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+                className="glass-chip w-full rounded-xl p-4 text-center text-white"
+              />
+
+              {syncEnabled && (
+                <>
+                  <input
+                    type="password"
+                    inputMode="numeric"
+                    value={pin}
+                    onChange={(e) => {
+                      setPin(e.target.value);
+                      setError(null);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") void submitSignup();
+                    }}
+                    placeholder={`رمز خودت رو وارد کن (حداقل ${MIN_PIN_LENGTH} کاراکتر)`}
+                    dir="ltr"
+                    className="glass-chip w-full rounded-xl p-4 text-center text-white"
+                  />
+
+                  <input
+                    type="password"
+                    inputMode="numeric"
+                    value={confirmPin}
+                    onChange={(e) => {
+                      setConfirmPin(e.target.value);
+                      setError(null);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") void submitSignup();
+                    }}
+                    placeholder="تکرار رمز عبور"
+                    dir="ltr"
+                    className="glass-chip w-full rounded-xl p-4 text-center text-white"
+                  />
+                </>
+              )}
+
+              {error && (
+                <p className="text-sm text-red-400">
+                  {error}
+                </p>
+              )}
+
+              <button
+                onClick={() => void submitSignup()}
+                disabled={!canSubmitSignup}
+                className="glass-tap w-full rounded-2xl bg-avocado-yellow py-4 text-xl font-bold text-black disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {busy ? "..." : "ثبت نام"}
+              </button>
+
+              {syncEnabled && (
+                <button
+                  onClick={() => goToMode("choose")}
+                  disabled={busy}
+                  className="w-full text-sm text-zinc-400 underline disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  بازگشت
+                </button>
+              )}
+            </>
+          )}
         </div>
       </div>
     </div>
