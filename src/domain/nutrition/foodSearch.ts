@@ -2,6 +2,7 @@ import type { FoodItem } from "@/types/food";
 import { iranianFoodsDatabase } from "@/data/nutrition/iranianFoodsDatabase";
 import { internationalFoodsDatabase } from "@/data/nutrition/internationalFoodsDatabase";
 import { gymFoodsDatabase } from "@/data/nutrition/gymFoodsDatabase";
+import { supplementsDatabase } from "@/data/nutrition/supplementsDatabase";
 import { searchExternalFoods } from "@/lib/openFoodFactsApi";
 
 const MIN_LOCAL_RESULTS_BEFORE_EXTERNAL_LOOKUP = 5;
@@ -15,6 +16,11 @@ export const localFoods: FoodItem[] = [
   ...internationalFoodsDatabase,
   ...gymFoodsDatabase,
 ];
+
+// Kept out of localFoods deliberately — supplements/vitamins belong to their
+// own "مکمل و ویتامین‌ها" meal slot, not the regular per-meal food search
+// (you wouldn't want creatine suggested for lunch).
+export const supplementFoods: FoodItem[] = supplementsDatabase;
 
 function normalizeFa(value: string): string {
   return value.replace(/ي/g, "ی").replace(/ك/g, "ک").trim().toLowerCase();
@@ -42,6 +48,22 @@ function searchLocal(query: string): FoodItem[] {
   if (!qFa) return [];
 
   return localFoods.filter(
+    (food) =>
+      matchesWordPrefix(normalizeFa(food.nameFa), qFa) ||
+      matchesWordPrefix(food.nameEn.toLowerCase(), qEn),
+  );
+}
+
+// Supplements are a small, fixed, curated list — a plain local filter is
+// enough, no need for the external-API fallback searchFood() uses for the
+// much larger, open-ended regular food catalog.
+export function searchSupplements(query: string): FoodItem[] {
+  const qFa = normalizeFa(query);
+  const qEn = query.trim().toLowerCase();
+
+  if (!qFa) return [];
+
+  return supplementFoods.filter(
     (food) =>
       matchesWordPrefix(normalizeFa(food.nameFa), qFa) ||
       matchesWordPrefix(food.nameEn.toLowerCase(), qEn),

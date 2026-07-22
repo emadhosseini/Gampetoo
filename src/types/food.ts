@@ -3,7 +3,8 @@ export type FoodCategory =
   | "bread_grain"
   | "dairy"
   | "protein"
-  | "snack";
+  | "snack"
+  | "supplement";
 
 // One selectable way to count out a serving of a food (a spoonful, a whole
 // piece, a cup, plain grams, ...) — `grams` is how much one of that unit

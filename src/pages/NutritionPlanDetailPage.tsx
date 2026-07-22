@@ -4,8 +4,15 @@ import { useParams } from "react-router-dom";
 
 import { getActiveProgram, updateProgram } from "@/utils/programEngine";
 import { getMealSlots } from "@/data/nutrition/foodCatalog";
-import { localFoods, searchFood } from "@/domain/nutrition/foodSearch";
+import {
+  localFoods,
+  searchFood,
+  searchSupplements,
+  supplementFoods,
+} from "@/domain/nutrition/foodSearch";
 import { sortFoodsForMeal } from "@/domain/nutrition/mealFoodSuggestions";
+
+const SUPPLEMENTS_MEAL_ID = "supplements";
 
 import type { FoodItem as FoodEntry, ServingUnit } from "@/types/food";
 import type { MealPlan, MealPlanType, MealSection } from "@/types/nutrition";
@@ -65,7 +72,12 @@ function MealFoodList({
   onToggleFood: (entry: FoodEntry) => void;
   onUpdateQuantity: (entry: FoodEntry, quantity: number, unit: ServingUnit) => void;
 }) {
-  const suggestedFoods = useMemo(() => sortFoodsForMeal(localFoods, meal.id), [meal.id]);
+  const isSupplementsMeal = meal.id === SUPPLEMENTS_MEAL_ID;
+
+  const suggestedFoods = useMemo(
+    () => (isSupplementsMeal ? supplementFoods : sortFoodsForMeal(localFoods, meal.id)),
+    [meal.id, isSupplementsMeal],
+  );
   const visibleFoods = isFiltering ? results : suggestedFoods;
 
   return (
@@ -243,7 +255,12 @@ export default function NutritionPlanDetailPage() {
 
     setMealLoading((prev) => ({ ...prev, [mealId]: true }));
 
-    const { results } = await searchFood(query);
+    // Supplements are a small fixed list — a plain local filter, no external
+    // API lookup like the regular (much larger, open-ended) food catalog.
+    const results =
+      mealId === SUPPLEMENTS_MEAL_ID
+        ? searchSupplements(query)
+        : (await searchFood(query)).results;
 
     if (searchRequestId.current[mealId] !== requestId) return;
 
@@ -395,7 +412,7 @@ export default function NutritionPlanDetailPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 px-5 pb-5 pt-10">
       <h1 className="text-center text-2xl font-bold text-white">
         {typeTitles[type]}
       </h1>
