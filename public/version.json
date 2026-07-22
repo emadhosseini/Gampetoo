@@ -1,6 +1,14 @@
 {
-  "current": "1.3.5",
+  "current": "1.3.6",
   "history": [
+    {
+      "version": "1.3.6",
+      "date": "2026-07-22",
+      "description": "Added a \"مکمل و ویتامین‌ها\" (supplements & vitamins) section to both the workout-day and rest-day meal plans, right after \"قبل خواب\" — with a dedicated bank of the most commonly used sports supplements (creatine, whey protein, multivitamin, omega-3, vitamin D3, magnesium, BCAA, caffeine/pre-workout, glutamine, vitamin C, zinc, ZMA, beta-alanine, collagen), kept separate from the regular food search so it never gets suggested as a meal food. Also fixed the nutrition menu pages having no horizontal padding (buttons/cards ran edge-to-edge) — now matches the width used on Settings and other pages.",
+      "highlights": [
+        "💊 اضافه شدن منوی مکمل و ویتامین‌ها با بانک مکمل‌های ورزشی پرکاربرد"
+      ]
+    },
     {
       "version": "1.3.5",
       "date": "2026-07-22",
