@@ -1,4 +1,4 @@
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Search } from "lucide-react";
 import { useState } from "react";
 import { useParams } from "react-router-dom";
 
@@ -16,13 +16,145 @@ const typeTitles: Record<MealPlanType, string> = {
   rest: "برنامه غذایی روزهای استراحت",
 };
 
+// Live-search only kicks in past this many characters — short queries (1-3
+// chars) match too many/ambiguous entries in a small catalog, so below this
+// length a search only applies once explicitly submitted via the button.
+const AUTO_SEARCH_MIN_LENGTH = 3;
+
 function parseQuantity(amount: string, fallback: number): number {
   const match = amount.match(/^(\d+(?:\.\d+)?)/);
   return match ? Number(match[1]) : fallback;
 }
 
+// Normalizes the Arabic/Persian look-alike letters (ي/ی, ك/ک) that Persian
+// and Arabic keyboards both produce, so a search doesn't miss entries typed
+// with the "wrong" variant.
+function normalizeFa(value: string): string {
+  return value.replace(/ي/g, "ی").replace(/ك/g, "ک").trim().toLowerCase();
+}
+
+function matchesFoodQuery(entry: FoodCatalogEntry, query: string): boolean {
+  const q = normalizeFa(query);
+
+  if (!q) return true;
+
+  return (
+    normalizeFa(entry.name).includes(q) ||
+    entry.nameEn.toLowerCase().includes(q)
+  );
+}
+
 function mealCalories(meal: MealSection): number {
   return meal.foods.reduce((sum, food) => sum + (food.calories ?? 0), 0);
+}
+
+function MealFoodList({
+  meal,
+  query,
+  isFiltering,
+  onQueryChange,
+  onSubmitSearch,
+  onToggleFood,
+  onUpdateQuantity,
+}: {
+  meal: MealSection;
+  query: string;
+  isFiltering: boolean;
+  onQueryChange: (value: string) => void;
+  onSubmitSearch: () => void;
+  onToggleFood: (entry: FoodCatalogEntry) => void;
+  onUpdateQuantity: (entry: FoodCatalogEntry, quantity: number) => void;
+}) {
+  const visibleFoods = isFiltering
+    ? foodCatalog.filter((entry) => matchesFoodQuery(entry, query))
+    : foodCatalog;
+
+  return (
+    <div className="mt-4 space-y-2">
+      <div className="glass-chip flex items-center gap-2 rounded-xl p-2">
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => onQueryChange(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") onSubmitSearch();
+          }}
+          placeholder="جستجوی غذا..."
+          className="flex-1 bg-transparent px-2 py-2 text-sm text-white placeholder:text-white/50 outline-none"
+        />
+
+        <button
+          onClick={onSubmitSearch}
+          aria-label="جستجو"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-avocado-yellow text-black"
+        >
+          <Search size={16} />
+        </button>
+      </div>
+
+      {isFiltering && visibleFoods.length === 0 && (
+        <p className="py-3 text-center text-sm text-white">
+          غذایی پیدا نشد.
+        </p>
+      )}
+
+      {visibleFoods.map((entry) => {
+        const selected = meal.foods.find(
+          (food) => food.name === entry.name,
+        );
+
+        return (
+          <div
+            key={entry.name}
+            className="glass-chip glass-static flex items-center gap-3 rounded-xl p-3"
+          >
+            <input
+              type="checkbox"
+              checked={!!selected}
+              onChange={() => onToggleFood(entry)}
+              className="h-5 w-5 shrink-0"
+            />
+
+            <span className="flex-1 text-sm text-white">
+              {entry.name}
+            </span>
+
+            {selected && selected.calories !== undefined && (
+              <span className="text-sm font-semibold text-white">
+                {selected.calories} کیلوکالری
+              </span>
+            )}
+
+            {selected &&
+              (entry.defaultQuantity !== null ? (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min={0}
+                    value={parseQuantity(
+                      selected.amount,
+                      entry.defaultQuantity,
+                    )}
+                    onChange={(e) =>
+                      onUpdateQuantity(entry, Number(e.target.value))
+                    }
+                    className="w-16 rounded-lg border border-forest-500 bg-forest-600 px-2 py-1 text-center text-sm text-white"
+                  />
+
+                  <span className="text-sm text-white">
+                    {entry.unit}
+                  </span>
+                </div>
+              ) : (
+                <span className="text-sm text-white">
+                  {entry.defaultAmount}
+                </span>
+              ))}
+          </div>
+        );
+      })}
+    </div>
+  );
 }
 
 function buildInitialPlan(type: MealPlanType): MealPlan {
@@ -67,6 +199,26 @@ export default function NutritionPlanDetailPage() {
 
   const [openMealId, setOpenMealId] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+
+  // Per-meal search text, and which meals have had a search explicitly
+  // submitted (via the button) — once true, that meal keeps filtering live
+  // regardless of query length, until the box is cleared back to empty.
+  const [mealQueries, setMealQueries] = useState<Record<string, string>>({});
+  const [searchActive, setSearchActive] = useState<Record<string, boolean>>(
+    {},
+  );
+
+  function setMealQuery(mealId: string, value: string) {
+    setMealQueries((prev) => ({ ...prev, [mealId]: value }));
+
+    if (value.trim().length === 0) {
+      setSearchActive((prev) => ({ ...prev, [mealId]: false }));
+    }
+  }
+
+  function submitMealSearch(mealId: string) {
+    setSearchActive((prev) => ({ ...prev, [mealId]: true }));
+  }
 
   if (!type || !plan) {
     return (
@@ -244,67 +396,21 @@ export default function NutritionPlanDetailPage() {
               </div>
 
               {isOpen && (
-                <div className="mt-4 space-y-2">
-                  {foodCatalog.map((entry) => {
-                    const selected = meal.foods.find(
-                      (food) => food.name === entry.name,
-                    );
-
-                    return (
-                      <div
-                        key={entry.name}
-                        className="glass-chip glass-static flex items-center gap-3 rounded-xl p-3"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={!!selected}
-                          onChange={() => toggleFood(meal.id, entry)}
-                          className="h-5 w-5 shrink-0"
-                        />
-
-                        <span className="flex-1 text-sm text-white">
-                          {entry.name}
-                        </span>
-
-                        {selected && selected.calories !== undefined && (
-                          <span className="text-sm font-semibold text-white">
-                            {selected.calories} کیلوکالری
-                          </span>
-                        )}
-
-                        {selected &&
-                          (entry.defaultQuantity !== null ? (
-                            <div className="flex items-center gap-2">
-                              <input
-                                type="number"
-                                min={0}
-                                value={parseQuantity(
-                                  selected.amount,
-                                  entry.defaultQuantity,
-                                )}
-                                onChange={(e) =>
-                                  updateFoodQuantity(
-                                    meal.id,
-                                    entry,
-                                    Number(e.target.value),
-                                  )
-                                }
-                                className="w-16 rounded-lg border border-forest-500 bg-forest-600 px-2 py-1 text-center text-sm text-white"
-                              />
-
-                              <span className="text-sm text-white">
-                                {entry.unit}
-                              </span>
-                            </div>
-                          ) : (
-                            <span className="text-sm text-white">
-                              {entry.defaultAmount}
-                            </span>
-                          ))}
-                      </div>
-                    );
-                  })}
-                </div>
+                <MealFoodList
+                  meal={meal}
+                  query={mealQueries[meal.id] ?? ""}
+                  isFiltering={
+                    searchActive[meal.id] ||
+                    (mealQueries[meal.id] ?? "").trim().length >
+                      AUTO_SEARCH_MIN_LENGTH
+                  }
+                  onQueryChange={(value) => setMealQuery(meal.id, value)}
+                  onSubmitSearch={() => submitMealSearch(meal.id)}
+                  onToggleFood={(entry) => toggleFood(meal.id, entry)}
+                  onUpdateQuantity={(entry, quantity) =>
+                    updateFoodQuantity(meal.id, entry, quantity)
+                  }
+                />
               )}
             </div>
           );

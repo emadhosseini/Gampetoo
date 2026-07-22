@@ -10,11 +10,38 @@ export interface MealSlot {
 
 export interface FoodCatalogEntry {
   name: string;
+  nameEn: string;
   unit: string;
   defaultQuantity: number | null;
   defaultAmount: string;
   calories?: number;
 }
+
+// The English name isn't stored on the raw meal-plan food entries (those are
+// Persian-only), so it's looked up here by the Persian name instead of
+// touching every entry in mealPlans.ts. Search (NutritionPlanDetailPage)
+// matches against both. Add new foods to mealPlans.ts as usual — this map
+// only needs a fallback for their Persian name to stay bilingual-searchable.
+const FOOD_NAME_EN: Record<string, string> = {
+  "آب": "Water",
+  "اسپرسو": "Espresso",
+  "بادام": "Almond",
+  "برنج پخته": "Cooked Rice",
+  "تخم مرغ کامل": "Whole Egg",
+  "جو دوسر": "Oats",
+  "سالاد": "Salad",
+  "سبزیجات": "Vegetables",
+  "سفیده تخم مرغ": "Egg White",
+  "سیب زمینی": "Potato",
+  "سینه مرغ": "Chicken Breast",
+  "قهوه تلخ": "Black Coffee",
+  "ماست یونانی": "Greek Yogurt",
+  "ماست یونانی یا پنیر کاتیج کم چرب": "Greek Yogurt or Cottage Cheese",
+  "ماهی": "Fish",
+  "مرغ": "Chicken",
+  "موز": "Banana",
+  "گوشت کم چرب": "Lean Meat",
+};
 
 const QUANTITY_PATTERN = /^(\d+(?:\.\d+)?)\s+(.+)$/;
 
@@ -30,6 +57,7 @@ function buildFoodCatalog(): FoodCatalogEntry[] {
 
         catalog.set(food.name, {
           name: food.name,
+          nameEn: FOOD_NAME_EN[food.name] ?? food.name,
           unit: match ? match[2] : food.amount,
           defaultQuantity: match ? Number(match[1]) : null,
           defaultAmount: food.amount,
