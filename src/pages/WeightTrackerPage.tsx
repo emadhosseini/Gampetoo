@@ -15,6 +15,7 @@ import DateObject from "react-date-object";
 import persian from "react-date-object/calendars/persian";
 import persian_fa from "react-date-object/locales/persian_fa";
 
+import WeightPicker from "@/components/WeightPicker";
 import { getTodaysWeight, getWeightLog, logWeight } from "@/utils/weightEngine";
 
 ChartJS.register(
@@ -47,9 +48,7 @@ function formatJalaliShort(iso: string): string {
 
 export default function WeightTrackerPage() {
   const [entries, setEntries] = useState(() => getWeightLog());
-  const [weightInput, setWeightInput] = useState(() =>
-    (getTodaysWeight() ?? "").toString(),
-  );
+  const [weight, setWeight] = useState(() => getTodaysWeight() ?? 70);
   const [saved, setSaved] = useState(false);
 
   const chartRef = useRef<ChartJS<"line"> | null>(null);
@@ -57,14 +56,7 @@ export default function WeightTrackerPage() {
   const alreadyLoggedToday = getTodaysWeight() !== null;
 
   function handleLog() {
-    const value = Number(weightInput);
-
-    if (!weightInput || Number.isNaN(value) || value <= 0) {
-      window.alert("لطفاً یک وزن معتبر وارد کن.");
-      return;
-    }
-
-    setEntries(logWeight(value));
+    setEntries(logWeight(weight));
     setSaved(true);
   }
 
@@ -144,24 +136,15 @@ export default function WeightTrackerPage() {
           {alreadyLoggedToday ? "وزن امروزت رو ویرایش کن" : "وزن امروزت رو وارد کن"}
         </label>
 
-        <div className="flex items-center justify-center gap-3">
-          <input
-            type="number"
-            inputMode="decimal"
-            step="0.01"
-            min="0"
-            value={weightInput}
-            onChange={(e) => {
-              setWeightInput(e.target.value);
-              setSaved(false);
-            }}
-            placeholder="۰٫۰۰"
-            dir="ltr"
-            className="glass-chip w-32 rounded-xl p-4 text-center text-lg text-white"
-          />
+        <WeightPicker
+          value={weight}
+          onChange={(newWeight) => {
+            setWeight(newWeight);
+            setSaved(false);
+          }}
+        />
 
-          <span className="text-zinc-400">کیلوگرم</span>
-        </div>
+        <p className="mt-1 text-sm text-zinc-400">کیلوگرم</p>
 
         <button
           onClick={handleLog}

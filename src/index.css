@@ -24,6 +24,17 @@
   padding-bottom: env(safe-area-inset-bottom);
 }
 
+/* Hides the scrollbar on a native-scrolling wheel picker (WeightPicker)
+   without disabling scroll itself. */
+@utility no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 html {
   direction: rtl;
 }
