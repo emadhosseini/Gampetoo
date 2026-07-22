@@ -1,6 +1,7 @@
 import { useState } from "react";
 
-import { completeWorkout } from "@/utils/sessionEngine";
+import { shiftProgramOneDayForward } from "@/utils/programEngine";
+import { resetSession } from "@/utils/sessionEngine";
 
 type WorkoutHeaderProps = {
   title: string;
@@ -14,11 +15,13 @@ export default function WorkoutHeader({
   const [open, setOpen] = useState(false);
 
   function handleConfirm() {
-    completeWorkout();
-    // No reactive state layer ties WorkoutPage's "انجام دادی" badge to this
-    // write — a full reload is how the rest of the app already handles this
-    // (see ProgramBuilderPage after updateWorkoutDay).
-    window.location.reload();
+    // Shifts the program cycle one day forward (startDate moves back a day)
+    // so today shows what would have been tomorrow's workout, instead of
+    // repeating the one that was actually done yesterday but never logged.
+    shiftProgramOneDayForward();
+    resetSession();
+
+    window.location.href = "/";
   }
 
   return (
@@ -45,13 +48,13 @@ export default function WorkoutHeader({
             </div>
 
             <h2 className="mt-4 text-lg font-bold text-white">
-              یادت رفته ثبتش کنی؟
+              یادت رفته دیروز رو ثبت کنی؟
             </h2>
 
             <p className="mt-2 text-sm leading-7 text-zinc-200">
-              اگه تمرینت رو انجام دادی ولی یادت رفت به‌موقع دکمه «انجام دادم»
-              رو بزنی، با این گزینه می‌تونی همین الان تمرین امروز رو
-              به‌عنوان انجام‌شده ثبت کنی.
+              اگه دیروز تمرینت رو انجام دادی ولی یادت رفت ثبتش کنی، با این
+              گزینه چرخه‌ی برنامه یک روز جلو می‌ره — یعنی برنامه‌ی امروز،
+              همون برنامه‌ای می‌شه که قرار بود فردا باشه.
             </p>
 
             <div className="mt-6 flex flex-col gap-3">
