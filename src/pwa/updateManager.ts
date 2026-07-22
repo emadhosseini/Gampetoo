@@ -1,5 +1,8 @@
 import { registerSW } from "virtual:pwa-register";
 
+import { getCurrentUsername } from "@/utils/userEngine";
+import { flushPendingSync } from "@/sync/remoteSync";
+
 // Re-checks while the app stays open for a long time in the background — the
 // main trigger is still every reopen/foreground below.
 const BACKGROUND_CHECK_INTERVAL_MS = 60 * 60 * 1000;
@@ -114,6 +117,17 @@ async function applyUpdate() {
   if (!updateSW) return;
 
   setState({ status: "updating" });
+
+  // This reload tears down the JS context (and any pending debounced sync
+  // push) exactly like the navigations elsewhere in the app that already
+  // flush first — skipping it here let an unsynced edit (e.g. a just-logged
+  // weight entry) get silently dropped, or even overwritten by a stale push
+  // racing in from the old tab right as the new one loads.
+  const username = getCurrentUsername();
+
+  if (username) {
+    await flushPendingSync(username);
+  }
 
   try {
     await updateSW(true);
