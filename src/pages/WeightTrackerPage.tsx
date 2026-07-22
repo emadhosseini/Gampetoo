@@ -16,7 +16,12 @@ import persian from "react-date-object/calendars/persian";
 import persian_fa from "react-date-object/locales/persian_fa";
 
 import WeightPicker from "@/components/WeightPicker";
-import { getTodaysWeight, getWeightLog, logWeight } from "@/utils/weightEngine";
+import {
+  getLatestWeight,
+  getTodaysWeight,
+  getWeightLog,
+  logWeight,
+} from "@/utils/weightEngine";
 
 ChartJS.register(
   CategoryScale,
@@ -48,7 +53,7 @@ function formatJalaliShort(iso: string): string {
 
 export default function WeightTrackerPage() {
   const [entries, setEntries] = useState(() => getWeightLog());
-  const [weight, setWeight] = useState(() => getTodaysWeight() ?? 70);
+  const [weight, setWeight] = useState(() => getLatestWeight() ?? 50);
   const [saved, setSaved] = useState(false);
 
   const chartRef = useRef<ChartJS<"line"> | null>(null);
@@ -143,8 +148,6 @@ export default function WeightTrackerPage() {
             setSaved(false);
           }}
         />
-
-        <p className="mt-1 text-sm text-zinc-400">کیلوگرم</p>
 
         <button
           onClick={handleLog}

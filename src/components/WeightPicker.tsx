@@ -2,7 +2,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, useScroll, useTransform, type MotionValue } from "framer-motion";
 
 const ITEM_HEIGHT = 40;
-const VISIBLE_ITEMS = 5;
+// One row above, the selected row, one row below.
+const VISIBLE_ITEMS = 3;
 const CONTAINER_HEIGHT = ITEM_HEIGHT * VISIBLE_ITEMS;
 // How long the wheel must sit still before we treat it as "settled" and
 // report the centered value — native scroll-snap already handles the visual
@@ -29,21 +30,21 @@ function WheelItem({ scrollY, index, label }: WheelItemProps) {
 
   const scale = useTransform(
     distance,
-    [-ITEM_HEIGHT * 2, 0, ITEM_HEIGHT * 2],
-    [0.7, 1, 0.7],
+    [-ITEM_HEIGHT, 0, ITEM_HEIGHT],
+    [0.65, 1.15, 0.65],
   );
 
   const opacity = useTransform(
     distance,
-    [-ITEM_HEIGHT * 2, 0, ITEM_HEIGHT * 2],
-    [0.25, 1, 0.25],
+    [-ITEM_HEIGHT, 0, ITEM_HEIGHT],
+    [0.35, 1, 0.35],
   );
 
   return (
     <div style={{ height: ITEM_HEIGHT, scrollSnapAlign: "center" }}>
       <motion.div
         style={{ scale, opacity }}
-        className="flex h-full items-center justify-center text-2xl font-bold tabular-nums text-white"
+        className="text-forest-900 flex h-full items-center justify-center text-2xl font-bold tabular-nums"
       >
         {label}
       </motion.div>
@@ -116,15 +117,11 @@ function WheelColumn({
         ))}
       </div>
 
-      {/* Center selection band, purely decorative. */}
+      {/* Center selection band — a thin indicator line only, no fill. */}
       <div
-        className="pointer-events-none absolute inset-x-0 top-1/2 -translate-y-1/2 border-y border-white/15"
+        className="border-forest-900/25 pointer-events-none absolute inset-x-0 top-1/2 -translate-y-1/2 border-y"
         style={{ height: ITEM_HEIGHT }}
       />
-
-      {/* Fade the edges toward the surrounding background. */}
-      <div className="from-forest-900 pointer-events-none absolute inset-x-0 top-0 h-1/3 bg-gradient-to-b to-transparent" />
-      <div className="from-forest-900 pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t to-transparent" />
     </div>
   );
 }
@@ -186,7 +183,7 @@ export default function WeightPicker({
         className="w-16"
       />
 
-      <span className="pb-1 text-2xl font-bold text-white">.</span>
+      <span className="text-forest-900 pb-1 text-2xl font-bold">.</span>
 
       <WheelColumn
         values={gramValues}
