@@ -29,7 +29,7 @@ export default function SubstitutionsCard({
         </span>
 
         <ChevronDown
-          className={`h-5 w-5 text-zinc-400 transition-transform ${
+          className={`h-5 w-5 text-zinc-200 transition-transform ${
             isOpen ? "rotate-180" : ""
           }`}
         />

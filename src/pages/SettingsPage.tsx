@@ -57,7 +57,7 @@ export default function SettingsPage() {
               کتابخانه تمرین‌ها
             </h2>
 
-            <p className="text-sm text-zinc-500">
+            <p className="text-sm text-zinc-300">
               مدیریت تمرین‌ها و حرکات
             </p>
           </div>
@@ -72,7 +72,7 @@ export default function SettingsPage() {
               برنامه تمرینی
             </h2>
 
-            <p className="text-sm text-zinc-500">
+            <p className="text-sm text-zinc-300">
               مدیریت روزهای برنامه و انتخاب تمرین هر روز
             </p>
           </div>
@@ -87,7 +87,7 @@ export default function SettingsPage() {
               برنامه غذایی
             </h2>
 
-            <p className="text-sm text-zinc-500">
+            <p className="text-sm text-zinc-300">
               انتخاب وعده‌ها و غذاهای برنامه تمرین و استراحت
             </p>
           </div>
@@ -102,7 +102,7 @@ export default function SettingsPage() {
               ثبت وزن و نمودار وزنی
             </h2>
 
-            <p className="text-sm text-zinc-500">
+            <p className="text-sm text-zinc-300">
               ثبت وزن روزانه و مشاهده روند تغییرات
             </p>
           </div>
@@ -118,20 +118,20 @@ export default function SettingsPage() {
             خروج از حساب کاربری
           </h2>
 
-          <p className="text-xs text-zinc-400">
+          <p className="text-xs text-zinc-200">
             بدون پاک شدن اطلاعات و تنظیمات
           </p>
         </button>
 
         <button
           onClick={() => void handleReset()}
-          className="glass-tap flex-1 rounded-xl border border-red-900 bg-red-950/30 backdrop-blur-xl p-3 text-center text-red-400 transition hover:bg-red-950/50"
+          className="glass-tap flex-1 rounded-xl border border-red-900 bg-red-950/30 backdrop-blur-xl p-3 text-center text-red-200 transition hover:bg-red-950/50"
         >
           <h2 className="text-sm font-semibold">
             پاک کردن حساب کاربری
           </h2>
 
-          <p className="text-xs text-red-500">
+          <p className="text-xs text-red-200">
             حذف کامل برنامه و پاک کردن اطلاعات
           </p>
         </button>

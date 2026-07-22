@@ -13,7 +13,7 @@ function HeroCard({
 }: HeroCardProps) {
   return (
     <div className="glass-panel rounded-[32px] p-8 text-center">
-      <p className="text-sm text-zinc-400">
+      <p className="text-sm text-zinc-200">
         {title}
       </p>
 
@@ -26,7 +26,7 @@ function HeroCard({
       </h2>
 
       {description && (
-        <p className="mt-4 text-sm leading-7 text-zinc-400">
+        <p className="mt-4 text-sm leading-7 text-zinc-200">
           {description}
         </p>
       )}

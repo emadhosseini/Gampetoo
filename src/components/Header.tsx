@@ -44,7 +44,7 @@ function Header() {
 
   return (
     <header className="px-6 pt-8 pb-6 text-center">
-      <p className="text-sm text-zinc-400">
+      <p className="text-sm text-zinc-200">
         سلام {userName} 👋
       </p>
 
@@ -52,7 +52,7 @@ function Header() {
         امروز چه برنامه‌ای داری؟
       </h1>
 
-      <p className="mt-3 text-sm text-zinc-500">
+      <p className="mt-3 text-sm text-zinc-300">
         {today}
       </p>
     </header>

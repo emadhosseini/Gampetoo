@@ -34,7 +34,7 @@ export default function UpdateModal({
           نسخه جدید آماده است
         </h2>
 
-        <p className="mt-2 text-sm leading-7 text-zinc-400">
+        <p className="mt-2 text-sm leading-7 text-zinc-200">
           نسخه جدید منتشر شده است.
           <br />
           برای استفاده از آخرین امکانات و رفع باگ‌ها برنامه را بروزرسانی کنید.
@@ -42,7 +42,7 @@ export default function UpdateModal({
 
         <div className="mt-4 flex items-center justify-center gap-6 rounded-xl bg-forest-600/60 py-3">
           <div className="text-center">
-            <p className="text-xs text-zinc-500">نسخه فعلی</p>
+            <p className="text-xs text-zinc-300">نسخه فعلی</p>
             <p dir="ltr" className="mt-1 font-bold text-white">
               {currentVersion}
             </p>
@@ -50,7 +50,7 @@ export default function UpdateModal({
 
           {newVersion && (
             <div className="text-center">
-              <p className="text-xs text-zinc-500">نسخه جدید</p>
+              <p className="text-xs text-zinc-300">نسخه جدید</p>
               <p dir="ltr" className="mt-1 font-bold text-emerald-400">
                 {newVersion}
               </p>

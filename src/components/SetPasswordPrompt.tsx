@@ -93,7 +93,7 @@ export default function SetPasswordPrompt() {
             رمز عبورت با موفقیت تنظیم شد ✅
           </p>
 
-          <p className="mt-2 text-sm leading-7 text-zinc-400">
+          <p className="mt-2 text-sm leading-7 text-zinc-200">
             اطلاعاتت الان روی سرور هم ذخیره شده و از هر دستگاهی با همین نام
             کاربری در دسترسته.
           </p>
@@ -116,7 +116,7 @@ export default function SetPasswordPrompt() {
           رمز عبور تنظیم کن
         </p>
 
-        <p className="mt-2 text-sm leading-7 text-zinc-400">
+        <p className="mt-2 text-sm leading-7 text-zinc-200">
           با تنظیم یک رمز عبور، اطلاعات فعلیت بدون هیچ تغییری روی سرور
           ذخیره می‌شه و می‌تونی با همین نام کاربری از هر دستگاه دیگه‌ای هم
           بهش دسترسی داشته باشی.
@@ -149,7 +149,7 @@ export default function SetPasswordPrompt() {
         </div>
 
         {error && (
-          <p className="mt-3 text-sm text-red-400">
+          <p className="mt-3 text-sm text-red-200">
             {error}
           </p>
         )}

@@ -46,6 +46,23 @@ body {
   color: #ffffff;
 }
 
+/* This is an app, not a document — text/buttons shouldn't highlight into a
+   selection on tap-and-hold, and iOS shouldn't pop its copy/lookup callout
+   menu. Inputs are the one place people actually need to select text (to
+   edit/replace a value), so they opt back in explicitly. */
+* {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+input,
+textarea {
+  -webkit-touch-callout: default;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
 /* Flat forest-green base — kept uniform (not fading darker toward the
    bottom) so the mesh-gradient glow layer stays consistent across the full
    page instead of being swallowed by a dark fade near the bottom. */

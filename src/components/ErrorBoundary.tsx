@@ -58,7 +58,7 @@ export default class ErrorBoundary extends Component<Props, State> {
             مشکلی پیش اومد
           </h1>
 
-          <p className="mt-2 text-sm leading-7 text-zinc-400">
+          <p className="mt-2 text-sm leading-7 text-zinc-200">
             یک خطای غیرمنتظره رخ داد. می‌تونی دوباره تلاش کنی، یا اگر مشکل
             ادامه داشت، برنامه رو بازنشانی کنی.
           </p>
@@ -73,7 +73,7 @@ export default class ErrorBoundary extends Component<Props, State> {
 
             <button
               onClick={this.handleReset}
-              className="w-full rounded-2xl border border-red-900 bg-red-950/30 py-3 font-bold text-red-400"
+              className="w-full rounded-2xl border border-red-900 bg-red-950/30 py-3 font-bold text-red-200"
             >
               بازنشانی کامل برنامه
             </button>

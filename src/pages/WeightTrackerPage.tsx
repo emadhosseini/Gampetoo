@@ -99,11 +99,11 @@ export default function WeightTrackerPage() {
         x: {
           min: initialWindow.min,
           max: initialWindow.max,
-          ticks: { color: "#a1a1aa" },
+          ticks: { color: "#e4e4e7" },
           grid: { color: "#1e2542" },
         },
         y: {
-          ticks: { color: "#a1a1aa" },
+          ticks: { color: "#e4e4e7" },
           grid: { color: "#1e2542" },
         },
       },
@@ -137,7 +137,7 @@ export default function WeightTrackerPage() {
       </h1>
 
       <div className="glass-panel glass-static rounded-2xl p-4 text-center">
-        <label className="mb-3 block text-sm text-zinc-400">
+        <label className="mb-3 block text-sm text-zinc-200">
           {alreadyLoggedToday ? "وزن امروزت رو ویرایش کن" : "وزن امروزت رو وارد کن"}
         </label>
 
@@ -158,12 +158,12 @@ export default function WeightTrackerPage() {
       </div>
 
       <div className="glass-panel rounded-2xl p-4">
-        <p className="mb-3 text-center text-sm text-zinc-400">
+        <p className="mb-3 text-center text-sm text-zinc-200">
           نمودار وزن
         </p>
 
         {entries.length === 0 ? (
-          <p className="py-8 text-center text-zinc-500">
+          <p className="py-8 text-center text-zinc-300">
             هنوز وزنی ثبت نکردی.
           </p>
         ) : (
@@ -172,13 +172,13 @@ export default function WeightTrackerPage() {
               <Line ref={chartRef} data={chartData} options={chartOptions} />
             </div>
 
-            <p className="mt-3 text-center text-xs text-zinc-500">
+            <p className="mt-3 text-center text-xs text-zinc-300">
               با اسکرول یا دو انگشتی زوم کن، برای دیدن وزن‌های قبلی بکش
             </p>
 
             <button
               onClick={() => chartRef.current?.resetZoom()}
-              className="mx-auto mt-2 block text-xs text-zinc-400 underline"
+              className="mx-auto mt-2 block text-xs text-zinc-200 underline"
             >
               بازنشانی نمودار
             </button>

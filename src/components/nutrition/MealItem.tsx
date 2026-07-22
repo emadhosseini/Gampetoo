@@ -11,7 +11,7 @@ export default function MealItem({ item }: MealItemProps) {
         {item.name}
       </span>
 
-      <span className="text-center text-sm text-orange-400">
+      <span className="text-center text-sm text-orange-300">
         {item.calories !== undefined && `${item.calories} کیلوکالری`}
       </span>
 

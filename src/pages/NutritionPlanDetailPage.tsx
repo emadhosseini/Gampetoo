@@ -225,7 +225,7 @@ export default function NutritionPlanDetailPage() {
                 </button>
 
                 {calories > 0 && (
-                  <span className="whitespace-nowrap text-sm font-medium text-orange-400">
+                  <span className="whitespace-nowrap text-sm font-medium text-orange-300">
                     {calories} کیلوکالری
                   </span>
                 )}
@@ -236,7 +236,7 @@ export default function NutritionPlanDetailPage() {
                   }
                 >
                   <ChevronDown
-                    className={`h-5 w-5 text-zinc-400 transition-transform ${
+                    className={`h-5 w-5 text-zinc-200 transition-transform ${
                       isOpen ? "rotate-180" : ""
                     }`}
                   />
@@ -267,7 +267,7 @@ export default function NutritionPlanDetailPage() {
                         </span>
 
                         {selected && selected.calories !== undefined && (
-                          <span className="text-sm text-orange-400">
+                          <span className="text-sm text-orange-300">
                             {selected.calories} کیلوکالری
                           </span>
                         )}
@@ -292,12 +292,12 @@ export default function NutritionPlanDetailPage() {
                                 className="w-16 rounded-lg border border-forest-500 bg-forest-600 px-2 py-1 text-center text-sm text-white"
                               />
 
-                              <span className="text-sm text-zinc-400">
+                              <span className="text-sm text-zinc-200">
                                 {entry.unit}
                               </span>
                             </div>
                           ) : (
-                            <span className="text-sm text-zinc-400">
+                            <span className="text-sm text-zinc-200">
                               {entry.defaultAmount}
                             </span>
                           ))}
@@ -312,11 +312,11 @@ export default function NutritionPlanDetailPage() {
       </div>
 
       <div className="glass-panel rounded-2xl p-4 text-center">
-        <p className="text-sm text-zinc-400">
+        <p className="text-sm text-zinc-200">
           مجموع کالری روز
         </p>
 
-        <p className="mt-1 text-xl font-bold text-orange-400">
+        <p className="mt-1 text-xl font-bold text-orange-300">
           {plan.meals
             .filter((meal) => meal.enabled ?? true)
             .reduce((sum, meal) => sum + mealCalories(meal), 0)}{" "}

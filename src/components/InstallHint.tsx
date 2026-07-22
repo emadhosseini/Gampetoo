@@ -42,7 +42,7 @@ export default function InstallHint() {
           برای دسترسی راحت‌تر به برنامه
         </p>
 
-        <p className="mt-3 text-sm leading-8 text-zinc-400">
+        <p className="mt-3 text-sm leading-8 text-zinc-200">
           روی دکمه
           <span className="mx-1 inline-flex items-center gap-1 align-middle font-medium text-white">
             <Share size={16} />

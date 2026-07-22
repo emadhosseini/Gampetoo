@@ -100,7 +100,7 @@ function ProgramBuilderPage() {
             <button
               onClick={() => removeDay(index)}
               disabled={days.length <= 1}
-              className="text-sm text-red-400 disabled:opacity-30"
+              className="text-sm text-red-200 disabled:opacity-30"
             >
               حذف
             </button>

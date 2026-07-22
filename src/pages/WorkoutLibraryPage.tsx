@@ -27,12 +27,12 @@ export default function WorkoutLibraryPage() {
                 {workout.title}
               </h2>
 
-              <p className="text-sm text-zinc-500">
+              <p className="text-sm text-zinc-300">
                 {workout.groups.length} گروه عضلانی
               </p>
             </div>
 
-            <ChevronRight className="h-5 w-5 text-zinc-400" />
+            <ChevronRight className="h-5 w-5 text-zinc-200" />
           </button>
         ))}
       </div>

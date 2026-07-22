@@ -28,7 +28,7 @@ export default function MealCard({ meal }: MealCardProps) {
         </span>
 
         <ChevronDown
-          className={`h-5 w-5 text-zinc-400 transition-transform ${
+          className={`h-5 w-5 text-zinc-200 transition-transform ${
             isOpen ? "rotate-180" : ""
           }`}
         />
@@ -45,7 +45,7 @@ export default function MealCard({ meal }: MealCardProps) {
           {(meal.calories || meal.protein) && (
             <div className="flex items-center gap-4 pt-2 text-sm">
               {meal.calories && (
-                <span className="text-orange-400">
+                <span className="text-orange-300">
                   {meal.calories} کیلوکالری
                 </span>
               )}
@@ -60,7 +60,7 @@ export default function MealCard({ meal }: MealCardProps) {
 
           {meal.notes && meal.notes.length > 0 && (
             <div className="glass-chip rounded-xl p-3">
-              <div className="mb-2 text-xs font-semibold text-zinc-400">
+              <div className="mb-2 text-xs font-semibold text-zinc-200">
                 نکات
               </div>
 

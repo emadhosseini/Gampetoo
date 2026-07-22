@@ -19,7 +19,7 @@ export default function NutritionPlanLibraryPage() {
             برنامه غذایی روزهای تمرین
           </h2>
 
-          <ChevronRight className="h-5 w-5 text-zinc-400" />
+          <ChevronRight className="h-5 w-5 text-zinc-200" />
         </button>
 
         <button
@@ -30,7 +30,7 @@ export default function NutritionPlanLibraryPage() {
             برنامه غذایی روزهای استراحت
           </h2>
 
-          <ChevronRight className="h-5 w-5 text-zinc-400" />
+          <ChevronRight className="h-5 w-5 text-zinc-200" />
         </button>
       </div>
     </div>

@@ -38,7 +38,7 @@ export default function SpecializedWarmupBlock({
         </span>
 
         <ChevronDown
-          className={`h-5 w-5 text-zinc-400 transition-transform ${
+          className={`h-5 w-5 text-zinc-200 transition-transform ${
             isOpen ? "rotate-180" : ""
           }`}
         />
@@ -48,7 +48,7 @@ export default function SpecializedWarmupBlock({
         <div className="mt-4 space-y-4">
           {groups.map((group) => (
             <div key={group.id}>
-              <div className="mb-2 text-xs font-semibold text-zinc-400">
+              <div className="mb-2 text-xs font-semibold text-zinc-200">
                 {group.title}
               </div>
 

@@ -296,7 +296,7 @@ function AccountStep({
               />
 
               {error && (
-                <p className="text-sm text-red-400">
+                <p className="text-sm text-red-200">
                   {error}
                 </p>
               )}
@@ -312,7 +312,7 @@ function AccountStep({
               <button
                 onClick={() => goToMode("choose")}
                 disabled={busy}
-                className="w-full text-sm text-zinc-400 underline disabled:cursor-not-allowed disabled:opacity-40"
+                className="w-full text-sm text-zinc-200 underline disabled:cursor-not-allowed disabled:opacity-40"
               >
                 بازگشت
               </button>
@@ -390,7 +390,7 @@ function AccountStep({
               )}
 
               {error && (
-                <p className="text-sm text-red-400">
+                <p className="text-sm text-red-200">
                   {error}
                 </p>
               )}
@@ -407,7 +407,7 @@ function AccountStep({
                 <button
                   onClick={() => goToMode("choose")}
                   disabled={busy}
-                  className="w-full text-sm text-zinc-400 underline disabled:cursor-not-allowed disabled:opacity-40"
+                  className="w-full text-sm text-zinc-200 underline disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   بازگشت
                 </button>
@@ -510,7 +510,7 @@ function ProgramCycleSetup() {
             Gampetoo
           </h1>
 
-          <p className="mt-2 text-zinc-400">
+          <p className="mt-2 text-zinc-200">
             برنامه تمرینی روزانه خودت رو بساز
           </p>
         </div>
@@ -545,7 +545,7 @@ function ProgramCycleSetup() {
           </div>
           {activity === "workout" && (
             <>
-              <p className="text-sm text-zinc-400">
+              <p className="text-sm text-zinc-200">
                 یکی از تمرین‌های زیر را انتخاب کنید.
               </p>
 
@@ -620,7 +620,7 @@ function ProgramCycleSetup() {
               روز {persianDays[index] ?? `${index + 1}`}
             </p>
 
-            <p className="text-zinc-400">
+            <p className="text-zinc-200">
               {day.activity === "walk"
                 ? "استراحت و پیاده‌روی سبک"
                 : day.title}
@@ -629,7 +629,7 @@ function ProgramCycleSetup() {
 
           <button
             onClick={() => removeDay(day.id)}
-            className="text-red-400"
+            className="text-red-200"
           >
             حذف
           </button>
@@ -640,7 +640,7 @@ function ProgramCycleSetup() {
 )}
   {days.length > 0 && (
   <div className="glass-panel rounded-2xl p-6">
-    <label className="mb-3 block text-center text-sm font-medium text-zinc-400">
+    <label className="mb-3 block text-center text-sm font-medium text-zinc-200">
      از چه تاریخی این چرخه آغاز شود؟
     </label>
 

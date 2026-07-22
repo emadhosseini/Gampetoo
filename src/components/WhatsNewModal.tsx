@@ -23,7 +23,7 @@ export default function WhatsNewModal({
           🎉 تغییرات این نسخه
         </h2>
 
-        <p dir="ltr" className="mt-1 text-xs text-zinc-500">
+        <p dir="ltr" className="mt-1 text-xs text-zinc-300">
           {version}
         </p>
 

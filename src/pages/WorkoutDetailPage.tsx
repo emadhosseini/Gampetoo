@@ -102,7 +102,7 @@ export default function WorkoutDetailPage() {
               </h2>
 
               <ChevronDown
-                className={`h-5 w-5 text-zinc-400 transition-transform ${
+                className={`h-5 w-5 text-zinc-200 transition-transform ${
                   warmupSectionOpen ? "rotate-180" : ""
                 }`}
               />
@@ -166,7 +166,7 @@ export default function WorkoutDetailPage() {
                 </h2>
 
                 <ChevronDown
-                  className={`h-5 w-5 text-zinc-400 transition-transform ${
+                  className={`h-5 w-5 text-zinc-200 transition-transform ${
                     isOpen ? "rotate-180" : ""
                   }`}
                 />
@@ -201,7 +201,7 @@ export default function WorkoutDetailPage() {
                       {workout.id !== "warmup" && (
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <div className="mb-2 text-sm text-zinc-500">
+                            <div className="mb-2 text-sm text-zinc-300">
                               ست
                             </div>
 
@@ -233,7 +233,7 @@ export default function WorkoutDetailPage() {
                           </div>
 
                           <div>
-                            <div className="mb-2 text-sm text-zinc-500">
+                            <div className="mb-2 text-sm text-zinc-300">
                               تکرار
                             </div>
 
