@@ -1,6 +1,14 @@
 {
-  "current": "1.2.4",
+  "current": "1.2.5",
   "history": [
+    {
+      "version": "1.2.5",
+      "date": "2026-07-22",
+      "description": "The black box was gone after 1.2.4, but the mascot froze on a single frame on real iOS Safari — moving the source video far off-screen to hide it also made iOS suspend its playback entirely (a known battery-saving behavior for off-screen video). Reverted to keeping the video plainly on-screen and in normal document flow, relying on ordinary DOM stacking (the canvas simply paints over it afterward) instead of any CSS hiding trick, so it stays visible enough to keep decoding while never actually being shown.",
+      "highlights": [
+        "🎨 رفع مشکل ثابت ماندن انیمیشن لوگو در سافاری موبایل"
+      ]
+    },
     {
       "version": "1.2.4",
       "date": "2026-07-22",
