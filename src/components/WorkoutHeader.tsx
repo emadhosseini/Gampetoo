@@ -9,7 +9,7 @@ export default function WorkoutHeader({
 }: WorkoutHeaderProps) {
   return (
     <div className="mb-6 mt-4 text-center">
-      <p className="text-sm text-zinc-200">{subtitle}</p>
+      <p className="text-sm text-white">{subtitle}</p>
 
       <h1 className="mt-1 text-3xl font-bold">
         {title}

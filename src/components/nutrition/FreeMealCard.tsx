@@ -23,16 +23,16 @@ export default function FreeMealCard({ message }: FreeMealCardProps) {
   return (
     <div className="glass-tap rounded-2xl border border-amber-700/40 bg-amber-500/10 backdrop-blur-xl p-5 text-center">
       {locked ? (
-        <p className="text-lg font-semibold text-amber-400">
+        <p className="text-lg font-semibold text-white">
           شما در این هفته وعده آزاد ندارید
         </p>
       ) : (
         <>
-          <h2 className="mb-3 text-xl font-semibold text-amber-400">
+          <h2 className="mb-3 text-xl font-semibold text-white">
             🍕 وعده آزاد
           </h2>
 
-          <p className="text-zinc-200">{message}</p>
+          <p className="text-white">{message}</p>
 
           <button
             onClick={handleClick}

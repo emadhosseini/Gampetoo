@@ -23,7 +23,7 @@ export default function WhatsNewModal({
           🎉 تغییرات این نسخه
         </h2>
 
-        <p dir="ltr" className="mt-1 text-xs text-zinc-300">
+        <p dir="ltr" className="mt-1 text-xs text-white">
           {version}
         </p>
 
@@ -31,7 +31,7 @@ export default function WhatsNewModal({
           {highlights.map((item) => (
             <li
               key={item}
-              className="rounded-xl bg-forest-600/60 px-4 py-3 text-right text-sm text-zinc-200"
+              className="rounded-xl bg-forest-600/60 px-4 py-3 text-right text-sm text-white"
             >
               {item}
             </li>

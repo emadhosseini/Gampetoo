@@ -90,7 +90,7 @@ const workout = workoutType
             امروز روز استراحت توئه
           </h2>
 
-          <p className="mt-3 text-sm text-zinc-200">
+          <p className="mt-3 text-sm text-white">
             به مدت ۴۵ تا ۶۰ دقیقه پیاده روی سبک داشته باش
           </p>
         </div>
@@ -128,7 +128,7 @@ const workout = workoutType
 
         <div className="glass-panel rounded-3xl p-2 text-center">
 
-          <p className="m-3 text-zinc-200">
+          <p className="m-3 text-white">
             برای این تمرین هنوز حرکتی انتخاب نشده.
             {/* <h2>در کتابخانه تمرین ها حرکت های مورد نظر خود را انتخاب کنید</h2> */}
           </p>
@@ -174,7 +174,7 @@ const workout = workoutType
         />
       )}
 
-      <p className="text-center text-sm text-zinc-200">
+      <p className="text-center text-sm text-white">
         خلاصه تمرین امروز
       </p>
 

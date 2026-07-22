@@ -99,12 +99,12 @@ export default function WeightTrackerPage() {
         x: {
           min: initialWindow.min,
           max: initialWindow.max,
-          ticks: { color: "#e4e4e7" },
-          grid: { color: "#1e2542" },
+          ticks: { color: "#ffffff" },
+          grid: { color: "#327b3e" },
         },
         y: {
-          ticks: { color: "#e4e4e7" },
-          grid: { color: "#1e2542" },
+          ticks: { color: "#ffffff" },
+          grid: { color: "#327b3e" },
         },
       },
       plugins: {
@@ -137,7 +137,7 @@ export default function WeightTrackerPage() {
       </h1>
 
       <div className="glass-panel glass-static rounded-2xl p-4 text-center">
-        <label className="mb-3 block text-sm text-zinc-200">
+        <label className="mb-3 block text-sm text-white">
           {alreadyLoggedToday ? "وزن امروزت رو ویرایش کن" : "وزن امروزت رو وارد کن"}
         </label>
 
@@ -158,12 +158,12 @@ export default function WeightTrackerPage() {
       </div>
 
       <div className="glass-panel rounded-2xl p-4">
-        <p className="mb-3 text-center text-sm text-zinc-200">
+        <p className="mb-3 text-center text-sm text-white">
           نمودار وزن
         </p>
 
         {entries.length === 0 ? (
-          <p className="py-8 text-center text-zinc-300">
+          <p className="py-8 text-center text-white">
             هنوز وزنی ثبت نکردی.
           </p>
         ) : (
@@ -172,13 +172,13 @@ export default function WeightTrackerPage() {
               <Line ref={chartRef} data={chartData} options={chartOptions} />
             </div>
 
-            <p className="mt-3 text-center text-xs text-zinc-300">
+            <p className="mt-3 text-center text-xs text-white">
               با اسکرول یا دو انگشتی زوم کن، برای دیدن وزن‌های قبلی بکش
             </p>
 
             <button
               onClick={() => chartRef.current?.resetZoom()}
-              className="mx-auto mt-2 block text-xs text-zinc-200 underline"
+              className="mx-auto mt-2 block text-xs text-white underline"
             >
               بازنشانی نمودار
             </button>

@@ -90,24 +90,24 @@ function ProgramBuilderPage() {
       {days.map((day, index) => (
         <div
           key={day.id}
-          className="glass-panel rounded-2xl p-4"
+          className="day-card-gradient rounded-2xl p-4"
         >
           <div className="flex items-center justify-between">
-            <div className="font-semibold">
+            <div className="text-lg font-bold text-white">
               روز {persianDays[index] ?? `${index + 1}`}
             </div>
 
             <button
               onClick={() => removeDay(index)}
               disabled={days.length <= 1}
-              className="text-sm text-red-200 disabled:opacity-30"
+              className="text-sm text-white disabled:opacity-30"
             >
               حذف
             </button>
           </div>
 
           <select
-            className="mt-3 w-full rounded-xl border border-forest-500 bg-forest-600 p-3 text-white"
+            className="selector-pill mt-3 w-full rounded-xl p-3 font-bold text-white"
             value={day.workoutId ?? ""}
             onChange={(e) => {
               updateDayWorkout(
@@ -134,7 +134,7 @@ function ProgramBuilderPage() {
 
       <button
         onClick={addDay}
-        className="glass-tap w-full rounded-2xl border border-dashed border-forest-500 py-4 text-center font-semibold text-zinc-300"
+        className="ghost-action w-full rounded-2xl py-4 text-center font-medium text-white"
       >
         + افزودن روز تمرینی
       </button>

@@ -251,7 +251,7 @@ function AccountStep({
 
               <button
                 onClick={() => goToMode("signup")}
-                className="glass-tap w-full rounded-2xl bg-forest-600 py-4 text-xl font-bold text-white"
+                className="selector-pill glass-tap w-full rounded-2xl py-4 text-xl font-bold text-white"
               >
                 ثبت نام
               </button>
@@ -296,7 +296,7 @@ function AccountStep({
               />
 
               {error && (
-                <p className="text-sm text-red-200">
+                <p className="text-sm text-white">
                   {error}
                 </p>
               )}
@@ -312,7 +312,7 @@ function AccountStep({
               <button
                 onClick={() => goToMode("choose")}
                 disabled={busy}
-                className="w-full text-sm text-zinc-200 underline disabled:cursor-not-allowed disabled:opacity-40"
+                className="w-full text-sm text-white underline disabled:cursor-not-allowed disabled:opacity-40"
               >
                 بازگشت
               </button>
@@ -390,7 +390,7 @@ function AccountStep({
               )}
 
               {error && (
-                <p className="text-sm text-red-200">
+                <p className="text-sm text-white">
                   {error}
                 </p>
               )}
@@ -407,7 +407,7 @@ function AccountStep({
                 <button
                   onClick={() => goToMode("choose")}
                   disabled={busy}
-                  className="w-full text-sm text-zinc-200 underline disabled:cursor-not-allowed disabled:opacity-40"
+                  className="w-full text-sm text-white underline disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   بازگشت
                 </button>
@@ -510,7 +510,7 @@ function ProgramCycleSetup() {
             Gampetoo
           </h1>
 
-          <p className="mt-2 text-zinc-200">
+          <p className="mt-2 text-white">
             برنامه تمرینی روزانه خودت رو بساز
           </p>
         </div>
@@ -526,7 +526,7 @@ function ProgramCycleSetup() {
               className={`glass-tap rounded-xl py-4 font-bold transition-colors ${
                 activity === "workout"
                   ? "bg-avocado-yellow text-black"
-                  : "bg-forest-600 text-white"
+                  : "selector-pill text-white"
               }`}
             >
               تمرین
@@ -537,7 +537,7 @@ function ProgramCycleSetup() {
               className={`glass-tap rounded-xl py-4 font-bold transition-colors ${
                 activity === "walk"
                   ? "bg-avocado-yellow text-black"
-                  : "bg-forest-600 text-white"
+                  : "selector-pill text-white"
               }`}
             >
               استراحت
@@ -545,7 +545,7 @@ function ProgramCycleSetup() {
           </div>
           {activity === "workout" && (
             <>
-              <p className="text-sm text-zinc-200">
+              <p className="text-sm text-white">
                 یکی از تمرین‌های زیر را انتخاب کنید.
               </p>
 
@@ -557,7 +557,7 @@ function ProgramCycleSetup() {
                     className={`glass-tap rounded-xl py-3 font-bold transition-colors ${
                       selectedWorkout === item.id
                         ? "bg-avocado-yellow text-black"
-                        : "bg-forest-600 text-white"
+                        : "selector-pill text-white"
                     }`}
                   >
                     {item.title}
@@ -613,14 +613,14 @@ function ProgramCycleSetup() {
       {days.map((day, index) => (
         <div
           key={day.id}
-          className="glass-chip flex items-center justify-between rounded-xl p-4"
+          className="day-card-gradient flex items-center justify-between rounded-xl p-4"
         >
           <div className="flex-1 text-right">
-            <p className="font-bold text-white">
+            <p className="text-lg font-bold text-white">
               روز {persianDays[index] ?? `${index + 1}`}
             </p>
 
-            <p className="text-zinc-200">
+            <p className="text-sm text-white">
               {day.activity === "walk"
                 ? "استراحت و پیاده‌روی سبک"
                 : day.title}
@@ -629,7 +629,7 @@ function ProgramCycleSetup() {
 
           <button
             onClick={() => removeDay(day.id)}
-            className="text-red-200"
+            className="text-sm text-white"
           >
             حذف
           </button>
@@ -640,7 +640,7 @@ function ProgramCycleSetup() {
 )}
   {days.length > 0 && (
   <div className="glass-panel rounded-2xl p-6">
-    <label className="mb-3 block text-center text-sm font-medium text-zinc-200">
+    <label className="mb-3 block text-center text-sm font-medium text-white">
      از چه تاریخی این چرخه آغاز شود؟
     </label>
 

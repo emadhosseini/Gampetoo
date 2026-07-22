@@ -225,7 +225,7 @@ export default function NutritionPlanDetailPage() {
                 </button>
 
                 {calories > 0 && (
-                  <span className="whitespace-nowrap text-sm font-medium text-orange-300">
+                  <span className="whitespace-nowrap text-sm font-medium text-white">
                     {calories} کیلوکالری
                   </span>
                 )}
@@ -262,12 +262,12 @@ export default function NutritionPlanDetailPage() {
                           className="h-5 w-5 shrink-0"
                         />
 
-                        <span className="flex-1 text-sm text-zinc-100">
+                        <span className="flex-1 text-sm text-white">
                           {entry.name}
                         </span>
 
                         {selected && selected.calories !== undefined && (
-                          <span className="text-sm text-orange-300">
+                          <span className="text-sm font-semibold text-white">
                             {selected.calories} کیلوکالری
                           </span>
                         )}
@@ -292,12 +292,12 @@ export default function NutritionPlanDetailPage() {
                                 className="w-16 rounded-lg border border-forest-500 bg-forest-600 px-2 py-1 text-center text-sm text-white"
                               />
 
-                              <span className="text-sm text-zinc-200">
+                              <span className="text-sm text-white">
                                 {entry.unit}
                               </span>
                             </div>
                           ) : (
-                            <span className="text-sm text-zinc-200">
+                            <span className="text-sm text-white">
                               {entry.defaultAmount}
                             </span>
                           ))}
@@ -312,11 +312,11 @@ export default function NutritionPlanDetailPage() {
       </div>
 
       <div className="glass-panel rounded-2xl p-4 text-center">
-        <p className="text-sm text-zinc-200">
+        <p className="text-sm text-white">
           مجموع کالری روز
         </p>
 
-        <p className="mt-1 text-xl font-bold text-orange-300">
+        <p className="mt-1 text-xl font-bold text-white">
           {plan.meals
             .filter((meal) => meal.enabled ?? true)
             .reduce((sum, meal) => sum + mealCalories(meal), 0)}{" "}
@@ -326,7 +326,7 @@ export default function NutritionPlanDetailPage() {
 
       <button
         onClick={handleSave}
-        className="glass-tap w-full rounded-2xl bg-forest-900/80 backdrop-blur-xl py-4 text-lg font-semibold text-white"
+        className="glass-tap w-full rounded-2xl bg-avocado-yellow py-4 text-lg font-bold text-black"
       >
         {saved ? "ذخیره شد ✅" : "ذخیره"}
       </button>

@@ -45,13 +45,13 @@ export default function MealCard({ meal }: MealCardProps) {
           {(meal.calories || meal.protein) && (
             <div className="flex items-center gap-4 pt-2 text-sm">
               {meal.calories && (
-                <span className="text-orange-300">
+                <span className="text-white">
                   {meal.calories} کیلوکالری
                 </span>
               )}
 
               {meal.protein && (
-                <span className="text-emerald-400">
+                <span className="font-semibold text-white">
                   {meal.protein} گرم پروتئین
                 </span>
               )}
@@ -60,7 +60,7 @@ export default function MealCard({ meal }: MealCardProps) {
 
           {meal.notes && meal.notes.length > 0 && (
             <div className="glass-chip rounded-xl p-3">
-              <div className="mb-2 text-xs font-semibold text-zinc-200">
+              <div className="mb-2 text-xs font-semibold text-white">
                 نکات
               </div>
 
@@ -68,7 +68,7 @@ export default function MealCard({ meal }: MealCardProps) {
                 {meal.notes.map((note, index) => (
                   <li
                     key={index}
-                    className="text-sm text-zinc-200"
+                    className="text-sm text-white"
                   >
                     • {note}
                   </li>

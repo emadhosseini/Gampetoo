@@ -13,7 +13,7 @@ export default function ExerciseCard({
         {exercise.name}
       </h2>
 
-      <div className="mt-2 flex justify-between text-sm text-zinc-200">
+      <div className="mt-2 flex justify-between text-sm text-white">
         <span>{exercise.sets} ست</span>
         <span>{exercise.reps} تکرار</span>
       </div>

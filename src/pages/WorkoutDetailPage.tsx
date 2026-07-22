@@ -201,11 +201,11 @@ export default function WorkoutDetailPage() {
                       {workout.id !== "warmup" && (
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <div className="mb-2 text-sm text-zinc-300">
+                            <div className="mb-2 text-sm font-medium text-white">
                               ست
                             </div>
 
-                            <div className="flex items-center justify-between rounded-xl border p-2">
+                            <div className="selector-pill flex items-center justify-between rounded-xl p-2">
                               <button
                                 onClick={() => {
                                   if (exercise.sets <= 1) return;
@@ -218,7 +218,7 @@ export default function WorkoutDetailPage() {
                                 <Minus size={18} />
                               </button>
 
-                              <span>{exercise.sets}</span>
+                              <span className="font-bold text-white">{exercise.sets}</span>
 
                               <button
                                 onClick={() =>
@@ -233,11 +233,11 @@ export default function WorkoutDetailPage() {
                           </div>
 
                           <div>
-                            <div className="mb-2 text-sm text-zinc-300">
+                            <div className="mb-2 text-sm font-medium text-white">
                               تکرار
                             </div>
 
-                            <div className="flex items-center justify-between rounded-xl border p-2">
+                            <div className="selector-pill flex items-center justify-between rounded-xl p-2">
                               <button
                                 onClick={() => {
                                   if (exercise.reps <= 1) return;
@@ -250,7 +250,7 @@ export default function WorkoutDetailPage() {
                                 <Minus size={18} />
                               </button>
 
-                              <span>{exercise.reps}</span>
+                              <span className="font-bold text-white">{exercise.reps}</span>
 
                               <button
                                 onClick={() =>
@@ -276,7 +276,7 @@ export default function WorkoutDetailPage() {
 
       <button
         onClick={handleSave}
-        className="glass-tap w-full rounded-2xl bg-forest-900/80 backdrop-blur-xl py-4 text-lg font-semibold text-white"
+        className="glass-tap w-full rounded-2xl bg-avocado-yellow py-4 text-lg font-bold text-black"
       >
         {saved ? "ذخیره شد ✅" : "ذخیره"}
       </button>

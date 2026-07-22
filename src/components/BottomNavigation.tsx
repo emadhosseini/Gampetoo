@@ -44,7 +44,7 @@ export default function BottomNavigation() {
                 `flex flex-col items-center gap-1 text-xs transition-colors ${
                   isActive
                     ? "text-avocado-yellow"
-                    : "text-zinc-300"
+                    : "text-white"
                 }`
               }
             >

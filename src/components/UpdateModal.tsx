@@ -34,7 +34,7 @@ export default function UpdateModal({
           نسخه جدید آماده است
         </h2>
 
-        <p className="mt-2 text-sm leading-7 text-zinc-200">
+        <p className="mt-2 text-sm leading-7 text-white">
           نسخه جدید منتشر شده است.
           <br />
           برای استفاده از آخرین امکانات و رفع باگ‌ها برنامه را بروزرسانی کنید.
@@ -42,7 +42,7 @@ export default function UpdateModal({
 
         <div className="mt-4 flex items-center justify-center gap-6 rounded-xl bg-forest-600/60 py-3">
           <div className="text-center">
-            <p className="text-xs text-zinc-300">نسخه فعلی</p>
+            <p className="text-xs text-white">نسخه فعلی</p>
             <p dir="ltr" className="mt-1 font-bold text-white">
               {currentVersion}
             </p>
@@ -50,8 +50,8 @@ export default function UpdateModal({
 
           {newVersion && (
             <div className="text-center">
-              <p className="text-xs text-zinc-300">نسخه جدید</p>
-              <p dir="ltr" className="mt-1 font-bold text-emerald-400">
+              <p className="text-xs text-white">نسخه جدید</p>
+              <p dir="ltr" className="mt-1 font-bold text-white">
                 {newVersion}
               </p>
             </div>
@@ -62,7 +62,7 @@ export default function UpdateModal({
           <button
             onClick={onLater}
             disabled={updating}
-            className="flex-1 rounded-2xl bg-forest-600 py-3 font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
+            className="ghost-action flex-1 rounded-2xl py-3 font-medium text-white disabled:cursor-not-allowed disabled:opacity-40"
           >
             بعداً
           </button>

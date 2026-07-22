@@ -10,8 +10,12 @@
   --color-forest-600: #327b3e;
   --color-forest-500: #3b9149;
 
-  /* The mascot icon's yellow (its avocado flesh) — the app's button/accent color. */
+  /* The mascot icon's yellow (its avocado flesh) — the app's primary button color. */
   --color-avocado-yellow: #faea5c;
+
+  /* A brighter lime-green, used only as the light end of the day-card
+     gradient (day-card-gradient below). */
+  --color-avocado-lime: #9dc730;
 }
 
 /* Respect the iOS notch / Dynamic Island / home-indicator when installed to the
@@ -140,6 +144,50 @@ textarea {
   .glass-panel,
   .glass-chip,
   .glass-tap {
+    transition: none;
+  }
+}
+
+/* Interactive-element system, by function:
+   - .day-card-gradient: the editable "day" container (holds a select and a
+     delete action) — a vivid solid gradient, not glass, since it's the
+     thing being directly worked on rather than a passive info card. No
+     press-transform: it wraps smaller controls, and scaling it would shift
+     them out from under the finger mid-tap (see .glass-static above).
+   - .selector-pill: a choice control (native <select>, a toggle in a
+     choice group) — solid, flat, one level lighter than the gradient's
+     dark end so it still reads as "nested inside" the day card.
+   - .ghost-action: a secondary/optional action (add, cancel) — outline
+     only, no fill, so it never competes with the primary yellow CTA. */
+.day-card-gradient {
+  background: linear-gradient(
+    120deg,
+    var(--color-forest-500) 0%,
+    var(--color-avocado-lime) 100%
+  );
+}
+
+.selector-pill {
+  background-color: var(--color-forest-600);
+}
+
+.ghost-action {
+  background-color: transparent;
+  border: 1px dashed var(--color-forest-500);
+  transition:
+    background-color 200ms ease,
+    transform 220ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.ghost-action:active {
+  background-color: rgb(255 255 255 / 6%);
+  transform: scale(0.98);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ghost-action {
     transition: none;
   }
 }

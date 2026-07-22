@@ -27,7 +27,7 @@ export default function WorkoutLibraryPage() {
                 {workout.title}
               </h2>
 
-              <p className="text-sm text-zinc-300">
+              <p className="text-sm text-white">
                 {workout.groups.length} گروه عضلانی
               </p>
             </div>
