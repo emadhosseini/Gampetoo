@@ -1,6 +1,14 @@
 {
-  "current": "1.3.8",
+  "current": "1.3.9",
   "history": [
+    {
+      "version": "1.3.9",
+      "date": "2026-07-22",
+      "description": "Removed the \"set a password\" prompt entirely — every account now signs up with a password from the start, so the feature (and the flaky check it used) no longer applies to anyone. Restricted the 🤦 forgot-to-log button to the workout page only (it was leaking onto the nutrition page too, since both share the same header component). Reworked the day-shift itself to no longer move the program's startDate — it now only nudges an internal cycle counter, so the displayed start date stays exactly as originally set.",
+      "highlights": [
+        "🧹 حذف کامل درخواست تنظیم رمز عبور و اصلاح دکمه فراموشی ثبت تمرین"
+      ]
+    },
     {
       "version": "1.3.8",
       "date": "2026-07-22",
