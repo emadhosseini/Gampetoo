@@ -77,6 +77,13 @@ export default defineConfig({
         // version instead of leaving the update banner lingering.
         skipWaiting: false,
         clientsClaim: true,
+        // Without this, an old worker's precache entries (previous builds'
+        // hashed asset filenames) stick around in Cache Storage indefinitely
+        // — on a device that's been through several updates, that's stale
+        // data piling up that a fetch could resolve against instead of the
+        // current precache, especially under WebKit's flakier Cache Storage
+        // behavior. Workbox's own recommended default for exactly this.
+        cleanupOutdatedCaches: true,
       },
     }),
   ],

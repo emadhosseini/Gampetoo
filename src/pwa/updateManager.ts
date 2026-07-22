@@ -129,13 +129,33 @@ async function applyUpdate() {
     await flushPendingSync(username);
   }
 
+  // updateSW(true) reloads the page itself once the new worker's
+  // controllerchange fires — but some environments don't reliably fire that
+  // event, so the timeout below is a fallback reload. Listening for the
+  // event ourselves (registered before calling updateSW, so we can't miss
+  // it firing while that call is still in flight) lets the fallback skip
+  // itself when the library's own reload already happened, instead of
+  // firing a second, overlapping reload on top of an in-progress
+  // navigation — which can interrupt it into a blank page on some WebKit
+  // builds.
+  let controllerChanged = false;
+
+  navigator.serviceWorker.addEventListener(
+    "controllerchange",
+    () => {
+      controllerChanged = true;
+    },
+    { once: true },
+  );
+
   try {
     await updateSW(true);
   } finally {
-    // Safety net: some environments don't reliably fire `controllerchange`
-    // right after skipWaiting, which is what triggers the library's own
-    // reload. Force one shortly after so the prompt never lingers.
-    setTimeout(() => window.location.reload(), 1500);
+    setTimeout(() => {
+      if (!controllerChanged) {
+        window.location.reload();
+      }
+    }, 1500);
   }
 }
 
