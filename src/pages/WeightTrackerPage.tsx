@@ -136,7 +136,7 @@ export default function WeightTrackerPage() {
         ثبت وزن
       </h1>
 
-      <div className="glass-panel rounded-2xl p-4 text-center">
+      <div className="glass-panel glass-static rounded-2xl p-4 text-center">
         <label className="mb-3 block text-sm text-zinc-400">
           {alreadyLoggedToday ? "وزن امروزت رو ویرایش کن" : "وزن امروزت رو وارد کن"}
         </label>

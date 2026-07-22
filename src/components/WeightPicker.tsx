@@ -5,6 +5,10 @@ const ITEM_HEIGHT = 40;
 // One row above, the selected row, one row below.
 const VISIBLE_ITEMS = 3;
 const CONTAINER_HEIGHT = ITEM_HEIGHT * VISIBLE_ITEMS;
+// The scrollable content has this much empty space above the first (and
+// below the last) item, so index 0 and the last index can still reach
+// center — every item's true on-screen position is offset by this.
+const EDGE_PADDING = (CONTAINER_HEIGHT - ITEM_HEIGHT) / 2;
 // How long the wheel must sit still before we treat it as "settled" and
 // report the centered value — native scroll-snap already handles the visual
 // centering, this just decides when to read the result back out.
@@ -22,7 +26,7 @@ interface WheelItemProps {
 // even while the container is mid-scroll on lower-end phones.
 function WheelItem({ scrollY, index, label }: WheelItemProps) {
   const distance = useTransform(scrollY, (y) => {
-    const itemCenter = index * ITEM_HEIGHT + ITEM_HEIGHT / 2;
+    const itemCenter = EDGE_PADDING + index * ITEM_HEIGHT + ITEM_HEIGHT / 2;
     const viewCenter = y + CONTAINER_HEIGHT / 2;
 
     return itemCenter - viewCenter;
@@ -92,6 +96,13 @@ function WheelColumn({
       const index = Math.round(container.scrollTop / ITEM_HEIGHT);
       const clamped = Math.min(values.length - 1, Math.max(0, index));
 
+      // proximity (rather than mandatory) lets a fast flick coast through
+      // many items on its own momentum instead of hard-resisting between
+      // every single one — this corrective scroll guarantees the settled
+      // item still ends up exactly centered even if momentum let it stop
+      // a few pixels off a snap point.
+      container.scrollTo({ top: clamped * ITEM_HEIGHT, behavior: "smooth" });
+
       onSettle(values[clamped]);
     }, SETTLE_DELAY_MS);
   }
@@ -103,8 +114,10 @@ function WheelColumn({
         onScroll={handleScroll}
         className="no-scrollbar h-full overflow-y-scroll"
         style={{
-          scrollSnapType: "y mandatory",
-          paddingBlock: (CONTAINER_HEIGHT - ITEM_HEIGHT) / 2,
+          scrollSnapType: "y proximity",
+          // Vertical scrolling only — no horizontal/diagonal panning.
+          touchAction: "pan-y",
+          paddingBlock: EDGE_PADDING,
         }}
       >
         {values.map((value, index) => (
