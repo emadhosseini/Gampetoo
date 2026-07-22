@@ -85,7 +85,7 @@ export default function WorkoutDetailPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 px-5 pb-5 pt-10">
       <h1 className="text-2xl font-bold">
         {workout.title}
       </h1>
@@ -113,20 +113,20 @@ export default function WorkoutDetailPage() {
                 {warmupGroups.map((group) => (
                   <div
                     key={group.id}
-                    className="glass-chip rounded-xl p-4"
+                    className="glass-chip glass-static rounded-xl p-4"
                   >
-                    <button
-                      onClick={() => toggleWarmupGroup(group.id)}
-                      className="flex w-full items-center justify-between"
-                    >
-                      <span className="font-medium">
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        checked={group.enabled}
+                        onChange={() => toggleWarmupGroup(group.id)}
+                        className="h-5 w-5 shrink-0"
+                      />
+
+                      <span className="flex-1 font-medium">
                         {group.title}
                       </span>
-
-                      <span className="text-2xl">
-                        {group.enabled ? "✅" : "⬜"}
-                      </span>
-                    </button>
+                    </div>
 
                     {group.enabled && (
                       <ul className="mt-3 space-y-2">
@@ -179,24 +179,26 @@ export default function WorkoutDetailPage() {
                       key={exercise.id}
                       className="glass-chip glass-static rounded-xl p-4"
                     >
-                      <button
-                        onClick={() =>
-                          updateExercise(group.id, exercise.id, {
-                            enabled: !exercise.enabled,
-                          })
-                        }
-                        className={`flex w-full items-center justify-between ${
+                      <div
+                        className={`flex items-center gap-3 ${
                           workout.id === "warmup" ? "" : "mb-4"
                         }`}
                       >
-                        <span className="font-medium">
+                        <input
+                          type="checkbox"
+                          checked={exercise.enabled}
+                          onChange={() =>
+                            updateExercise(group.id, exercise.id, {
+                              enabled: !exercise.enabled,
+                            })
+                          }
+                          className="h-5 w-5 shrink-0"
+                        />
+
+                        <span className="flex-1 font-medium">
                           {exercise.name}
                         </span>
-
-                        <span className="text-2xl">
-                          {exercise.enabled ? "✅" : "⬜"}
-                        </span>
-                      </button>
+                      </div>
 
                       {workout.id !== "warmup" && (
                         <div className="grid grid-cols-2 gap-4">

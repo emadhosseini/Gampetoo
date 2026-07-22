@@ -8,7 +8,7 @@ export default function WorkoutLibraryPage() {
   const workouts = getLibrary();
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 px-5 pb-5 pt-10">
       <h1 className="text-2xl font-bold">
         کتابخانه تمرین‌ها
       </h1>
