@@ -179,6 +179,36 @@ export function setProgramStartDate(
   });
 }
 
+// Moves the cycle's startDate one day earlier, which shifts every future
+// day-index computation (getProgramDayIndex et al.) forward by one day —
+// for when a workout actually happened but its completion never got
+// logged, so the cycle would otherwise repeat that day. Parses/formats the
+// date locally (not via Date's UTC-based ISO parsing) to avoid an
+// off-by-one across timezones, matching isoToLocalDate/dateToISO elsewhere.
+export function shiftProgramOneDayForward() {
+  const program = getActiveProgram();
+
+  if (!program.startDate) {
+    return;
+  }
+
+  const [y, m, d] = program.startDate.split("-").map(Number);
+  const start = new Date(y, m - 1, d);
+
+  start.setDate(start.getDate() - 1);
+
+  const newStartDate = [
+    start.getFullYear(),
+    String(start.getMonth() + 1).padStart(2, "0"),
+    String(start.getDate()).padStart(2, "0"),
+  ].join("-");
+
+  updateProgram({
+    ...program,
+    startDate: newStartDate,
+  });
+}
+
 export function getProgramDayIndex(
   date = new Date()
 ): number {

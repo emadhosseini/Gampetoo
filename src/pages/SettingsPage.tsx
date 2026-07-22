@@ -1,10 +1,28 @@
+import { SkipForward } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { resetApplication } from "../domain/reset/resetApplication.ts";
 import { logoutCurrentUser } from "@/utils/userEngine";
 import { signOutRemote } from "@/auth/authEngine";
+import { shiftProgramOneDayForward } from "@/utils/programEngine";
+import { resetSession } from "@/utils/sessionEngine";
 
 export default function SettingsPage() {
   const navigate = useNavigate();
+
+  function handleShiftDayForward() {
+    const confirmed = window.confirm(
+      "چرخه‌ی برنامه‌ی شما یک روز جلوتر می‌ره — یعنی روزی که قرار بود فردا باشه، از امروز نشون داده می‌شه.\n\nادامه می‌دی؟"
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    shiftProgramOneDayForward();
+    resetSession();
+
+    navigate("/", { replace: true });
+  }
 
   function handleLogout() {
     const confirmed = window.confirm(
@@ -108,6 +126,14 @@ export default function SettingsPage() {
           </div>
         </button>
       </div>
+
+      <button
+        onClick={handleShiftDayForward}
+        className="mx-auto mt-6 flex items-center gap-1.5 text-xs font-normal text-white underline"
+      >
+        <SkipForward size={12} />
+        فراموشی ثبت اتمام تمرین دیروز
+      </button>
 
       <div className="mx-auto mt-auto flex w-full max-w-sm gap-3">
         <button
