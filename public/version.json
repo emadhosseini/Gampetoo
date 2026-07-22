@@ -1,6 +1,14 @@
 {
-  "current": "1.2.3",
+  "current": "1.2.4",
   "history": [
+    {
+      "version": "1.2.4",
+      "date": "2026-07-22",
+      "description": "The mascot animation still showed a black box on real iOS Safari after the 1.2.3 canvas fix, because iOS can promote an autoplaying <video> to a hardware compositor layer that ignores CSS opacity — so the hidden source video kept painting its raw black frame over the processed canvas. Moved the source video fully off-screen (position: fixed, far outside the viewport) instead of hiding it in place, and added a defensive fallback in case a device can't read video pixels back onto canvas at all.",
+      "highlights": [
+        "🎨 رفع مشکل مربع مشکی لوگو در سافاری موبایل"
+      ]
+    },
     {
       "version": "1.2.3",
       "date": "2026-07-22",
