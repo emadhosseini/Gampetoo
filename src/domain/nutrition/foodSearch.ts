@@ -23,14 +23,26 @@ function isEnglishQuery(query: string): boolean {
   return !/[؀-ۿ]/.test(query) && /[a-zA-Z]/.test(query);
 }
 
-function searchLocal(query: string): FoodItem[] {
-  const q = normalizeFa(query);
+// Matches only at the start of a word (never mid-word) — e.g. querying "بز"
+// must NOT match "قرمه سبزی" (it sits inside "سبزی"), but "سبز" must, since
+// it's a prefix of that second word. Leading punctuation (parentheses, etc.)
+// around a word is ignored so it doesn't shadow a real word-boundary match.
+function matchesWordPrefix(name: string, query: string): boolean {
+  return name
+    .split(/\s+/)
+    .some((word) => word.replace(/^[^\p{L}\p{N}]+/u, "").startsWith(query));
+}
 
-  if (!q) return [];
+function searchLocal(query: string): FoodItem[] {
+  const qFa = normalizeFa(query);
+  const qEn = query.trim().toLowerCase();
+
+  if (!qFa) return [];
 
   return localFoods.filter(
     (food) =>
-      normalizeFa(food.nameFa).includes(q) || food.nameEn.toLowerCase().includes(q),
+      matchesWordPrefix(normalizeFa(food.nameFa), qFa) ||
+      matchesWordPrefix(food.nameEn.toLowerCase(), qEn),
   );
 }
 

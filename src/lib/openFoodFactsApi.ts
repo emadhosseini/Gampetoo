@@ -52,13 +52,16 @@ function mapProduct(product: OffProduct): FoodItem | null {
     nameFa: nameEn,
     nameEn,
     category: guessCategory(product.categories_tags),
-    servingUnit: "100 گرم",
-    servingWeightGrams: 100,
-    calories: Math.round(calories),
-    proteinGrams: Math.round((n.proteins_100g ?? 0) * 10) / 10,
-    carbsGrams: Math.round((n.carbohydrates_100g ?? 0) * 10) / 10,
-    fatGrams: Math.round((n.fat_100g ?? 0) * 10) / 10,
-    fiberGrams:
+    // No known typical serving/count for an arbitrary external product —
+    // plain grams is the only unit that's always meaningful here.
+    servingUnits: [{ label: "گرم", grams: 1 }],
+    // Open Food Facts nutriments are already per-100g, so these map straight
+    // across with no conversion needed.
+    caloriesPer100g: Math.round(calories),
+    proteinPer100g: Math.round((n.proteins_100g ?? 0) * 10) / 10,
+    carbsPer100g: Math.round((n.carbohydrates_100g ?? 0) * 10) / 10,
+    fatPer100g: Math.round((n.fat_100g ?? 0) * 10) / 10,
+    fiberPer100g:
       n.fiber_100g !== undefined ? Math.round(n.fiber_100g * 10) / 10 : undefined,
   };
 }

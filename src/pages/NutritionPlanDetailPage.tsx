@@ -6,7 +6,7 @@ import { getActiveProgram, updateProgram } from "@/utils/programEngine";
 import { getMealSlots } from "@/data/nutrition/foodCatalog";
 import { localFoods, searchFood } from "@/domain/nutrition/foodSearch";
 
-import type { FoodItem as FoodEntry } from "@/types/food";
+import type { FoodItem as FoodEntry, ServingUnit } from "@/types/food";
 import type { MealPlan, MealPlanType, MealSection } from "@/types/nutrition";
 
 const typeTitles: Record<MealPlanType, string> = {
@@ -24,21 +24,19 @@ const AUTO_SEARCH_MIN_LENGTH = 3;
 // every single character while the user is still typing.
 const SEARCH_DEBOUNCE_MS = 300;
 
-const QUANTITY_PATTERN = /^(\d+(?:\.\d+)?)\s+(.+)$/;
+const AMOUNT_PATTERN = /^(\d+(?:\.\d+)?)\s+(.+)$/;
 
-function parseQuantity(amount: string, fallback: number): number {
-  const match = amount.match(/^(\d+(?:\.\d+)?)/);
-  return match ? Number(match[1]) : fallback;
+// A persisted amount string is always "<quantity> <unit label>" — split it
+// back apart so the quantity input and unit dropdown can be driven from it.
+function parseAmount(amount: string): { quantity: number; unitLabel: string } {
+  const match = amount.match(AMOUNT_PATTERN);
+  return match
+    ? { quantity: Number(match[1]), unitLabel: match[2] }
+    : { quantity: 1, unitLabel: amount };
 }
 
-// A servingUnit string is always "<count> <unit label>" (e.g. "1 پرس",
-// "100 گرم") — split it so the quantity can be edited independently of the
-// unit label it's attached to.
-function parseServingUnit(servingUnit: string): { quantity: number; unit: string } {
-  const match = servingUnit.match(QUANTITY_PATTERN);
-  return match
-    ? { quantity: Number(match[1]), unit: match[2] }
-    : { quantity: 1, unit: servingUnit };
+function caloriesFor(entry: FoodEntry, unit: ServingUnit, quantity: number): number {
+  return Math.round((entry.caloriesPer100g * unit.grams * quantity) / 100);
 }
 
 function mealCalories(meal: MealSection): number {
@@ -64,7 +62,7 @@ function MealFoodList({
   onQueryChange: (value: string) => void;
   onSubmitSearch: () => void;
   onToggleFood: (entry: FoodEntry) => void;
-  onUpdateQuantity: (entry: FoodEntry, quantity: number) => void;
+  onUpdateQuantity: (entry: FoodEntry, quantity: number, unit: ServingUnit) => void;
 }) {
   const visibleFoods = isFiltering ? results : localFoods;
 
@@ -102,14 +100,17 @@ function MealFoodList({
       {(!isFiltering || !loading) &&
         visibleFoods.map((entry) => {
           const selected = meal.foods.find((food) => food.id === entry.id);
-          const { quantity: defaultQuantity, unit } = parseServingUnit(
-            entry.servingUnit,
-          );
+          const parsed = selected ? parseAmount(selected.amount) : null;
+          const selectedUnit =
+            (parsed &&
+              entry.servingUnits.find((u) => u.label === parsed.unitLabel)) ??
+            entry.servingUnits[0];
+          const quantity = parsed?.quantity ?? 1;
 
           return (
             <div
               key={entry.id}
-              className="glass-chip glass-static flex items-center gap-3 rounded-xl p-3"
+              className="glass-chip glass-static flex flex-wrap items-center gap-3 rounded-xl p-3"
             >
               <input
                 type="checkbox"
@@ -131,14 +132,29 @@ function MealFoodList({
                   <input
                     type="number"
                     min={0}
-                    value={parseQuantity(selected.amount, defaultQuantity)}
+                    value={quantity}
                     onChange={(e) =>
-                      onUpdateQuantity(entry, Number(e.target.value))
+                      onUpdateQuantity(entry, Number(e.target.value), selectedUnit)
                     }
-                    className="w-16 rounded-lg border border-forest-500 bg-forest-600 px-2 py-1 text-center text-sm text-white"
+                    className="w-14 rounded-lg border border-forest-500 bg-forest-600 px-2 py-1 text-center text-sm text-white"
                   />
 
-                  <span className="text-sm text-white">{unit}</span>
+                  <select
+                    value={selectedUnit.label}
+                    onChange={(e) => {
+                      const unit =
+                        entry.servingUnits.find((u) => u.label === e.target.value) ??
+                        entry.servingUnits[0];
+                      onUpdateQuantity(entry, quantity, unit);
+                    }}
+                    className="glass-static rounded-lg border border-forest-500 bg-forest-600 px-2 py-1 text-sm text-white"
+                  >
+                    {entry.servingUnits.map((unit) => (
+                      <option key={unit.label} value={unit.label}>
+                        {unit.label}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               )}
             </div>
@@ -298,6 +314,8 @@ export default function NutritionPlanDetailPage() {
 
           const exists = meal.foods.some((food) => food.id === entry.id);
 
+          const defaultUnit = entry.servingUnits[0];
+
           const foods = exists
             ? meal.foods.filter((food) => food.id !== entry.id)
             : [
@@ -305,8 +323,8 @@ export default function NutritionPlanDetailPage() {
                 {
                   id: entry.id,
                   name: entry.nameFa,
-                  amount: entry.servingUnit,
-                  calories: entry.calories,
+                  amount: `1 ${defaultUnit.label}`,
+                  calories: caloriesFor(entry, defaultUnit, 1),
                 },
               ];
 
@@ -327,12 +345,9 @@ export default function NutritionPlanDetailPage() {
     mealId: string,
     entry: FoodEntry,
     quantity: number,
+    unit: ServingUnit,
   ) {
     setSaved(false);
-
-    const { quantity: defaultQuantity, unit } = parseServingUnit(
-      entry.servingUnit,
-    );
 
     setPlan((prev) => {
       if (!prev) return prev;
@@ -347,14 +362,10 @@ export default function NutritionPlanDetailPage() {
             foods: meal.foods.map((food) => {
               if (food.id !== entry.id) return food;
 
-              const calories = Math.round(
-                (entry.calories / defaultQuantity) * quantity,
-              );
-
               return {
                 ...food,
-                amount: `${quantity} ${unit}`,
-                calories,
+                amount: `${quantity} ${unit.label}`,
+                calories: caloriesFor(entry, unit, quantity),
               };
             }),
           };
@@ -452,8 +463,8 @@ export default function NutritionPlanDetailPage() {
                     submitMealSearch(meal.id, mealQueries[meal.id] ?? "")
                   }
                   onToggleFood={(entry) => toggleFood(meal.id, entry)}
-                  onUpdateQuantity={(entry, quantity) =>
-                    updateFoodQuantity(meal.id, entry, quantity)
+                  onUpdateQuantity={(entry, quantity, unit) =>
+                    updateFoodQuantity(meal.id, entry, quantity, unit)
                   }
                 />
               )}
