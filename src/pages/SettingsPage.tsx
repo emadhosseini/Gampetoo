@@ -3,16 +3,12 @@ import { resetApplication } from "../domain/reset/resetApplication.ts";
 import { logoutCurrentUser } from "@/utils/userEngine";
 import { signOutRemote } from "@/auth/authEngine";
 
-// Hidden for now (not ready to expose to users yet) — keep the handler/markup
-// in place so it can be turned back on with a one-line flip.
-const SHOW_SWITCH_USER_BUTTON = false;
-
 export default function SettingsPage() {
   const navigate = useNavigate();
 
-  function handleSwitchUser() {
+  function handleLogout() {
     const confirmed = window.confirm(
-      "از این حساب خارج می‌شوی و می‌تونی نام کاربری دیگه‌ای وارد کنی. اطلاعات این حساب پاک نمی‌شه و هر وقت دوباره همین نام کاربری رو وارد کنی برمی‌گرده.\n\nادامه می‌دی؟"
+      "از حساب کاربریت خارج می‌شی و به صفحه اول برمی‌گردی. اطلاعات و تنظیمات این حساب پاک نمی‌شه و هر وقت دوباره با همین نام کاربری وارد بشی، همه‌چیز برمی‌گرده.\n\nادامه می‌دی؟"
     );
 
     if (!confirmed) {
@@ -111,36 +107,35 @@ export default function SettingsPage() {
             </p>
           </div>
         </button>
-        {SHOW_SWITCH_USER_BUTTON && (
-          <button
-            onClick={handleSwitchUser}
-            className="glass-panel w-full rounded-2xl p-5"
-          >
-            <div className="text-center">
-              <h2 className="text-lg font-semibold">
-                تغییر کاربر
-              </h2>
-
-              <p className="text-sm text-zinc-500">
-                خروج از این حساب و ورود با نام کاربری دیگر
-              </p>
-            </div>
-          </button>
-        )}
       </div>
 
-      <button
-        onClick={() => void handleReset()}
-        className="glass-tap mx-auto mt-auto w-fit rounded-xl border border-red-900 bg-red-950/30 backdrop-blur-xl p-3 text-center text-red-400 transition hover:bg-red-950/50"
-      >
-        <h2 className="whitespace-nowrap text-sm font-semibold">
-          شروع دوباره
-        </h2>
+      <div className="mx-auto mt-auto flex w-full max-w-sm gap-3">
+        <button
+          onClick={handleLogout}
+          className="glass-tap flex-1 rounded-xl border border-forest-600 bg-forest-700/50 backdrop-blur-xl p-3 text-center text-white transition hover:bg-forest-700/70"
+        >
+          <h2 className="text-sm font-semibold">
+            خروج از حساب کاربری
+          </h2>
 
-        <p className="whitespace-nowrap text-xs text-red-500">
-          حذف کامل برنامه و بازگشت به صفحه راه‌اندازی
-        </p>
-      </button>
+          <p className="text-xs text-zinc-400">
+            بدون پاک شدن اطلاعات و تنظیمات
+          </p>
+        </button>
+
+        <button
+          onClick={() => void handleReset()}
+          className="glass-tap flex-1 rounded-xl border border-red-900 bg-red-950/30 backdrop-blur-xl p-3 text-center text-red-400 transition hover:bg-red-950/50"
+        >
+          <h2 className="text-sm font-semibold">
+            پاک کردن حساب کاربری
+          </h2>
+
+          <p className="text-xs text-red-500">
+            حذف کامل برنامه و پاک کردن اطلاعات
+          </p>
+        </button>
+      </div>
     </div>
   );
 }
