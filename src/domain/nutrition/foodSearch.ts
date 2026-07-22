@@ -1,17 +1,19 @@
 import type { FoodItem } from "@/types/food";
 import { iranianFoodsDatabase } from "@/data/nutrition/iranianFoodsDatabase";
 import { internationalFoodsDatabase } from "@/data/nutrition/internationalFoodsDatabase";
+import { gymFoodsDatabase } from "@/data/nutrition/gymFoodsDatabase";
 import { searchExternalFoods } from "@/lib/openFoodFactsApi";
 
 const MIN_LOCAL_RESULTS_BEFORE_EXTERNAL_LOOKUP = 5;
 
-// Both databases are bilingual (real Persian translations, not just the
-// English name reused) — the external API is only a fallback for foods
-// neither one covers. Exported so screens can show the full browsable list
-// before the user has typed a search query.
+// All three databases are bilingual (real Persian translations, not just the
+// English name reused) — the external API is only a fallback for foods none
+// of them cover. Exported so screens can show the full browsable list before
+// the user has typed a search query.
 export const localFoods: FoodItem[] = [
   ...iranianFoodsDatabase,
   ...internationalFoodsDatabase,
+  ...gymFoodsDatabase,
 ];
 
 function normalizeFa(value: string): string {

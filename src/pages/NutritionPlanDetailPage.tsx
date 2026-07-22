@@ -1,10 +1,11 @@
 import { ChevronDown, Search } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 
 import { getActiveProgram, updateProgram } from "@/utils/programEngine";
 import { getMealSlots } from "@/data/nutrition/foodCatalog";
 import { localFoods, searchFood } from "@/domain/nutrition/foodSearch";
+import { sortFoodsForMeal } from "@/domain/nutrition/mealFoodSuggestions";
 
 import type { FoodItem as FoodEntry, ServingUnit } from "@/types/food";
 import type { MealPlan, MealPlanType, MealSection } from "@/types/nutrition";
@@ -64,7 +65,8 @@ function MealFoodList({
   onToggleFood: (entry: FoodEntry) => void;
   onUpdateQuantity: (entry: FoodEntry, quantity: number, unit: ServingUnit) => void;
 }) {
-  const visibleFoods = isFiltering ? results : localFoods;
+  const suggestedFoods = useMemo(() => sortFoodsForMeal(localFoods, meal.id), [meal.id]);
+  const visibleFoods = isFiltering ? results : suggestedFoods;
 
   return (
     <div className="mt-4 space-y-2">
@@ -119,10 +121,12 @@ function MealFoodList({
                 className="h-5 w-5 shrink-0"
               />
 
-              <span className="flex-1 text-sm text-white">{entry.nameFa}</span>
+              <span className="flex-1 text-sm font-semibold text-white">
+                {entry.nameFa}
+              </span>
 
               {selected && selected.calories !== undefined && (
-                <span className="text-sm font-semibold text-white">
+                <span className="text-sm font-normal text-white">
                   {selected.calories} کیلوکالری
                 </span>
               )}
