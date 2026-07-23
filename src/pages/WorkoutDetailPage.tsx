@@ -92,7 +92,7 @@ export default function WorkoutDetailPage() {
 
       <div className="space-y-3">
         {specializedWarmup && (
-          <div className="glass-panel rounded-2xl p-4">
+          <div className="glass-panel glass-static rounded-2xl p-4">
             <button
               onClick={() => setWarmupSectionOpen((prev) => !prev)}
               className="flex w-full items-center justify-between"
@@ -153,7 +153,7 @@ export default function WorkoutDetailPage() {
           return (
             <div
               key={group.id}
-              className="glass-panel rounded-2xl p-4"
+              className="glass-panel glass-static rounded-2xl p-4"
             >
               <button
                 onClick={() =>

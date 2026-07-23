@@ -1,6 +1,14 @@
 {
-  "current": "1.4.0",
+  "current": "1.4.1",
   "history": [
+    {
+      "version": "1.4.1",
+      "date": "2026-07-23",
+      "description": "Fixed the checkbox tap-drop still happening on the workout-library exercise/warmup screens: the previous fix only stopped each row from shrinking on tap, but the group card wrapping the rows still scaled down on any tap inside it (including on a checkbox), shifting the row out from under the finger — same class of bug the sets/reps steppers could hit too. Cancelled the press-scale on those outer group cards as well, matching the nutrition menu exactly.",
+      "highlights": [
+        "🏋️ رفع مشکل سخت بودن تیک زدن چک‌باکس‌ها در کتابخانه تمرین‌ها"
+      ]
+    },
     {
       "version": "1.4.0",
       "date": "2026-07-22",
