@@ -1,11 +1,13 @@
 import { ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
+import FreeMealSettingsButton from "@/components/nutrition/FreeMealSettingsButton";
+
 export default function NutritionPlanLibraryPage() {
   const navigate = useNavigate();
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 px-5 pb-5 pt-10">
       <h1 className="text-center text-2xl font-bold">
         برنامه غذایی
       </h1>
@@ -19,7 +21,7 @@ export default function NutritionPlanLibraryPage() {
             برنامه غذایی روزهای تمرین
           </h2>
 
-          <ChevronRight className="h-5 w-5 text-zinc-400" />
+          <ChevronRight className="h-5 w-5 text-zinc-200" />
         </button>
 
         <button
@@ -30,8 +32,10 @@ export default function NutritionPlanLibraryPage() {
             برنامه غذایی روزهای استراحت
           </h2>
 
-          <ChevronRight className="h-5 w-5 text-zinc-400" />
+          <ChevronRight className="h-5 w-5 text-zinc-200" />
         </button>
+
+        <FreeMealSettingsButton />
       </div>
     </div>
   );

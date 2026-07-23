@@ -1,6 +1,224 @@
 {
-  "current": "1.2.2",
+  "current": "2.0.0",
   "history": [
+    {
+      "version": "2.0.0",
+      "date": "2026-07-23",
+      "description": "Major release merging seven weeks of beta work into main (previously at 1.3.0). Highlights: a new mesh-gradient app background and a restyled iOS-style wheel picker for weight entry; cross-device account sync via Supabase with a proper login/signup split and a logout button; a bilingual (Persian/English) Iranian + international foods database with hybrid local/external search, per-food selectable serving units (spoon, piece, cup, grams, ...), a gym-foods bank with per-meal suggestions, and a supplements & vitamins section; a configurable weekly free-meal count with its own tracking card; a \"forgot to log yesterday's workout\" button that shifts the program cycle; the workout library restyled to match the nutrition menu with real checkboxes (and two follow-up fixes for press-scale animation swallowing taps); the workout/walk completion button turned into a slide-to-complete gesture; all dates shown in Gregorian except the home page's greeting (which keeps Jalali in parentheses); every number in the app now in Persian digits with the Vazirmatn font applied consistently, including on the weight chart's canvas-rendered text; app-wide text-selection disabled with a low-contrast text sweep; and a round of reliability fixes (a sync race that could drop data on in-app update, the mascot animation showing a black box on iOS Safari, a weight-picker math bug, and a free-meal NaN display bug).",
+      "highlights": [
+        "🎨 پس‌زمینه mesh-gradient جدید و انتخابگر وزن استوانه‌ای بازطراحی‌شده",
+        "👤 ورود/ثبت‌نام جداگانه + همگام‌سازی حساب بین دستگاه‌ها",
+        "🍽️ بانک غذایی ایرانی و بین‌المللی با جست‌وجوی دوزبانه و واحد شمارش قابل انتخاب",
+        "💊 منوی مکمل و ویتامین‌ها + پیشنهاد غذا بر اساس نوع وعده",
+        "🍕 وعده آزاد هفتگی حالا قابل تنظیم و پیگیری",
+        "🤦 دکمه فراموشی ثبت تمرین دیروز",
+        "🏋️ هماهنگ‌سازی طراحی کتابخانه تمرین‌ها و رفع مشکل تیک‌زدن چک‌باکس‌ها",
+        "👉 دکمه اتمام تمرین به‌صورت اسلایدی (بکشید تا تایید شود)",
+        "📅 تاریخ میلادی و 🔢 اعداد فارسی در سراسر برنامه",
+        "🔒 غیرفعال شدن انتخاب متن و بهبود کنتراست رنگ‌ها",
+        "🐛 چند رفع باگ مهم: گم نشدن اطلاعات هنگام آپدیت، رفع مشکل ویدیوی ماسکوت در سافاری، و موارد دیگر"
+      ]
+    },
+    {
+      "version": "1.6.2",
+      "date": "2026-07-23",
+      "description": "Every number the app displays to the user now renders in Persian digits: exercise sets/reps, workout summary counts, meal calories/protein, food amounts, the weight wheel-picker, day numbers, and \"days until start\". Left the weight-log/chart date numbers (already fixed), the app version number, and native number inputs (browsers only accept ASCII digits there) as-is.",
+      "highlights": [
+        "🔢 همه‌ی اعداد نرم‌افزار به فارسی نمایش داده می‌شن"
+      ]
+    },
+    {
+      "version": "1.6.1",
+      "date": "2026-07-23",
+      "description": "Fixed the free-meal card showing NaN for accounts with the old pre-weekly-count free-meal data still in storage. All the free-meal card's numbers, plus the weight chart's axis numbers and date labels, now render in Persian digits with the Vazirmatn font (the chart's canvas text doesn't inherit page fonts, so it needed its own font config). Widened the weight chart a bit further to the left, and removed its card's press-scale animation, matching the weight-entry card above it.",
+      "highlights": [
+        "🐛 رفع باگ نمایش NaN در کادر وعده آزاد و اصلاح فونت/اعداد نمودار وزن"
+      ]
+    },
+    {
+      "version": "1.6.0",
+      "date": "2026-07-23",
+      "description": "Added a configurable weekly free-meal count. A new \"وعده آزاد\" button on the nutrition-plan page opens a stepper to set how many free meals you get per week (defaults to 1, same as before). The free-meal card on the daily nutrition page now tracks and shows remaining/total for the current 7-day cycle, confirms with the right wording whether you just used one of several or your only one for the week, and says the week's free meals are used up once they hit zero. The cycle resets to exactly the configured count every 7 days — unused meals never carry over into the next week.",
+      "highlights": [
+        "🍕 تعداد وعده آزاد هفتگی حالا قابل تنظیمه"
+      ]
+    },
+    {
+      "version": "1.5.2",
+      "date": "2026-07-23",
+      "description": "Changed the weight-tracker chart's date labels from the Jalali (Shamsi) calendar to Gregorian, matching every other date shown in the app except the home page's greeting, which keeps its Gregorian-with-Jalali-in-parentheses format on purpose.",
+      "highlights": [
+        "📅 تاریخ نمودار وزن به میلادی تغییر کرد"
+      ]
+    },
+    {
+      "version": "1.5.1",
+      "date": "2026-07-23",
+      "description": "Restyled the slide-to-complete handle: dropped the black circular knob in favor of three bare yellow chevrons (bigger than the old single icon), fading from full color on the left to faint on the right to read as a directional swipe hint. The yellow fill is now fully hidden at rest, fades in only once dragging starts, and its leading edge softens into the track instead of cutting off sharply.",
+      "highlights": [
+        "👉 طراحی جدید دستگیره دکمه اسلایدی (بدون کادر مشکی، فلش‌های زرد محوشونده)"
+      ]
+    },
+    {
+      "version": "1.5.0",
+      "date": "2026-07-23",
+      "description": "Replaced the tappable \"تمرین امروز رو انجام دادم\" / \"پیاده روی امروز رو انجام دادم\" buttons with a slide-to-complete gesture (framer-motion drag), so finishing a workout or walk needs a deliberate swipe instead of a single tap. Dragging past 75% of the track snaps forward to a completed checkmark state and confirms; releasing earlier snaps back to the start. The \"رفتن به کتابخانه تمرین‌ها\" button (a plain navigation link, not a completion action) is unchanged.",
+      "highlights": [
+        "👉 دکمه اتمام تمرین حالا اسلایدی است (بکشید تا تایید شود)"
+      ]
+    },
+    {
+      "version": "1.4.1",
+      "date": "2026-07-23",
+      "description": "Fixed the checkbox tap-drop still happening on the workout-library exercise/warmup screens: the previous fix only stopped each row from shrinking on tap, but the group card wrapping the rows still scaled down on any tap inside it (including on a checkbox), shifting the row out from under the finger — same class of bug the sets/reps steppers could hit too. Cancelled the press-scale on those outer group cards as well, matching the nutrition menu exactly.",
+      "highlights": [
+        "🏋️ رفع مشکل سخت بودن تیک زدن چک‌باکس‌ها در کتابخانه تمرین‌ها"
+      ]
+    },
+    {
+      "version": "1.4.0",
+      "date": "2026-07-22",
+      "description": "Restyled the workout library and exercise-detail screens to match the nutrition menu: fixed missing horizontal padding (cards ran edge-to-edge), and replaced the ✅/⬜ emoji-in-a-button toggle for exercises and warmup groups with real checkbox inputs, matching the nutrition menu's touch/tick behavior exactly.",
+      "highlights": [
+        "🏋️ هماهنگ‌سازی طراحی و تیک‌خوردن کتابخانه تمرین‌ها با برنامه غذایی"
+      ]
+    },
+    {
+      "version": "1.3.9",
+      "date": "2026-07-22",
+      "description": "Removed the \"set a password\" prompt entirely — every account now signs up with a password from the start, so the feature (and the flaky check it used) no longer applies to anyone. Restricted the 🤦 forgot-to-log button to the workout page only (it was leaking onto the nutrition page too, since both share the same header component). Reworked the day-shift itself to no longer move the program's startDate — it now only nudges an internal cycle counter, so the displayed start date stays exactly as originally set.",
+      "highlights": [
+        "🧹 حذف کامل درخواست تنظیم رمز عبور و اصلاح دکمه فراموشی ثبت تمرین"
+      ]
+    },
+    {
+      "version": "1.3.8",
+      "date": "2026-07-22",
+      "description": "The new 🤦 workout-page button now performs the real \"forgot to log yesterday's workout\" action instead of a placeholder: it shifts the program cycle one day forward (today shows what was supposed to be tomorrow's workout), replacing the old plain text link that used to live in Settings for this. Verified the program's startDate correctly moves back a day when confirmed.",
+      "highlights": [
+        "🤦 دکمه فراموشی ثبت تمرین حالا واقعاً چرخه برنامه رو یک روز جلو می‌بره"
+      ]
+    },
+    {
+      "version": "1.3.7",
+      "date": "2026-07-22",
+      "description": "Added an icon-only \"forgot to log\" button (🤦) to the top-left of the workout page header. Tapping it opens a popup explaining what it does, with a \"فراموشی ثبت تمرین\" button that retroactively marks today's workout as completed (for when you did it but forgot to tap \"انجام دادم\" in time) and a \"متوجه شدم\" button that just closes the popup with no effect.",
+      "highlights": [
+        "🤦 اضافه شدن دکمه فراموشی ثبت تمرین به صفحه تمرین"
+      ]
+    },
+    {
+      "version": "1.3.6",
+      "date": "2026-07-22",
+      "description": "Added a \"مکمل و ویتامین‌ها\" (supplements & vitamins) section to both the workout-day and rest-day meal plans, right after \"قبل خواب\" — with a dedicated bank of the most commonly used sports supplements (creatine, whey protein, multivitamin, omega-3, vitamin D3, magnesium, BCAA, caffeine/pre-workout, glutamine, vitamin C, zinc, ZMA, beta-alanine, collagen), kept separate from the regular food search so it never gets suggested as a meal food. Also fixed the nutrition menu pages having no horizontal padding (buttons/cards ran edge-to-edge) — now matches the width used on Settings and other pages.",
+      "highlights": [
+        "💊 اضافه شدن منوی مکمل و ویتامین‌ها با بانک مکمل‌های ورزشی پرکاربرد"
+      ]
+    },
+    {
+      "version": "1.3.5",
+      "date": "2026-07-22",
+      "description": "Fixed the \"set a password\" prompt wrongly reappearing after an app update for accounts that already had one. It used to decide based on whether a live Supabase session existed right now, which can drop out for reasons unrelated to the account actually having a password (e.g. a token-refresh hiccup right around an update reload). It now checks a persisted local flag set the moment the account first successfully authenticates, decoupled from live session state.",
+      "highlights": [
+        "🐛 رفع نمایش نادرست دوباره پیام «رمز عبور تنظیم کن» بعد از آپدیت"
+      ]
+    },
+    {
+      "version": "1.3.4",
+      "date": "2026-07-22",
+      "description": "Added a dedicated gym-foods bank to the food catalog (boiled/grilled chicken breast, turkey breast, canned tuna, egg whites, lean ground beef, whey protein, low-fat cottage cheese, brown rice, sweet potato, quinoa, rice cakes) covering the staples researched as most common in workout meal plans. Each meal (breakfast, post-workout, snack, etc.) now surfaces its typically-relevant foods at the top of the browsable list instead of a fixed catalog order. Also rebalanced the food-list font weights: the food's name is now bold and the calorie amount normal weight, instead of the reverse.",
+      "highlights": [
+        "🍗 اضافه شدن بانک غذاهای باشگاهی و پیشنهاد غذا بر اساس نوع وعده"
+      ]
+    },
+    {
+      "version": "1.3.3",
+      "date": "2026-07-22",
+      "description": "App-wide: disabled text selection and iOS's tap-and-hold copy/lookup callout on every text and button (inputs still allow normal text selection/editing), so the app feels native instead of like a selectable document. Also audited every non-white text color against its actual background and brightened the low-contrast ones (secondary captions, error text, calorie labels) that were tuned for the old near-black theme and had fallen below readable contrast on the new green background.",
+      "highlights": [
+        "🔒 غیرفعال شدن انتخاب متن با تاچ و بهبود خوانایی رنگ‌های متن در کل برنامه"
+      ]
+    },
+    {
+      "version": "1.3.2",
+      "date": "2026-07-22",
+      "description": "Fixed a math bug in the weight picker where the row below center rendered as the largest instead of the selected (center) row, due to a missing padding offset in the distance-from-center calculation. Also disabled the settings card's press-scale animation on this screen (it fought with dragging the wheel), locked the wheel to vertical-only scrolling (touch-action: pan-y, no horizontal drag), and switched scroll-snap from mandatory to proximity with a corrective snap-back so a fast flick can now coast through many values at once instead of resisting between every single one.",
+      "highlights": [
+        "🐛 رفع سایز اشتباه ردیف انتخاب‌شده و بهبود اسکرول سریع در انتخابگر وزن"
+      ]
+    },
+    {
+      "version": "1.3.1",
+      "date": "2026-07-22",
+      "description": "Restyled the weight wheel picker: removed its dark green background entirely (fully transparent now), narrowed it to 3 visible rows (one above, the selected row, one below), colored the selected number and the decimal point dark green with the neighboring rows paler, removed the \"کیلوگرم\" label, and changed the default value to the last logged weight overall (50.00 if none exists yet) instead of always today's.",
+      "highlights": [
+        "🎨 بازطراحی انتخابگر وزن: بدون بک‌گراند، ۳ ردیف، رنگ سبز تیره"
+      ]
+    },
+    {
+      "version": "1.3.0",
+      "date": "2026-07-22",
+      "description": "Replaced the plain number input on the weight-tracking screen with an iOS-style wheel picker: a kg column and a grams column, each scrolling and snapping to center natively, with a 3D-cylinder-style fade/scale falloff away from the selected row.",
+      "highlights": [
+        "🎡 اضافه شدن انتخابگر چرخشی (Wheel Picker) برای ثبت وزن"
+      ]
+    },
+    {
+      "version": "1.2.9",
+      "date": "2026-07-22",
+      "description": "Added a \"خروج از حساب کاربری\" (log out) button next to the reset button in Settings — signs out and returns to the first screen without touching any local data, so logging back in with the same username brings everything back. Renamed \"شروع دوباره\" to \"پاک کردن حساب کاربری\" with a clearer description that it fully deletes the program and data.",
+      "highlights": [
+        "🚪 اضافه شدن دکمه خروج از حساب کاربری بدون پاک شدن اطلاعات"
+      ]
+    },
+    {
+      "version": "1.2.8",
+      "date": "2026-07-22",
+      "description": "Split the first-run account screen into an explicit choice between \"ورود\" (login: username + password only, checked against the existing account) and \"ثبت نام\" (signup: name + username + password + confirm password), replacing the single combined form that silently signed up or logged in behind the scenes.",
+      "highlights": [
+        "👤 جداسازی صفحه ورود و ثبت نام در اولین اجرای برنامه"
+      ]
+    },
+    {
+      "version": "1.2.7",
+      "date": "2026-07-22",
+      "description": "Fixed weight-log (and other synced) data appearing to get wiped after applying an in-app update: the PWA update flow reloaded the page to activate the new version without flushing a pending debounced sync push first, unlike every other reload path in the app. An edit made in the second before tapping \"بروزرسانی\" could fail to reach the server, and in a race, a stale in-flight push from the old page could even overwrite fresher local data right as the new page loaded.",
+      "highlights": [
+        "🐛 رفع گم شدن اطلاعات (مثل سابقه وزن) هنگام بروزرسانی برنامه"
+      ]
+    },
+    {
+      "version": "1.2.6",
+      "date": "2026-07-22",
+      "description": "1.2.5's plain on-screen stacking brought the black box back on real iOS Safari — confirming the video's hardware compositor layer really does float above normal DOM stacking there, not just bypass opacity. Reverted to the 1.2.4 off-screen approach: no black box, but the mascot is a static frame on iOS instead of animating, which is the preferred trade-off over a black box.",
+      "highlights": [
+        "🎨 رفع مجدد مشکل مربع مشکی لوگو در سافاری موبایل"
+      ]
+    },
+    {
+      "version": "1.2.5",
+      "date": "2026-07-22",
+      "description": "The black box was gone after 1.2.4, but the mascot froze on a single frame on real iOS Safari — moving the source video far off-screen to hide it also made iOS suspend its playback entirely (a known battery-saving behavior for off-screen video). Reverted to keeping the video plainly on-screen and in normal document flow, relying on ordinary DOM stacking (the canvas simply paints over it afterward) instead of any CSS hiding trick, so it stays visible enough to keep decoding while never actually being shown.",
+      "highlights": [
+        "🎨 رفع مشکل ثابت ماندن انیمیشن لوگو در سافاری موبایل"
+      ]
+    },
+    {
+      "version": "1.2.4",
+      "date": "2026-07-22",
+      "description": "The mascot animation still showed a black box on real iOS Safari after the 1.2.3 canvas fix, because iOS can promote an autoplaying <video> to a hardware compositor layer that ignores CSS opacity — so the hidden source video kept painting its raw black frame over the processed canvas. Moved the source video fully off-screen (position: fixed, far outside the viewport) instead of hiding it in place, and added a defensive fallback in case a device can't read video pixels back onto canvas at all.",
+      "highlights": [
+        "🎨 رفع مشکل مربع مشکی لوگو در سافاری موبایل"
+      ]
+    },
+    {
+      "version": "1.2.3",
+      "date": "2026-07-22",
+      "description": "New mesh-gradient + noise background across the app shell (setup, error screen, main layout), and the setup-page mascot icon replaced with a looping brand animation. Fixed the animation rendering as a solid black box on Safari/iOS by replacing the CSS blend-mode approach (silently ignored on <video> in WebKit) with a canvas-based luma key.",
+      "highlights": [
+        "🎨 آپدیت بک گراند و لوگو"
+      ]
+    },
     {
       "version": "1.2.2",
       "date": "2026-07-20",

@@ -12,7 +12,10 @@ import persian_fa from "react-date-object/locales/persian_fa";
 import "react-multi-date-picker/styles/backgrounds/bg-dark.css";
 import "react-multi-date-picker/styles/colors/green.css";
 
+import MeshGradientBackground from "@/components/background/MeshGradientBackground";
+import ChromaKeyVideo from "@/components/ChromaKeyVideo";
 import InstallHint from "@/components/InstallHint";
+import { toFaDigits } from "@/utils/numberFormat";
 
 // startDate is stored as a Gregorian ISO date (YYYY-MM-DD). These convert to and
 // from a local JS Date without the UTC-parsing off-by-one that new Date("...") has.
@@ -68,7 +71,7 @@ import {
 } from "@/utils/userEngine";
 import { generateId } from "@/utils/id";
 import { isSyncConfigured } from "@/lib/supabaseClient";
-import { MIN_PIN_LENGTH, signInOrSignUp } from "@/auth/authEngine";
+import { MIN_PIN_LENGTH, signIn, signUp } from "@/auth/authEngine";
 import { flushPendingSync, syncAfterLogin } from "@/sync/remoteSync";
 
 // Username must be English only (letters, digits, and . _ - separators).
@@ -89,11 +92,7 @@ export default function SetupProgramPage() {
 function SetupBrand() {
   return (
     <div className="flex flex-col items-center text-center">
-      <img
-        src="/Gampetoo.png"
-        alt="Gampetoo"
-        className="mb-4 h-24 w-24 object-contain"
-      />
+      <ChromaKeyVideo src="/Gampetoo.webm" size={96} className="mb-4" />
 
       <h1 className="text-3xl font-bold text-white">
         Gampetoo
@@ -109,21 +108,100 @@ function AccountStep({
 }) {
   const syncEnabled = isSyncConfigured();
 
+  // Without a configured server there are no accounts to check credentials
+  // against, so skip straight to the (password-less) signup form — same as
+  // this screen's original behaviour in that mode.
+  const [mode, setMode] = useState<"choose" | "login" | "signup">(
+    () => (syncEnabled ? "choose" : "signup")
+  );
+
   const [name, setName] = useState(
     () => getCurrentUserName() ?? ""
   );
 
   const [username, setUsername] = useState("");
   const [pin, setPin] = useState("");
+  const [confirmPin, setConfirmPin] = useState("");
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const canSubmit =
-    !busy &&
-    name.trim().length > 0 &&
-    username.trim().length > 0 &&
-    (!syncEnabled || pin.length >= MIN_PIN_LENGTH);
+  function goToMode(next: "choose" | "login" | "signup") {
+    setMode(next);
+    setError(null);
+  }
 
-  function applyLocalAccount(trimmedName: string, trimmedUsername: string) {
+  async function afterAuthSuccess(trimmedUsername: string) {
+    if (syncEnabled) {
+      // On a brand-new remote account this uploads the (now-migrated) local
+      // data as the initial snapshot; on a returning account logging in from
+      // a fresh device, this pulls its existing data (including the display
+      // name) down instead.
+      await syncAfterLogin(trimmedUsername);
+    }
+
+    setBusy(false);
+
+    // A username that already has a configured program (existing, migrated,
+    // or just pulled down from the server) goes straight into the app.
+    if (hasStartDate()) {
+      window.location.replace("/");
+      return;
+    }
+
+    onNewAccount();
+  }
+
+  async function submitLogin() {
+    setError(null);
+
+    const trimmedUsername = username.trim();
+
+    if (!trimmedUsername) return;
+
+    setBusy(true);
+
+    const result = await signIn(trimmedUsername, pin);
+
+    if (!result.ok) {
+      setBusy(false);
+      setError(result.error ?? "ورود ناموفق بود.");
+      return;
+    }
+
+    setCurrentUsername(trimmedUsername);
+    await afterAuthSuccess(trimmedUsername);
+  }
+
+  async function submitSignup() {
+    setError(null);
+
+    const trimmedName = name.trim();
+    const trimmedUsername = username.trim();
+
+    if (!trimmedName || !trimmedUsername) return;
+
+    if (!USERNAME_PATTERN.test(trimmedUsername)) {
+      setError("نام کاربری باید فقط با حروف و اعداد انگلیسی باشد.");
+      return;
+    }
+
+    if (syncEnabled && pin !== confirmPin) {
+      setError("تکرار رمز مطابقت ندارد.");
+      return;
+    }
+
+    setBusy(true);
+
+    if (syncEnabled) {
+      const result = await signUp(trimmedUsername, pin);
+
+      if (!result.ok) {
+        setBusy(false);
+        setError(result.error ?? "ثبت‌نام ناموفق بود.");
+        return;
+      }
+    }
+
     // Existing users from the old name-scoped scheme carry their data over to
     // the username they pick here. This must happen BEFORE syncAfterLogin
     // below — otherwise a brand-new remote account would bootstrap-push an
@@ -139,56 +217,23 @@ function AccountStep({
     }
 
     setCurrentUserName(trimmedName);
+
+    await afterAuthSuccess(trimmedUsername);
   }
 
-  async function submit() {
-    const trimmedName = name.trim();
-    const trimmedUsername = username.trim();
+  const canSubmitLogin =
+    !busy && username.trim().length > 0 && pin.length >= MIN_PIN_LENGTH;
 
-    if (!trimmedName || !trimmedUsername) return;
-
-    if (!USERNAME_PATTERN.test(trimmedUsername)) {
-      window.alert(
-        "نام کاربری باید فقط با حروف و اعداد انگلیسی باشد."
-      );
-      return;
-    }
-
-    if (syncEnabled) {
-      setBusy(true);
-
-      const result = await signInOrSignUp(trimmedUsername, pin);
-
-      if (!result.ok) {
-        setBusy(false);
-        window.alert(result.error ?? "ورود ناموفق بود.");
-        return;
-      }
-    }
-
-    applyLocalAccount(trimmedName, trimmedUsername);
-
-    if (syncEnabled) {
-      // On a brand-new remote account this uploads the (now-migrated) local
-      // data as the initial snapshot; on a returning account logging in from
-      // a fresh device, this pulls its existing data down instead.
-      await syncAfterLogin(trimmedUsername);
-      setBusy(false);
-    }
-
-    // A username that already has a configured program (existing, migrated,
-    // or just pulled down from the server) goes straight into the app.
-    if (hasStartDate()) {
-      window.location.replace("/");
-      return;
-    }
-
-    onNewAccount();
-  }
+  const canSubmitSignup =
+    !busy &&
+    name.trim().length > 0 &&
+    username.trim().length > 0 &&
+    (!syncEnabled ||
+      (pin.length >= MIN_PIN_LENGTH && confirmPin.length > 0));
 
   return (
     <div className="app-gradient-bg pt-safe relative flex min-h-screen flex-col items-center justify-center px-6 py-10">
-      <div className="light-sweep" aria-hidden="true" />
+      <MeshGradientBackground colorA="#3b9149" colorB="#faea5c" />
 
       <div className="relative z-10 mx-auto flex w-full max-w-xl flex-col space-y-8">
         <InstallHint />
@@ -196,57 +241,180 @@ function AccountStep({
         <SetupBrand />
 
         <div className="glass-panel rounded-2xl p-6 space-y-4 text-center">
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") void submit();
-            }}
-            placeholder="اسم خودت رو وارد کن"
-            className="glass-chip w-full rounded-xl p-4 text-center text-white"
-          />
+          {mode === "choose" && (
+            <div className="space-y-3">
+              <button
+                onClick={() => goToMode("login")}
+                className="glass-tap w-full rounded-2xl bg-avocado-yellow py-4 text-xl font-bold text-black"
+              >
+                ورود
+              </button>
 
-          <input
-            type="text"
-            value={username}
-            onChange={(e) =>
-              // Strip anything that isn't English so the username stays valid.
-              setUsername(e.target.value.replace(/[^A-Za-z0-9._-]/g, ""))
-            }
-            onKeyDown={(e) => {
-              if (e.key === "Enter") void submit();
-            }}
-            placeholder="نام کاربری خودت رو وارد کن"
-            dir="ltr"
-            autoCapitalize="none"
-            autoCorrect="off"
-            spellCheck={false}
-            className="glass-chip w-full rounded-xl p-4 text-center text-white"
-          />
-
-          {syncEnabled && (
-            <input
-              type="password"
-              inputMode="numeric"
-              value={pin}
-              onChange={(e) => setPin(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") void submit();
-              }}
-              placeholder={`رمز خودت رو وارد کن (حداقل ${MIN_PIN_LENGTH} کاراکتر)`}
-              dir="ltr"
-              className="glass-chip w-full rounded-xl p-4 text-center text-white"
-            />
+              <button
+                onClick={() => goToMode("signup")}
+                className="selector-pill glass-tap w-full rounded-2xl py-4 text-xl font-bold text-white"
+              >
+                ثبت نام
+              </button>
+            </div>
           )}
 
-          <button
-            onClick={() => void submit()}
-            disabled={!canSubmit}
-            className="glass-tap w-full rounded-2xl bg-emerald-500 py-4 text-xl font-bold text-black disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            {busy ? "..." : "ادامه"}
-          </button>
+          {mode === "login" && (
+            <>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => {
+                  // Strip anything that isn't English so the username stays valid.
+                  setUsername(e.target.value.replace(/[^A-Za-z0-9._-]/g, ""));
+                  setError(null);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") void submitLogin();
+                }}
+                placeholder="نام کاربری خودت رو وارد کن"
+                dir="ltr"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+                className="glass-chip w-full rounded-xl p-4 text-center text-white"
+              />
+
+              <input
+                type="password"
+                inputMode="numeric"
+                value={pin}
+                onChange={(e) => {
+                  setPin(e.target.value);
+                  setError(null);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") void submitLogin();
+                }}
+                placeholder="رمز عبورت رو وارد کن"
+                dir="ltr"
+                className="glass-chip w-full rounded-xl p-4 text-center text-white"
+              />
+
+              {error && (
+                <p className="text-sm text-white">
+                  {error}
+                </p>
+              )}
+
+              <button
+                onClick={() => void submitLogin()}
+                disabled={!canSubmitLogin}
+                className="glass-tap w-full rounded-2xl bg-avocado-yellow py-4 text-xl font-bold text-black disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {busy ? "..." : "ورود"}
+              </button>
+
+              <button
+                onClick={() => goToMode("choose")}
+                disabled={busy}
+                className="w-full text-sm text-white underline disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                بازگشت
+              </button>
+            </>
+          )}
+
+          {mode === "signup" && (
+            <>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  setError(null);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") void submitSignup();
+                }}
+                placeholder="اسم خودت رو وارد کن"
+                className="glass-chip w-full rounded-xl p-4 text-center text-white"
+              />
+
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => {
+                  setUsername(e.target.value.replace(/[^A-Za-z0-9._-]/g, ""));
+                  setError(null);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") void submitSignup();
+                }}
+                placeholder="نام کاربری خودت رو وارد کن"
+                dir="ltr"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+                className="glass-chip w-full rounded-xl p-4 text-center text-white"
+              />
+
+              {syncEnabled && (
+                <>
+                  <input
+                    type="password"
+                    inputMode="numeric"
+                    value={pin}
+                    onChange={(e) => {
+                      setPin(e.target.value);
+                      setError(null);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") void submitSignup();
+                    }}
+                    placeholder={`رمز خودت رو وارد کن (حداقل ${MIN_PIN_LENGTH} کاراکتر)`}
+                    dir="ltr"
+                    className="glass-chip w-full rounded-xl p-4 text-center text-white"
+                  />
+
+                  <input
+                    type="password"
+                    inputMode="numeric"
+                    value={confirmPin}
+                    onChange={(e) => {
+                      setConfirmPin(e.target.value);
+                      setError(null);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") void submitSignup();
+                    }}
+                    placeholder="تکرار رمز عبور"
+                    dir="ltr"
+                    className="glass-chip w-full rounded-xl p-4 text-center text-white"
+                  />
+                </>
+              )}
+
+              {error && (
+                <p className="text-sm text-white">
+                  {error}
+                </p>
+              )}
+
+              <button
+                onClick={() => void submitSignup()}
+                disabled={!canSubmitSignup}
+                className="glass-tap w-full rounded-2xl bg-avocado-yellow py-4 text-xl font-bold text-black disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {busy ? "..." : "ثبت نام"}
+              </button>
+
+              {syncEnabled && (
+                <button
+                  onClick={() => goToMode("choose")}
+                  disabled={busy}
+                  className="w-full text-sm text-white underline disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  بازگشت
+                </button>
+              )}
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -335,7 +503,7 @@ function ProgramCycleSetup() {
 
   return (
     <div className="app-gradient-bg pt-safe relative min-h-screen px-6 py-10">
-      <div className="light-sweep" aria-hidden="true" />
+      <MeshGradientBackground colorA="#3b9149" colorB="#faea5c" />
 
       <div className="relative z-10 mx-auto flex max-w-xl flex-col space-y-8">
         <div className="text-center">
@@ -343,14 +511,14 @@ function ProgramCycleSetup() {
             Gampetoo
           </h1>
 
-          <p className="mt-2 text-zinc-400">
+          <p className="mt-2 text-white">
             برنامه تمرینی روزانه خودت رو بساز
           </p>
         </div>
 
         <div className="glass-panel rounded-2xl p-6 space-y-5 text-center">
           <h2 className="text-xl font-bold text-white">
-            روز {persianDays[days.length] ?? `${days.length + 1}`}
+            روز {persianDays[days.length] ?? toFaDigits(days.length + 1)}
           </h2>
 
           <div className="grid grid-cols-2 gap-3">
@@ -358,8 +526,8 @@ function ProgramCycleSetup() {
               onClick={() => setActivity("workout")}
               className={`glass-tap rounded-xl py-4 font-bold transition-colors ${
                 activity === "workout"
-                  ? "bg-emerald-500 text-black"
-                  : "bg-navy-600 text-white"
+                  ? "bg-avocado-yellow text-black"
+                  : "selector-pill text-white"
               }`}
             >
               تمرین
@@ -369,8 +537,8 @@ function ProgramCycleSetup() {
               onClick={() => setActivity("walk")}
               className={`glass-tap rounded-xl py-4 font-bold transition-colors ${
                 activity === "walk"
-                  ? "bg-emerald-500 text-black"
-                  : "bg-navy-600 text-white"
+                  ? "bg-avocado-yellow text-black"
+                  : "selector-pill text-white"
               }`}
             >
               استراحت
@@ -378,7 +546,7 @@ function ProgramCycleSetup() {
           </div>
           {activity === "workout" && (
             <>
-              <p className="text-sm text-zinc-400">
+              <p className="text-sm text-white">
                 یکی از تمرین‌های زیر را انتخاب کنید.
               </p>
 
@@ -389,8 +557,8 @@ function ProgramCycleSetup() {
                     onClick={() => setSelectedWorkout(item.id)}
                     className={`glass-tap rounded-xl py-3 font-bold transition-colors ${
                       selectedWorkout === item.id
-                        ? "bg-emerald-500 text-black"
-                        : "bg-navy-600 text-white"
+                        ? "bg-avocado-yellow text-black"
+                        : "selector-pill text-white"
                     }`}
                   >
                     {item.title}
@@ -429,7 +597,7 @@ function ProgramCycleSetup() {
               setActivity(null);
               setSelectedWorkout(null);
             }}
-            className="glass-tap w-full rounded-xl bg-amber-500 py-4 font-bold text-black"
+            className="glass-tap w-full rounded-xl bg-avocado-yellow py-4 font-bold text-black"
           >
           روز بعدی!
           </button>
@@ -446,14 +614,14 @@ function ProgramCycleSetup() {
       {days.map((day, index) => (
         <div
           key={day.id}
-          className="glass-chip flex items-center justify-between rounded-xl p-4"
+          className="day-card-gradient flex items-center justify-between rounded-xl p-4"
         >
           <div className="flex-1 text-right">
-            <p className="font-bold text-white">
-              روز {persianDays[index] ?? `${index + 1}`}
+            <p className="text-lg font-bold text-white">
+              روز {persianDays[index] ?? toFaDigits(index + 1)}
             </p>
 
-            <p className="text-zinc-400">
+            <p className="text-sm text-white">
               {day.activity === "walk"
                 ? "استراحت و پیاده‌روی سبک"
                 : day.title}
@@ -462,7 +630,7 @@ function ProgramCycleSetup() {
 
           <button
             onClick={() => removeDay(day.id)}
-            className="text-red-400"
+            className="text-sm text-white"
           >
             حذف
           </button>
@@ -473,7 +641,7 @@ function ProgramCycleSetup() {
 )}
   {days.length > 0 && (
   <div className="glass-panel rounded-2xl p-6">
-    <label className="mb-3 block text-center text-sm font-medium text-zinc-400">
+    <label className="mb-3 block text-center text-sm font-medium text-white">
      از چه تاریخی این چرخه آغاز شود؟
     </label>
 
@@ -504,7 +672,7 @@ function ProgramCycleSetup() {
         <button
   onClick={() => void handleFinish()}
   disabled={days.length === 0 || !startDate}
-  className="glass-tap w-full rounded-2xl bg-emerald-500 py-4 text-xl font-bold text-black disabled:cursor-not-allowed disabled:opacity-40"
+  className="glass-tap w-full rounded-2xl bg-avocado-yellow py-4 text-xl font-bold text-black disabled:cursor-not-allowed disabled:opacity-40"
 >
   شروع برنامه
 </button>

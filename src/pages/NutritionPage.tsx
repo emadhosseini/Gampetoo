@@ -36,13 +36,13 @@ export default function NutritionPage() {
         <WorkoutHeader subtitle="🍽 تغذیه امروز" title={title} />
 
         <div className="glass-panel rounded-2xl p-6 text-center">
-          <p className="text-zinc-300">
+          <p className="text-white">
             شما برنامه غذایی انتخاب نکردین
           </p>
 
           <button
             onClick={() => navigate("/settings/nutrition")}
-            className="mt-4 rounded-xl bg-emerald-500 px-5 py-3 text-sm font-semibold text-black"
+            className="mt-4 rounded-xl bg-avocado-yellow px-5 py-3 text-sm font-semibold text-black"
           >
             رفتن به تنظیمات برنامه غذایی
           </button>
@@ -61,7 +61,7 @@ export default function NutritionPage() {
 
       <SubstitutionsCard substitutions={plan.substitutions} />
 
-      <FreeMealCard message={plan.freeMeal} />
+      <FreeMealCard />
     </div>
   );
 }

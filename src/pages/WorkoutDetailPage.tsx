@@ -10,6 +10,7 @@ import {
 
 import type { ExerciseGroup } from "@/data/workoutLibrary";
 import type { WarmupGroup } from "@/data/warmupLibrary";
+import { toFaDigits } from "@/utils/numberFormat";
 
 export default function WorkoutDetailPage() {
   const { id } = useParams();
@@ -85,14 +86,14 @@ export default function WorkoutDetailPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 px-5 pb-5 pt-10">
       <h1 className="text-2xl font-bold">
         {workout.title}
       </h1>
 
       <div className="space-y-3">
         {specializedWarmup && (
-          <div className="glass-panel rounded-2xl p-4">
+          <div className="glass-panel glass-static rounded-2xl p-4">
             <button
               onClick={() => setWarmupSectionOpen((prev) => !prev)}
               className="flex w-full items-center justify-between"
@@ -102,7 +103,7 @@ export default function WorkoutDetailPage() {
               </h2>
 
               <ChevronDown
-                className={`h-5 w-5 text-zinc-400 transition-transform ${
+                className={`h-5 w-5 text-zinc-200 transition-transform ${
                   warmupSectionOpen ? "rotate-180" : ""
                 }`}
               />
@@ -113,20 +114,20 @@ export default function WorkoutDetailPage() {
                 {warmupGroups.map((group) => (
                   <div
                     key={group.id}
-                    className="glass-chip rounded-xl p-4"
+                    className="glass-chip glass-static rounded-xl p-4"
                   >
-                    <button
-                      onClick={() => toggleWarmupGroup(group.id)}
-                      className="flex w-full items-center justify-between"
-                    >
-                      <span className="font-medium">
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        checked={group.enabled}
+                        onChange={() => toggleWarmupGroup(group.id)}
+                        className="h-5 w-5 shrink-0"
+                      />
+
+                      <span className="flex-1 font-medium">
                         {group.title}
                       </span>
-
-                      <span className="text-2xl">
-                        {group.enabled ? "✅" : "⬜"}
-                      </span>
-                    </button>
+                    </div>
 
                     {group.enabled && (
                       <ul className="mt-3 space-y-2">
@@ -153,7 +154,7 @@ export default function WorkoutDetailPage() {
           return (
             <div
               key={group.id}
-              className="glass-panel rounded-2xl p-4"
+              className="glass-panel glass-static rounded-2xl p-4"
             >
               <button
                 onClick={() =>
@@ -166,7 +167,7 @@ export default function WorkoutDetailPage() {
                 </h2>
 
                 <ChevronDown
-                  className={`h-5 w-5 text-zinc-400 transition-transform ${
+                  className={`h-5 w-5 text-zinc-200 transition-transform ${
                     isOpen ? "rotate-180" : ""
                   }`}
                 />
@@ -179,33 +180,35 @@ export default function WorkoutDetailPage() {
                       key={exercise.id}
                       className="glass-chip glass-static rounded-xl p-4"
                     >
-                      <button
-                        onClick={() =>
-                          updateExercise(group.id, exercise.id, {
-                            enabled: !exercise.enabled,
-                          })
-                        }
-                        className={`flex w-full items-center justify-between ${
+                      <div
+                        className={`flex items-center gap-3 ${
                           workout.id === "warmup" ? "" : "mb-4"
                         }`}
                       >
-                        <span className="font-medium">
+                        <input
+                          type="checkbox"
+                          checked={exercise.enabled}
+                          onChange={() =>
+                            updateExercise(group.id, exercise.id, {
+                              enabled: !exercise.enabled,
+                            })
+                          }
+                          className="h-5 w-5 shrink-0"
+                        />
+
+                        <span className="flex-1 font-medium">
                           {exercise.name}
                         </span>
-
-                        <span className="text-2xl">
-                          {exercise.enabled ? "✅" : "⬜"}
-                        </span>
-                      </button>
+                      </div>
 
                       {workout.id !== "warmup" && (
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <div className="mb-2 text-sm text-zinc-500">
+                            <div className="mb-2 text-sm font-medium text-white">
                               ست
                             </div>
 
-                            <div className="flex items-center justify-between rounded-xl border p-2">
+                            <div className="selector-pill flex items-center justify-between rounded-xl p-2">
                               <button
                                 onClick={() => {
                                   if (exercise.sets <= 1) return;
@@ -218,7 +221,7 @@ export default function WorkoutDetailPage() {
                                 <Minus size={18} />
                               </button>
 
-                              <span>{exercise.sets}</span>
+                              <span className="font-bold text-white">{toFaDigits(exercise.sets)}</span>
 
                               <button
                                 onClick={() =>
@@ -233,11 +236,11 @@ export default function WorkoutDetailPage() {
                           </div>
 
                           <div>
-                            <div className="mb-2 text-sm text-zinc-500">
+                            <div className="mb-2 text-sm font-medium text-white">
                               تکرار
                             </div>
 
-                            <div className="flex items-center justify-between rounded-xl border p-2">
+                            <div className="selector-pill flex items-center justify-between rounded-xl p-2">
                               <button
                                 onClick={() => {
                                   if (exercise.reps <= 1) return;
@@ -250,7 +253,7 @@ export default function WorkoutDetailPage() {
                                 <Minus size={18} />
                               </button>
 
-                              <span>{exercise.reps}</span>
+                              <span className="font-bold text-white">{toFaDigits(exercise.reps)}</span>
 
                               <button
                                 onClick={() =>
@@ -276,7 +279,7 @@ export default function WorkoutDetailPage() {
 
       <button
         onClick={handleSave}
-        className="glass-tap w-full rounded-2xl bg-navy-900/80 backdrop-blur-xl py-4 text-lg font-semibold text-white"
+        className="glass-tap w-full rounded-2xl bg-avocado-yellow py-4 text-lg font-bold text-black"
       >
         {saved ? "ذخیره شد ✅" : "ذخیره"}
       </button>

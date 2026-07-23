@@ -3,6 +3,7 @@ import { useState } from "react";
 
 import MealItem from "./MealItem";
 import type { MealSection } from "../../types/nutrition";
+import { toFaDigits } from "@/utils/numberFormat";
 
 interface MealCardProps {
   meal: MealSection;
@@ -28,7 +29,7 @@ export default function MealCard({ meal }: MealCardProps) {
         </span>
 
         <ChevronDown
-          className={`h-5 w-5 text-zinc-400 transition-transform ${
+          className={`h-5 w-5 text-zinc-200 transition-transform ${
             isOpen ? "rotate-180" : ""
           }`}
         />
@@ -45,14 +46,14 @@ export default function MealCard({ meal }: MealCardProps) {
           {(meal.calories || meal.protein) && (
             <div className="flex items-center gap-4 pt-2 text-sm">
               {meal.calories && (
-                <span className="text-orange-400">
-                  {meal.calories} کیلوکالری
+                <span className="text-white">
+                  {toFaDigits(meal.calories)} کیلوکالری
                 </span>
               )}
 
               {meal.protein && (
-                <span className="text-emerald-400">
-                  {meal.protein} گرم پروتئین
+                <span className="font-semibold text-white">
+                  {toFaDigits(meal.protein)} گرم پروتئین
                 </span>
               )}
             </div>
@@ -60,7 +61,7 @@ export default function MealCard({ meal }: MealCardProps) {
 
           {meal.notes && meal.notes.length > 0 && (
             <div className="glass-chip rounded-xl p-3">
-              <div className="mb-2 text-xs font-semibold text-zinc-400">
+              <div className="mb-2 text-xs font-semibold text-white">
                 نکات
               </div>
 
@@ -68,7 +69,7 @@ export default function MealCard({ meal }: MealCardProps) {
                 {meal.notes.map((note, index) => (
                   <li
                     key={index}
-                    className="text-sm text-zinc-200"
+                    className="text-sm text-white"
                   >
                     • {note}
                   </li>

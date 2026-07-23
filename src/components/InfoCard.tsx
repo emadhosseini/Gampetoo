@@ -17,7 +17,7 @@ function InfoCard({
         {icon}
       </div>
 
-      <p className="text-sm text-zinc-400">
+      <p className="text-sm text-white">
         {title}
       </p>
 

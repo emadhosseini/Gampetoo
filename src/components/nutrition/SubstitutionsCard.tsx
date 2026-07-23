@@ -29,7 +29,7 @@ export default function SubstitutionsCard({
         </span>
 
         <ChevronDown
-          className={`h-5 w-5 text-zinc-400 transition-transform ${
+          className={`h-5 w-5 text-zinc-200 transition-transform ${
             isOpen ? "rotate-180" : ""
           }`}
         />
@@ -39,11 +39,11 @@ export default function SubstitutionsCard({
         <div className="mt-4 space-y-5">
           {substitutions.map((group) => (
             <div key={group.title}>
-              <h3 className="mb-2 font-medium text-emerald-400">
+              <h3 className="mb-2 font-semibold text-white">
                 {group.title}
               </h3>
 
-              <ul className="space-y-1 text-zinc-300">
+              <ul className="space-y-1 text-white">
                 {group.foods.map((food) => (
                   <li key={food}>• {food}</li>
                 ))}

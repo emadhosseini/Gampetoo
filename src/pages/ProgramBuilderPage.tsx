@@ -5,6 +5,7 @@ import { getWorkoutOptions } from "@/store/workoutLibraryStore";
 import { getActiveProgram, updateProgram } from "@/utils/programEngine";
 import { generateId } from "@/utils/id";
 import type { WorkoutDay, WorkoutType } from "@/types/program";
+import { toFaDigits } from "@/utils/numberFormat";
 
 const persianDays = [
   "اول",
@@ -90,24 +91,24 @@ function ProgramBuilderPage() {
       {days.map((day, index) => (
         <div
           key={day.id}
-          className="glass-panel rounded-2xl p-4"
+          className="day-card-gradient rounded-2xl p-4"
         >
           <div className="flex items-center justify-between">
-            <div className="font-semibold">
-              روز {persianDays[index] ?? `${index + 1}`}
+            <div className="text-lg font-bold text-white">
+              روز {persianDays[index] ?? toFaDigits(index + 1)}
             </div>
 
             <button
               onClick={() => removeDay(index)}
               disabled={days.length <= 1}
-              className="text-sm text-red-400 disabled:opacity-30"
+              className="text-sm text-white disabled:opacity-30"
             >
               حذف
             </button>
           </div>
 
           <select
-            className="mt-3 w-full rounded-xl border border-navy-500 bg-navy-600 p-3 text-white"
+            className="selector-pill mt-3 w-full rounded-xl p-3 font-bold text-white"
             value={day.workoutId ?? ""}
             onChange={(e) => {
               updateDayWorkout(
@@ -134,14 +135,14 @@ function ProgramBuilderPage() {
 
       <button
         onClick={addDay}
-        className="glass-tap w-full rounded-2xl border border-dashed border-navy-500 py-4 text-center font-semibold text-zinc-300"
+        className="ghost-action w-full rounded-2xl py-4 text-center font-medium text-white"
       >
         + افزودن روز تمرینی
       </button>
 
       <button
         onClick={handleSave}
-        className="w-full rounded-2xl bg-emerald-500 py-4 text-lg font-bold text-black"
+        className="w-full rounded-2xl bg-avocado-yellow py-4 text-lg font-bold text-black"
       >
         ذخیره تغییرات
       </button>

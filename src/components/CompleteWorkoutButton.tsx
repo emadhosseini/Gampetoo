@@ -1,15 +1,9 @@
+import SlideToCompleteButton from "@/components/SlideToCompleteButton";
+
 type CompleteWorkoutButtonProps = {
   onClick: () => void;
   label?: string;
   variant?: "primary" | "accent";
-};
-
-const variantClasses: Record<
-  NonNullable<CompleteWorkoutButtonProps["variant"]>,
-  string
-> = {
-  primary: "bg-navy-900 text-white",
-  accent: "bg-orange-500 text-black",
 };
 
 export default function CompleteWorkoutButton({
@@ -17,10 +11,14 @@ export default function CompleteWorkoutButton({
   label = "اتمام تمرین",
   variant = "primary",
 }: CompleteWorkoutButtonProps) {
+  if (variant === "accent") {
+    return <SlideToCompleteButton label={label} onComplete={onClick} />;
+  }
+
   return (
     <button
       onClick={onClick}
-      className={`mt-6 w-full rounded-2xl py-4 text-lg font-semibold ${variantClasses[variant]}`}
+      className="mt-6 w-full rounded-2xl bg-forest-900 py-4 text-lg font-semibold text-white"
     >
       {label}
     </button>

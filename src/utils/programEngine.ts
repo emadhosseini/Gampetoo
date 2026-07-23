@@ -179,6 +179,24 @@ export function setProgramStartDate(
   });
 }
 
+// Nudges every future day-index computation (getProgramDayIndex et al.)
+// forward by one day, for when a workout actually happened but its
+// completion never got logged, so the cycle would otherwise repeat that
+// day — without touching startDate itself, which should keep showing the
+// program's real, unaltered start date.
+export function shiftProgramOneDayForward() {
+  const program = getActiveProgram();
+
+  if (!program.startDate) {
+    return;
+  }
+
+  updateProgram({
+    ...program,
+    cycleShiftDays: (program.cycleShiftDays ?? 0) + 1,
+  });
+}
+
 export function getProgramDayIndex(
   date = new Date()
 ): number {
@@ -198,7 +216,7 @@ export function getProgramDayIndex(
     (current.getTime() - start.getTime()) / 86400000
   );
 
-  return Math.max(0, diffDays);
+  return Math.max(0, diffDays + (program.cycleShiftDays ?? 0));
 }
 
 export function getCycleDayIndex(

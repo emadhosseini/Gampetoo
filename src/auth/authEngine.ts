@@ -66,17 +66,69 @@ export async function signInOrSignUp(
   return { ok: false, error: signUpResult.error.message };
 }
 
-export async function signOutRemote(): Promise<void> {
-  await supabase?.auth.signOut();
+/** Logs into an existing account only — fails (rather than creating one) if
+ * the username doesn't exist or the password is wrong. */
+export async function signIn(username: string, pin: string): Promise<AuthResult> {
+  if (!supabase) {
+    return { ok: false, error: "همگام‌سازی با سرور فعال نیست." };
+  }
+
+  if (pin.length < MIN_PIN_LENGTH) {
+    return {
+      ok: false,
+      error: `رمز باید حداقل ${MIN_PIN_LENGTH} کاراکتر باشد.`,
+    };
+  }
+
+  const email = usernameToEmail(username);
+
+  const { error } = await supabase.auth.signInWithPassword({
+    email,
+    password: pin,
+  });
+
+  if (error) {
+    return { ok: false, error: "نام کاربری یا رمز اشتباه است." };
+  }
+
+  return { ok: true };
 }
 
-/** The Supabase auth user id for the active session, or null if signed out
- * or sync isn't configured. Used by the sync engine to address the
- * user_data row — RLS still enforces this server-side regardless. */
-export async function getRemoteUserId(): Promise<string | null> {
-  if (!supabase) return null;
+/** Creates a new account only — fails (rather than logging in) if the
+ * username is already registered. */
+export async function signUp(username: string, pin: string): Promise<AuthResult> {
+  if (!supabase) {
+    return { ok: false, error: "همگام‌سازی با سرور فعال نیست." };
+  }
 
-  const { data } = await supabase.auth.getSession();
+  if (pin.length < MIN_PIN_LENGTH) {
+    return {
+      ok: false,
+      error: `رمز باید حداقل ${MIN_PIN_LENGTH} کاراکتر باشد.`,
+    };
+  }
 
-  return data.session?.user.id ?? null;
+  const email = usernameToEmail(username);
+
+  const { error } = await supabase.auth.signUp({
+    email,
+    password: pin,
+  });
+
+  if (error) {
+    if (error.message.toLowerCase().includes("already registered")) {
+      return {
+        ok: false,
+        error: "این نام کاربری قبلاً ثبت شده. از گزینه «ورود» استفاده کن.",
+      };
+    }
+
+    return { ok: false, error: error.message };
+  }
+
+  return { ok: true };
+}
+
+export async function signOutRemote(): Promise<void> {
+  await supabase?.auth.signOut();
 }

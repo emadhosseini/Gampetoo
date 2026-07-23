@@ -1,13 +1,21 @@
 @import "tailwindcss";
 
-/* Very dark, desaturated navy — the app's base color. Never pure black. */
+/* Dark forest green — the app's base color, matched to the mascot icon's
+   own dark green (forest-900 is that exact color). Never pure black. */
 @theme {
-  --color-navy-950: #05070d;
-  --color-navy-900: #090d18;
-  --color-navy-800: #10152a;
-  --color-navy-700: #161c35;
-  --color-navy-600: #1e2542;
-  --color-navy-500: #2b3355;
+  --color-forest-950: #132f18;
+  --color-forest-900: #1d4724;
+  --color-forest-800: #23572c;
+  --color-forest-700: #296533;
+  --color-forest-600: #327b3e;
+  --color-forest-500: #3b9149;
+
+  /* The mascot icon's yellow (its avocado flesh) — the app's primary button color. */
+  --color-avocado-yellow: #faea5c;
+
+  /* A brighter lime-green, used only as the light end of the day-card
+     gradient (day-card-gradient below). */
+  --color-avocado-lime: #9dc730;
 }
 
 /* Respect the iOS notch / Dynamic Island / home-indicator when installed to the
@@ -20,6 +28,17 @@
   padding-bottom: env(safe-area-inset-bottom);
 }
 
+/* Hides the scrollbar on a native-scrolling wheel picker (WeightPicker)
+   without disabling scroll itself. */
+@utility no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 html {
   direction: rtl;
 }
@@ -27,62 +46,33 @@ html {
 body {
   margin: 0;
   font-family: "Vazirmatn", sans-serif;
-  background: var(--color-navy-950);
+  background: var(--color-forest-950);
   color: #ffffff;
 }
 
-/* Soft top-to-bottom navy gradient: a touch lighter at the top, deepening
-   toward the bottom. Used for full-screen surfaces (the phone shell and the
-   pre-setup gate screens). */
+/* This is an app, not a document — text/buttons shouldn't highlight into a
+   selection on tap-and-hold, and iOS shouldn't pop its copy/lookup callout
+   menu. Inputs are the one place people actually need to select text (to
+   edit/replace a value), so they opt back in explicitly. */
+* {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+input,
+textarea {
+  -webkit-touch-callout: default;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* Flat forest-green base — kept uniform (not fading darker toward the
+   bottom) so the mesh-gradient glow layer stays consistent across the full
+   page instead of being swallowed by a dark fade near the bottom. */
 .app-gradient-bg {
   position: relative;
-  background: linear-gradient(
-    180deg,
-    var(--color-navy-800) 0%,
-    var(--color-navy-900) 45%,
-    var(--color-navy-950) 100%
-  );
-}
-
-/* A slow, very soft diagonal sheen that drifts across the gradient — the
-   "light sweep". Purely decorative, so it sits behind content and never
-   captures pointer events. */
-.light-sweep {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  pointer-events: none;
-}
-
-.light-sweep::before {
-  content: "";
-  position: absolute;
-  inset: -20% -60%;
-  background: linear-gradient(
-    100deg,
-    transparent 32%,
-    rgb(255 255 255 / 5%) 45%,
-    rgb(255 255 255 / 9%) 50%,
-    rgb(255 255 255 / 5%) 55%,
-    transparent 68%
-  );
-  animation: light-sweep 90s ease-in-out infinite;
-}
-
-@keyframes light-sweep {
-  0%,
-  100% {
-    transform: translate3d(-35%, -15%, 0);
-  }
-  50% {
-    transform: translate3d(35%, 15%, 0);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .light-sweep::before {
-    animation: none;
-  }
+  background: var(--color-forest-800);
 }
 
 /* iOS-style frosted glass blocks. .glass-panel is a full translucent card
@@ -145,7 +135,7 @@ body {
 
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .glass-panel {
-    background-color: var(--color-navy-700);
+    background-color: var(--color-forest-700);
     background-image: none;
   }
 }
@@ -154,6 +144,50 @@ body {
   .glass-panel,
   .glass-chip,
   .glass-tap {
+    transition: none;
+  }
+}
+
+/* Interactive-element system, by function:
+   - .day-card-gradient: the editable "day" container (holds a select and a
+     delete action) — a vivid solid gradient, not glass, since it's the
+     thing being directly worked on rather than a passive info card. No
+     press-transform: it wraps smaller controls, and scaling it would shift
+     them out from under the finger mid-tap (see .glass-static above).
+   - .selector-pill: a choice control (native <select>, a toggle in a
+     choice group) — solid, flat, one level lighter than the gradient's
+     dark end so it still reads as "nested inside" the day card.
+   - .ghost-action: a secondary/optional action (add, cancel) — outline
+     only, no fill, so it never competes with the primary yellow CTA. */
+.day-card-gradient {
+  background: linear-gradient(
+    120deg,
+    var(--color-forest-500) 0%,
+    var(--color-avocado-lime) 100%
+  );
+}
+
+.selector-pill {
+  background-color: var(--color-forest-600);
+}
+
+.ghost-action {
+  background-color: transparent;
+  border: 1px dashed var(--color-forest-500);
+  transition:
+    background-color 200ms ease,
+    transform 220ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.ghost-action:active {
+  background-color: rgb(255 255 255 / 6%);
+  transform: scale(0.98);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ghost-action {
     transition: none;
   }
 }

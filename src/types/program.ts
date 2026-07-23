@@ -36,6 +36,12 @@ export interface Program {
   startDate: string;
   active: boolean;
 
+  // How many extra days the workout cycle has been nudged forward without
+  // touching startDate itself — see shiftProgramOneDayForward in
+  // programEngine.ts. Absent/undefined on programs created before this
+  // existed, treated the same as 0.
+  cycleShiftDays?: number;
+
   workout: WorkoutCycle;
 
   nutrition: {

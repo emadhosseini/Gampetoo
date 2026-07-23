@@ -1,14 +1,21 @@
-import { ChevronDown } from "lucide-react";
-import { useState } from "react";
+import { ChevronDown, Search } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 
 import { getActiveProgram, updateProgram } from "@/utils/programEngine";
+import { getMealSlots } from "@/data/nutrition/foodCatalog";
 import {
-  getMealSlots,
-  foodCatalog,
-  type FoodCatalogEntry,
-} from "@/data/nutrition/foodCatalog";
+  localFoods,
+  searchFood,
+  searchSupplements,
+  supplementFoods,
+} from "@/domain/nutrition/foodSearch";
+import { sortFoodsForMeal } from "@/domain/nutrition/mealFoodSuggestions";
+import { toFaDigits } from "@/utils/numberFormat";
 
+const SUPPLEMENTS_MEAL_ID = "supplements";
+
+import type { FoodItem as FoodEntry, ServingUnit } from "@/types/food";
 import type { MealPlan, MealPlanType, MealSection } from "@/types/nutrition";
 
 const typeTitles: Record<MealPlanType, string> = {
@@ -16,13 +23,162 @@ const typeTitles: Record<MealPlanType, string> = {
   rest: "برنامه غذایی روزهای استراحت",
 };
 
-function parseQuantity(amount: string, fallback: number): number {
-  const match = amount.match(/^(\d+(?:\.\d+)?)/);
-  return match ? Number(match[1]) : fallback;
+// Live-search only kicks in past this many characters — short queries (1-3
+// chars) match too many/ambiguous entries in a small catalog, so below this
+// length a search only applies once explicitly submitted via the button.
+const AUTO_SEARCH_MIN_LENGTH = 3;
+
+// How long to wait after the last keystroke before actually running a live
+// search — avoids firing a network request (the external API fallback) on
+// every single character while the user is still typing.
+const SEARCH_DEBOUNCE_MS = 300;
+
+const AMOUNT_PATTERN = /^(\d+(?:\.\d+)?)\s+(.+)$/;
+
+// A persisted amount string is always "<quantity> <unit label>" — split it
+// back apart so the quantity input and unit dropdown can be driven from it.
+function parseAmount(amount: string): { quantity: number; unitLabel: string } {
+  const match = amount.match(AMOUNT_PATTERN);
+  return match
+    ? { quantity: Number(match[1]), unitLabel: match[2] }
+    : { quantity: 1, unitLabel: amount };
+}
+
+function caloriesFor(entry: FoodEntry, unit: ServingUnit, quantity: number): number {
+  return Math.round((entry.caloriesPer100g * unit.grams * quantity) / 100);
 }
 
 function mealCalories(meal: MealSection): number {
   return meal.foods.reduce((sum, food) => sum + (food.calories ?? 0), 0);
+}
+
+function MealFoodList({
+  meal,
+  query,
+  isFiltering,
+  results,
+  loading,
+  onQueryChange,
+  onSubmitSearch,
+  onToggleFood,
+  onUpdateQuantity,
+}: {
+  meal: MealSection;
+  query: string;
+  isFiltering: boolean;
+  results: FoodEntry[];
+  loading: boolean;
+  onQueryChange: (value: string) => void;
+  onSubmitSearch: () => void;
+  onToggleFood: (entry: FoodEntry) => void;
+  onUpdateQuantity: (entry: FoodEntry, quantity: number, unit: ServingUnit) => void;
+}) {
+  const isSupplementsMeal = meal.id === SUPPLEMENTS_MEAL_ID;
+
+  const suggestedFoods = useMemo(
+    () => (isSupplementsMeal ? supplementFoods : sortFoodsForMeal(localFoods, meal.id)),
+    [meal.id, isSupplementsMeal],
+  );
+  const visibleFoods = isFiltering ? results : suggestedFoods;
+
+  return (
+    <div className="mt-4 space-y-2">
+      <div className="glass-chip flex items-center gap-2 rounded-xl p-2">
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => onQueryChange(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") onSubmitSearch();
+          }}
+          placeholder="جستجوی غذا..."
+          className="flex-1 bg-transparent px-2 py-2 text-sm text-white placeholder:text-white/50 outline-none"
+        />
+
+        <button
+          onClick={onSubmitSearch}
+          aria-label="جستجو"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-avocado-yellow text-black"
+        >
+          <Search size={16} />
+        </button>
+      </div>
+
+      {isFiltering && loading && (
+        <p className="py-3 text-center text-sm text-white">در حال جستجو...</p>
+      )}
+
+      {isFiltering && !loading && visibleFoods.length === 0 && (
+        <p className="py-3 text-center text-sm text-white">غذایی پیدا نشد.</p>
+      )}
+
+      {(!isFiltering || !loading) &&
+        visibleFoods.map((entry) => {
+          const selected = meal.foods.find((food) => food.id === entry.id);
+          const parsed = selected ? parseAmount(selected.amount) : null;
+          const selectedUnit =
+            (parsed &&
+              entry.servingUnits.find((u) => u.label === parsed.unitLabel)) ??
+            entry.servingUnits[0];
+          const quantity = parsed?.quantity ?? 1;
+
+          return (
+            <div
+              key={entry.id}
+              className="glass-chip glass-static flex flex-wrap items-center gap-3 rounded-xl p-3"
+            >
+              <input
+                type="checkbox"
+                checked={!!selected}
+                onChange={() => onToggleFood(entry)}
+                className="h-5 w-5 shrink-0"
+              />
+
+              <span className="flex-1 text-sm font-semibold text-white">
+                {entry.nameFa}
+              </span>
+
+              {selected && selected.calories !== undefined && (
+                <span className="text-sm font-normal text-white">
+                  {toFaDigits(selected.calories)} کیلوکالری
+                </span>
+              )}
+
+              {selected && (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min={0}
+                    value={quantity}
+                    onChange={(e) =>
+                      onUpdateQuantity(entry, Number(e.target.value), selectedUnit)
+                    }
+                    className="w-14 rounded-lg border border-forest-500 bg-forest-600 px-2 py-1 text-center text-sm text-white"
+                  />
+
+                  <select
+                    value={selectedUnit.label}
+                    onChange={(e) => {
+                      const unit =
+                        entry.servingUnits.find((u) => u.label === e.target.value) ??
+                        entry.servingUnits[0];
+                      onUpdateQuantity(entry, quantity, unit);
+                    }}
+                    className="glass-static rounded-lg border border-forest-500 bg-forest-600 px-2 py-1 text-sm text-white"
+                  >
+                    {entry.servingUnits.map((unit) => (
+                      <option key={unit.label} value={unit.label}>
+                        {unit.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
+          );
+        })}
+    </div>
+  );
 }
 
 function buildInitialPlan(type: MealPlanType): MealPlan {
@@ -68,6 +224,82 @@ export default function NutritionPlanDetailPage() {
   const [openMealId, setOpenMealId] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
 
+  // Per-meal search text, and which meals have had a search explicitly
+  // submitted (via the button) — once true, that meal keeps filtering live
+  // regardless of query length, until the box is cleared back to empty.
+  const [mealQueries, setMealQueries] = useState<Record<string, string>>({});
+  const [searchActive, setSearchActive] = useState<Record<string, boolean>>(
+    {},
+  );
+  const [mealResults, setMealResults] = useState<Record<string, FoodEntry[]>>(
+    {},
+  );
+  const [mealLoading, setMealLoading] = useState<Record<string, boolean>>({});
+
+  // Guards against a slower, stale search response overwriting a newer one
+  // when the user keeps typing before the previous request resolves.
+  const searchRequestId = useRef<Record<string, number>>({});
+  const searchTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>(
+    {},
+  );
+
+  useEffect(() => {
+    const timers = searchTimers.current;
+    return () => {
+      Object.values(timers).forEach((timer) => clearTimeout(timer));
+    };
+  }, []);
+
+  async function runMealSearch(mealId: string, query: string) {
+    const requestId = (searchRequestId.current[mealId] ?? 0) + 1;
+    searchRequestId.current[mealId] = requestId;
+
+    setMealLoading((prev) => ({ ...prev, [mealId]: true }));
+
+    // Supplements are a small fixed list — a plain local filter, no external
+    // API lookup like the regular (much larger, open-ended) food catalog.
+    const results =
+      mealId === SUPPLEMENTS_MEAL_ID
+        ? searchSupplements(query)
+        : (await searchFood(query)).results;
+
+    if (searchRequestId.current[mealId] !== requestId) return;
+
+    setMealResults((prev) => ({ ...prev, [mealId]: results }));
+    setMealLoading((prev) => ({ ...prev, [mealId]: false }));
+  }
+
+  function setMealQuery(mealId: string, value: string) {
+    setMealQueries((prev) => ({ ...prev, [mealId]: value }));
+
+    if (searchTimers.current[mealId]) {
+      clearTimeout(searchTimers.current[mealId]);
+    }
+
+    const trimmed = value.trim();
+
+    if (trimmed.length === 0) {
+      setSearchActive((prev) => ({ ...prev, [mealId]: false }));
+      setMealResults((prev) => ({ ...prev, [mealId]: [] }));
+      return;
+    }
+
+    if (trimmed.length > AUTO_SEARCH_MIN_LENGTH) {
+      searchTimers.current[mealId] = setTimeout(() => {
+        void runMealSearch(mealId, trimmed);
+      }, SEARCH_DEBOUNCE_MS);
+    }
+  }
+
+  function submitMealSearch(mealId: string, query: string) {
+    if (searchTimers.current[mealId]) {
+      clearTimeout(searchTimers.current[mealId]);
+    }
+
+    setSearchActive((prev) => ({ ...prev, [mealId]: true }));
+    void runMealSearch(mealId, query);
+  }
+
   if (!type || !plan) {
     return (
       <div className="py-10 text-center">
@@ -91,7 +323,7 @@ export default function NutritionPlanDetailPage() {
     );
   }
 
-  function toggleFood(mealId: string, entry: FoodCatalogEntry) {
+  function toggleFood(mealId: string, entry: FoodEntry) {
     setSaved(false);
 
     setPlan((prev) => {
@@ -102,19 +334,19 @@ export default function NutritionPlanDetailPage() {
         meals: prev.meals.map((meal) => {
           if (meal.id !== mealId) return meal;
 
-          const exists = meal.foods.some(
-            (food) => food.name === entry.name,
-          );
+          const exists = meal.foods.some((food) => food.id === entry.id);
+
+          const defaultUnit = entry.servingUnits[0];
 
           const foods = exists
-            ? meal.foods.filter((food) => food.name !== entry.name)
+            ? meal.foods.filter((food) => food.id !== entry.id)
             : [
                 ...meal.foods,
                 {
-                  id: entry.name,
-                  name: entry.name,
-                  amount: entry.defaultAmount,
-                  calories: entry.calories,
+                  id: entry.id,
+                  name: entry.nameFa,
+                  amount: `1 ${defaultUnit.label}`,
+                  calories: caloriesFor(entry, defaultUnit, 1),
                 },
               ];
 
@@ -133,8 +365,9 @@ export default function NutritionPlanDetailPage() {
 
   function updateFoodQuantity(
     mealId: string,
-    entry: FoodCatalogEntry,
+    entry: FoodEntry,
     quantity: number,
+    unit: ServingUnit,
   ) {
     setSaved(false);
 
@@ -149,19 +382,12 @@ export default function NutritionPlanDetailPage() {
           return {
             ...meal,
             foods: meal.foods.map((food) => {
-              if (food.name !== entry.name) return food;
-
-              const calories =
-                entry.calories !== undefined && entry.defaultQuantity
-                  ? Math.round(
-                      (entry.calories / entry.defaultQuantity) * quantity,
-                    )
-                  : entry.calories;
+              if (food.id !== entry.id) return food;
 
               return {
                 ...food,
-                amount: `${quantity} ${entry.unit}`,
-                calories,
+                amount: `${quantity} ${unit.label}`,
+                calories: caloriesFor(entry, unit, quantity),
               };
             }),
           };
@@ -187,7 +413,7 @@ export default function NutritionPlanDetailPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 px-5 pb-5 pt-10">
       <h1 className="text-center text-2xl font-bold text-white">
         {typeTitles[type]}
       </h1>
@@ -225,8 +451,8 @@ export default function NutritionPlanDetailPage() {
                 </button>
 
                 {calories > 0 && (
-                  <span className="whitespace-nowrap text-sm font-medium text-orange-400">
-                    {calories} کیلوکالری
+                  <span className="whitespace-nowrap text-sm font-medium text-white">
+                    {toFaDigits(calories)} کیلوکالری
                   </span>
                 )}
 
@@ -236,7 +462,7 @@ export default function NutritionPlanDetailPage() {
                   }
                 >
                   <ChevronDown
-                    className={`h-5 w-5 text-zinc-400 transition-transform ${
+                    className={`h-5 w-5 text-zinc-200 transition-transform ${
                       isOpen ? "rotate-180" : ""
                     }`}
                   />
@@ -244,67 +470,25 @@ export default function NutritionPlanDetailPage() {
               </div>
 
               {isOpen && (
-                <div className="mt-4 space-y-2">
-                  {foodCatalog.map((entry) => {
-                    const selected = meal.foods.find(
-                      (food) => food.name === entry.name,
-                    );
-
-                    return (
-                      <div
-                        key={entry.name}
-                        className="glass-chip glass-static flex items-center gap-3 rounded-xl p-3"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={!!selected}
-                          onChange={() => toggleFood(meal.id, entry)}
-                          className="h-5 w-5 shrink-0"
-                        />
-
-                        <span className="flex-1 text-sm text-zinc-100">
-                          {entry.name}
-                        </span>
-
-                        {selected && selected.calories !== undefined && (
-                          <span className="text-sm text-orange-400">
-                            {selected.calories} کیلوکالری
-                          </span>
-                        )}
-
-                        {selected &&
-                          (entry.defaultQuantity !== null ? (
-                            <div className="flex items-center gap-2">
-                              <input
-                                type="number"
-                                min={0}
-                                value={parseQuantity(
-                                  selected.amount,
-                                  entry.defaultQuantity,
-                                )}
-                                onChange={(e) =>
-                                  updateFoodQuantity(
-                                    meal.id,
-                                    entry,
-                                    Number(e.target.value),
-                                  )
-                                }
-                                className="w-16 rounded-lg border border-navy-500 bg-navy-600 px-2 py-1 text-center text-sm text-white"
-                              />
-
-                              <span className="text-sm text-zinc-400">
-                                {entry.unit}
-                              </span>
-                            </div>
-                          ) : (
-                            <span className="text-sm text-zinc-400">
-                              {entry.defaultAmount}
-                            </span>
-                          ))}
-                      </div>
-                    );
-                  })}
-                </div>
+                <MealFoodList
+                  meal={meal}
+                  query={mealQueries[meal.id] ?? ""}
+                  isFiltering={
+                    searchActive[meal.id] ||
+                    (mealQueries[meal.id] ?? "").trim().length >
+                      AUTO_SEARCH_MIN_LENGTH
+                  }
+                  results={mealResults[meal.id] ?? []}
+                  loading={mealLoading[meal.id] ?? false}
+                  onQueryChange={(value) => setMealQuery(meal.id, value)}
+                  onSubmitSearch={() =>
+                    submitMealSearch(meal.id, mealQueries[meal.id] ?? "")
+                  }
+                  onToggleFood={(entry) => toggleFood(meal.id, entry)}
+                  onUpdateQuantity={(entry, quantity, unit) =>
+                    updateFoodQuantity(meal.id, entry, quantity, unit)
+                  }
+                />
               )}
             </div>
           );
@@ -312,21 +496,23 @@ export default function NutritionPlanDetailPage() {
       </div>
 
       <div className="glass-panel rounded-2xl p-4 text-center">
-        <p className="text-sm text-zinc-400">
+        <p className="text-sm text-white">
           مجموع کالری روز
         </p>
 
-        <p className="mt-1 text-xl font-bold text-orange-400">
-          {plan.meals
-            .filter((meal) => meal.enabled ?? true)
-            .reduce((sum, meal) => sum + mealCalories(meal), 0)}{" "}
+        <p className="mt-1 text-xl font-bold text-white">
+          {toFaDigits(
+            plan.meals
+              .filter((meal) => meal.enabled ?? true)
+              .reduce((sum, meal) => sum + mealCalories(meal), 0),
+          )}{" "}
           کیلوکالری
         </p>
       </div>
 
       <button
         onClick={handleSave}
-        className="glass-tap w-full rounded-2xl bg-navy-900/80 backdrop-blur-xl py-4 text-lg font-semibold text-white"
+        className="glass-tap w-full rounded-2xl bg-avocado-yellow py-4 text-lg font-bold text-black"
       >
         {saved ? "ذخیره شد ✅" : "ذخیره"}
       </button>

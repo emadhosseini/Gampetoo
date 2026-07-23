@@ -37,12 +37,12 @@ export default function InstallHint() {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-6 backdrop-blur-sm">
-      <div className="w-full max-w-sm rounded-2xl border border-navy-600 bg-navy-700 p-6 text-center shadow-2xl">
+      <div className="w-full max-w-sm rounded-2xl border border-forest-600 bg-forest-700 p-6 text-center shadow-2xl">
         <p className="text-base font-bold text-white">
           برای دسترسی راحت‌تر به برنامه
         </p>
 
-        <p className="mt-3 text-sm leading-8 text-zinc-400">
+        <p className="mt-3 text-sm leading-8 text-white">
           روی دکمه
           <span className="mx-1 inline-flex items-center gap-1 align-middle font-medium text-white">
             <Share size={16} />
@@ -58,7 +58,7 @@ export default function InstallHint() {
 
         <button
           onClick={dismiss}
-          className="mt-6 w-full rounded-2xl bg-emerald-500 py-3 text-lg font-bold text-black"
+          className="mt-6 w-full rounded-2xl bg-avocado-yellow py-3 text-lg font-bold text-black"
         >
           متوجه شدم
         </button>

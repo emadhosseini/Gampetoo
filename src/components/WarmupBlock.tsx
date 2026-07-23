@@ -32,7 +32,7 @@ export default function WarmupBlock({
         </span>
 
         <ChevronDown
-          className={`h-5 w-5 text-zinc-400 transition-transform ${
+          className={`h-5 w-5 text-zinc-200 transition-transform ${
             isOpen ? "rotate-180" : ""
           }`}
         />
@@ -43,7 +43,7 @@ export default function WarmupBlock({
           {exercises.map((exercise) => (
             <li
               key={exercise.id}
-              className="glass-chip rounded-xl px-4 py-3 text-sm text-zinc-100"
+              className="glass-chip rounded-xl px-4 py-3 text-sm text-white"
             >
               {exercise.name}
             </li>

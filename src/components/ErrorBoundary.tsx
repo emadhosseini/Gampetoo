@@ -1,5 +1,6 @@
 import { Component, type ReactNode } from "react";
 
+import MeshGradientBackground from "@/components/background/MeshGradientBackground";
 import { resetApplication } from "@/domain/reset/resetApplication";
 
 interface Props {
@@ -50,14 +51,14 @@ export default class ErrorBoundary extends Component<Props, State> {
 
     return (
       <div className="app-gradient-bg pt-safe relative flex min-h-screen flex-col items-center justify-center px-6">
-        <div className="light-sweep" aria-hidden="true" />
+        <MeshGradientBackground colorA="#3b9149" colorB="#faea5c" />
 
-        <div className="relative z-10 w-full max-w-sm rounded-2xl border border-navy-600 bg-navy-700 p-6 text-center">
+        <div className="relative z-10 w-full max-w-sm rounded-2xl border border-forest-600 bg-forest-700 p-6 text-center">
           <h1 className="text-lg font-bold text-white">
             مشکلی پیش اومد
           </h1>
 
-          <p className="mt-2 text-sm leading-7 text-zinc-400">
+          <p className="mt-2 text-sm leading-7 text-white">
             یک خطای غیرمنتظره رخ داد. می‌تونی دوباره تلاش کنی، یا اگر مشکل
             ادامه داشت، برنامه رو بازنشانی کنی.
           </p>
@@ -65,14 +66,14 @@ export default class ErrorBoundary extends Component<Props, State> {
           <div className="mt-6 flex flex-col gap-3">
             <button
               onClick={this.handleRetry}
-              className="w-full rounded-2xl bg-emerald-500 py-3 font-bold text-black"
+              className="w-full rounded-2xl bg-avocado-yellow py-3 font-bold text-black"
             >
               تلاش دوباره
             </button>
 
             <button
               onClick={this.handleReset}
-              className="w-full rounded-2xl border border-red-900 bg-red-950/30 py-3 font-bold text-red-400"
+              className="w-full rounded-2xl border border-red-900 bg-red-950/30 py-3 font-bold text-white"
             >
               بازنشانی کامل برنامه
             </button>

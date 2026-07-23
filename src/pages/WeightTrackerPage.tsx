@@ -11,11 +11,18 @@ import {
 } from "chart.js";
 import zoomPlugin from "chartjs-plugin-zoom";
 import { Line } from "react-chartjs-2";
-import DateObject from "react-date-object";
-import persian from "react-date-object/calendars/persian";
-import persian_fa from "react-date-object/locales/persian_fa";
 
-import { getTodaysWeight, getWeightLog, logWeight } from "@/utils/weightEngine";
+import WeightPicker from "@/components/WeightPicker";
+import {
+  getLatestWeight,
+  getTodaysWeight,
+  getWeightLog,
+  logWeight,
+} from "@/utils/weightEngine";
+import { formatGregorianShort } from "@/utils/dateFormat";
+import { toFaDigits } from "@/utils/numberFormat";
+
+const CHART_FONT_FAMILY = "Vazirmatn";
 
 ChartJS.register(
   CategoryScale,
@@ -35,21 +42,9 @@ function isoToLocalDate(iso: string): Date {
   return new Date(y, m - 1, d);
 }
 
-function formatJalaliShort(iso: string): string {
-  const jalali = new DateObject({
-    date: isoToLocalDate(iso),
-    calendar: persian,
-    locale: persian_fa,
-  });
-
-  return `${jalali.format("D")} ${jalali.format("MMMM")}`;
-}
-
 export default function WeightTrackerPage() {
   const [entries, setEntries] = useState(() => getWeightLog());
-  const [weightInput, setWeightInput] = useState(() =>
-    (getTodaysWeight() ?? "").toString(),
-  );
+  const [weight, setWeight] = useState(() => getLatestWeight() ?? 50);
   const [saved, setSaved] = useState(false);
 
   const chartRef = useRef<ChartJS<"line"> | null>(null);
@@ -57,20 +52,13 @@ export default function WeightTrackerPage() {
   const alreadyLoggedToday = getTodaysWeight() !== null;
 
   function handleLog() {
-    const value = Number(weightInput);
-
-    if (!weightInput || Number.isNaN(value) || value <= 0) {
-      window.alert("لطفاً یک وزن معتبر وارد کن.");
-      return;
-    }
-
-    setEntries(logWeight(value));
+    setEntries(logWeight(weight));
     setSaved(true);
   }
 
   const chartData = useMemo(
     () => ({
-      labels: entries.map((entry) => formatJalaliShort(entry.date)),
+      labels: entries.map((entry) => formatGregorianShort(isoToLocalDate(entry.date))),
       datasets: [
         {
           data: entries.map((entry) => entry.weight),
@@ -102,19 +90,25 @@ export default function WeightTrackerPage() {
         x: {
           min: initialWindow.min,
           max: initialWindow.max,
-          ticks: { color: "#a1a1aa" },
-          grid: { color: "#1e2542" },
+          ticks: { color: "#ffffff", font: { family: CHART_FONT_FAMILY } },
+          grid: { color: "#327b3e" },
         },
         y: {
-          ticks: { color: "#a1a1aa" },
-          grid: { color: "#1e2542" },
+          ticks: {
+            color: "#ffffff",
+            font: { family: CHART_FONT_FAMILY },
+            callback: (value: number | string) => toFaDigits(value),
+          },
+          grid: { color: "#327b3e" },
         },
       },
       plugins: {
         tooltip: {
+          titleFont: { family: CHART_FONT_FAMILY },
+          bodyFont: { family: CHART_FONT_FAMILY },
           callbacks: {
             label: (context: TooltipItem<"line">) =>
-              `${context.parsed.y ?? 0} کیلوگرم`,
+              `${toFaDigits(context.parsed.y ?? 0)} کیلوگرم`,
           },
         },
         zoom: {
@@ -139,60 +133,49 @@ export default function WeightTrackerPage() {
         ثبت وزن
       </h1>
 
-      <div className="glass-panel rounded-2xl p-4 text-center">
-        <label className="mb-3 block text-sm text-zinc-400">
+      <div className="glass-panel glass-static rounded-2xl p-4 text-center">
+        <label className="mb-3 block text-sm text-white">
           {alreadyLoggedToday ? "وزن امروزت رو ویرایش کن" : "وزن امروزت رو وارد کن"}
         </label>
 
-        <div className="flex items-center justify-center gap-3">
-          <input
-            type="number"
-            inputMode="decimal"
-            step="0.01"
-            min="0"
-            value={weightInput}
-            onChange={(e) => {
-              setWeightInput(e.target.value);
-              setSaved(false);
-            }}
-            placeholder="۰٫۰۰"
-            dir="ltr"
-            className="glass-chip w-32 rounded-xl p-4 text-center text-lg text-white"
-          />
-
-          <span className="text-zinc-400">کیلوگرم</span>
-        </div>
+        <WeightPicker
+          value={weight}
+          onChange={(newWeight) => {
+            setWeight(newWeight);
+            setSaved(false);
+          }}
+        />
 
         <button
           onClick={handleLog}
-          className="mt-4 w-full rounded-2xl bg-emerald-500 py-3 text-lg font-bold text-black"
+          className="mt-4 w-full rounded-2xl bg-avocado-yellow py-3 text-lg font-bold text-black"
         >
           {saved ? "ثبت شد ✅" : alreadyLoggedToday ? "بروزرسانی وزن" : "ثبت وزن"}
         </button>
       </div>
 
-      <div className="glass-panel rounded-2xl p-4">
-        <p className="mb-3 text-center text-sm text-zinc-400">
+      <div className="glass-panel glass-static rounded-2xl p-4">
+        <p className="mb-3 text-center text-sm text-white">
           نمودار وزن
         </p>
 
         {entries.length === 0 ? (
-          <p className="py-8 text-center text-zinc-500">
+          <p className="py-8 text-center text-white">
             هنوز وزنی ثبت نکردی.
           </p>
         ) : (
           <>
-            <div className="h-64">
+            <div className="-ml-3 h-64">
               <Line ref={chartRef} data={chartData} options={chartOptions} />
             </div>
 
-            <p className="mt-3 text-center text-xs text-zinc-500">
+            <p className="mt-3 text-center text-xs text-white">
               با اسکرول یا دو انگشتی زوم کن، برای دیدن وزن‌های قبلی بکش
             </p>
 
             <button
               onClick={() => chartRef.current?.resetZoom()}
-              className="mx-auto mt-2 block text-xs text-zinc-400 underline"
+              className="mx-auto mt-2 block text-xs text-white underline"
             >
               بازنشانی نمودار
             </button>

@@ -1,4 +1,5 @@
 import type { Exercise } from "@/data/workoutLibrary";
+import { toFaDigits } from "@/utils/numberFormat";
 
 type ExerciseCardProps = {
   exercise: Exercise;
@@ -13,9 +14,9 @@ export default function ExerciseCard({
         {exercise.name}
       </h2>
 
-      <div className="mt-2 flex justify-between text-sm text-zinc-400">
-        <span>{exercise.sets} ست</span>
-        <span>{exercise.reps} تکرار</span>
+      <div className="mt-2 flex justify-between text-sm text-white">
+        <span>{toFaDigits(exercise.sets)} ست</span>
+        <span>{toFaDigits(exercise.reps)} تکرار</span>
       </div>
     </div>
   );

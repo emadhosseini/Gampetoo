@@ -190,6 +190,13 @@ export const mealPlans: Record<"workout" | "rest", MealPlan> = {
           },
         ],
       },
+
+      {
+        id: "supplements",
+        title: "مکمل و ویتامین‌ها",
+        icon: "💊",
+        foods: [],
+      },
     ],
 
     substitutions: [
@@ -296,6 +303,13 @@ export const mealPlans: Record<"workout" | "rest", MealPlan> = {
             calories: 50,
           },
         ],
+      },
+
+      {
+        id: "supplements",
+        title: "مکمل و ویتامین‌ها",
+        icon: "💊",
+        foods: [],
       },
     ],
 

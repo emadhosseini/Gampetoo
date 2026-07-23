@@ -42,6 +42,13 @@ export function getTodaysWeight(): number | null {
   return getWeightLog().find((entry) => entry.date === today())?.weight ?? null;
 }
 
+/** The most recently logged weight overall (any date), not just today's. */
+export function getLatestWeight(): number | null {
+  const entries = getWeightLog();
+
+  return entries.length > 0 ? entries[entries.length - 1].weight : null;
+}
+
 /**
  * Logs a date's weight, replacing any existing entry for that same date
  * rather than creating a duplicate — logging again today just updates it.
