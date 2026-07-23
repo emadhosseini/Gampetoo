@@ -11,9 +11,6 @@ import {
 } from "chart.js";
 import zoomPlugin from "chartjs-plugin-zoom";
 import { Line } from "react-chartjs-2";
-import DateObject from "react-date-object";
-import persian from "react-date-object/calendars/persian";
-import persian_fa from "react-date-object/locales/persian_fa";
 
 import WeightPicker from "@/components/WeightPicker";
 import {
@@ -22,6 +19,7 @@ import {
   getWeightLog,
   logWeight,
 } from "@/utils/weightEngine";
+import { formatGregorianShort } from "@/utils/dateFormat";
 
 ChartJS.register(
   CategoryScale,
@@ -41,16 +39,6 @@ function isoToLocalDate(iso: string): Date {
   return new Date(y, m - 1, d);
 }
 
-function formatJalaliShort(iso: string): string {
-  const jalali = new DateObject({
-    date: isoToLocalDate(iso),
-    calendar: persian,
-    locale: persian_fa,
-  });
-
-  return `${jalali.format("D")} ${jalali.format("MMMM")}`;
-}
-
 export default function WeightTrackerPage() {
   const [entries, setEntries] = useState(() => getWeightLog());
   const [weight, setWeight] = useState(() => getLatestWeight() ?? 50);
@@ -67,7 +55,7 @@ export default function WeightTrackerPage() {
 
   const chartData = useMemo(
     () => ({
-      labels: entries.map((entry) => formatJalaliShort(entry.date)),
+      labels: entries.map((entry) => formatGregorianShort(isoToLocalDate(entry.date))),
       datasets: [
         {
           data: entries.map((entry) => entry.weight),

@@ -1,6 +1,14 @@
 {
-  "current": "1.5.1",
+  "current": "1.5.2",
   "history": [
+    {
+      "version": "1.5.2",
+      "date": "2026-07-23",
+      "description": "Changed the weight-tracker chart's date labels from the Jalali (Shamsi) calendar to Gregorian, matching every other date shown in the app except the home page's greeting, which keeps its Gregorian-with-Jalali-in-parentheses format on purpose.",
+      "highlights": [
+        "📅 تاریخ نمودار وزن به میلادی تغییر کرد"
+      ]
+    },
     {
       "version": "1.5.1",
       "date": "2026-07-23",

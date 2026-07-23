@@ -3,21 +3,7 @@ import persian from "react-date-object/calendars/persian";
 import persian_fa from "react-date-object/locales/persian_fa";
 
 import { getCurrentUserName } from "@/utils/userEngine";
-
-const gregorianMonthNamesFa = [
-  "ژانویه",
-  "فوریه",
-  "مارس",
-  "آوریل",
-  "می",
-  "ژوئن",
-  "جولای",
-  "آگوست",
-  "سپتامبر",
-  "اکتبر",
-  "نوامبر",
-  "دسامبر",
-];
+import { formatGregorianShort } from "@/utils/dateFormat";
 
 function formatToday() {
   const now = new Date();
@@ -32,10 +18,7 @@ function formatToday() {
   const jalaliDay = jalali.format("D");
   const jalaliMonth = jalali.format("MMMM");
 
-  const gregorianDay = now.getDate().toLocaleString("fa-IR");
-  const gregorianMonth = gregorianMonthNamesFa[now.getMonth()];
-
-  return `${weekday}، ${gregorianDay} ${gregorianMonth} (${jalaliDay} ${jalaliMonth}ماه)`;
+  return `${weekday}، ${formatGregorianShort(now)} (${jalaliDay} ${jalaliMonth}ماه)`;
 }
 
 function Header() {
