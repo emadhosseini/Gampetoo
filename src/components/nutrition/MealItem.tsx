@@ -1,4 +1,5 @@
 import type { FoodItem } from "../../types/nutrition";
+import { toFaDigits } from "@/utils/numberFormat";
 
 interface MealItemProps {
   item: FoodItem;
@@ -12,11 +13,11 @@ export default function MealItem({ item }: MealItemProps) {
       </span>
 
       <span className="text-center text-sm text-white">
-        {item.calories !== undefined && `${item.calories} کیلوکالری`}
+        {item.calories !== undefined && `${toFaDigits(item.calories)} کیلوکالری`}
       </span>
 
       <span className="text-left text-sm font-semibold text-white">
-        {item.amount}
+        {toFaDigits(item.amount)}
       </span>
     </div>
   );

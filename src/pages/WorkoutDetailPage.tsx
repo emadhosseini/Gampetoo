@@ -10,6 +10,7 @@ import {
 
 import type { ExerciseGroup } from "@/data/workoutLibrary";
 import type { WarmupGroup } from "@/data/warmupLibrary";
+import { toFaDigits } from "@/utils/numberFormat";
 
 export default function WorkoutDetailPage() {
   const { id } = useParams();
@@ -220,7 +221,7 @@ export default function WorkoutDetailPage() {
                                 <Minus size={18} />
                               </button>
 
-                              <span className="font-bold text-white">{exercise.sets}</span>
+                              <span className="font-bold text-white">{toFaDigits(exercise.sets)}</span>
 
                               <button
                                 onClick={() =>
@@ -252,7 +253,7 @@ export default function WorkoutDetailPage() {
                                 <Minus size={18} />
                               </button>
 
-                              <span className="font-bold text-white">{exercise.reps}</span>
+                              <span className="font-bold text-white">{toFaDigits(exercise.reps)}</span>
 
                               <button
                                 onClick={() =>

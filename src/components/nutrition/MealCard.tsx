@@ -3,6 +3,7 @@ import { useState } from "react";
 
 import MealItem from "./MealItem";
 import type { MealSection } from "../../types/nutrition";
+import { toFaDigits } from "@/utils/numberFormat";
 
 interface MealCardProps {
   meal: MealSection;
@@ -46,13 +47,13 @@ export default function MealCard({ meal }: MealCardProps) {
             <div className="flex items-center gap-4 pt-2 text-sm">
               {meal.calories && (
                 <span className="text-white">
-                  {meal.calories} کیلوکالری
+                  {toFaDigits(meal.calories)} کیلوکالری
                 </span>
               )}
 
               {meal.protein && (
                 <span className="font-semibold text-white">
-                  {meal.protein} گرم پروتئین
+                  {toFaDigits(meal.protein)} گرم پروتئین
                 </span>
               )}
             </div>

@@ -5,6 +5,7 @@ import { getWorkoutOptions } from "@/store/workoutLibraryStore";
 import { getActiveProgram, updateProgram } from "@/utils/programEngine";
 import { generateId } from "@/utils/id";
 import type { WorkoutDay, WorkoutType } from "@/types/program";
+import { toFaDigits } from "@/utils/numberFormat";
 
 const persianDays = [
   "اول",
@@ -94,7 +95,7 @@ function ProgramBuilderPage() {
         >
           <div className="flex items-center justify-between">
             <div className="text-lg font-bold text-white">
-              روز {persianDays[index] ?? `${index + 1}`}
+              روز {persianDays[index] ?? toFaDigits(index + 1)}
             </div>
 
             <button

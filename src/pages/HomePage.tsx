@@ -19,6 +19,7 @@ import {
 } from "@/utils/programEngine";
 
 import { getWorkout } from "@/store/workoutLibraryStore";
+import { toFaDigits } from "@/utils/numberFormat";
 
 function HomePage() {
   const session = getSession();
@@ -70,7 +71,7 @@ const workout = workoutType
             !started
               ? daysUntilStart === 1
                 ? "اولین برنامه فردا شروع می‌شه"
-                : `اولین برنامه از ${daysUntilStart} روز دیگه شروع می‌شه`
+                : `اولین برنامه از ${toFaDigits(daysUntilStart)} روز دیگه شروع می‌شه`
               : isWorkout
                 ? undefined
                 : "استراحت و پیاده روی سبک به مدت ۴۵ تا ۶۰ دقیقه"

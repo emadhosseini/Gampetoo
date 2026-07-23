@@ -1,6 +1,14 @@
 {
-  "current": "1.6.1",
+  "current": "1.6.2",
   "history": [
+    {
+      "version": "1.6.2",
+      "date": "2026-07-23",
+      "description": "Every number the app displays to the user now renders in Persian digits: exercise sets/reps, workout summary counts, meal calories/protein, food amounts, the weight wheel-picker, day numbers, and \"days until start\". Left the weight-log/chart date numbers (already fixed), the app version number, and native number inputs (browsers only accept ASCII digits there) as-is.",
+      "highlights": [
+        "🔢 همه‌ی اعداد نرم‌افزار به فارسی نمایش داده می‌شن"
+      ]
+    },
     {
       "version": "1.6.1",
       "date": "2026-07-23",

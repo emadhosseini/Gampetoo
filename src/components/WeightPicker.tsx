@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, useScroll, useTransform, type MotionValue } from "framer-motion";
 
+import { toFaDigits } from "@/utils/numberFormat";
+
 const ITEM_HEIGHT = 40;
 // One row above, the selected row, one row below.
 const VISIBLE_ITEMS = 3;
@@ -68,7 +70,7 @@ function WheelColumn({
   values,
   selected,
   onSettle,
-  format = String,
+  format = toFaDigits,
   className = "",
 }: WheelColumnProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -202,7 +204,7 @@ export default function WeightPicker({
         values={gramValues}
         selected={initialGrams}
         onSettle={handleGramSettle}
-        format={(v) => v.toString().padStart(2, "0")}
+        format={(v) => toFaDigits(v.toString().padStart(2, "0"))}
         className="w-14"
       />
     </div>

@@ -2,6 +2,7 @@ import { ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import { getLibrary } from "@/store/workoutLibraryStore";
+import { toFaDigits } from "@/utils/numberFormat";
 
 export default function WorkoutLibraryPage() {
   const navigate = useNavigate();
@@ -28,7 +29,7 @@ export default function WorkoutLibraryPage() {
               </h2>
 
               <p className="text-sm text-white">
-                {workout.groups.length} گروه عضلانی
+                {toFaDigits(workout.groups.length)} گروه عضلانی
               </p>
             </div>
 

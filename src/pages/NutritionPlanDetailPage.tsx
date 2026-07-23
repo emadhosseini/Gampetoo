@@ -11,6 +11,7 @@ import {
   supplementFoods,
 } from "@/domain/nutrition/foodSearch";
 import { sortFoodsForMeal } from "@/domain/nutrition/mealFoodSuggestions";
+import { toFaDigits } from "@/utils/numberFormat";
 
 const SUPPLEMENTS_MEAL_ID = "supplements";
 
@@ -139,7 +140,7 @@ function MealFoodList({
 
               {selected && selected.calories !== undefined && (
                 <span className="text-sm font-normal text-white">
-                  {selected.calories} کیلوکالری
+                  {toFaDigits(selected.calories)} کیلوکالری
                 </span>
               )}
 
@@ -451,7 +452,7 @@ export default function NutritionPlanDetailPage() {
 
                 {calories > 0 && (
                   <span className="whitespace-nowrap text-sm font-medium text-white">
-                    {calories} کیلوکالری
+                    {toFaDigits(calories)} کیلوکالری
                   </span>
                 )}
 
@@ -500,9 +501,11 @@ export default function NutritionPlanDetailPage() {
         </p>
 
         <p className="mt-1 text-xl font-bold text-white">
-          {plan.meals
-            .filter((meal) => meal.enabled ?? true)
-            .reduce((sum, meal) => sum + mealCalories(meal), 0)}{" "}
+          {toFaDigits(
+            plan.meals
+              .filter((meal) => meal.enabled ?? true)
+              .reduce((sum, meal) => sum + mealCalories(meal), 0),
+          )}{" "}
           کیلوکالری
         </p>
       </div>

@@ -15,6 +15,7 @@ import "react-multi-date-picker/styles/colors/green.css";
 import MeshGradientBackground from "@/components/background/MeshGradientBackground";
 import ChromaKeyVideo from "@/components/ChromaKeyVideo";
 import InstallHint from "@/components/InstallHint";
+import { toFaDigits } from "@/utils/numberFormat";
 
 // startDate is stored as a Gregorian ISO date (YYYY-MM-DD). These convert to and
 // from a local JS Date without the UTC-parsing off-by-one that new Date("...") has.
@@ -517,7 +518,7 @@ function ProgramCycleSetup() {
 
         <div className="glass-panel rounded-2xl p-6 space-y-5 text-center">
           <h2 className="text-xl font-bold text-white">
-            روز {persianDays[days.length] ?? `${days.length + 1}`}
+            روز {persianDays[days.length] ?? toFaDigits(days.length + 1)}
           </h2>
 
           <div className="grid grid-cols-2 gap-3">
@@ -617,7 +618,7 @@ function ProgramCycleSetup() {
         >
           <div className="flex-1 text-right">
             <p className="text-lg font-bold text-white">
-              روز {persianDays[index] ?? `${index + 1}`}
+              روز {persianDays[index] ?? toFaDigits(index + 1)}
             </p>
 
             <p className="text-sm text-white">
