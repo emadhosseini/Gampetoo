@@ -1,6 +1,14 @@
 {
-  "current": "1.6.0",
+  "current": "1.6.1",
   "history": [
+    {
+      "version": "1.6.1",
+      "date": "2026-07-23",
+      "description": "Fixed the free-meal card showing NaN for accounts with the old pre-weekly-count free-meal data still in storage. All the free-meal card's numbers, plus the weight chart's axis numbers and date labels, now render in Persian digits with the Vazirmatn font (the chart's canvas text doesn't inherit page fonts, so it needed its own font config). Widened the weight chart a bit further to the left, and removed its card's press-scale animation, matching the weight-entry card above it.",
+      "highlights": [
+        "🐛 رفع باگ نمایش NaN در کادر وعده آزاد و اصلاح فونت/اعداد نمودار وزن"
+      ]
+    },
     {
       "version": "1.6.0",
       "date": "2026-07-23",

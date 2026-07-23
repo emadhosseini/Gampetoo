@@ -5,6 +5,7 @@ import {
   getWeeklyFreeMealCount,
   setWeeklyFreeMealCount,
 } from "@/utils/freeMealEngine";
+import { toFaDigits } from "@/utils/numberFormat";
 
 export default function FreeMealSettingsButton() {
   const [open, setOpen] = useState(false);
@@ -47,7 +48,7 @@ export default function FreeMealSettingsButton() {
                 <Minus size={18} />
               </button>
 
-              <span className="font-bold text-white">{count}</span>
+              <span className="font-bold text-white">{toFaDigits(count)}</span>
 
               <button onClick={() => setCount((prev) => prev + 1)}>
                 <Plus size={18} />

@@ -49,7 +49,21 @@ function readState(): FreeMealState | null {
   if (!saved) return null;
 
   try {
-    return JSON.parse(saved) as FreeMealState;
+    const parsed = JSON.parse(saved) as Partial<FreeMealState>;
+    const startedAtMs = parsed.cycleStartedAt
+      ? new Date(parsed.cycleStartedAt).getTime()
+      : NaN;
+
+    // Guards against the old single-boolean shape (`{ usedAt }`, no
+    // cycleStartedAt/usedCount) left over in localStorage from before the
+    // weekly-count feature — reading it as the current shape silently
+    // produced NaN everywhere. Anything that doesn't parse as a valid
+    // cycle is treated as no active cycle (a fresh full allowance).
+    if (Number.isNaN(startedAtMs) || typeof parsed.usedCount !== "number") {
+      return null;
+    }
+
+    return { cycleStartedAt: parsed.cycleStartedAt!, usedCount: parsed.usedCount };
   } catch {
     return null;
   }

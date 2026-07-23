@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import { getFreeMealStatus, markFreeMealUsed } from "@/utils/freeMealEngine";
+import { toFaDigits } from "@/utils/numberFormat";
 
 function usedTodayMessage(weeklyCount: number): string {
   return weeklyCount > 1
@@ -51,7 +52,7 @@ export default function FreeMealCard() {
       <p className="text-white">
         {justUsed
           ? usedTodayMessage(status.weeklyCount)
-          : `${status.remaining} از ${status.weeklyCount} وعده آزاد این هفته باقی مونده`}
+          : `${toFaDigits(status.remaining)} از ${toFaDigits(status.weeklyCount)} وعده آزاد این هفته باقی مونده`}
       </p>
 
       {exhausted ? (

@@ -20,6 +20,9 @@ import {
   logWeight,
 } from "@/utils/weightEngine";
 import { formatGregorianShort } from "@/utils/dateFormat";
+import { toFaDigits } from "@/utils/numberFormat";
+
+const CHART_FONT_FAMILY = "Vazirmatn";
 
 ChartJS.register(
   CategoryScale,
@@ -87,19 +90,25 @@ export default function WeightTrackerPage() {
         x: {
           min: initialWindow.min,
           max: initialWindow.max,
-          ticks: { color: "#ffffff" },
+          ticks: { color: "#ffffff", font: { family: CHART_FONT_FAMILY } },
           grid: { color: "#327b3e" },
         },
         y: {
-          ticks: { color: "#ffffff" },
+          ticks: {
+            color: "#ffffff",
+            font: { family: CHART_FONT_FAMILY },
+            callback: (value: number | string) => toFaDigits(value),
+          },
           grid: { color: "#327b3e" },
         },
       },
       plugins: {
         tooltip: {
+          titleFont: { family: CHART_FONT_FAMILY },
+          bodyFont: { family: CHART_FONT_FAMILY },
           callbacks: {
             label: (context: TooltipItem<"line">) =>
-              `${context.parsed.y ?? 0} کیلوگرم`,
+              `${toFaDigits(context.parsed.y ?? 0)} کیلوگرم`,
           },
         },
         zoom: {
@@ -145,7 +154,7 @@ export default function WeightTrackerPage() {
         </button>
       </div>
 
-      <div className="glass-panel rounded-2xl p-4">
+      <div className="glass-panel glass-static rounded-2xl p-4">
         <p className="mb-3 text-center text-sm text-white">
           نمودار وزن
         </p>
@@ -156,7 +165,7 @@ export default function WeightTrackerPage() {
           </p>
         ) : (
           <>
-            <div className="h-64">
+            <div className="-ml-3 h-64">
               <Line ref={chartRef} data={chartData} options={chartOptions} />
             </div>
 
