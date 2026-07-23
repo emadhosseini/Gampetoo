@@ -61,7 +61,7 @@ export default function NutritionPage() {
 
       <SubstitutionsCard substitutions={plan.substitutions} />
 
-      <FreeMealCard message={plan.freeMeal} />
+      <FreeMealCard />
     </div>
   );
 }

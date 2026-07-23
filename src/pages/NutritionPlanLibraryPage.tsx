@@ -1,6 +1,8 @@
 import { ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
+import FreeMealSettingsButton from "@/components/nutrition/FreeMealSettingsButton";
+
 export default function NutritionPlanLibraryPage() {
   const navigate = useNavigate();
 
@@ -32,6 +34,8 @@ export default function NutritionPlanLibraryPage() {
 
           <ChevronRight className="h-5 w-5 text-zinc-200" />
         </button>
+
+        <FreeMealSettingsButton />
       </div>
     </div>
   );

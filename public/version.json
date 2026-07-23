@@ -1,6 +1,14 @@
 {
-  "current": "1.5.2",
+  "current": "1.6.0",
   "history": [
+    {
+      "version": "1.6.0",
+      "date": "2026-07-23",
+      "description": "Added a configurable weekly free-meal count. A new \"وعده آزاد\" button on the nutrition-plan page opens a stepper to set how many free meals you get per week (defaults to 1, same as before). The free-meal card on the daily nutrition page now tracks and shows remaining/total for the current 7-day cycle, confirms with the right wording whether you just used one of several or your only one for the week, and says the week's free meals are used up once they hit zero. The cycle resets to exactly the configured count every 7 days — unused meals never carry over into the next week.",
+      "highlights": [
+        "🍕 تعداد وعده آزاد هفتگی حالا قابل تنظیمه"
+      ]
+    },
     {
       "version": "1.5.2",
       "date": "2026-07-23",

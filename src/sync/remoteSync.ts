@@ -11,6 +11,7 @@ const SYNCED_BASE_KEYS = [
   "emad-workout-library-overrides",
   "emad-warmup-library-overrides",
   "emad-free-meal",
+  "emad-free-meal-settings",
   "emad-user-name",
   "emad-weight-log",
 ];
