@@ -1,6 +1,14 @@
 {
-  "current": "1.5.0",
+  "current": "1.5.1",
   "history": [
+    {
+      "version": "1.5.1",
+      "date": "2026-07-23",
+      "description": "Restyled the slide-to-complete handle: dropped the black circular knob in favor of three bare yellow chevrons (bigger than the old single icon), fading from full color on the left to faint on the right to read as a directional swipe hint. The yellow fill is now fully hidden at rest, fades in only once dragging starts, and its leading edge softens into the track instead of cutting off sharply.",
+      "highlights": [
+        "👉 طراحی جدید دستگیره دکمه اسلایدی (بدون کادر مشکی، فلش‌های زرد محوشونده)"
+      ]
+    },
     {
       "version": "1.5.0",
       "date": "2026-07-23",
