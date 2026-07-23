@@ -1,6 +1,24 @@
 {
-  "current": "1.6.2",
+  "current": "2.0.0",
   "history": [
+    {
+      "version": "2.0.0",
+      "date": "2026-07-23",
+      "description": "Major release merging seven weeks of beta work into main (previously at 1.3.0). Highlights: a new mesh-gradient app background and a restyled iOS-style wheel picker for weight entry; cross-device account sync via Supabase with a proper login/signup split and a logout button; a bilingual (Persian/English) Iranian + international foods database with hybrid local/external search, per-food selectable serving units (spoon, piece, cup, grams, ...), a gym-foods bank with per-meal suggestions, and a supplements & vitamins section; a configurable weekly free-meal count with its own tracking card; a \"forgot to log yesterday's workout\" button that shifts the program cycle; the workout library restyled to match the nutrition menu with real checkboxes (and two follow-up fixes for press-scale animation swallowing taps); the workout/walk completion button turned into a slide-to-complete gesture; all dates shown in Gregorian except the home page's greeting (which keeps Jalali in parentheses); every number in the app now in Persian digits with the Vazirmatn font applied consistently, including on the weight chart's canvas-rendered text; app-wide text-selection disabled with a low-contrast text sweep; and a round of reliability fixes (a sync race that could drop data on in-app update, the mascot animation showing a black box on iOS Safari, a weight-picker math bug, and a free-meal NaN display bug).",
+      "highlights": [
+        "🎨 پس‌زمینه mesh-gradient جدید و انتخابگر وزن استوانه‌ای بازطراحی‌شده",
+        "👤 ورود/ثبت‌نام جداگانه + همگام‌سازی حساب بین دستگاه‌ها",
+        "🍽️ بانک غذایی ایرانی و بین‌المللی با جست‌وجوی دوزبانه و واحد شمارش قابل انتخاب",
+        "💊 منوی مکمل و ویتامین‌ها + پیشنهاد غذا بر اساس نوع وعده",
+        "🍕 وعده آزاد هفتگی حالا قابل تنظیم و پیگیری",
+        "🤦 دکمه فراموشی ثبت تمرین دیروز",
+        "🏋️ هماهنگ‌سازی طراحی کتابخانه تمرین‌ها و رفع مشکل تیک‌زدن چک‌باکس‌ها",
+        "👉 دکمه اتمام تمرین به‌صورت اسلایدی (بکشید تا تایید شود)",
+        "📅 تاریخ میلادی و 🔢 اعداد فارسی در سراسر برنامه",
+        "🔒 غیرفعال شدن انتخاب متن و بهبود کنتراست رنگ‌ها",
+        "🐛 چند رفع باگ مهم: گم نشدن اطلاعات هنگام آپدیت، رفع مشکل ویدیوی ماسکوت در سافاری، و موارد دیگر"
+      ]
+    },
     {
       "version": "1.6.2",
       "date": "2026-07-23",
