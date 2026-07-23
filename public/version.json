@@ -1,6 +1,14 @@
 {
-  "current": "1.4.1",
+  "current": "1.5.0",
   "history": [
+    {
+      "version": "1.5.0",
+      "date": "2026-07-23",
+      "description": "Replaced the tappable \"تمرین امروز رو انجام دادم\" / \"پیاده روی امروز رو انجام دادم\" buttons with a slide-to-complete gesture (framer-motion drag), so finishing a workout or walk needs a deliberate swipe instead of a single tap. Dragging past 75% of the track snaps forward to a completed checkmark state and confirms; releasing earlier snaps back to the start. The \"رفتن به کتابخانه تمرین‌ها\" button (a plain navigation link, not a completion action) is unchanged.",
+      "highlights": [
+        "👉 دکمه اتمام تمرین حالا اسلایدی است (بکشید تا تایید شود)"
+      ]
+    },
     {
       "version": "1.4.1",
       "date": "2026-07-23",
