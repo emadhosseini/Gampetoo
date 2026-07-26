@@ -9,6 +9,7 @@ import {
 import Layout from "@/components/Layout";
 import PwaUpdater from "@/components/PwaUpdater";
 import WhatsNewNotifier from "@/components/WhatsNewNotifier";
+import DomainMigrationNotice from "@/components/DomainMigrationNotice";
 
 import HomePage from "@/pages/HomePage";
 import WorkoutPage from "@/pages/WorkoutPage";
@@ -31,6 +32,7 @@ initSync();
 export default function App() {
   return (
     <BrowserRouter>
+      <DomainMigrationNotice />
       <PwaUpdater />
       <WhatsNewNotifier />
       <AppRoutes />
