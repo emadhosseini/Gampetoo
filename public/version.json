@@ -1,6 +1,14 @@
 {
-  "current": "2.0.0",
+  "current": "2.0.1",
   "history": [
+    {
+      "version": "2.0.1",
+      "date": "2026-07-23",
+      "description": "The app's address moved from gampetoo.com to pwa.gampetoo.com. Anyone still landing on the old domain (an old bookmark, an already-installed PWA icon) now gets a popup telling them to switch, with a button straight to the new address — the old domain will be shut down soon.",
+      "highlights": [
+        "🚚 اطلاع‌رسانی انتقال آدرس اپ به pwa.gampetoo.com"
+      ]
+    },
     {
       "version": "2.0.0",
       "date": "2026-07-23",
