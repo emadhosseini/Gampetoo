@@ -153,13 +153,40 @@ export default function SideMenu({ children }: SideMenuProps) {
       </motion.div>
 
       <motion.aside
-        style={{ x: asideX, width: `${DRAWER_FRACTION * 100}%` }}
-        className="absolute inset-y-0 right-0 z-20 touch-none"
+        style={{
+          x: asideX,
+          width: `${DRAWER_FRACTION * 100}%`,
+          boxShadow: "0px 8px 48px 0px rgba(0, 0, 0, 0.25)",
+        }}
+        className="absolute inset-y-0 right-0 z-20 touch-none rounded-l-[34px]"
         aria-hidden={!open}
         {...dragHandlers}
       >
-        <div className="glass-panel glass-static h-full rounded-none border-y-0 border-l-0 px-5 pt-safe">
-          <h2 className="pt-16 text-lg font-bold text-white">منو</h2>
+        {/* iOS-style glass fill, ported from the Figma Action Sheet component:
+            translucent white over the mesh gradient (multiply-blended so it
+            darkens rather than washing out), plus a soft top/bottom vignette. */}
+        <div className="relative h-full overflow-hidden rounded-l-[34px] backdrop-blur-2xl">
+          <div
+            className="pointer-events-none absolute inset-0"
+            style={{ backgroundColor: "rgba(191, 191, 191, 0.1)", mixBlendMode: "darken" }}
+          />
+
+          <div
+            className="pointer-events-none absolute inset-0"
+            style={{ backgroundColor: "rgba(255, 255, 255, 0.1)", mixBlendMode: "multiply" }}
+          />
+
+          <div
+            className="pointer-events-none absolute inset-0"
+            style={{
+              boxShadow:
+                "inset -1.25px 0 0 -0.75px #dbdbdb, inset 0px 40px 10px -40px #282828, inset 0px -40px 10px -40px #282828",
+            }}
+          />
+
+          <div className="relative h-full px-5 pt-safe">
+            <h2 className="pt-16 text-lg font-bold text-white">منو</h2>
+          </div>
         </div>
       </motion.aside>
 
