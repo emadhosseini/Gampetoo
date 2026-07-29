@@ -1,4 +1,4 @@
-import { Menu, X } from "lucide-react";
+import { Menu } from "lucide-react";
 import {
   animate,
   motion,
@@ -29,6 +29,8 @@ const OPEN_THRESHOLD = 0.4;
 // reveal any more of it (already maxed out), so that intent has to be read
 // from the gesture directly rather than from where openPx ends up.
 const CLOSE_DRAG_DISTANCE = 60;
+// How dark the backdrop over the rest of the page gets at fully open.
+const BACKDROP_MAX_OPACITY = 0.55;
 
 interface SideMenuProps {
   children: ReactNode;
@@ -129,11 +131,25 @@ export default function SideMenu({ children }: SideMenuProps) {
 
   const asideX = useTransform(openPx, (value) => drawerWidth - value);
   const contentX = useTransform(openPx, (value) => -value);
+  const backdropOpacity = useTransform(
+    openPx,
+    [0, drawerWidth || 1],
+    [0, BACKDROP_MAX_OPACITY],
+  );
 
   return (
-    <div ref={containerRef} className="relative min-h-screen overflow-x-hidden">
-      <motion.div style={{ x: contentX }} className="relative z-10 min-h-screen">
+    <div ref={containerRef} className="relative h-full overflow-x-hidden">
+      <motion.div style={{ x: contentX }} className="relative z-10 h-full">
         {children}
+
+        <motion.div
+          style={{ opacity: backdropOpacity }}
+          className={`absolute inset-0 z-50 bg-black ${
+            open ? "pointer-events-auto" : "pointer-events-none"
+          }`}
+          aria-hidden={!open}
+          onClick={() => snapTo(false)}
+        />
       </motion.div>
 
       <motion.aside
@@ -155,18 +171,20 @@ export default function SideMenu({ children }: SideMenuProps) {
         />
       )}
 
-      <div className="pointer-events-none fixed inset-x-0 top-0 z-40">
-        <div className="pointer-events-auto relative mx-auto max-w-md">
-          <button
-            onClick={() => snapTo(!open)}
-            aria-label={open ? "بستن منو" : "باز کردن منو"}
-            className="glass-chip absolute right-4 flex h-10 w-10 items-center justify-center rounded-full"
-            style={{ top: "calc(env(safe-area-inset-top) + 0.75rem)" }}
-          >
-            {open ? <X size={20} /> : <Menu size={20} />}
-          </button>
+      {!open && (
+        <div className="pointer-events-none fixed inset-x-0 top-0 z-40">
+          <div className="pointer-events-auto relative mx-auto max-w-md">
+            <button
+              onClick={() => snapTo(true)}
+              aria-label="باز کردن منو"
+              className="glass-chip absolute right-4 flex h-10 w-10 items-center justify-center rounded-full"
+              style={{ top: "calc(env(safe-area-inset-top) + 0.75rem)" }}
+            >
+              <Menu size={20} />
+            </button>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
