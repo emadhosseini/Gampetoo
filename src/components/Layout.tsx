@@ -1,15 +1,18 @@
 import { Outlet } from "react-router-dom";
 import MobileContainer from "./MobileContainer";
 import BottomNavigation from "./BottomNavigation";
+import SideMenu from "./SideMenu";
 
 function Layout() {
   return (
     <MobileContainer>
-      <main className="pb-28">
-        <Outlet />
-      </main>
+      <SideMenu>
+        <main className="pb-28">
+          <Outlet />
+        </main>
 
-      <BottomNavigation />
+        <BottomNavigation />
+      </SideMenu>
     </MobileContainer>
   );
 }
