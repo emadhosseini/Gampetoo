@@ -11,8 +11,8 @@ import PwaUpdater from "@/components/PwaUpdater";
 import WhatsNewNotifier from "@/components/WhatsNewNotifier";
 
 import HomePage from "@/pages/HomePage";
-import WorkoutPage from "@/pages/WorkoutPage";
-import NutritionPage from "@/pages/NutritionPage";
+import DailyProgramPage from "@/pages/DailyProgramPage";
+import ProgressPage from "@/pages/ProgressPage";
 import SettingsPage from "@/pages/SettingsPage";
 import SetupProgramPage from "@/pages/SetupProgramPage";
 import WorkoutLibraryPage from "@/pages/WorkoutLibraryPage";
@@ -69,13 +69,13 @@ function AppRoutes() {
         />
 
         <Route
-          path="/workout"
-          element={<WorkoutPage />}
+          path="/daily-program"
+          element={<DailyProgramPage />}
         />
 
         <Route
-          path="/nutrition"
-          element={<NutritionPage />}
+          path="/progress"
+          element={<ProgressPage />}
         />
 
         <Route

@@ -2,8 +2,8 @@ import { motion } from "framer-motion";
 import { NavLink } from "react-router-dom";
 import {
   Home,
-  Dumbbell,
-  UtensilsCrossed,
+  CalendarDays,
+  TrendingUp,
   Settings,
 } from "lucide-react";
 
@@ -14,14 +14,14 @@ const items = [
     icon: Home,
   },
   {
-    to: "/workout",
-    label: "تمرین",
-    icon: Dumbbell,
+    to: "/daily-program",
+    label: "برنامه روزانه",
+    icon: CalendarDays,
   },
   {
-    to: "/nutrition",
-    label: "تغذیه",
-    icon: UtensilsCrossed,
+    to: "/progress",
+    label: "پیشرفت",
+    icon: TrendingUp,
   },
   {
     to: "/settings",
