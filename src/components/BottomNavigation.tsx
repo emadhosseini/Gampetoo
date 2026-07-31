@@ -71,7 +71,7 @@ export default function BottomNavigation() {
                   key={item.to}
                   to={item.to}
                   className={({ isActive }) =>
-                    `relative z-10 flex flex-col items-center gap-1 text-xs transition-colors ${
+                    `relative z-10 flex flex-col items-center gap-1 text-xs transition-[color,transform] duration-150 [-webkit-tap-highlight-color:transparent] touch-manipulation active:scale-95 ${
                       isActive
                         ? "text-avocado-yellow"
                         : "text-white"

@@ -1,6 +1,14 @@
 {
-  "current": "2.1.0",
+  "current": "2.1.1",
   "history": [
+    {
+      "version": "2.1.1",
+      "date": "2026-07-31",
+      "description": "Added a subtle press-down touch response to the bottom nav's tabs (they previously had zero visual feedback on tap), and suppressed the browser's default tap-highlight flash in favor of it.",
+      "highlights": [
+        "👆 حس لمسی ملایم روی دکمه‌های نوار پایین هنگام تاچ"
+      ]
+    },
     {
       "version": "2.1.0",
       "date": "2026-07-31",
