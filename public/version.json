@@ -1,6 +1,16 @@
 {
-  "current": "2.0.0",
+  "current": "2.1.0",
   "history": [
+    {
+      "version": "2.1.0",
+      "date": "2026-07-31",
+      "description": "A right-side hamburger menu (currently just a shell, opened by dragging from the right edge or the top-right button) that overlays the page with a blur/dim instead of pushing it aside. Redesigned the bottom nav into a floating glass pill inset from the screen edges instead of a flush-to-edge bar. Ported a glass surface recipe from Figma (flat dark tint, soft hairline, drop shadow, no backdrop blur) onto the bottom nav, the side menu, and every card in the app via .glass-panel/.glass-chip, replacing the old translucent-white 24px-blur treatment app-wide.",
+      "highlights": [
+        "☰ منوی همبرگری جدید از سمت راست (روی صفحه با بلر/تیرگی، بدون هل دادن محتوا)",
+        "💊 نوار پایین حالا یک پیل شیشه‌ای شناوره، نه یک نوار چسبیده به لبه",
+        "✨ ظاهر شیشه‌ای جدید (بر اساس فیگما) روی تمام کارت‌های اپ"
+      ]
+    },
     {
       "version": "2.0.0",
       "date": "2026-07-23",
