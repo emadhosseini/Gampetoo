@@ -5,6 +5,11 @@ const USERNAME_KEY = "emad-current-username";
 // Per-account display name (scoped by username), e.g. "emad-user-name:<username>".
 const NAME_KEY = "emad-user-name";
 
+// Per-account gender (scoped by username), used to pick a matching avatar.
+const GENDER_KEY = "emad-user-gender";
+
+export type Gender = "male" | "female";
+
 // Pre-username scheme: a single global name that also acted as the data scope.
 // Kept only so existing users can be detected and migrated to a username.
 const LEGACY_NAME_KEY = "emad-current-user";
@@ -17,6 +22,7 @@ const SCOPED_BASES = [
   "emad-free-meal",
   "emad-workout-library-overrides",
   "emad-warmup-library-overrides",
+  "emad-user-gender",
 ];
 
 export function getCurrentUsername(): string | null {
@@ -51,6 +57,16 @@ export function getCurrentUserName(): string | null {
 
 export function setCurrentUserName(name: string) {
   localStorage.setItem(scopedKey(NAME_KEY), name);
+}
+
+export function getCurrentUserGender(): Gender | null {
+  const value = localStorage.getItem(scopedKey(GENDER_KEY));
+
+  return value === "male" || value === "female" ? value : null;
+}
+
+export function setCurrentUserGender(gender: Gender) {
+  localStorage.setItem(scopedKey(GENDER_KEY), gender);
 }
 
 export function hasCurrentUser(): boolean {
@@ -122,6 +138,7 @@ export function logoutCurrentUser() {
  */
 export function resetCurrentUser() {
   localStorage.removeItem(scopedKey(NAME_KEY));
+  localStorage.removeItem(scopedKey(GENDER_KEY));
   localStorage.removeItem(USERNAME_KEY);
   localStorage.removeItem(LEGACY_NAME_KEY);
 }

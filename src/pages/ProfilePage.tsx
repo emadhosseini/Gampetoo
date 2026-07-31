@@ -1,6 +1,8 @@
+import { useState } from "react";
 import { User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
+import AccountEditModal from "@/components/AccountEditModal";
 import { getCurrentUserName } from "@/utils/userEngine";
 import { getLatestWeight } from "@/utils/weightEngine";
 import { toFaDigits } from "@/utils/numberFormat";
@@ -9,10 +11,18 @@ export default function ProfilePage() {
   const navigate = useNavigate();
   const userName = getCurrentUserName() ?? "";
   const weight = getLatestWeight();
+  const [accountModalOpen, setAccountModalOpen] = useState(false);
 
   return (
     <div className="space-y-4 px-5 pb-5 pt-10">
-      <div className="glass-panel flex items-stretch justify-between gap-4 rounded-3xl p-5">
+      <h1 className="text-center text-2xl font-bold text-white">
+        حساب کاربری
+      </h1>
+
+      <button
+        onClick={() => setAccountModalOpen(true)}
+        className="glass-panel flex w-full items-stretch justify-between gap-4 rounded-3xl p-5"
+      >
         {/* Placeholder photo — swap for a gender-based picture later. */}
         <div className="aspect-square w-24 shrink-0 rounded-3xl bg-white/10" />
 
@@ -24,7 +34,12 @@ export default function ProfilePage() {
         <div className="flex h-14 w-14 shrink-0 items-center justify-center self-center rounded-full bg-avocado-yellow/20 text-avocado-yellow">
           <User size={24} />
         </div>
-      </div>
+      </button>
+
+      <AccountEditModal
+        open={accountModalOpen}
+        onClose={() => setAccountModalOpen(false)}
+      />
 
       <div className="flex gap-4">
         <button
