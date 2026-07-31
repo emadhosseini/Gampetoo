@@ -229,7 +229,7 @@ export default function SideMenu({ children }: SideMenuProps) {
 
           <div
             className="relative h-full space-y-3 overflow-y-auto px-5 pb-6"
-            style={{ paddingTop: "calc(env(safe-area-inset-top) + 0.75rem)" }}
+            style={{ paddingTop: "env(safe-area-inset-top)" }}
           >
             {/* Profile row + the 3 menu rows below, ported from Figma
                 (node-id=0-1's loose "Notification - Collapsed"/"Toolbar"
@@ -237,7 +237,11 @@ export default function SideMenu({ children }: SideMenuProps) {
                 (index.css), 24px corners per that component's own radius.
                 Top gap matches space-y-3 (the gap between rows) instead of
                 being its own much larger, disproportionate margin. */}
-            <div className="glass-panel flex items-center justify-between rounded-3xl p-7">
+            <button
+              onClick={() => goTo("/profile")}
+              aria-label="رفتن به پروفایل"
+              className="glass-panel flex w-full items-center justify-between rounded-3xl p-7"
+            >
               <div className="flex items-center gap-3">
                 {/* Placeholder avatar — swap for a gender-based picture later. */}
                 <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-avocado-yellow/20 text-avocado-yellow">
@@ -247,14 +251,13 @@ export default function SideMenu({ children }: SideMenuProps) {
                 <span className="font-semibold text-white">{userName}</span>
               </div>
 
-              <button
-                onClick={() => goTo("/profile")}
-                aria-label="پروفایل"
+              <div
+                aria-hidden="true"
                 className="glass-chip flex h-11 w-11 shrink-0 items-center justify-center rounded-3xl"
               >
                 <ChevronLeft size={20} />
-              </button>
-            </div>
+              </div>
+            </button>
 
             {menuLinks.map((item) => {
               const Icon = item.icon;
