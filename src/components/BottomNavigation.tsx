@@ -37,46 +37,17 @@ export default function BottomNavigation() {
       style={{ bottom: "calc(env(safe-area-inset-bottom) + 24px)" }}
     >
       <div className="pointer-events-auto relative mx-auto max-w-md px-5.25">
-        {/* Floating glass pill, ported from Figma's "Tab Bar - iPhone"
-            component (node 38:906, Apple's own iOS tab-bar pattern —
-            https://developer.apple.com/design/human-interface-guidelines/tab-bars).
-            The bar itself reuses the same glass recipe as
-            SideMenu.tsx/the Action Sheet component (dark top/bottom
-            vignette + light top highlight); the hairline is a low-alpha,
-            slightly-blurred version of Figma's literal hairline (the exact
-            value rendered as a hard, complete ring in Chromium, unlike
-            Figma's own softer render of it). New here: each tab gets a
-            sliding "Selection" pill behind it when active, via a shared
-            framer-motion layoutId — the actual defining trait of an iOS
-            tab bar (it glides between tabs on switch instead of just
+        {/* Floating pill, same glass-panel treatment as every other card in
+            the app (index.css) instead of a bespoke recipe. Tab selection
+            is ported from Figma's "Tab Bar - iPhone" component (node
+            38:906, Apple's own iOS tab-bar pattern —
+            https://developer.apple.com/design/human-interface-guidelines/tab-bars):
+            each tab gets a sliding "Selection" pill behind it when active,
+            via a shared framer-motion layoutId — the defining trait of an
+            iOS tab bar (it glides between tabs on switch instead of just
             appearing). */}
-        <div
-          className="relative rounded-full"
-          style={{
-            boxShadow:
-              "1.25px 0px 1px -0.75px rgba(219, 219, 219, 0.35), -1.25px 0px 1px -0.75px rgba(219, 219, 219, 0.35), 0px 0px 0.5px 0.5px rgba(219, 219, 219, 0.3), 0px 10px 30px -14px rgba(0, 0, 0, 0.55)",
-          }}
-        >
+        <div className="glass-panel rounded-full">
           <nav className="relative flex h-17 items-center justify-around overflow-hidden rounded-full">
-            {/* Pixel-sampled from Figma's own render of this Action Sheet
-                (node 29:20): the pill is ~8-10% darker than the page behind
-                it, flat across its whole width — no highlight/shine
-                gradient. A translucent white veil (tried earlier) is the
-                opposite of what Figma actually renders here. The light
-                top-edge and dark top/bottom inner shadows are the other two
-                layers of the same node's real Effects stack (read directly
-                from Figma's Effects panel, since design-context export
-                doesn't surface Figma's native Glass material or its inner
-                shadows at all). */}
-            <div
-              className="pointer-events-none absolute inset-0"
-              style={{
-                backgroundColor: "rgba(0, 0, 0, 0.1)",
-                boxShadow:
-                  "inset 0px 40px 30px -40px rgba(230, 230, 230, 1), inset 0px 40px 10px -40px rgba(40, 40, 40, 1), inset 0px -40px 10px -40px rgba(40, 40, 40, 1)",
-              }}
-            />
-
             {items.map((item) => {
               const Icon = item.icon;
 
