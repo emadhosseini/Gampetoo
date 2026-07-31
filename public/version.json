@@ -1,6 +1,15 @@
 {
-  "current": "2.1.8",
+  "current": "2.1.9",
   "history": [
+    {
+      "version": "2.1.9",
+      "date": "2026-07-31",
+      "description": "The daily-log add-food screen's \"بستن\" now closes all the way back to the meal list instead of stopping one level back at the overview screen. Both the add-food and overview popups are now styled with the same glass-panel treatment as the bottom nav (translucent tint, hairline border, soft shadow) instead of the previous solid opaque card.",
+      "highlights": [
+        "🔙 دکمه «بستن» توی افزودن غذا حالا مستقیم برمی‌گرده به لیست وعده‌ها",
+        "✨ ظاهر پاپ‌اپ‌های ثبت روزانه دقیقاً هماهنگ با استایل شیشه‌ای منوی پایین"
+      ]
+    },
     {
       "version": "2.1.8",
       "date": "2026-07-31",

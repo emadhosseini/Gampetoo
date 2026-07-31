@@ -46,7 +46,9 @@ type ModalScreen = { meal: MealSlot; screen: "overview" | "add" } | null;
 // this logs whatever the user actually ate against a fixed catalog of
 // meal-time slots (صبحانه، ناهار، ...). Tapping a whole card opens an
 // overview of what's already logged for it; "افزودن" there drills one level
-// deeper into the actual food-search screen.
+// deeper into the actual food-search screen. "بستن" on the food-search
+// screen closes everything straight back to this list, not just one level
+// back to the overview — closing there means "I'm done", not "go back".
 function MealLogTab() {
   const [modal, setModal] = useState<ModalScreen>(null);
   // Bumped after every add/remove so the cards (whose own state was read
@@ -75,9 +77,7 @@ function MealLogTab() {
 
       <AddMealEntryModal
         meal={modal?.screen === "add" ? modal.meal : null}
-        onClose={() =>
-          setModal(modal && { meal: modal.meal, screen: "overview" })
-        }
+        onClose={() => setModal(null)}
         onChange={() => setVersion((v) => v + 1)}
       />
     </div>

@@ -150,7 +150,7 @@ export default function AddMealEntryModal({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-sm space-y-4 rounded-2xl border border-forest-600 bg-forest-700 p-6 shadow-2xl"
+        className="glass-panel w-full max-w-sm space-y-4 rounded-3xl p-6"
       >
         <h2 className="text-center text-lg font-bold text-white">
           افزودن به وعده {meal.title}
