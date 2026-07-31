@@ -75,30 +75,26 @@ textarea {
   background: var(--color-forest-800);
 }
 
-/* iOS-style frosted glass blocks. .glass-panel is a full translucent card
-   (its own blur, tinted border, soft depth shadow); .glass-chip is the same
-   tint without its own blur, for rows nested inside a .glass-panel that
-   already blurs the background. .glass-tap adds only the press response, for
-   blocks that keep a custom tint (e.g. the amber free-meal card). */
+/* iOS-style glass blocks, ported from the Figma Action Sheet component
+   (same recipe as BottomNavigation.tsx/SideMenu.tsx): a flat dark tint
+   (not a blur — fully transparent, page shows through crisply) plus a
+   soft low-alpha hairline and a drop shadow underneath. .glass-panel is
+   the full card; .glass-chip is a lighter version for rows nested inside
+   one. .glass-tap adds only the press response, for blocks that keep a
+   custom tint (e.g. the amber free-meal card). */
 .glass-panel {
   position: relative;
-  background-color: rgb(255 255 255 / 6%);
-  background-image: linear-gradient(
-    180deg,
-    rgb(255 255 255 / 7%),
-    rgb(255 255 255 / 0%) 65%
-  );
-  backdrop-filter: blur(24px) saturate(160%);
-  -webkit-backdrop-filter: blur(24px) saturate(160%);
-  border: 1px solid rgb(255 255 255 / 10%);
+  background-color: rgb(0 0 0 / 10%);
   box-shadow:
-    inset 0 1px 0 0 rgb(255 255 255 / 10%),
+    1.25px 0px 1px -0.75px rgb(219 219 219 / 35%),
+    -1.25px 0px 1px -0.75px rgb(219 219 219 / 35%),
+    0px 0px 0.5px 0.5px rgb(219 219 219 / 30%),
     0 10px 30px -14px rgb(0 0 0 / 55%);
 }
 
 .glass-chip {
-  background-color: rgb(255 255 255 / 5%);
-  border: 1px solid rgb(255 255 255 / 8%);
+  background-color: rgb(0 0 0 / 8%);
+  box-shadow: 0px 0px 0.5px 0.5px rgb(219 219 219 / 20%);
 }
 
 .glass-panel,
@@ -116,13 +112,15 @@ textarea {
 .glass-tap:active {
   transform: scale(0.965);
   box-shadow:
-    inset 0 1px 0 0 rgb(255 255 255 / 14%),
+    1.25px 0px 1px -0.75px rgb(219 219 219 / 35%),
+    -1.25px 0px 1px -0.75px rgb(219 219 219 / 35%),
+    0px 0px 0.5px 0.5px rgb(219 219 219 / 30%),
     0 4px 14px -10px rgb(0 0 0 / 55%);
 }
 
 .glass-chip:active {
   transform: scale(0.955);
-  background-color: rgb(255 255 255 / 10%);
+  background-color: rgb(0 0 0 / 18%);
 }
 
 /* Cancel the press-motion for glass blocks that directly wrap a native form
@@ -131,13 +129,6 @@ textarea {
    touch devices — keep the glass look, drop the transform. */
 .glass-static:active {
   transform: none;
-}
-
-@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .glass-panel {
-    background-color: var(--color-forest-700);
-    background-image: none;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
