@@ -1,6 +1,14 @@
 {
-  "current": "2.1.2",
+  "current": "2.1.3",
   "history": [
+    {
+      "version": "2.1.3",
+      "date": "2026-07-31",
+      "description": "Filled the side menu's placeholder with real content: the account row (avatar, name, a settings shortcut) and three menu rows (workout library, workout program, nutrition program) — all navigable, ported from Figma's own layout and sizing, styled like the rest of the app's cards with 24px corners.",
+      "highlights": [
+        "👤 محتوای واقعی منوی کناری: ردیف پروفایل و لینک‌های کتابخانه تمرین، برنامه تمرینی و برنامه غذایی"
+      ]
+    },
     {
       "version": "2.1.2",
       "date": "2026-07-31",

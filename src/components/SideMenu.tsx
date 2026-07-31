@@ -1,4 +1,11 @@
-import { Menu } from "lucide-react";
+import {
+  ChevronLeft,
+  ClipboardList,
+  Dumbbell,
+  Menu,
+  User,
+  UtensilsCrossed,
+} from "lucide-react";
 import {
   animate,
   motion,
@@ -15,6 +22,15 @@ import {
   type PointerEvent as ReactPointerEvent,
   type ReactNode,
 } from "react";
+import { useNavigate } from "react-router-dom";
+
+import { getCurrentUserName } from "@/utils/userEngine";
+
+const menuLinks = [
+  { to: "/settings/workouts", label: "کتابخانه تمرین‌ها", icon: Dumbbell },
+  { to: "/settings/program", label: "برنامه تمرینی", icon: ClipboardList },
+  { to: "/settings/nutrition", label: "برنامه غذایی", icon: UtensilsCrossed },
+];
 
 const DRAWER_FRACTION = 2 / 3;
 // A thin strip along the right edge that can start an open-swipe even while
@@ -45,6 +61,8 @@ export default function SideMenu({ children }: SideMenuProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [drawerWidth, setDrawerWidth] = useState(0);
   const prefersReducedMotion = useReducedMotion();
+  const navigate = useNavigate();
+  const userName = getCurrentUserName() ?? "";
 
   // How far (in px) the drawer has entered from the right: 0 = fully closed
   // (off-screen), drawerWidth = fully open.
@@ -126,6 +144,11 @@ export default function SideMenu({ children }: SideMenuProps) {
     snapTo(!draggedLeftToClose && progress >= OPEN_THRESHOLD);
   }
 
+  function goTo(path: string) {
+    navigate(path);
+    snapTo(false);
+  }
+
   const dragHandlers = {
     onPointerDown: handlePointerDown,
     onPointerMove: handlePointerMove,
@@ -204,8 +227,49 @@ export default function SideMenu({ children }: SideMenuProps) {
             }}
           />
 
-          <div className="relative h-full px-5 pt-safe">
-            <h2 className="pt-16 text-lg font-bold text-white">منو</h2>
+          <div className="relative h-full space-y-3 overflow-y-auto px-5 pb-6 pt-safe">
+            {/* Profile row + the 3 menu rows below, ported from Figma
+                (node-id=0-1's loose "Notification - Collapsed"/"Toolbar"
+                instances) — same glass-panel treatment as every other card
+                (index.css), 24px corners per that component's own radius. */}
+            <div className="glass-panel mt-16 flex items-center justify-between rounded-3xl p-7">
+              <div className="flex items-center gap-3">
+                {/* Placeholder avatar — swap for a gender-based picture later. */}
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-avocado-yellow/20 text-avocado-yellow">
+                  <User size={20} />
+                </div>
+
+                <span className="font-semibold text-white">{userName}</span>
+              </div>
+
+              <button
+                onClick={() => goTo("/settings")}
+                aria-label="تنظیمات حساب"
+                className="glass-chip flex h-11 w-11 shrink-0 items-center justify-center rounded-3xl"
+              >
+                <ChevronLeft size={20} />
+              </button>
+            </div>
+
+            {menuLinks.map((item) => {
+              const Icon = item.icon;
+
+              return (
+                <button
+                  key={item.to}
+                  onClick={() => goTo(item.to)}
+                  className="glass-panel flex w-full items-center gap-3 rounded-3xl p-4"
+                >
+                  <span className="flex-1 text-right font-semibold text-white">
+                    {item.label}
+                  </span>
+
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/10">
+                    <Icon size={18} />
+                  </div>
+                </button>
+              );
+            })}
           </div>
         </div>
       </motion.aside>
