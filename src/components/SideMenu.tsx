@@ -2,6 +2,7 @@ import { Menu } from "lucide-react";
 import {
   animate,
   motion,
+  useMotionTemplate,
   useMotionValue,
   useReducedMotion,
   useTransform,
@@ -31,6 +32,9 @@ const OPEN_THRESHOLD = 0.4;
 const CLOSE_DRAG_DISTANCE = 60;
 // How dark the backdrop over the rest of the page gets at fully open.
 const BACKDROP_MAX_OPACITY = 0.55;
+// How blurred the page behind the menu gets at fully open — the menu now
+// overlays the page (like a modal) instead of pushing it aside.
+const CONTENT_BLUR_MAX_PX = 5;
 
 interface SideMenuProps {
   children: ReactNode;
@@ -130,27 +134,35 @@ export default function SideMenu({ children }: SideMenuProps) {
   };
 
   const asideX = useTransform(openPx, (value) => drawerWidth - value);
-  const contentX = useTransform(openPx, (value) => -value);
   const backdropOpacity = useTransform(
     openPx,
     [0, drawerWidth || 1],
     [0, BACKDROP_MAX_OPACITY],
   );
+  const contentBlurPx = useTransform(
+    openPx,
+    [0, drawerWidth || 1],
+    [0, CONTENT_BLUR_MAX_PX],
+  );
+  const contentFilter = useMotionTemplate`blur(${contentBlurPx}px)`;
 
   return (
     <div ref={containerRef} className="relative h-full overflow-x-hidden">
-      <motion.div style={{ x: contentX }} className="relative z-10 h-full">
+      <motion.div
+        style={{ filter: prefersReducedMotion ? undefined : contentFilter }}
+        className="relative z-10 h-full"
+      >
         {children}
-
-        <motion.div
-          style={{ opacity: backdropOpacity }}
-          className={`absolute inset-0 z-50 bg-black ${
-            open ? "pointer-events-auto" : "pointer-events-none"
-          }`}
-          aria-hidden={!open}
-          onClick={() => snapTo(false)}
-        />
       </motion.div>
+
+      <motion.div
+        style={{ opacity: backdropOpacity }}
+        className={`absolute inset-0 z-40 bg-black ${
+          open ? "pointer-events-auto" : "pointer-events-none"
+        }`}
+        aria-hidden={!open}
+        onClick={() => snapTo(false)}
+      />
 
       <motion.aside
         style={{
@@ -158,22 +170,29 @@ export default function SideMenu({ children }: SideMenuProps) {
           width: `${DRAWER_FRACTION * 100}%`,
           boxShadow: "0px 8px 48px 0px rgba(0, 0, 0, 0.25)",
         }}
-        className="absolute inset-y-0 right-0 z-20 touch-none rounded-l-[34px]"
+        className="absolute inset-y-0 right-0 z-50 touch-none rounded-l-[34px]"
         aria-hidden={!open}
         {...dragHandlers}
       >
-        {/* iOS-style glass fill, ported from the Figma Action Sheet component:
-            translucent white over the mesh gradient (multiply-blended so it
-            darkens rather than washing out), plus a soft top/bottom vignette. */}
-        <div className="relative h-full overflow-hidden rounded-l-[34px] backdrop-blur-2xl">
+        {/* iOS-style glass fill, ported from the Figma Action Sheet component.
+            Figma's own blend layers (white multiply + gray darken) are near
+            no-ops over most backgrounds — multiply-by-white is a
+            mathematical identity — so the real "glass" tint comes from an
+            actual translucent veil here instead. A much stronger blur (40px,
+            then 24px) was tried first and softened the page behind it more
+            than intended; 5px is the tuned value — barely-there blur plus a
+            near-invisible veil so the page behind stays legible through it. */}
+        <div
+          className="relative h-full overflow-hidden rounded-l-[34px]"
+          style={{ backdropFilter: "blur(5px) saturate(160%)", WebkitBackdropFilter: "blur(5px) saturate(160%)" }}
+        >
           <div
             className="pointer-events-none absolute inset-0"
-            style={{ backgroundColor: "rgba(191, 191, 191, 0.1)", mixBlendMode: "darken" }}
-          />
-
-          <div
-            className="pointer-events-none absolute inset-0"
-            style={{ backgroundColor: "rgba(255, 255, 255, 0.1)", mixBlendMode: "multiply" }}
+            style={{
+              backgroundColor: "rgba(255, 255, 255, 0.01)",
+              backgroundImage:
+                "linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0) 65%)",
+            }}
           />
 
           <div
@@ -199,7 +218,7 @@ export default function SideMenu({ children }: SideMenuProps) {
       )}
 
       {!open && (
-        <div className="pointer-events-none fixed inset-x-0 top-0 z-40">
+        <div className="pointer-events-none fixed inset-x-0 top-0 z-50">
           <div className="pointer-events-auto relative mx-auto max-w-md">
             <button
               onClick={() => snapTo(true)}
