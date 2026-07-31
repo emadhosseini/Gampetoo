@@ -31,29 +31,61 @@ const items = [
 
 export default function BottomNavigation() {
   return (
-    <nav className="pb-safe fixed bottom-0 left-0 right-0 border-t border-white/5 bg-forest-950/90 backdrop-blur-xl">
-      <div className="mx-auto flex h-16 max-w-md items-center justify-around">
-        {items.map((item) => {
-          const Icon = item.icon;
+    <div
+      className="pointer-events-none fixed inset-x-0 z-40"
+      style={{ bottom: "calc(env(safe-area-inset-bottom) + 24px)" }}
+    >
+      <div className="pointer-events-auto relative mx-auto max-w-md px-5.25">
+        {/* Floating glass pill, ported from the Figma Action Sheet component
+            (same recipe as SideMenu.tsx) — fully transparent (no backdrop
+            blur, unlike the side menu) so the page scrolls crisply behind
+            it. The hairline's shape/geometry is Figma's own exact values,
+            but its fully-opaque #dbdbdb rendered as a hard, complete ring
+            in Chromium — much bolder than Figma's own softer render of the
+            same node (node 24:535) — so the color here is a low-alpha,
+            slightly-blurred version of the same line instead of a literal
+            copy, to land on the same soft-glint look. */}
+        <div
+          className="relative rounded-full"
+          style={{
+            boxShadow:
+              "1.25px 0px 1px -0.75px rgba(219, 219, 219, 0.35), -1.25px 0px 1px -0.75px rgba(219, 219, 219, 0.35), 0px 0px 0.5px 0.5px rgba(219, 219, 219, 0.3), 0px 10px 30px -14px rgba(0, 0, 0, 0.55)",
+          }}
+        >
+          <nav className="relative flex h-17 items-center justify-around overflow-hidden rounded-full">
+            {/* Pixel-sampled from Figma's own render of this Action Sheet
+                (node 29:20): the pill is ~8-10% darker than the page behind
+                it, flat across its whole width — no highlight/shine
+                gradient. A translucent white veil (tried earlier) is the
+                opposite of what Figma actually renders here. */}
+            <div
+              className="pointer-events-none absolute inset-0"
+              style={{ backgroundColor: "rgba(0, 0, 0, 0.1)" }}
+            />
 
-          return (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              className={({ isActive }) =>
-                `flex flex-col items-center gap-1 text-xs transition-colors ${
-                  isActive
-                    ? "text-avocado-yellow"
-                    : "text-white"
-                }`
-              }
-            >
-              <Icon size={22} />
-              <span>{item.label}</span>
-            </NavLink>
-          );
-        })}
+            {items.map((item) => {
+              const Icon = item.icon;
+
+              return (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  className={({ isActive }) =>
+                    `relative z-10 flex flex-col items-center gap-1 text-xs transition-colors ${
+                      isActive
+                        ? "text-avocado-yellow"
+                        : "text-white"
+                    }`
+                  }
+                >
+                  <Icon size={22} />
+                  <span>{item.label}</span>
+                </NavLink>
+              );
+            })}
+          </nav>
+        </div>
       </div>
-    </nav>
+    </div>
   );
 }

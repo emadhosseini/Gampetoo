@@ -168,7 +168,8 @@ export default function SideMenu({ children }: SideMenuProps) {
         style={{
           x: asideX,
           width: `${DRAWER_FRACTION * 100}%`,
-          boxShadow: "0px 8px 48px 0px rgba(0, 0, 0, 0.25)",
+          boxShadow:
+            "1.25px 0px 1px -0.75px rgba(219, 219, 219, 0.35), -1.25px 0px 1px -0.75px rgba(219, 219, 219, 0.35), 0px 0px 0.5px 0.5px rgba(219, 219, 219, 0.3), 0px 8px 48px 0px rgba(0, 0, 0, 0.25)",
         }}
         className="absolute inset-y-0 right-0 z-50 touch-none rounded-l-[34px]"
         aria-hidden={!open}
@@ -199,7 +200,7 @@ export default function SideMenu({ children }: SideMenuProps) {
             className="pointer-events-none absolute inset-0"
             style={{
               boxShadow:
-                "inset -1.25px 0 0 -0.75px #dbdbdb, inset 0px 40px 10px -40px #282828, inset 0px -40px 10px -40px #282828",
+                "inset 0px 40px 10px -40px #282828, inset 0px -40px 10px -40px #282828",
             }}
           />
 

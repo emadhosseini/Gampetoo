@@ -7,7 +7,7 @@ function Layout() {
   return (
     <MobileContainer>
       <SideMenu>
-        <main className="h-full overflow-y-auto pb-28">
+        <main className="h-full overflow-y-auto pb-36">
           <Outlet />
         </main>
 
