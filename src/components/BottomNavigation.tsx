@@ -44,19 +44,15 @@ export default function BottomNavigation() {
             in Chromium — much bolder than Figma's own softer render of the
             same node (node 24:535) — so the color here is a low-alpha,
             slightly-blurred version of the same line instead of a literal
-            copy, to land on the same soft-glint look. active:scale here
-            (rather than only on each NavLink) gives the whole pill a press
-            response — CSS :active naturally propagates up to ancestors, so
-            this also fires when a NavLink child is the one actually
-            pressed, not just direct taps on the pill's own background. */}
+            copy, to land on the same soft-glint look. */}
         <div
-          className="relative rounded-3xl transition-transform duration-150 [-webkit-tap-highlight-color:transparent] touch-manipulation active:scale-[98%]"
+          className="relative rounded-full"
           style={{
             boxShadow:
               "1.25px 0px 1px -0.75px rgba(219, 219, 219, 0.35), -1.25px 0px 1px -0.75px rgba(219, 219, 219, 0.35), 0px 0px 0.5px 0.5px rgba(219, 219, 219, 0.3), 0px 10px 30px -14px rgba(0, 0, 0, 0.55)",
           }}
         >
-          <nav className="relative flex h-17 items-center justify-around overflow-hidden rounded-3xl">
+          <nav className="relative flex h-17 items-center justify-around overflow-hidden rounded-full">
             {/* Pixel-sampled from Figma's own render of this Action Sheet
                 (node 29:20): the pill is ~8-10% darker than the page behind
                 it, flat across its whole width — no highlight/shine
@@ -65,20 +61,6 @@ export default function BottomNavigation() {
             <div
               className="pointer-events-none absolute inset-0"
               style={{ backgroundColor: "rgba(0, 0, 0, 0.1)" }}
-            />
-
-            {/* The other two of Figma's three inner-shadow layers (this
-                node's actual Effects stack, read directly from the Figma
-                panel rather than the design-context export, which doesn't
-                surface Figma's native "Glass" material effect or its inner
-                shadows at all): a light top highlight plus the dark
-                top/bottom vignette already sampled above. */}
-            <div
-              className="pointer-events-none absolute inset-0"
-              style={{
-                boxShadow:
-                  "inset 0px 40px 30px -40px rgba(230, 230, 230, 1), inset 0px 40px 10px -40px rgba(40, 40, 40, 1), inset 0px -40px 10px -40px rgba(40, 40, 40, 1)",
-              }}
             />
 
             {items.map((item) => {
