@@ -3,8 +3,8 @@ import { NavLink } from "react-router-dom";
 import {
   Home,
   CalendarDays,
+  NotebookPen,
   TrendingUp,
-  Settings,
 } from "lucide-react";
 
 const items = [
@@ -19,14 +19,14 @@ const items = [
     icon: CalendarDays,
   },
   {
+    to: "/daily-log",
+    label: "ثبت روزانه",
+    icon: NotebookPen,
+  },
+  {
     to: "/progress",
     label: "پیشرفت",
     icon: TrendingUp,
-  },
-  {
-    to: "/settings",
-    label: "تنظیمات",
-    icon: Settings,
   },
 ];
 

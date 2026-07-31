@@ -13,7 +13,7 @@ import WhatsNewNotifier from "@/components/WhatsNewNotifier";
 import HomePage from "@/pages/HomePage";
 import DailyProgramPage from "@/pages/DailyProgramPage";
 import ProgressPage from "@/pages/ProgressPage";
-import SettingsPage from "@/pages/SettingsPage";
+import DailyLogPage from "@/pages/DailyLogPage";
 import SetupProgramPage from "@/pages/SetupProgramPage";
 import WorkoutLibraryPage from "@/pages/WorkoutLibraryPage";
 import WorkoutDetailPage from "@/pages/WorkoutDetailPage";
@@ -79,8 +79,8 @@ function AppRoutes() {
         />
 
         <Route
-          path="/settings"
-          element={<SettingsPage />}
+          path="/daily-log"
+          element={<DailyLogPage />}
         />
 
         <Route

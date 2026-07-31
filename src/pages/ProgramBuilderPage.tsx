@@ -77,7 +77,7 @@ function ProgramBuilderPage() {
       },
     });
 
-    navigate("/settings");
+    navigate("/");
   }
 
   return (
