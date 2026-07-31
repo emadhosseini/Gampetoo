@@ -1,6 +1,17 @@
 {
-  "current": "2.1.4",
+  "current": "2.1.5",
   "history": [
+    {
+      "version": "2.1.5",
+      "date": "2026-07-31",
+      "description": "Made the side menu's whole profile row a single tappable button (instead of just its chevron icon) and hardened the drawer's drag handling so a plain tap can never be swallowed by the drag-to-close gesture. Added an account-edit popup from the profile page (name, gender, logout, delete account) with a gender-based avatar icon. Merged the separate workout and nutrition pages into one tabbed \"Daily Program\" page, and retired the settings hub (all its shortcuts now live in the side menu/profile) in favor of a new \"Daily Log\" page for meal/activity logging — its meal tab is a fully free-form food diary (log anything, any meal slot, at any time) independent of the prescribed nutrition plan.",
+      "highlights": [
+        "👆 کل ردیف پروفایل توی منو کناری حالا قابل کلیکه",
+        "🙍 پاپ‌اپ ویرایش حساب (اسم، جنسیت، خروج، حذف حساب) با آواتار بر اساس جنسیت",
+        "📅 صفحه‌ی «برنامه روزانه» با تب تمرین/تغذیه به‌جای دو صفحه‌ی جدا",
+        "📝 صفحه‌ی جدید «ثبت روزانه»: دفترچه‌ی آزاد کالری‌شماری، مستقل از برنامه غذایی"
+      ]
+    },
     {
       "version": "2.1.4",
       "date": "2026-07-31",
