@@ -1,6 +1,16 @@
 {
-  "current": "2.1.11",
+  "current": "2.1.12",
   "history": [
+    {
+      "version": "2.1.12",
+      "date": "2026-07-31",
+      "description": "Built out the progress page: a weight card (mini chart, target-weight and current-weight rows, target set via a picker popup) plus stat cards for daily calories (real total from today's logged meals), water, and activity — all styled with the app's own glass-panel system. Also fixed a real bug found while building this: a popup nested inside a pressable glass-panel card could stop responding to taps after the page scrolled, because CSS :active bubbles up and can turn that ancestor card into a containing block for the popup's fixed positioning — popups now always render as siblings of any card that opens them, and the side menu's own blur filter (which had the same footgun even at zero blur) is now only applied while the drawer is actually animating.",
+      "highlights": [
+        "⚖️ کارت وزن با نمودار، وزن هدف (قابل تنظیم) و وزن فعلی",
+        "🍽️ کارت کالری روزانه با مجموع واقعی از ثبت روزانه، به‌علاوه کارت‌های آب و فعالیت",
+        "🐛 رفع یک باگ واقعی: پاپ‌اپ‌های تودرتوی داخل کارت‌ها بعد از اسکرول قابل لمس نبودن"
+      ]
+    },
     {
       "version": "2.1.11",
       "date": "2026-07-31",

@@ -66,6 +66,15 @@ interface SideMenuProps {
 
 export default function SideMenu({ children }: SideMenuProps) {
   const [open, setOpen] = useState(false);
+  // Any non-"none" CSS `filter` on an ancestor — even a visually-inert
+  // blur(0px) — makes that ancestor a containing block for `position:
+  // fixed` descendants (a CSS footgun), which breaks every full-screen
+  // modal any page renders (its "fixed inset-0" stops tracking the real
+  // viewport once the page scrolls). So the blur filter below is only
+  // ever applied while the drawer is actually opening/open/closing —
+  // removed entirely (not just zeroed) the rest of the time, which is
+  // the vast majority of normal app usage.
+  const [filterActive, setFilterActive] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const [drawerWidth, setDrawerWidth] = useState(0);
   const prefersReducedMotion = useReducedMotion();
@@ -112,16 +121,26 @@ export default function SideMenu({ children }: SideMenuProps) {
 
   function snapTo(nextOpen: boolean) {
     setOpen(nextOpen);
+    setFilterActive(true);
 
     const target = nextOpen ? drawerWidth : 0;
 
     if (prefersReducedMotion) {
       openPx.set(target);
+      if (!nextOpen) setFilterActive(false);
       return;
     }
 
-    // A plain ease-out tween (no spring) — no bounce/overshoot on either end.
-    animate(openPx, target, { duration: 0.3, ease: "easeOut" });
+    // A plain ease-out tween (no spring) — no bounce/overshoot on either
+    // end. filterActive only turns back off once a close animation has
+    // actually finished, so the blur still fades smoothly through it.
+    animate(openPx, target, {
+      duration: 0.3,
+      ease: "easeOut",
+      onComplete: () => {
+        if (!nextOpen) setFilterActive(false);
+      },
+    });
   }
 
   function handlePointerDown(e: ReactPointerEvent) {
@@ -147,6 +166,7 @@ export default function SideMenu({ children }: SideMenuProps) {
       if (Math.abs(deltaX) < DRAG_START_THRESHOLD) return;
 
       state.dragging = true;
+      setFilterActive(true);
       (e.target as Element).setPointerCapture(e.pointerId);
     }
 
@@ -204,7 +224,10 @@ export default function SideMenu({ children }: SideMenuProps) {
   return (
     <div ref={containerRef} className="relative h-full overflow-x-hidden">
       <motion.div
-        style={{ filter: prefersReducedMotion ? undefined : contentFilter }}
+        style={{
+          filter:
+            !prefersReducedMotion && filterActive ? contentFilter : undefined,
+        }}
         className="relative z-10 h-full"
       >
         {children}
