@@ -6,10 +6,17 @@ import { toFaDigits } from "@/utils/numberFormat";
 
 export interface MealLogCardProps {
   meal: MealSlot;
+  // Tapping the "+" skips straight to the add-food screen; tapping anywhere
+  // else on the card opens the overview of what's already logged.
   onOpen: (meal: MealSlot) => void;
+  onAdd: (meal: MealSlot) => void;
 }
 
-export default function MealLogCard({ meal, onOpen }: MealLogCardProps) {
+export default function MealLogCard({
+  meal,
+  onOpen,
+  onAdd,
+}: MealLogCardProps) {
   const entries = getLoggedEntries(meal.id);
 
   const totalCalories = entries.reduce(
@@ -18,14 +25,14 @@ export default function MealLogCard({ meal, onOpen }: MealLogCardProps) {
   );
 
   return (
-    <button
-      onClick={() => onOpen(meal)}
-      className="glass-panel flex w-full items-center justify-between gap-3 rounded-2xl p-5"
-    >
-      <div className="flex items-center gap-3">
+    <div className="glass-panel flex items-center justify-between gap-3 rounded-2xl p-5">
+      <button
+        onClick={() => onOpen(meal)}
+        className="flex flex-1 items-center gap-3 text-right"
+      >
         <span className="text-2xl">{meal.icon}</span>
 
-        <div className="text-right">
+        <div>
           <h2 className="text-lg font-semibold text-white">{meal.title}</h2>
 
           <p className="text-sm text-white/70">
@@ -34,14 +41,15 @@ export default function MealLogCard({ meal, onOpen }: MealLogCardProps) {
               : "چیزی ثبت نشده"}
           </p>
         </div>
-      </div>
+      </button>
 
-      <div
-        aria-hidden="true"
-        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-avocado-lime text-black"
+      <button
+        onClick={() => onAdd(meal)}
+        aria-label={`افزودن ${meal.title}`}
+        className="glass-tap flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-avocado-lime text-black"
       >
         <Plus size={20} />
-      </div>
-    </button>
+      </button>
+    </div>
   );
 }

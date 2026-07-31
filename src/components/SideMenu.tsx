@@ -22,7 +22,7 @@ import {
   type PointerEvent as ReactPointerEvent,
   type ReactNode,
 } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import { getCurrentUserName } from "@/utils/userEngine";
 
@@ -70,6 +70,8 @@ export default function SideMenu({ children }: SideMenuProps) {
   const [drawerWidth, setDrawerWidth] = useState(0);
   const prefersReducedMotion = useReducedMotion();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const isHomePage = pathname === "/";
   const userName = getCurrentUserName() ?? "";
 
   // How far (in px) the drawer has entered from the right: 0 = fully closed
@@ -320,7 +322,11 @@ export default function SideMenu({ children }: SideMenuProps) {
         />
       )}
 
-      {!open && (
+      {/* The visible hamburger button only makes sense as a persistent
+          entry point on the home page — every other page can still open
+          the menu via the edge-swipe strip above, which stays mounted
+          regardless of this. */}
+      {!open && isHomePage && (
         <div className="pointer-events-none fixed inset-x-0 top-0 z-50">
           <div className="pointer-events-auto relative mx-auto max-w-md">
             <button

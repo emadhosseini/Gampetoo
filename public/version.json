@@ -1,6 +1,15 @@
 {
-  "current": "2.1.7",
+  "current": "2.1.8",
   "history": [
+    {
+      "version": "2.1.8",
+      "date": "2026-07-31",
+      "description": "Removed the \"ثبت روزانه\" page title. The hamburger menu button is now only shown on the home page — every other page still opens it via the existing edge-swipe gesture. Each meal card's \"+\" now jumps straight to the food-search add screen, while tapping the rest of the card still opens the logged-items overview first.",
+      "highlights": [
+        "☰ دکمه منوی کناری فقط توی صفحه خانه نمایش داده می‌شه (بقیه صفحات با کشیدن از کنار باز می‌شه)",
+        "➕ دکمه + هر وعده مستقیم می‌ره به افزودن غذا، بقیه کارت لیست ثبت‌شده‌ها رو نشون می‌ده"
+      ]
+    },
     {
       "version": "2.1.7",
       "date": "2026-07-31",

@@ -22,10 +22,6 @@ export default function DailyLogPage() {
 
   return (
     <div>
-      <h1 className="px-5 pt-10 text-center text-2xl font-bold text-white">
-        ثبت روزانه
-      </h1>
-
       <PillTabBar
         items={tabs}
         active={tab}
@@ -66,6 +62,7 @@ function MealLogTab() {
           key={`${meal.id}-${version}`}
           meal={meal}
           onOpen={(meal) => setModal({ meal, screen: "overview" })}
+          onAdd={(meal) => setModal({ meal, screen: "add" })}
         />
       ))}
 
