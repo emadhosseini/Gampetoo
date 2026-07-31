@@ -5,6 +5,7 @@ import { resetWarmupLibraryOverrides } from "../../store/warmupLibraryStore";
 import { getCurrentUsername, resetCurrentUser } from "../../utils/userEngine";
 import { resetFreeMeal } from "../../utils/freeMealEngine";
 import { resetWeightLog } from "../../utils/weightEngine";
+import { resetDailyLog } from "../../utils/dailyLogEngine";
 import { signOutRemote } from "../../auth/authEngine";
 import { flushPendingSync, resetSyncMarkers } from "../../sync/remoteSync";
 
@@ -21,6 +22,7 @@ export async function resetApplication() {
   resetWarmupLibraryOverrides();
   resetFreeMeal();
   resetWeightLog();
+  resetDailyLog();
 
   if (username) {
     await flushPendingSync(username);

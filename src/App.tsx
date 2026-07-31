@@ -14,6 +14,7 @@ import HomePage from "@/pages/HomePage";
 import DailyProgramPage from "@/pages/DailyProgramPage";
 import ProgressPage from "@/pages/ProgressPage";
 import DailyLogPage from "@/pages/DailyLogPage";
+import MealLogPage from "@/pages/MealLogPage";
 import SetupProgramPage from "@/pages/SetupProgramPage";
 import WorkoutLibraryPage from "@/pages/WorkoutLibraryPage";
 import WorkoutDetailPage from "@/pages/WorkoutDetailPage";
@@ -81,6 +82,11 @@ function AppRoutes() {
         <Route
           path="/daily-log"
           element={<DailyLogPage />}
+        />
+
+        <Route
+          path="/daily-log/meal/:mealId"
+          element={<MealLogPage />}
         />
 
         <Route
