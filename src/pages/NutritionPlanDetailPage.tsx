@@ -5,6 +5,9 @@ import { useParams } from "react-router-dom";
 import { getActiveProgram, updateProgram } from "@/utils/programEngine";
 import { getMealSlots } from "@/data/nutrition/foodCatalog";
 import {
+  AUTO_SEARCH_MIN_LENGTH,
+  SEARCH_DEBOUNCE_MS,
+  caloriesForServing,
   localFoods,
   searchFood,
   searchSupplements,
@@ -23,16 +26,6 @@ const typeTitles: Record<MealPlanType, string> = {
   rest: "برنامه غذایی روزهای استراحت",
 };
 
-// Live-search only kicks in past this many characters — short queries (1-3
-// chars) match too many/ambiguous entries in a small catalog, so below this
-// length a search only applies once explicitly submitted via the button.
-const AUTO_SEARCH_MIN_LENGTH = 3;
-
-// How long to wait after the last keystroke before actually running a live
-// search — avoids firing a network request (the external API fallback) on
-// every single character while the user is still typing.
-const SEARCH_DEBOUNCE_MS = 300;
-
 const AMOUNT_PATTERN = /^(\d+(?:\.\d+)?)\s+(.+)$/;
 
 // A persisted amount string is always "<quantity> <unit label>" — split it
@@ -42,10 +35,6 @@ function parseAmount(amount: string): { quantity: number; unitLabel: string } {
   return match
     ? { quantity: Number(match[1]), unitLabel: match[2] }
     : { quantity: 1, unitLabel: amount };
-}
-
-function caloriesFor(entry: FoodEntry, unit: ServingUnit, quantity: number): number {
-  return Math.round((entry.caloriesPer100g * unit.grams * quantity) / 100);
 }
 
 function mealCalories(meal: MealSection): number {
@@ -346,7 +335,7 @@ export default function NutritionPlanDetailPage() {
                   id: entry.id,
                   name: entry.nameFa,
                   amount: `1 ${defaultUnit.label}`,
-                  calories: caloriesFor(entry, defaultUnit, 1),
+                  calories: caloriesForServing(entry, defaultUnit, 1),
                 },
               ];
 
@@ -387,7 +376,7 @@ export default function NutritionPlanDetailPage() {
               return {
                 ...food,
                 amount: `${quantity} ${unit.label}`,
-                calories: caloriesFor(entry, unit, quantity),
+                calories: caloriesForServing(entry, unit, quantity),
               };
             }),
           };

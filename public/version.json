@@ -1,6 +1,15 @@
 {
-  "current": "2.1.5",
+  "current": "2.1.6",
   "history": [
+    {
+      "version": "2.1.6",
+      "date": "2026-07-31",
+      "description": "The daily-log meal-entry popup no longer takes free-typed food names/calories — it now searches the same Iranian/international/gym foods database used by the nutrition plan builder (with the same per-meal suggested foods when the search box is empty), and calories are computed automatically from the selected food's real per-100g values times the chosen serving unit and quantity, instead of being manually typed in.",
+      "highlights": [
+        "🔎 فرم افزودن غذا به «ثبت روزانه» حالا از بانک غذایی واقعی جست‌وجو می‌کنه",
+        "🔢 کالری و واحد شمارش خودکار از روی غذای انتخاب‌شده محاسبه می‌شه"
+      ]
+    },
     {
       "version": "2.1.5",
       "date": "2026-07-31",

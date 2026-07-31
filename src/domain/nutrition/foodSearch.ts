@@ -1,4 +1,4 @@
-import type { FoodItem } from "@/types/food";
+import type { FoodItem, ServingUnit } from "@/types/food";
 import { iranianFoodsDatabase } from "@/data/nutrition/iranianFoodsDatabase";
 import { internationalFoodsDatabase } from "@/data/nutrition/internationalFoodsDatabase";
 import { gymFoodsDatabase } from "@/data/nutrition/gymFoodsDatabase";
@@ -6,6 +6,21 @@ import { supplementsDatabase } from "@/data/nutrition/supplementsDatabase";
 import { searchExternalFoods } from "@/lib/openFoodFactsApi";
 
 const MIN_LOCAL_RESULTS_BEFORE_EXTERNAL_LOOKUP = 5;
+
+// Shared by every screen that searches this catalog (NutritionPlanDetailPage,
+// AddMealEntryModal, ...) so their live-search behavior/timing stays in sync.
+export const AUTO_SEARCH_MIN_LENGTH = 3;
+export const SEARCH_DEBOUNCE_MS = 300;
+
+// A food's macros are stored per 100g — this converts a (unit, quantity)
+// serving into an actual calorie count.
+export function caloriesForServing(
+  entry: FoodItem,
+  unit: ServingUnit,
+  quantity: number,
+): number {
+  return Math.round((entry.caloriesPer100g * unit.grams * quantity) / 100);
+}
 
 // All three databases are bilingual (real Persian translations, not just the
 // English name reused) — the external API is only a fallback for foods none
