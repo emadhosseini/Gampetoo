@@ -1,6 +1,14 @@
 {
-  "current": "2.1.3",
+  "current": "2.1.4",
   "history": [
+    {
+      "version": "2.1.4",
+      "date": "2026-07-31",
+      "description": "Added a new Profile page (/profile), opened from the side menu's account row: a header card (avatar, name, a photo placeholder) plus a weight card (shows the latest logged weight, taps through to the existing weight-log/chart page) and a height card (display-only for now — no height storage exists yet).",
+      "highlights": [
+        "🧑 صفحه‌ی پروفایل جدید با کارت وزن (لینک به ثبت وزن) و کارت قد"
+      ]
+    },
     {
       "version": "2.1.3",
       "date": "2026-07-31",

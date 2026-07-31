@@ -243,8 +243,8 @@ export default function SideMenu({ children }: SideMenuProps) {
               </div>
 
               <button
-                onClick={() => goTo("/settings")}
-                aria-label="تنظیمات حساب"
+                onClick={() => goTo("/profile")}
+                aria-label="پروفایل"
                 className="glass-chip flex h-11 w-11 shrink-0 items-center justify-center rounded-3xl"
               >
                 <ChevronLeft size={20} />
