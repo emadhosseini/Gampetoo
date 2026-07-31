@@ -1,17 +1,20 @@
 import { useState } from "react";
-import { User } from "lucide-react";
+import { ChevronLeft, Mars, User, Venus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import AccountEditModal from "@/components/AccountEditModal";
-import { getCurrentUserName } from "@/utils/userEngine";
+import { getCurrentUserGender, getCurrentUserName } from "@/utils/userEngine";
 import { getLatestWeight } from "@/utils/weightEngine";
 import { toFaDigits } from "@/utils/numberFormat";
 
 export default function ProfilePage() {
   const navigate = useNavigate();
   const userName = getCurrentUserName() ?? "";
+  const gender = getCurrentUserGender();
   const weight = getLatestWeight();
   const [accountModalOpen, setAccountModalOpen] = useState(false);
+
+  const GenderIcon = gender === "male" ? Mars : gender === "female" ? Venus : User;
 
   return (
     <div className="space-y-4 px-5 pb-5 pt-10">
@@ -21,18 +24,23 @@ export default function ProfilePage() {
 
       <button
         onClick={() => setAccountModalOpen(true)}
-        className="glass-panel flex w-full items-stretch justify-between gap-4 rounded-3xl p-5"
+        className="glass-panel flex w-full items-center justify-between rounded-3xl p-5"
       >
-        {/* Placeholder photo — swap for a gender-based picture later. */}
-        <div className="aspect-square w-24 shrink-0 rounded-3xl bg-white/10" />
+        <div className="flex items-center gap-4">
+          {/* Gender-based avatar icon, chosen once the user picks a gender
+              in the account-edit popup — a generic person icon until then. */}
+          <div className="flex aspect-square w-24 shrink-0 items-center justify-center rounded-3xl bg-white/10 text-avocado-yellow">
+            <GenderIcon size={40} />
+          </div>
 
-        <span className="flex flex-1 items-center justify-end text-right font-semibold text-white">
-          {userName}
-        </span>
+          <span className="font-semibold text-white">{userName}</span>
+        </div>
 
-        {/* Placeholder avatar — swap for a gender-based picture later. */}
-        <div className="flex h-14 w-14 shrink-0 items-center justify-center self-center rounded-full bg-avocado-yellow/20 text-avocado-yellow">
-          <User size={24} />
+        <div
+          aria-hidden="true"
+          className="glass-chip flex h-11 w-11 shrink-0 items-center justify-center rounded-3xl"
+        >
+          <ChevronLeft size={20} />
         </div>
       </button>
 
