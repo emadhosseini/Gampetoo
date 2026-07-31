@@ -1,6 +1,16 @@
 {
-  "current": "2.1.1",
+  "current": "2.1.2",
   "history": [
+    {
+      "version": "2.1.2",
+      "date": "2026-07-31",
+      "description": "Extended the bottom nav's press feedback to the whole pill (previously only the individual tapped tab reacted). Added Figma's actual inner-shadow effect stack for the pill's glass look (a light top highlight plus the dark top/bottom vignette, read directly from Figma's Effects panel instead of the design-context export, which doesn't surface Figma's native Glass material or its shadows). Changed the pill's corner radius from a full capsule to 24px rounded corners.",
+      "highlights": [
+        "👆 حس لمسی روی کل نوار پایین (نه فقط دکمه‌ی لمس‌شده)",
+        "✨ جزئیات دقیق‌تر شیشه‌ای (هایلایت بالا) طبق فیگما",
+        "📐 گوشه‌های نوار پایین به ۲۴ پیکسل تغییر کرد"
+      ]
+    },
     {
       "version": "2.1.1",
       "date": "2026-07-31",
