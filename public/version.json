@@ -1,6 +1,14 @@
 {
-  "current": "2.1.1",
+  "current": "2.1.2",
   "history": [
+    {
+      "version": "2.1.2",
+      "date": "2026-07-31",
+      "description": "Restyled the bottom nav as an iOS-style tab bar (Figma's \"Tab Bar - iPhone\" component, node 38:906): the active tab now gets a light selection pill behind it that glides between tabs on switch (a shared framer-motion layoutId animation) instead of just the icon/text changing color. Also added the glass bar's light top-highlight inner shadow from Figma's real Effects panel, alongside the dark top/bottom vignette already in use.",
+      "highlights": [
+        "📱 نوار پایین حالا دقیقاً مثل تب‌بار iOS — هایلایت تب فعال بین تب‌ها سر می‌خوره"
+      ]
+    },
     {
       "version": "2.1.1",
       "date": "2026-07-31",
