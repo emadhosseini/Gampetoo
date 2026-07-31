@@ -1,6 +1,14 @@
 {
-  "current": "2.1.10",
+  "current": "2.1.11",
   "history": [
+    {
+      "version": "2.1.11",
+      "date": "2026-07-31",
+      "description": "Increased every popup's backdrop blur by another 50% (12px to 18px) for clearer separation from the page behind it, still with no darkening or color tint.",
+      "highlights": [
+        "🔍 بلر پس‌زمینه‌ی پاپ‌اپ‌ها ۵۰٪ بیشتر شد برای خوانایی بهتر"
+      ]
+    },
     {
       "version": "2.1.10",
       "date": "2026-07-31",

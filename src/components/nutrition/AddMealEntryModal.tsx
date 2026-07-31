@@ -145,7 +145,7 @@ export default function AddMealEntryModal({
 
   return (
     <div
-      className="pt-safe fixed inset-0 z-[70] flex items-center justify-center px-6 backdrop-blur-md"
+      className="pt-safe fixed inset-0 z-[70] flex items-center justify-center px-6 backdrop-blur-[18px]"
       onClick={onClose}
     >
       <div
