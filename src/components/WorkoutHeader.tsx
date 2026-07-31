@@ -48,7 +48,7 @@ export default function WorkoutHeader({
       </h1>
 
       {showForgotButton && open && (
-        <div className="pt-safe fixed inset-0 z-[70] flex items-center justify-center bg-black/70 px-6 backdrop-blur-sm">
+        <div className="pt-safe fixed inset-0 z-[70] flex items-center justify-center px-6 backdrop-blur-md">
           <div className="w-full max-w-sm rounded-2xl border border-forest-600 bg-forest-700 p-6 text-center shadow-2xl">
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-avocado-yellow/10 text-2xl">
               🤦

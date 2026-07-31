@@ -35,7 +35,7 @@ export default function FreeMealSettingsButton() {
       </button>
 
       {open && (
-        <div className="pt-safe fixed inset-0 z-[70] flex items-center justify-center bg-black/70 px-6 backdrop-blur-sm">
+        <div className="pt-safe fixed inset-0 z-[70] flex items-center justify-center px-6 backdrop-blur-md">
           <div className="w-full max-w-sm rounded-2xl border border-forest-600 bg-forest-700 p-6 text-center shadow-2xl">
             <h2 className="text-lg font-bold text-white">
               تعداد وعده آزاد هفته خودتو مشخص کن
