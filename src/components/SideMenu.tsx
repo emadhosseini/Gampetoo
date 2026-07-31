@@ -46,6 +46,14 @@ const OPEN_THRESHOLD = 0.4;
 // reveal any more of it (already maxed out), so that intent has to be read
 // from the gesture directly rather than from where openPx ends up.
 const CLOSE_DRAG_DISTANCE = 60;
+// The drag handlers below sit on the whole panel (so the menu can be closed
+// by dragging from anywhere on it, not just a dedicated handle), which means
+// every tap on every button inside it also starts a "potential drag". A
+// plain tap must NOT be captured as a drag, or it can swallow the button's
+// native click before it fires — so pointer capture (and the open/close
+// tracking) is deferred until the finger has actually moved past this many
+// px, distinguishing a real drag from a tap/click.
+const DRAG_START_THRESHOLD = 8;
 // How dark the backdrop over the rest of the page gets at fully open.
 const BACKDROP_MAX_OPACITY = 0.55;
 // How blurred the page behind the menu gets at fully open — the menu now
@@ -67,9 +75,11 @@ export default function SideMenu({ children }: SideMenuProps) {
   // How far (in px) the drawer has entered from the right: 0 = fully closed
   // (off-screen), drawerWidth = fully open.
   const openPx = useMotionValue(0);
-  const dragState = useRef<{ startX: number; startOpenPx: number } | null>(
-    null,
-  );
+  const dragState = useRef<{
+    startX: number;
+    startOpenPx: number;
+    dragging: boolean;
+  } | null>(null);
 
   useLayoutEffect(() => {
     function measure() {
@@ -113,8 +123,16 @@ export default function SideMenu({ children }: SideMenuProps) {
   }
 
   function handlePointerDown(e: ReactPointerEvent) {
-    dragState.current = { startX: e.clientX, startOpenPx: openPx.get() };
-    (e.target as Element).setPointerCapture(e.pointerId);
+    // Pointer capture is intentionally NOT taken here yet — see
+    // DRAG_START_THRESHOLD. Grabbing it immediately on every pointerdown
+    // (including ones that land on a button) risks the browser routing the
+    // eventual click to whatever this ends up capturing instead of firing
+    // it on the button normally.
+    dragState.current = {
+      startX: e.clientX,
+      startOpenPx: openPx.get(),
+      dragging: false,
+    };
   }
 
   function handlePointerMove(e: ReactPointerEvent) {
@@ -122,6 +140,14 @@ export default function SideMenu({ children }: SideMenuProps) {
     if (!state || drawerWidth === 0) return;
 
     const deltaX = e.clientX - state.startX;
+
+    if (!state.dragging) {
+      if (Math.abs(deltaX) < DRAG_START_THRESHOLD) return;
+
+      state.dragging = true;
+      (e.target as Element).setPointerCapture(e.pointerId);
+    }
+
     // Dragging left (negative deltaX) reveals more of the drawer.
     const next = Math.min(
       drawerWidth,
@@ -135,6 +161,10 @@ export default function SideMenu({ children }: SideMenuProps) {
     const state = dragState.current;
     if (!state) return;
     dragState.current = null;
+
+    // No real drag happened — this was a plain tap/click, so leave it to
+    // whatever element the pointer actually landed on (its own onClick).
+    if (!state.dragging) return;
 
     const deltaX = e.clientX - state.startX;
     const startedFullyOpen = state.startOpenPx >= drawerWidth - 1;
