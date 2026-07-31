@@ -32,7 +32,7 @@ const menuLinks = [
   { to: "/settings/nutrition", label: "برنامه غذایی", icon: UtensilsCrossed },
 ];
 
-const DRAWER_FRACTION = 2 / 3;
+const DRAWER_FRACTION = 0.8;
 // A thin strip along the right edge that can start an open-swipe even while
 // the drawer is closed (it's off-screen then, so nothing else is there to
 // grab).
@@ -227,12 +227,17 @@ export default function SideMenu({ children }: SideMenuProps) {
             }}
           />
 
-          <div className="relative h-full space-y-3 overflow-y-auto px-5 pb-6 pt-safe">
+          <div
+            className="relative h-full space-y-3 overflow-y-auto px-5 pb-6"
+            style={{ paddingTop: "calc(env(safe-area-inset-top) + 0.75rem)" }}
+          >
             {/* Profile row + the 3 menu rows below, ported from Figma
                 (node-id=0-1's loose "Notification - Collapsed"/"Toolbar"
                 instances) — same glass-panel treatment as every other card
-                (index.css), 24px corners per that component's own radius. */}
-            <div className="glass-panel mt-16 flex items-center justify-between rounded-3xl p-7">
+                (index.css), 24px corners per that component's own radius.
+                Top gap matches space-y-3 (the gap between rows) instead of
+                being its own much larger, disproportionate margin. */}
+            <div className="glass-panel flex items-center justify-between rounded-3xl p-7">
               <div className="flex items-center gap-3">
                 {/* Placeholder avatar — swap for a gender-based picture later. */}
                 <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-avocado-yellow/20 text-avocado-yellow">
