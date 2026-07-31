@@ -1,6 +1,15 @@
 {
-  "current": "2.1.6",
+  "current": "2.1.7",
   "history": [
+    {
+      "version": "2.1.7",
+      "date": "2026-07-31",
+      "description": "Split the daily-log meal-entry popup into two steps: tapping a whole meal card now opens an overview of what's already logged for it (with a remove button per item and a total), and only its own \"افزودن\" button drills one level deeper into the food-search screen. The card itself is a single button now (the plus icon is decorative), replacing the previous separate add/nutrition-summary buttons.",
+      "highlights": [
+        "📋 کارت هر وعده حالا کامل قابل کلیکه و اول لیست خورده‌شده‌ها رو نشون می‌ده",
+        "🔍 صفحه‌ی جست‌وجوی غذا یک قدم جداگانه‌ست، فقط از دکمه «افزودن» باز می‌شه"
+      ]
+    },
     {
       "version": "2.1.6",
       "date": "2026-07-31",

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Search, X } from "lucide-react";
+import { Search } from "lucide-react";
 
 import type { MealSlot } from "@/data/nutrition/foodCatalog";
 import {
@@ -12,11 +12,7 @@ import {
   supplementFoods,
 } from "@/domain/nutrition/foodSearch";
 import { sortFoodsForMeal } from "@/domain/nutrition/mealFoodSuggestions";
-import {
-  addLoggedEntry,
-  getLoggedEntries,
-  removeLoggedEntry,
-} from "@/utils/dailyLogEngine";
+import { addLoggedEntry } from "@/utils/dailyLogEngine";
 import { toFaDigits } from "@/utils/numberFormat";
 import type { FoodItem, ServingUnit } from "@/types/food";
 
@@ -126,8 +122,6 @@ export default function AddMealEntryModal({
     searchActive || query.trim().length > AUTO_SEARCH_MIN_LENGTH;
   const visibleFoods = isFiltering ? results : suggestedFoods;
 
-  const entries = getLoggedEntries(meal.id);
-
   function selectFood(entry: FoodItem) {
     setSelected(entry);
     setUnit(entry.servingUnits[0]);
@@ -149,11 +143,6 @@ export default function AddMealEntryModal({
     onChange();
   }
 
-  function handleRemove(entryId: string) {
-    removeLoggedEntry(meal!.id, entryId);
-    onChange();
-  }
-
   return (
     <div
       className="pt-safe fixed inset-0 z-[70] flex items-center justify-center bg-black/70 px-6 backdrop-blur-sm"
@@ -166,40 +155,6 @@ export default function AddMealEntryModal({
         <h2 className="text-center text-lg font-bold text-white">
           افزودن به وعده {meal.title}
         </h2>
-
-        {entries.length > 0 && (
-          <div className="max-h-32 space-y-2 overflow-y-auto">
-            {entries.map((entry) => (
-              <div
-                key={entry.id}
-                className="glass-chip flex items-center gap-2 rounded-xl p-3"
-              >
-                <span className="flex-1 text-sm font-medium text-white">
-                  {entry.name}
-                  {entry.amount && (
-                    <span className="mr-2 text-white/60">
-                      {toFaDigits(entry.amount)}
-                    </span>
-                  )}
-                </span>
-
-                {entry.calories !== undefined && (
-                  <span className="text-xs text-white/70">
-                    {toFaDigits(entry.calories)} کالری
-                  </span>
-                )}
-
-                <button
-                  onClick={() => handleRemove(entry.id)}
-                  aria-label={`حذف ${entry.name}`}
-                  className="glass-tap flex h-7 w-7 shrink-0 items-center justify-center rounded-full"
-                >
-                  <X size={14} className="text-white" />
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
 
         <div className="glass-chip flex items-center gap-2 rounded-xl p-2">
           <input

@@ -3,8 +3,8 @@ import { Activity, UtensilsCrossed } from "lucide-react";
 
 import PillTabBar, { type PillTabBarItem } from "@/components/PillTabBar";
 import MealLogCard from "@/components/nutrition/MealLogCard";
+import MealOverviewModal from "@/components/nutrition/MealOverviewModal";
 import AddMealEntryModal from "@/components/nutrition/AddMealEntryModal";
-import MealNutritionModal from "@/components/nutrition/MealNutritionModal";
 import { getMealSlots, type MealSlot } from "@/data/nutrition/foodCatalog";
 
 type Tab = "meal" | "activity";
@@ -44,16 +44,17 @@ export default function DailyLogPage() {
   );
 }
 
+type ModalScreen = { meal: MealSlot; screen: "overview" | "add" } | null;
+
 // Fully independent of the prescribed nutrition plan (program.nutrition) —
-// this logs whatever the user actually ate, freely typed in, against a
-// fixed catalog of meal-time slots (صبحانه، ناهار، ...) rather than
-// whatever foods happen to be assigned in their plan.
+// this logs whatever the user actually ate against a fixed catalog of
+// meal-time slots (صبحانه، ناهار، ...). Tapping a whole card opens an
+// overview of what's already logged for it; "افزودن" there drills one level
+// deeper into the actual food-search screen.
 function MealLogTab() {
-  const [addModalMeal, setAddModalMeal] = useState<MealSlot | null>(null);
-  const [nutritionModalMeal, setNutritionModalMeal] =
-    useState<MealSlot | null>(null);
-  // Bumped to force MealLogCard's totals to re-read storage after the add
-  // modal changes something — there's no shared reactive store.
+  const [modal, setModal] = useState<ModalScreen>(null);
+  // Bumped after every add/remove so the cards (whose own state was read
+  // before the modal opened) show fresh totals once everything closes.
   const [version, setVersion] = useState(0);
 
   const mealSlots = getMealSlots();
@@ -64,20 +65,23 @@ function MealLogTab() {
         <MealLogCard
           key={`${meal.id}-${version}`}
           meal={meal}
-          onAdd={setAddModalMeal}
-          onShowNutrition={setNutritionModalMeal}
+          onOpen={(meal) => setModal({ meal, screen: "overview" })}
         />
       ))}
 
-      <AddMealEntryModal
-        meal={addModalMeal}
-        onClose={() => setAddModalMeal(null)}
+      <MealOverviewModal
+        meal={modal?.screen === "overview" ? modal.meal : null}
+        onClose={() => setModal(null)}
+        onAdd={() => setModal(modal && { meal: modal.meal, screen: "add" })}
         onChange={() => setVersion((v) => v + 1)}
       />
 
-      <MealNutritionModal
-        meal={nutritionModalMeal}
-        onClose={() => setNutritionModalMeal(null)}
+      <AddMealEntryModal
+        meal={modal?.screen === "add" ? modal.meal : null}
+        onClose={() =>
+          setModal(modal && { meal: modal.meal, screen: "overview" })
+        }
+        onChange={() => setVersion((v) => v + 1)}
       />
     </div>
   );
