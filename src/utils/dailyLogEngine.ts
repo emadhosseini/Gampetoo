@@ -1,3 +1,4 @@
+import { generateId } from "./id";
 import { scopedKey } from "./userEngine";
 
 const STORAGE_KEY = "emad-daily-log";
@@ -10,10 +11,18 @@ function today() {
   return new Date().toISOString().split("T")[0];
 }
 
+export interface LoggedFoodEntry {
+  id: string;
+  name: string;
+  amount?: string;
+  calories?: number;
+}
+
 interface DailyLogState {
   date: string;
-  // mealId -> ids of the foods (from that meal's food list) logged as eaten.
-  meals: Record<string, string[]>;
+  // mealId -> freely-entered food items logged as eaten that meal — not
+  // tied to any prescribed nutrition plan, the user can log anything.
+  meals: Record<string, LoggedFoodEntry[]>;
 }
 
 function createState(): DailyLogState {
@@ -42,14 +51,27 @@ function writeState(state: DailyLogState) {
   localStorage.setItem(storageKey(), JSON.stringify(state));
 }
 
-export function getLoggedFoodIds(mealId: string): string[] {
+export function getLoggedEntries(mealId: string): LoggedFoodEntry[] {
   return readState().meals[mealId] ?? [];
 }
 
-export function setLoggedFoodIds(mealId: string, foodIds: string[]) {
+export function addLoggedEntry(
+  mealId: string,
+  entry: Omit<LoggedFoodEntry, "id">,
+) {
   const state = readState();
+  const entries = state.meals[mealId] ?? [];
 
-  state.meals[mealId] = foodIds;
+  state.meals[mealId] = [...entries, { ...entry, id: generateId() }];
+
+  writeState(state);
+}
+
+export function removeLoggedEntry(mealId: string, entryId: string) {
+  const state = readState();
+  const entries = state.meals[mealId] ?? [];
+
+  state.meals[mealId] = entries.filter((entry) => entry.id !== entryId);
 
   writeState(state);
 }

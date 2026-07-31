@@ -1,13 +1,13 @@
-import type { MealSection } from "@/types/nutrition";
-import { getLoggedFoodIds } from "@/utils/dailyLogEngine";
+import type { MealSlot } from "@/data/nutrition/foodCatalog";
+import { getLoggedEntries } from "@/utils/dailyLogEngine";
 import { toFaDigits } from "@/utils/numberFormat";
 
 export interface MealNutritionModalProps {
-  meal: MealSection | null;
+  meal: MealSlot | null;
   onClose: () => void;
 }
 
-// FoodItem only carries a per-food calorie value (no protein/carb/fiber
+// Logged entries only carry a calorie value (no protein/carb/fiber
 // breakdown), so calories logged is the one number this can honestly total —
 // no fabricated macros.
 export default function MealNutritionModal({
@@ -18,11 +18,10 @@ export default function MealNutritionModal({
     return null;
   }
 
-  const loggedIds = new Set(getLoggedFoodIds(meal.id));
-  const loggedFoods = meal.foods.filter((food) => loggedIds.has(food.id));
+  const entries = getLoggedEntries(meal.id);
 
-  const totalCalories = loggedFoods.reduce(
-    (sum, food) => sum + (food.calories ?? 0),
+  const totalCalories = entries.reduce(
+    (sum, entry) => sum + (entry.calories ?? 0),
     0,
   );
 
@@ -48,8 +47,7 @@ export default function MealNutritionModal({
         </div>
 
         <p className="text-center text-sm text-white">
-          {toFaDigits(loggedFoods.length)} از {toFaDigits(meal.foods.length)}{" "}
-          خوردنی این وعده ثبت شده
+          {toFaDigits(entries.length)} خوردنی توی این وعده ثبت شده
         </p>
 
         <button

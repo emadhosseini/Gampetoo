@@ -1,19 +1,26 @@
 import { ChevronLeft, Plus } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 
-import type { MealSection } from "@/types/nutrition";
+import type { MealSlot } from "@/data/nutrition/foodCatalog";
+import { getLoggedEntries } from "@/utils/dailyLogEngine";
 import { toFaDigits } from "@/utils/numberFormat";
 
 export interface MealLogCardProps {
-  meal: MealSection;
-  onShowNutrition: (meal: MealSection) => void;
+  meal: MealSlot;
+  onAdd: (meal: MealSlot) => void;
+  onShowNutrition: (meal: MealSlot) => void;
 }
 
 export default function MealLogCard({
   meal,
+  onAdd,
   onShowNutrition,
 }: MealLogCardProps) {
-  const navigate = useNavigate();
+  const entries = getLoggedEntries(meal.id);
+
+  const totalCalories = entries.reduce(
+    (sum, entry) => sum + (entry.calories ?? 0),
+    0,
+  );
 
   return (
     <div className="glass-panel rounded-2xl p-5">
@@ -26,16 +33,16 @@ export default function MealLogCard({
               {meal.title}
             </h2>
 
-            {meal.calories !== undefined && (
-              <p className="text-sm text-white/70">
-                {toFaDigits(meal.calories)} کالری
-              </p>
-            )}
+            <p className="text-sm text-white/70">
+              {entries.length > 0
+                ? `${toFaDigits(totalCalories)} کالری ثبت‌شده`
+                : "چیزی ثبت نشده"}
+            </p>
           </div>
         </div>
 
         <button
-          onClick={() => navigate(`/daily-log/meal/${meal.id}`)}
+          onClick={() => onAdd(meal)}
           aria-label={`افزودن ${meal.title}`}
           className="glass-tap flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-avocado-lime text-black"
         >

@@ -1,12 +1,11 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Activity, UtensilsCrossed } from "lucide-react";
 
 import PillTabBar, { type PillTabBarItem } from "@/components/PillTabBar";
 import MealLogCard from "@/components/nutrition/MealLogCard";
+import AddMealEntryModal from "@/components/nutrition/AddMealEntryModal";
 import MealNutritionModal from "@/components/nutrition/MealNutritionModal";
-import { getCurrentMealPlan, hasProgramStarted } from "@/utils/programEngine";
-import type { MealSection } from "@/types/nutrition";
+import { getMealSlots, type MealSlot } from "@/data/nutrition/foodCatalog";
 
 type Tab = "meal" | "activity";
 
@@ -45,44 +44,36 @@ export default function DailyLogPage() {
   );
 }
 
+// Fully independent of the prescribed nutrition plan (program.nutrition) —
+// this logs whatever the user actually ate, freely typed in, against a
+// fixed catalog of meal-time slots (صبحانه، ناهار، ...) rather than
+// whatever foods happen to be assigned in their plan.
 function MealLogTab() {
-  const navigate = useNavigate();
+  const [addModalMeal, setAddModalMeal] = useState<MealSlot | null>(null);
   const [nutritionModalMeal, setNutritionModalMeal] =
-    useState<MealSection | null>(null);
+    useState<MealSlot | null>(null);
+  // Bumped to force MealLogCard's totals to re-read storage after the add
+  // modal changes something — there's no shared reactive store.
+  const [version, setVersion] = useState(0);
 
-  const started = hasProgramStarted();
-  const plan = started ? getCurrentMealPlan() : null;
-
-  const enabledMeals = (plan?.meals ?? []).filter(
-    (meal) => (meal.enabled ?? true) && meal.foods.length > 0,
-  );
-
-  if (!started || enabledMeals.length === 0) {
-    return (
-      <div className="space-y-4 px-5 pb-5 pt-6 text-center">
-        <div className="glass-panel rounded-2xl p-6">
-          <p className="text-white">شما برنامه غذایی انتخاب نکردین</p>
-
-          <button
-            onClick={() => navigate("/settings/nutrition")}
-            className="mt-4 rounded-xl bg-avocado-yellow px-5 py-3 text-sm font-semibold text-black"
-          >
-            رفتن به تنظیمات برنامه غذایی
-          </button>
-        </div>
-      </div>
-    );
-  }
+  const mealSlots = getMealSlots();
 
   return (
     <div className="space-y-4 px-5 pb-5 pt-6">
-      {enabledMeals.map((meal) => (
+      {mealSlots.map((meal) => (
         <MealLogCard
-          key={meal.id}
+          key={`${meal.id}-${version}`}
           meal={meal}
+          onAdd={setAddModalMeal}
           onShowNutrition={setNutritionModalMeal}
         />
       ))}
+
+      <AddMealEntryModal
+        meal={addModalMeal}
+        onClose={() => setAddModalMeal(null)}
+        onChange={() => setVersion((v) => v + 1)}
+      />
 
       <MealNutritionModal
         meal={nutritionModalMeal}
