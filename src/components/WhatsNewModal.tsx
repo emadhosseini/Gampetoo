@@ -1,3 +1,5 @@
+import ModalOverlay from "@/components/ModalOverlay";
+
 export interface WhatsNewModalProps {
   open: boolean;
   version: string;
@@ -17,8 +19,8 @@ export default function WhatsNewModal({
   }
 
   return (
-    <div className="pt-safe fixed inset-0 z-[70] flex items-center justify-center px-6 backdrop-blur-[30px]">
-      <div className="w-full max-w-sm rounded-2xl border border-forest-600 bg-forest-700 p-6 text-center shadow-2xl">
+    <ModalOverlay onClose={onClose}>
+      <div className="rounded-2xl border border-forest-600 bg-forest-700 p-6 text-center shadow-2xl">
         <h2 className="text-lg font-bold text-white">
           🎉 تغییرات این نسخه
         </h2>
@@ -45,6 +47,6 @@ export default function WhatsNewModal({
           متوجه شدم
         </button>
       </div>
-    </div>
+    </ModalOverlay>
   );
 }

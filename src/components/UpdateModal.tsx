@@ -1,5 +1,7 @@
 import { RefreshCw } from "lucide-react";
 
+import ModalOverlay from "@/components/ModalOverlay";
+
 export interface UpdateModalProps {
   open: boolean;
   currentVersion: string;
@@ -24,8 +26,10 @@ export default function UpdateModal({
   }
 
   return (
-    <div className="pt-safe fixed inset-0 z-[70] flex items-center justify-center px-6 backdrop-blur-[30px]">
-      <div className="w-full max-w-sm rounded-2xl border border-forest-600 bg-forest-700 p-6 text-center shadow-2xl">
+    // No backdrop-tap-to-close — this choice (later/update) should be
+    // explicit, not accidentally dismissed by a stray tap outside the card.
+    <ModalOverlay onClose={() => {}}>
+      <div className="rounded-2xl border border-forest-600 bg-forest-700 p-6 text-center shadow-2xl">
         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-avocado-yellow/10 text-avocado-yellow">
           <RefreshCw size={22} />
         </div>
@@ -76,6 +80,6 @@ export default function UpdateModal({
           </button>
         </div>
       </div>
-    </div>
+    </ModalOverlay>
   );
 }

@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Share, SquarePlus } from "lucide-react";
 
+import ModalOverlay from "@/components/ModalOverlay";
+
 const DISMISS_KEY = "gampetoo-install-hint-dismissed";
 
 function isStandalone() {
@@ -36,8 +38,8 @@ export default function InstallHint() {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center px-6 backdrop-blur-[30px]">
-      <div className="w-full max-w-sm rounded-2xl border border-forest-600 bg-forest-700 p-6 text-center shadow-2xl">
+    <ModalOverlay onClose={dismiss} zIndexClass="z-50" paddingTop="">
+      <div className="rounded-2xl border border-forest-600 bg-forest-700 p-6 text-center shadow-2xl">
         <p className="text-base font-bold text-white">
           برای دسترسی راحت‌تر به برنامه
         </p>
@@ -63,6 +65,6 @@ export default function InstallHint() {
           متوجه شدم
         </button>
       </div>
-    </div>
+    </ModalOverlay>
   );
 }

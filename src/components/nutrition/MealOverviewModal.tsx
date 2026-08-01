@@ -1,5 +1,6 @@
 import { X } from "lucide-react";
 
+import ModalOverlay from "@/components/ModalOverlay";
 import type { MealSlot } from "@/data/nutrition/foodCatalog";
 import { getLoggedEntries, removeLoggedEntry } from "@/utils/dailyLogEngine";
 import { toFaDigits } from "@/utils/numberFormat";
@@ -39,14 +40,8 @@ export default function MealOverviewModal({
   }
 
   return (
-    <div
-      className="pt-safe fixed inset-0 z-[70] flex items-center justify-center px-6 backdrop-blur-[30px]"
-      onClick={onClose}
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        className="glass-panel glass-static w-full max-w-sm space-y-4 rounded-3xl p-6"
-      >
+    <ModalOverlay onClose={onClose}>
+      <div className="glass-panel glass-static space-y-4 rounded-3xl p-6">
         <h2 className="text-center text-lg font-bold text-white">
           {meal.title}
         </h2>
@@ -109,6 +104,6 @@ export default function MealOverviewModal({
           بستن
         </button>
       </div>
-    </div>
+    </ModalOverlay>
   );
 }

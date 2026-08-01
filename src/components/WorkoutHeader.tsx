@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import ModalOverlay from "@/components/ModalOverlay";
 import { shiftProgramOneDayForward } from "@/utils/programEngine";
 import { resetSession } from "@/utils/sessionEngine";
 
@@ -48,8 +49,8 @@ export default function WorkoutHeader({
       </h1>
 
       {showForgotButton && open && (
-        <div className="pt-safe fixed inset-0 z-[70] flex items-center justify-center px-6 backdrop-blur-[30px]">
-          <div className="w-full max-w-sm rounded-2xl border border-forest-600 bg-forest-700 p-6 text-center shadow-2xl">
+        <ModalOverlay onClose={() => setOpen(false)}>
+          <div className="rounded-2xl border border-forest-600 bg-forest-700 p-6 text-center shadow-2xl">
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-avocado-yellow/10 text-2xl">
               🤦
             </div>
@@ -80,7 +81,7 @@ export default function WorkoutHeader({
               </button>
             </div>
           </div>
-        </div>
+        </ModalOverlay>
       )}
     </div>
   );

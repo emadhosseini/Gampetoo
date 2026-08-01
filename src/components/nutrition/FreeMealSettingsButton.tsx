@@ -1,6 +1,7 @@
 import { ChevronRight, Minus, Plus } from "lucide-react";
 import { useState } from "react";
 
+import ModalOverlay from "@/components/ModalOverlay";
 import {
   getWeeklyFreeMealCount,
   setWeeklyFreeMealCount,
@@ -35,8 +36,8 @@ export default function FreeMealSettingsButton() {
       </button>
 
       {open && (
-        <div className="pt-safe fixed inset-0 z-[70] flex items-center justify-center px-6 backdrop-blur-[30px]">
-          <div className="w-full max-w-sm rounded-2xl border border-forest-600 bg-forest-700 p-6 text-center shadow-2xl">
+        <ModalOverlay onClose={() => setOpen(false)}>
+          <div className="rounded-2xl border border-forest-600 bg-forest-700 p-6 text-center shadow-2xl">
             <h2 className="text-lg font-bold text-white">
               تعداد وعده آزاد هفته خودتو مشخص کن
             </h2>
@@ -71,7 +72,7 @@ export default function FreeMealSettingsButton() {
               </button>
             </div>
           </div>
-        </div>
+        </ModalOverlay>
       )}
     </>
   );

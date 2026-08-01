@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+import ModalOverlay from "@/components/ModalOverlay";
 import {
   getCurrentUserGender,
   getCurrentUserName,
@@ -75,14 +76,8 @@ export default function AccountEditModal({
   }
 
   return (
-    <div
-      className="pt-safe fixed inset-0 z-[70] flex items-center justify-center px-6 backdrop-blur-[30px]"
-      onClick={onClose}
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-sm space-y-4 rounded-2xl border border-forest-600 bg-forest-700 p-6 shadow-2xl"
-      >
+    <ModalOverlay onClose={onClose}>
+      <div className="space-y-4 rounded-2xl border border-forest-600 bg-forest-700 p-6 shadow-2xl">
         <h2 className="text-center text-lg font-bold text-white">
           حساب کاربری
         </h2>
@@ -142,6 +137,6 @@ export default function AccountEditModal({
           </button>
         </div>
       </div>
-    </div>
+    </ModalOverlay>
   );
 }

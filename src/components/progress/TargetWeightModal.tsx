@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import ModalOverlay from "@/components/ModalOverlay";
 import WeightPicker from "@/components/WeightPicker";
 import { getTargetWeight, setTargetWeight } from "@/utils/weightEngine";
 
@@ -27,14 +28,8 @@ export default function TargetWeightModal({
   }
 
   return (
-    <div
-      className="pt-safe fixed inset-0 z-[70] flex items-center justify-center px-6 backdrop-blur-[30px]"
-      onClick={onClose}
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        className="glass-panel glass-static w-full max-w-sm space-y-4 rounded-3xl p-6 text-center"
-      >
+    <ModalOverlay onClose={onClose}>
+      <div className="glass-panel glass-static space-y-4 rounded-3xl p-6 text-center">
         <h2 className="text-lg font-bold text-white">وزن هدف</h2>
 
         <WeightPicker value={weight} onChange={setWeight} />
@@ -53,6 +48,6 @@ export default function TargetWeightModal({
           بستن
         </button>
       </div>
-    </div>
+    </ModalOverlay>
   );
 }

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Search } from "lucide-react";
 
+import ModalOverlay from "@/components/ModalOverlay";
 import type { MealSlot } from "@/data/nutrition/foodCatalog";
 import {
   AUTO_SEARCH_MIN_LENGTH,
@@ -42,6 +43,13 @@ export default function AddMealEntryModal({
   const [unit, setUnit] = useState<ServingUnit | null>(null);
   const [quantity, setQuantity] = useState(1);
 
+  // Position/size (as 0-100 percentages) of the custom scroll indicator
+  // alongside the food list — the list itself is capped to ~4 rows, so a
+  // longer result set needs a visible cue that there's more below.
+  const [scrollThumb, setScrollThumb] = useState({ top: 0, height: 100 });
+  const [listScrollable, setListScrollable] = useState(false);
+  const listRef = useRef<HTMLDivElement>(null);
+
   const requestId = useRef(0);
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined,
@@ -59,6 +67,10 @@ export default function AddMealEntryModal({
     [meal, isSupplementsMeal],
   );
 
+  const isFiltering =
+    searchActive || query.trim().length > AUTO_SEARCH_MIN_LENGTH;
+  const visibleFoods = isFiltering ? results : suggestedFoods;
+
   useEffect(() => {
     // Reset the search/selection state every time a different meal's modal
     // opens, so leftover state from the previous meal never leaks in.
@@ -73,6 +85,34 @@ export default function AddMealEntryModal({
   useEffect(() => {
     return () => clearTimeout(debounceTimer.current);
   }, []);
+
+  function updateScrollThumb() {
+    const el = listRef.current;
+    if (!el) return;
+
+    const { scrollTop, scrollHeight, clientHeight } = el;
+
+    if (scrollHeight <= clientHeight + 1) {
+      setListScrollable(false);
+      return;
+    }
+
+    setListScrollable(true);
+
+    const thumbHeightPct = Math.max(15, (clientHeight / scrollHeight) * 100);
+    const maxTopPct = 100 - thumbHeightPct;
+    const scrollPct = scrollTop / (scrollHeight - clientHeight);
+
+    setScrollThumb({ top: scrollPct * maxTopPct, height: thumbHeightPct });
+  }
+
+  // Recompute whenever the visible list changes (new search results,
+  // suggestions swapped in) — the row count driving scrollHeight isn't
+  // something a scroll event alone would catch.
+  useEffect(() => {
+    updateScrollThumb();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visibleFoods]);
 
   async function runSearch(value: string) {
     const id = ++requestId.current;
@@ -118,10 +158,6 @@ export default function AddMealEntryModal({
     return null;
   }
 
-  const isFiltering =
-    searchActive || query.trim().length > AUTO_SEARCH_MIN_LENGTH;
-  const visibleFoods = isFiltering ? results : suggestedFoods;
-
   function selectFood(entry: FoodItem) {
     setSelected(entry);
     setUnit(entry.servingUnits[0]);
@@ -144,14 +180,8 @@ export default function AddMealEntryModal({
   }
 
   return (
-    <div
-      className="pt-safe fixed inset-0 z-[70] flex items-center justify-center px-6 backdrop-blur-[30px]"
-      onClick={onClose}
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        className="glass-panel glass-static max-h-[85vh] w-full max-w-sm space-y-4 overflow-y-auto rounded-3xl p-6"
-      >
+    <ModalOverlay onClose={onClose}>
+      <div className="glass-panel glass-static max-h-[85vh] space-y-4 overflow-y-auto rounded-3xl p-6">
         <h2 className="text-center text-lg font-bold text-white">
           افزودن به وعده {meal.title}
         </h2>
@@ -177,31 +207,54 @@ export default function AddMealEntryModal({
           </button>
         </div>
 
-        <div className="space-y-2">
-          {isFiltering && loading && (
-            <p className="py-2 text-center text-sm text-white">
-              در حال جستجو...
-            </p>
-          )}
+        <div className="flex items-stretch gap-2">
+          <div
+            ref={listRef}
+            onScroll={updateScrollThumb}
+            className="max-h-[200px] flex-1 space-y-2 overflow-y-auto"
+          >
+            {isFiltering && loading && (
+              <p className="py-2 text-center text-sm text-white">
+                در حال جستجو...
+              </p>
+            )}
 
-          {isFiltering && !loading && visibleFoods.length === 0 && (
-            <p className="py-2 text-center text-sm text-white">
-              غذایی پیدا نشد.
-            </p>
-          )}
+            {isFiltering && !loading && visibleFoods.length === 0 && (
+              <p className="py-2 text-center text-sm text-white">
+                غذایی پیدا نشد.
+              </p>
+            )}
 
-          {(!isFiltering || !loading) &&
-            visibleFoods.map((entry) => (
-              <button
-                key={entry.id}
-                onClick={() => selectFood(entry)}
-                className={`glass-chip glass-static flex w-full items-center justify-between rounded-xl p-3 text-sm font-medium text-white ${
-                  selected?.id === entry.id ? "ring-2 ring-avocado-yellow" : ""
-                }`}
-              >
-                {entry.nameFa}
-              </button>
-            ))}
+            {(!isFiltering || !loading) &&
+              visibleFoods.map((entry) => (
+                <button
+                  key={entry.id}
+                  onClick={() => selectFood(entry)}
+                  className={`glass-chip glass-static flex w-full items-center justify-between rounded-xl p-3 text-sm font-medium text-white ${
+                    selected?.id === entry.id
+                      ? "ring-2 ring-avocado-yellow"
+                      : ""
+                  }`}
+                >
+                  {entry.nameFa}
+                </button>
+              ))}
+          </div>
+
+          {listScrollable && (
+            <div
+              aria-hidden="true"
+              className="w-1 shrink-0 rounded-full bg-white/10"
+            >
+              <div
+                className="w-1 rounded-full bg-white/50"
+                style={{
+                  height: `${scrollThumb.height}%`,
+                  marginTop: `${scrollThumb.top}%`,
+                }}
+              />
+            </div>
+          )}
         </div>
 
         {selected && unit && (
@@ -259,6 +312,6 @@ export default function AddMealEntryModal({
           بستن
         </button>
       </div>
-    </div>
+    </ModalOverlay>
   );
 }

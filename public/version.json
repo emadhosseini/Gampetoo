@@ -1,6 +1,16 @@
 {
-  "current": "2.1.15",
+  "current": "2.1.16",
   "history": [
+    {
+      "version": "2.1.16",
+      "date": "2026-08-01",
+      "description": "Popup blur set to 25px. Fixed the background behind an open popup still being scrollable by dragging a finger over the empty space around the card — the backdrop now blocks touch panning entirely. Since blocking touch on an ancestor also silently blocks it on any scrollable child nested inside (a real CSS footgun), every popup's backdrop and card were restructured as siblings via a new shared ModalOverlay component, instead of nesting the card inside the backdrop. The add-food popup's food list is now capped to about 4 rows with its own scrollbar and a visible scroll-position indicator next to it.",
+      "highlights": [
+        "🔍 بلر پاپ‌اپ‌ها به ۲۵ پیکسل تنظیم شد",
+        "🚫 دیگه نمی‌شه با کشیدن روی پس‌زمینه، پشت پاپ‌اپ رو اسکرول کرد",
+        "📋 لیست غذاها به ۴ ردیف محدود شد، با اسکرول و نشانگر کنارش"
+      ]
+    },
     {
       "version": "2.1.15",
       "date": "2026-08-01",
