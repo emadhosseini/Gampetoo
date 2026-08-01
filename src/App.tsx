@@ -174,9 +174,9 @@ function Hero() {
 
             {/* CTA */}
             <div style={{ marginBottom: 40 }}>
-              <button className="btn-primary" style={{ width: "100%", fontSize: 16, fontWeight: 700, padding: "15px 24px", borderRadius: 14, ...F, boxShadow: "0 8px 32px rgba(250,234,92,0.3)" }}>
-                ورود به برنامه
-              </button>
+              <a href="https://pwa.gampetoo.com" className="btn-primary" style={{ display: "block", width: "100%", textAlign: "center", fontSize: 16, fontWeight: 700, padding: "15px 24px", borderRadius: 14, textDecoration: "none", ...F, boxShadow: "0 8px 32px rgba(250,234,92,0.3)" }}>
+                نصب وب‌اپ
+              </a>
             </div>
 
             {/* Single centered phone */}
@@ -191,7 +191,7 @@ function Hero() {
 
         ) : (
           /* ── Tablet / Desktop layout: 2 columns ── */
-          <div style={{ display: "grid", gridTemplateColumns: isTablet ? "1fr 1fr" : "1fr 1fr", gap: isTablet ? 40 : 80, alignItems: "center", minHeight: "90vh" }}>
+          <div style={{ display: "grid", gridTemplateColumns: isTablet ? "1fr 1fr" : "1fr 1fr", gap: isTablet ? 40 : 80, alignItems: "center" }}>
             {/* Text */}
             <div className="rtl animate-fade-in-up" style={{ animationFillMode: "forwards", opacity: 0 }}>
               <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "7px 14px", borderRadius: 100, background: "rgba(250,234,92,0.1)", border: "1px solid rgba(250,234,92,0.25)", marginBottom: 28 }}>
@@ -210,8 +210,8 @@ function Hero() {
               </p>
 
               <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-                <button className="btn-primary" style={{ fontSize: 16, fontWeight: 700, padding: "14px 32px", borderRadius: 14, ...F, boxShadow: "0 8px 32px rgba(250,234,92,0.3)" }}
-                >ورود به برنامه</button>
+                <a href="https://pwa.gampetoo.com" className="btn-primary" style={{ display: "inline-block", fontSize: 16, fontWeight: 700, padding: "14px 32px", borderRadius: 14, textDecoration: "none", ...F, boxShadow: "0 8px 32px rgba(250,234,92,0.3)" }}
+                >نصب وب‌اپ</a>
               </div>
             </div>
 
@@ -356,12 +356,12 @@ function Footer() {
   return (
     <footer style={{ borderTop: "1px solid rgba(255,255,255,0.06)", padding: isMobile ? "44px 20px 32px" : "64px 24px 40px" }}>
       <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-        <div className="rtl" style={{ marginBottom: isMobile ? 36 : 56 }}>
+        <div className="rtl" style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", marginBottom: isMobile ? 36 : 56 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
             <img src={gampetooLogo} alt="Gampetoo" style={{ width: 32, height: 32, objectFit: "contain", flexShrink: 0 }}/>
             <span style={{ fontWeight: 700, fontSize: 18, color: "#F5F5F7", letterSpacing: "-0.02em" }}>Gampetoo</span>
           </div>
-          <p style={{ color: "rgba(245,245,247,0.4)", fontSize: 14, lineHeight: 1.7, marginBottom: 20, ...F, maxWidth: 280 }}>بهترین اپلیکیشن تناسب اندام برای رسیدن به هدف‌های سلامتی شما</p>
+          <p style={{ color: "rgba(245,245,247,0.4)", fontSize: 14, lineHeight: 1.7, marginBottom: 20, whiteSpace: isMobile ? "normal" : "nowrap", maxWidth: isMobile ? 280 : "none", ...F }}>بهترین اپلیکیشن تناسب اندام برای رسیدن به هدف‌های سلامتی شما</p>
           <div style={{ display: "flex", gap: 10 }}>
             {["tw", "ig", "yt"].map((s, i) => (
               <div key={i} style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "rgba(245,245,247,0.5)", fontSize: 11 }}>{s}</div>
