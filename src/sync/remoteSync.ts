@@ -13,7 +13,10 @@ const SYNCED_BASE_KEYS = [
   "emad-free-meal",
   "emad-free-meal-settings",
   "emad-user-name",
+  "emad-user-gender",
   "emad-weight-log",
+  "emad-weight-target",
+  "emad-daily-log",
 ];
 
 const PUSH_DEBOUNCE_MS = 1000;

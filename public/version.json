@@ -1,6 +1,14 @@
 {
-  "current": "2.1.12",
+  "current": "2.1.13",
   "history": [
+    {
+      "version": "2.1.13",
+      "date": "2026-08-01",
+      "description": "Audited every piece of per-account data against the cross-device sync list and found three recently-added features missing from it — target weight, gender, and daily meal/activity log entries were saved locally but would never have reached the server, so they'd be lost on a new device or if local storage were ever cleared. All three are now included in the synced data set alongside everything else (program, workouts, nutrition plan, free-meal tracking, weight log, display name).",
+      "highlights": [
+        "☁️ وزن هدف، جنسیت، و ثبت روزانه حالا مثل بقیه اطلاعات حساب همگام‌سازی می‌شن"
+      ]
+    },
     {
       "version": "2.1.12",
       "date": "2026-07-31",
