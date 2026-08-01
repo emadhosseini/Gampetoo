@@ -165,17 +165,17 @@ function Hero() {
             <h1 style={{ fontSize: "clamp(28px, 8vw, 40px)", fontWeight: 800, lineHeight: 1.3, color: "#F5F5F7", letterSpacing: "-0.02em", marginBottom: 16, ...F }}>
               برنامه تمرینی و غذایی<br/>
               <span className="gradient-text">شخصی خودت</span> رو<br/>
-              از همین امروز شروع کن!
+              برنامه‌ریزی کن، ثبت کن، پیشرفت کن !
             </h1>
 
             <p style={{ fontSize: 15, lineHeight: 1.75, color: "rgba(245,245,247,0.55)", marginBottom: 28, ...F }}>
-              برنامه تمرینی و تغذیه شخصی، کالری شماری هوشمند، گزارش پیشرفت و انگیزه روزانه؛ همه در یک اپلیکیشن.
+              مدیریت برنامه تمرینی و تغذیه شخصی، کالری شماری هوشمند، گزارش پیشرفت و انگیزه روزانه؛ همه در یک اپلیکیشن.
             </p>
 
             {/* CTA */}
             <div style={{ marginBottom: 40 }}>
               <a href="https://pwa.gampetoo.com" className="btn-primary" style={{ display: "block", width: "100%", textAlign: "center", fontSize: 16, fontWeight: 700, padding: "15px 24px", borderRadius: 14, textDecoration: "none", ...F, boxShadow: "0 8px 32px rgba(250,234,92,0.3)" }}>
-                نصب وب‌اپ
+                نصب وب‌اپ گامپتو
               </a>
             </div>
 
@@ -202,7 +202,7 @@ function Hero() {
               <h1 style={{ fontSize: isTablet ? "clamp(28px,4vw,40px)" : "clamp(32px, 4vw, 54px)", fontWeight: 800, lineHeight: 1.25, color: "#F5F5F7", letterSpacing: "-0.02em", marginBottom: 20, ...F }}>
                 برنامه تمرینی و غذایی<br/>
                 <span className="gradient-text">شخصی خودت</span> رو<br/>
-                از همین امروز شروع کن!
+                برنامه‌ریزی کن، ثبت کن، پیشرفت کن !
               </h1>
 
               <p style={{ fontSize: isTablet ? 15 : 17, lineHeight: 1.7, color: "rgba(245,245,247,0.55)", marginBottom: 36, ...F }}>
@@ -211,7 +211,9 @@ function Hero() {
 
               <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
                 <a href="https://pwa.gampetoo.com" className="btn-primary" style={{ display: "inline-block", fontSize: 16, fontWeight: 700, padding: "14px 32px", borderRadius: 14, textDecoration: "none", ...F, boxShadow: "0 8px 32px rgba(250,234,92,0.3)" }}
-                >نصب وب‌اپ</a>
+                >
+                 نصب وب‌اپ گامپتو
+                </a>
               </div>
             </div>
 
@@ -263,12 +265,12 @@ function SectionHeader({ badge, title, sub }: { badge: string; title: React.Reac
 // ─── Features ─────────────────────────────────────────────────────────────────
 
 const FEATURES = [
-  { icon: <IconDumbbell/>, title: "تمرینات هوشمند", desc: "برنامه تمرینی کاملاً شخصی‌سازی شده بر اساس سطح آمادگی و هدف شما" },
-  { icon: <IconFork/>, title: "برنامه غذایی شخصی", desc: "رژیم غذایی متناسب با نیاز بدن و هدف کاهش یا افزایش وزن شما" },
-  { icon: <IconTrendUp/>, title: "پیگیری پیشرفت", desc: "مشاهده روند پیشرفت خود به صورت گرافیکی و تحلیل هفتگی" },
-  { icon: <IconScale/>, title: "ثبت وزن", desc: "ثبت روزانه وزن و مشاهده منحنی تغییرات در طول زمان" },
-  { icon: <IconBarChart/>, title: "گزارش‌های آماری", desc: "گزارش‌های جامع و دقیق از عملکرد تمرین و تغذیه شما" },
-  { icon: <IconBell/>, title: "یادآوری تمرین", desc: "هشدارهای هوشمند برای تمرین، آب نوشیدن و وعده‌های غذایی" },
+  { icon: <IconDumbbell/>, title: "برنامه روزانه", desc: "تمرین، تغذیه و فعالیت‌های هر روز را در یک صفحه مشاهده و مدیریت کن" },
+  { icon: <IconFork/>, title: "برنامه غذایی", desc: "وعده‌های غذایی و برنامه تغذیه شخصی خودت را ثبت و مدیریت کن" },
+  { icon: <IconTrendUp/>, title: "برنامه‌های تمرینی", desc: "برنامه‌های تمرینی خودت را وارد کن، و هر روز دقیقاً بدان چه تمرینی در انتظار توست." },
+  { icon: <IconScale/>, title: "گزارش‌ها", desc: "آمار تمرین و فعالیت‌هایت را در یک نگاه مرور کن و عملکردت را بهتر بشناس" },
+  { icon: <IconBarChart/>, title: "کالری شماری هوشمند", desc: "وعده های غذایی روزانه رو وارد کن و با دستیار هوش مصنوعی هوشمند کالری شماری کن" },
+  { icon: <IconBell/>, title: "ثبت پیشرفت", desc: "وزن و روند تغییراتت را ثبت کن و همیشه تصویر روشنی از مسیر پیشرفتت داشته باش" },
 ];
 
 function FeatureCard({ icon, title, desc }: { icon: React.ReactNode; title: string; desc: string }) {
@@ -294,7 +296,7 @@ function Features() {
     <section style={{ padding: isMobile ? "64px 20px" : "100px 24px", position: "relative" }}>
       <div className="ambient-blob" style={{ width: 500, height: 500, background: "radial-gradient(circle, rgba(59,145,73,0.1) 0%, transparent 70%)", top: 0, left: "50%", transform: "translateX(-50%)" }}/>
       <div style={{ maxWidth: 1200, margin: "0 auto", position: "relative", zIndex: 1 }}>
-        <SectionHeader badge="ویژگی‌های برجسته" title={<>همه چیزی که برای <span className="gradient-text">تناسب اندام</span> نیاز داری</>} sub="ابزارهای پیشرفته برای رسیدن به بهترین نسخه از خودت"/>
+        <SectionHeader badge="ویژگی‌های برجسته" title={<>هر چیزی که برای مدیریت مسیر <span className="gradient-text">تناسب اندام</span> نیاز داری</>} sub="گامپتو به جای ساخت برنامه، تمام ابزارهای لازم برای ثبت، مدیریت و پیگیری برنامه‌های شخصی تو را در اختیارت قرار می‌دهد."/>
         <div style={{ display: "grid", gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: isMobile ? 14 : 20 }}>
           {FEATURES.map((f, i) => <FeatureCard key={i} {...f}/>)}
         </div>
@@ -370,8 +372,8 @@ function Footer() {
         </div>
 
         <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: 20, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
-          <p style={{ color: "rgba(245,245,247,0.3)", fontSize: 13, ...F }}>© ۱۴۰۴ Gampetoo. تمامی حقوق محفوظ است.</p>
-          <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+          <p style={{ color: "rgba(245,245,247,0.3)", fontSize: 13, ...F }}> Gampetoo. تمامی حقوق محفوظ است.</p>
+          <div style={{ display: "flex", gap: 4, alignItems: "center", direction: "rtl" }}>
             <span style={{ color: "rgba(245,245,247,0.3)", fontSize: 13, ...F }}>ساخته شده با</span>
             <span style={{ color: "#faea5c" }}>♥</span>
             <span style={{ color: "rgba(245,245,247,0.3)", fontSize: 13, ...F }}>در ایران</span>
