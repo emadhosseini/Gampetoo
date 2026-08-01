@@ -244,19 +244,6 @@ body {
 .animate-fade-in-up { animation: fadeInUp 0.8s ease forwards; }
 .animate-pulse-green { animation: pulse-green 2s ease-in-out infinite; }
 
-/* FAQ accordion */
-.faq-answer {
-  max-height: 0;
-  overflow: hidden;
-  transition: max-height 0.4s ease, opacity 0.3s ease;
-  opacity: 0;
-}
-
-.faq-answer.open {
-  max-height: 300px;
-  opacity: 1;
-}
-
 /* Responsive */
 @media (max-width: 768px) {
   .phone-mockup {
