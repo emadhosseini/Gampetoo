@@ -24,7 +24,7 @@ export default function UpdateModal({
   }
 
   return (
-    <div className="pt-safe fixed inset-0 z-[70] flex items-center justify-center px-6 backdrop-blur-[18px]">
+    <div className="pt-safe fixed inset-0 z-[70] flex items-center justify-center px-6 backdrop-blur-[50px]">
       <div className="w-full max-w-sm rounded-2xl border border-forest-600 bg-forest-700 p-6 text-center shadow-2xl">
         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-avocado-yellow/10 text-avocado-yellow">
           <RefreshCw size={22} />
