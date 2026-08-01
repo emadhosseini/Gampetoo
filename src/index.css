@@ -2,15 +2,17 @@
 @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap');
 @import 'tailwindcss';
 
+/* Same palette as the app (beta-v3 src/index.css): dark forest green base,
+   the mascot's avocado-yellow as the one accent/button color. */
 @theme {
-  --color-bg: #090909;
-  --color-surface: rgba(255,255,255,0.04);
-  --color-surface-hover: rgba(255,255,255,0.07);
-  --color-border: rgba(255,255,255,0.08);
-  --color-border-hover: rgba(34,197,94,0.3);
-  --color-green: #22C55E;
-  --color-green-dim: rgba(34,197,94,0.15);
-  --color-green-glow: rgba(34,197,94,0.4);
+  --color-forest-950: #132f18;
+  --color-forest-900: #1d4724;
+  --color-forest-800: #23572c;
+  --color-forest-700: #296533;
+  --color-forest-600: #327b3e;
+  --color-forest-500: #3b9149;
+  --color-avocado-yellow: #faea5c;
+  --color-avocado-lime: #9dc730;
   --color-text-primary: #F5F5F7;
   --color-text-secondary: rgba(245,245,247,0.55);
   --color-text-tertiary: rgba(245,245,247,0.35);
@@ -27,7 +29,7 @@ html {
 }
 
 body {
-  background-color: #090909;
+  background-color: var(--color-forest-950);
   color: #F5F5F7;
   font-family: 'Vazirmatn', 'Inter', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -44,36 +46,95 @@ body {
   text-align: right;
 }
 
-/* Glass morphism card */
-.glass {
-  background: rgba(255,255,255,0.04);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(255,255,255,0.08);
+/* iOS-style glass blocks — ported verbatim from the app's index.css
+   (same recipe as BottomNavigation/SideMenu there): a flat dark tint, not
+   a blur (fully transparent, the mesh background shows through crisply),
+   plus a hairline edge and a soft drop shadow. .glass-static drops the
+   press-scale for cards that aren't themselves a tappable control. */
+.glass-panel {
+  position: relative;
+  background-color: rgb(0 0 0 / 10%);
+  box-shadow:
+    1.25px 0px 1px -0.75px rgb(219 219 219 / 35%),
+    -1.25px 0px 1px -0.75px rgb(219 219 219 / 35%),
+    0px 0px 0.5px 0.5px rgb(219 219 219 / 30%),
+    0 10px 30px -14px rgb(0 0 0 / 55%);
+  transition:
+    transform 260ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 220ms ease,
+    background-color 220ms ease,
+    border-color 220ms ease;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.glass-hover {
-  transition: background 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
+.glass-panel:active {
+  transform: scale(0.965);
 }
 
-.glass-hover:hover {
-  background: rgba(255,255,255,0.07);
-  border-color: rgba(34,197,94,0.25);
-  transform: translateY(-2px);
+.glass-panel.glass-static:active {
+  transform: none;
 }
 
-/* Green glow effect */
-.green-glow {
-  box-shadow: 0 0 40px rgba(34,197,94,0.2), 0 0 80px rgba(34,197,94,0.05);
+/* Desktop-only affordance the app doesn't need (touch-only, no mouse) —
+   a faint yellow edge on hover so cards still read as interactive here. */
+@media (hover: hover) {
+  .glass-panel.glass-hover-accent:hover {
+    box-shadow:
+      0 0 0 1px rgba(250, 234, 92, 0.25),
+      0 10px 30px -14px rgb(0 0 0 / 55%);
+  }
 }
 
-.text-green-glow {
-  text-shadow: 0 0 40px rgba(34,197,94,0.4);
+/* Primary button: solid avocado-yellow + black text, exactly like every
+   CTA in the app (bg-avocado-yellow text-black). */
+.btn-primary {
+  background: var(--color-avocado-yellow);
+  border: none;
+  color: #000;
+  cursor: pointer;
+  transition: transform 260ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 220ms ease;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
-/* Gradient text */
+.btn-primary:active {
+  transform: scale(0.965);
+}
+
+/* Secondary/optional action — outline only, never competes with the
+   yellow CTA. Ported from the app's .ghost-action. */
+.btn-ghost {
+  background: transparent;
+  border: 1px dashed var(--color-forest-500);
+  color: #F5F5F7;
+  cursor: pointer;
+  transition: background-color 200ms ease, transform 220ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.btn-ghost:active {
+  background-color: rgb(255 255 255 / 6%);
+  transform: scale(0.98);
+}
+
+@media (hover: hover) {
+  .btn-ghost:hover {
+    background-color: rgb(255 255 255 / 6%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glass-panel,
+  .btn-primary,
+  .btn-ghost {
+    transition: none;
+  }
+}
+
+/* Gradient text — avocado-yellow into lime, the app's own accent duo. */
 .gradient-text {
-  background: linear-gradient(135deg, #22C55E 0%, #86EFAC 60%, #D9F99D 100%);
+  background: linear-gradient(135deg, var(--color-avocado-yellow) 0%, var(--color-avocado-lime) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -135,7 +196,7 @@ body {
 }
 
 .animated-border {
-  background: linear-gradient(270deg, #22C55E, #16A34A, #86EFAC, #22C55E);
+  background: linear-gradient(270deg, var(--color-avocado-yellow), var(--color-forest-500), var(--color-avocado-lime), var(--color-avocado-yellow));
   background-size: 300% 300%;
   animation: border-rotate 4s ease infinite;
 }

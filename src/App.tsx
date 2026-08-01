@@ -86,21 +86,21 @@ function IconGoogle() {
 }
 function IconStar() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="#22C55E" stroke="#22C55E" strokeWidth="1">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="#faea5c" stroke="#faea5c" strokeWidth="1">
       <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
     </svg>
   );
 }
 function IconCheck() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22C55E" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#faea5c" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
       <polyline points="20 6 9 17 4 12"/>
     </svg>
   );
 }
 function IconFlame() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22C55E" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#132f18" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>
     </svg>
   );
@@ -127,9 +127,9 @@ function Logo() {
     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
       <div style={{
         width: 32, height: 32, borderRadius: 10,
-        background: "linear-gradient(135deg, #22C55E, #16A34A)",
+        background: "#faea5c",
         display: "flex", alignItems: "center", justifyContent: "center",
-        boxShadow: "0 4px 12px rgba(34,197,94,0.35)",
+        boxShadow: "0 4px 12px rgba(250,234,92,0.35)",
         flexShrink: 0,
       }}>
         <IconFlame/>
@@ -162,10 +162,8 @@ function Nav() {
     <>
       <nav style={{
         position: "fixed", top: 0, left: 0, right: 0, zIndex: 100,
-        transition: "background 0.4s, backdrop-filter 0.4s, border-color 0.4s",
-        background: scrolled || menuOpen ? "rgba(9,9,9,0.92)" : "transparent",
-        backdropFilter: scrolled || menuOpen ? "blur(24px)" : "none",
-        WebkitBackdropFilter: scrolled || menuOpen ? "blur(24px)" : "none",
+        transition: "background-color 0.4s, border-color 0.4s",
+        backgroundColor: scrolled || menuOpen ? "rgb(0 0 0 / 30%)" : "transparent",
         borderBottom: scrolled ? "1px solid rgba(255,255,255,0.06)" : "1px solid transparent",
       }}>
         <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 20px" }}>
@@ -191,14 +189,11 @@ function Nav() {
                   onMouseLeave={e => (e.currentTarget.style.color = "rgba(245,245,247,0.6)")}
                 >ورود</button>
               )}
-              <button className="rtl" style={{
-                background: "linear-gradient(135deg, #22C55E, #16A34A)",
-                border: "none", color: "#fff", fontSize: isMobile ? 13 : 14, fontWeight: 600,
-                padding: isMobile ? "9px 16px" : "10px 20px", borderRadius: 10, cursor: "pointer", ...F,
-                boxShadow: "0 4px 16px rgba(34,197,94,0.3)", transition: "transform 0.2s, box-shadow 0.2s",
+              <button className="btn-primary" style={{
+                fontSize: isMobile ? 13 : 14, fontWeight: 700,
+                padding: isMobile ? "9px 16px" : "10px 20px", borderRadius: 10, ...F,
+                boxShadow: "0 4px 16px rgba(250,234,92,0.3)",
               }}
-                onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 6px 24px rgba(34,197,94,0.45)"; }}
-                onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 4px 16px rgba(34,197,94,0.3)"; }}
               >ورود</button>
 
               {isMobile && (
@@ -283,8 +278,8 @@ function Hero() {
   return (
     <section style={{ position: "relative", overflow: "hidden", paddingTop: isMobile ? 80 : 100 }}>
       {/* Ambient blobs */}
-      <div className="ambient-blob" style={{ width: isMobile ? 300 : 600, height: isMobile ? 300 : 600, background: "radial-gradient(circle, rgba(34,197,94,0.12) 0%, transparent 70%)", top: -80, right: isMobile ? -80 : -200 }}/>
-      <div className="ambient-blob" style={{ width: 400, height: 400, background: "radial-gradient(circle, rgba(34,197,94,0.06) 0%, transparent 70%)", bottom: 50, left: -100 }}/>
+      <div className="ambient-blob" style={{ width: isMobile ? 300 : 600, height: isMobile ? 300 : 600, background: "radial-gradient(circle, rgba(59,145,73,0.16) 0%, transparent 70%)", top: -80, right: isMobile ? -80 : -200 }}/>
+      <div className="ambient-blob" style={{ width: 400, height: 400, background: "radial-gradient(circle, rgba(250,234,92,0.08) 0%, transparent 70%)", bottom: 50, left: -100 }}/>
 
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: isMobile ? "0 20px" : "0 24px", position: "relative", zIndex: 1 }}>
 
@@ -292,9 +287,9 @@ function Hero() {
         {isMobile ? (
           <div className="rtl animate-fade-in-up" style={{ animationFillMode: "forwards", opacity: 0, paddingBottom: 60 }}>
             {/* Badge */}
-            <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "7px 14px", borderRadius: 100, background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.25)", marginBottom: 22 }}>
-              <span className="animate-pulse-green" style={{ width: 6, height: 6, borderRadius: "50%", background: "#22C55E", display: "inline-block" }}/>
-              <span style={{ color: "#22C55E", fontSize: 12, fontWeight: 600, ...F }}>نسخه ۲.۰ اکنون در دسترس است</span>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "7px 14px", borderRadius: 100, background: "rgba(250,234,92,0.1)", border: "1px solid rgba(250,234,92,0.25)", marginBottom: 22 }}>
+              <span className="animate-pulse-green" style={{ width: 6, height: 6, borderRadius: "50%", background: "#faea5c", display: "inline-block" }}/>
+              <span style={{ color: "#faea5c", fontSize: 12, fontWeight: 600, ...F }}>نسخه ۲.۰ اکنون در دسترس است</span>
             </div>
 
             <h1 style={{ fontSize: "clamp(28px, 8vw, 40px)", fontWeight: 800, lineHeight: 1.3, color: "#F5F5F7", letterSpacing: "-0.02em", marginBottom: 16, ...F }}>
@@ -309,10 +304,10 @@ function Hero() {
 
             {/* CTAs — full width stacked */}
             <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 32 }}>
-              <button style={{ width: "100%", background: "linear-gradient(135deg, #22C55E, #16A34A)", border: "none", color: "#fff", fontSize: 16, fontWeight: 700, padding: "15px 24px", borderRadius: 14, cursor: "pointer", ...F, boxShadow: "0 8px 32px rgba(34,197,94,0.35)" }}>
+              <button className="btn-primary" style={{ width: "100%", fontSize: 16, fontWeight: 700, padding: "15px 24px", borderRadius: 14, ...F, boxShadow: "0 8px 32px rgba(250,234,92,0.3)" }}>
                 ورود به برنامه
               </button>
-              <button style={{ width: "100%", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", color: "#F5F5F7", fontSize: 16, fontWeight: 600, padding: "15px 24px", borderRadius: 14, cursor: "pointer", ...F }}>
+              <button className="btn-ghost" style={{ width: "100%", fontSize: 16, fontWeight: 600, padding: "15px 24px", borderRadius: 14, ...F }}>
                 مشاهده امکانات
               </button>
             </div>
@@ -320,7 +315,7 @@ function Hero() {
             {/* Social proof */}
             <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 40 }}>
               <div style={{ display: "flex" }}>
-                {["#22C55E", "#16A34A", "#86EFAC", "#D9F99D", "#4ADE80"].map((c, i) => (
+                {["#faea5c", "#9dc730", "#3b9149", "#296533", "#1d4724"].map((c, i) => (
                   <div key={i} style={{ width: 28, height: 28, borderRadius: "50%", background: `linear-gradient(135deg, ${c}, #090909)`, border: "2px solid #090909", marginRight: i < 4 ? -7 : 0 }}/>
                 ))}
               </div>
@@ -336,7 +331,7 @@ function Hero() {
                 <PhoneMockup screen="workout" width={phoneW}/>
               </div>
               {/* Glow */}
-              <div style={{ position: "absolute", bottom: -20, left: "50%", transform: "translateX(-50%)", width: 200, height: 60, background: "radial-gradient(ellipse, rgba(34,197,94,0.25) 0%, transparent 70%)", filter: "blur(16px)" }}/>
+              <div style={{ position: "absolute", bottom: -20, left: "50%", transform: "translateX(-50%)", width: 200, height: 60, background: "radial-gradient(ellipse, rgba(250,234,92,0.22) 0%, transparent 70%)", filter: "blur(16px)" }}/>
             </div>
           </div>
 
@@ -345,9 +340,9 @@ function Hero() {
           <div style={{ display: "grid", gridTemplateColumns: isTablet ? "1fr 1fr" : "1fr 1fr", gap: isTablet ? 40 : 80, alignItems: "center", minHeight: "90vh" }}>
             {/* Text */}
             <div className="rtl animate-fade-in-up" style={{ animationFillMode: "forwards", opacity: 0 }}>
-              <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "7px 14px", borderRadius: 100, background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.25)", marginBottom: 28 }}>
-                <span className="animate-pulse-green" style={{ width: 6, height: 6, borderRadius: "50%", background: "#22C55E", display: "inline-block" }}/>
-                <span style={{ color: "#22C55E", fontSize: 13, fontWeight: 600, ...F }}>نسخه ۲.۰ اکنون در دسترس است</span>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "7px 14px", borderRadius: 100, background: "rgba(250,234,92,0.1)", border: "1px solid rgba(250,234,92,0.25)", marginBottom: 28 }}>
+                <span className="animate-pulse-green" style={{ width: 6, height: 6, borderRadius: "50%", background: "#faea5c", display: "inline-block" }}/>
+                <span style={{ color: "#faea5c", fontSize: 13, fontWeight: 600, ...F }}>نسخه ۲.۰ اکنون در دسترس است</span>
               </div>
 
               <h1 style={{ fontSize: isTablet ? "clamp(28px,4vw,40px)" : "clamp(32px, 4vw, 54px)", fontWeight: 800, lineHeight: 1.25, color: "#F5F5F7", letterSpacing: "-0.02em", marginBottom: 20, ...F }}>
@@ -361,19 +356,15 @@ function Hero() {
               </p>
 
               <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 36 }}>
-                <button style={{ background: "linear-gradient(135deg, #22C55E, #16A34A)", border: "none", color: "#fff", fontSize: 16, fontWeight: 700, padding: "14px 32px", borderRadius: 14, cursor: "pointer", ...F, boxShadow: "0 8px 32px rgba(34,197,94,0.35)", transition: "transform 0.2s, box-shadow 0.2s" }}
-                  onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 12px 40px rgba(34,197,94,0.5)"; }}
-                  onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 8px 32px rgba(34,197,94,0.35)"; }}
+                <button className="btn-primary" style={{ fontSize: 16, fontWeight: 700, padding: "14px 32px", borderRadius: 14, ...F, boxShadow: "0 8px 32px rgba(250,234,92,0.3)" }}
                 >ورود به برنامه</button>
-                <button style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", color: "#F5F5F7", fontSize: 16, fontWeight: 600, padding: "14px 32px", borderRadius: 14, cursor: "pointer", ...F, backdropFilter: "blur(12px)", transition: "background 0.2s, transform 0.2s" }}
-                  onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.1)"; e.currentTarget.style.transform = "translateY(-2px)"; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.transform = "translateY(0)"; }}
+                <button className="btn-ghost" style={{ fontSize: 16, fontWeight: 600, padding: "14px 32px", borderRadius: 14, ...F }}
                 >مشاهده امکانات</button>
               </div>
 
               <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
                 <div style={{ display: "flex" }}>
-                  {["#22C55E", "#16A34A", "#86EFAC", "#D9F99D", "#4ADE80"].map((c, i) => (
+                  {["#faea5c", "#9dc730", "#3b9149", "#296533", "#1d4724"].map((c, i) => (
                     <div key={i} style={{ width: 32, height: 32, borderRadius: "50%", background: `linear-gradient(135deg, ${c}, #090909)`, border: "2px solid #090909", marginRight: i < 4 ? -8 : 0 }}/>
                   ))}
                 </div>
@@ -395,7 +386,7 @@ function Hero() {
               <div className="animate-float-3" style={{ position: "absolute", left: isTablet ? 0 : 10, bottom: 20, zIndex: 1, opacity: 0.75 }}>
                 <PhoneMockup screen="progress" width={phoneW}/>
               </div>
-              <div style={{ position: "absolute", bottom: 0, left: "50%", transform: "translateX(-50%)", width: 300, height: 60, background: "radial-gradient(ellipse, rgba(34,197,94,0.2) 0%, transparent 70%)", filter: "blur(20px)" }}/>
+              <div style={{ position: "absolute", bottom: 0, left: "50%", transform: "translateX(-50%)", width: 300, height: 60, background: "radial-gradient(ellipse, rgba(250,234,92,0.18) 0%, transparent 70%)", filter: "blur(20px)" }}/>
             </div>
           </div>
         )}
@@ -421,8 +412,8 @@ function SectionHeader({ badge, title, sub }: { badge: string; title: React.Reac
   const isMobile = w < 768;
   return (
     <div className="rtl" style={{ textAlign: "center", marginBottom: isMobile ? 40 : 64 }}>
-      <div style={{ display: "inline-flex", padding: "5px 14px", borderRadius: 100, background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)", marginBottom: 16 }}>
-        <span style={{ color: "#22C55E", fontSize: 12, fontWeight: 600, ...F }}>{badge}</span>
+      <div style={{ display: "inline-flex", padding: "5px 14px", borderRadius: 100, background: "rgba(250,234,92,0.08)", border: "1px solid rgba(250,234,92,0.2)", marginBottom: 16 }}>
+        <span style={{ color: "#faea5c", fontSize: 12, fontWeight: 600, ...F }}>{badge}</span>
       </div>
       <h2 style={{ fontSize: isMobile ? "clamp(24px,6vw,32px)" : "clamp(28px,3.5vw,44px)", fontWeight: 800, color: "#F5F5F7", letterSpacing: "-0.02em", marginBottom: sub ? 14 : 0, ...F }}>{title}</h2>
       {sub && <p style={{ color: "rgba(245,245,247,0.5)", fontSize: isMobile ? 15 : 17, maxWidth: 480, margin: "0 auto", ...F, lineHeight: 1.7 }}>{sub}</p>}
@@ -444,10 +435,10 @@ const FEATURES = [
 function FeatureCard({ icon, title, desc }: { icon: React.ReactNode; title: string; desc: string }) {
   const [hov, setHov] = useState(false);
   return (
-    <div className="rtl"
+    <div className="rtl glass-panel glass-static glass-hover-accent"
       onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
-      style={{ padding: "24px 20px", borderRadius: 20, background: hov ? "rgba(255,255,255,0.07)" : "rgba(255,255,255,0.04)", border: hov ? "1px solid rgba(34,197,94,0.25)" : "1px solid rgba(255,255,255,0.08)", backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)", transition: "all 0.3s ease", transform: hov ? "translateY(-3px)" : "translateY(0)", cursor: "default" }}>
-      <div style={{ width: 48, height: 48, borderRadius: 14, background: hov ? "linear-gradient(135deg, rgba(34,197,94,0.25), rgba(34,197,94,0.08))" : "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.2)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16, color: "#22C55E", transition: "all 0.3s", boxShadow: hov ? "0 4px 20px rgba(34,197,94,0.2)" : "none" }}>{icon}</div>
+      style={{ padding: "24px 20px", borderRadius: 20, transform: hov ? "translateY(-3px)" : "translateY(0)", cursor: "default" }}>
+      <div style={{ width: 48, height: 48, borderRadius: 14, background: hov ? "rgba(250,234,92,0.22)" : "rgba(250,234,92,0.1)", border: "1px solid rgba(250,234,92,0.25)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16, color: "#faea5c", transition: "all 0.3s", boxShadow: hov ? "0 4px 20px rgba(250,234,92,0.2)" : "none" }}>{icon}</div>
       <h3 style={{ color: "#F5F5F7", fontSize: 16, fontWeight: 700, marginBottom: 8, ...F }}>{title}</h3>
       <p style={{ color: "rgba(245,245,247,0.5)", fontSize: 14, lineHeight: 1.7, ...F }}>{desc}</p>
     </div>
@@ -462,7 +453,7 @@ function Features() {
 
   return (
     <section style={{ padding: isMobile ? "64px 20px" : "100px 24px", position: "relative" }}>
-      <div className="ambient-blob" style={{ width: 500, height: 500, background: "radial-gradient(circle, rgba(34,197,94,0.07) 0%, transparent 70%)", top: 0, left: "50%", transform: "translateX(-50%)" }}/>
+      <div className="ambient-blob" style={{ width: 500, height: 500, background: "radial-gradient(circle, rgba(59,145,73,0.1) 0%, transparent 70%)", top: 0, left: "50%", transform: "translateX(-50%)" }}/>
       <div style={{ maxWidth: 1200, margin: "0 auto", position: "relative", zIndex: 1 }}>
         <SectionHeader badge="ویژگی‌های برجسته" title={<>همه چیزی که برای <span className="gradient-text">تناسب اندام</span> نیاز داری</>} sub="ابزارهای پیشرفته برای رسیدن به بهترین نسخه از خودت"/>
         <div style={{ display: "grid", gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: isMobile ? 14 : 20 }}>
@@ -540,8 +531,8 @@ function Stats() {
   return (
     <section style={{ padding: isMobile ? "48px 20px" : "80px 24px" }}>
       <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-        <div style={{ borderRadius: isMobile ? 20 : 28, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", backdropFilter: "blur(20px)", padding: isMobile ? "36px 20px" : "64px 48px", position: "relative", overflow: "hidden" }}>
-          <div style={{ position: "absolute", top: -60, left: "50%", transform: "translateX(-50%)", width: 400, height: 200, background: "radial-gradient(ellipse, rgba(34,197,94,0.12) 0%, transparent 70%)" }}/>
+        <div className="glass-panel glass-static" style={{ borderRadius: isMobile ? 20 : 28, padding: isMobile ? "36px 20px" : "64px 48px", position: "relative", overflow: "hidden" }}>
+          <div style={{ position: "absolute", top: -60, left: "50%", transform: "translateX(-50%)", width: 400, height: 200, background: "radial-gradient(ellipse, rgba(250,234,92,0.12) 0%, transparent 70%)" }}/>
           <div style={{ display: "grid", gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: isMobile ? "28px 16px" : 40, position: "relative", zIndex: 1 }}>
             {STATS.map((s, i) => (
               <div key={i} className="rtl" style={{ textAlign: "center" }}>
@@ -567,12 +558,12 @@ const TESTIMONIALS = [
 function TestimonialCard({ name, role, text, rating, avatar }: typeof TESTIMONIALS[0]) {
   const [hov, setHov] = useState(false);
   return (
-    <div className="rtl" onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
-      style={{ padding: "24px", borderRadius: 20, background: hov ? "rgba(255,255,255,0.07)" : "rgba(255,255,255,0.04)", border: hov ? "1px solid rgba(34,197,94,0.2)" : "1px solid rgba(255,255,255,0.07)", backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)", transition: "all 0.3s", transform: hov ? "translateY(-3px)" : "translateY(0)" }}>
+    <div className="rtl glass-panel glass-static glass-hover-accent" onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
+      style={{ padding: "24px", borderRadius: 20, transform: hov ? "translateY(-3px)" : "translateY(0)" }}>
       <div style={{ display: "flex", gap: 3, marginBottom: 16 }}>{Array.from({ length: rating }).map((_, i) => <IconStar key={i}/>)}</div>
       <p style={{ color: "rgba(245,245,247,0.75)", fontSize: 15, lineHeight: 1.75, marginBottom: 20, ...F }}>"{text}"</p>
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        <div style={{ width: 40, height: 40, borderRadius: "50%", background: "linear-gradient(135deg, #22C55E, #16A34A)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 15, fontWeight: 700, ...F, flexShrink: 0 }}>{avatar}</div>
+        <div style={{ width: 40, height: 40, borderRadius: "50%", background: "#327b3e", display: "flex", alignItems: "center", justifyContent: "center", color: "#faea5c", fontSize: 15, fontWeight: 700, ...F, flexShrink: 0 }}>{avatar}</div>
         <div>
           <p style={{ color: "#F5F5F7", fontSize: 14, fontWeight: 600, ...F }}>{name}</p>
           <p style={{ color: "rgba(245,245,247,0.4)", fontSize: 12, ...F }}>{role}</p>
@@ -621,11 +612,13 @@ function FAQ() {
         <SectionHeader badge="سوالات متداول" title="سوال داری؟"/>
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {FAQS.map((faq, i) => (
-            <div key={i} style={{ borderRadius: 16, background: open === i ? "rgba(34,197,94,0.06)" : "rgba(255,255,255,0.04)", border: open === i ? "1px solid rgba(34,197,94,0.2)" : "1px solid rgba(255,255,255,0.07)", overflow: "hidden", transition: "all 0.3s" }}>
+            <div key={i} className="glass-panel glass-static" style={{ borderRadius: 16, overflow: "hidden", boxShadow: open === i
+              ? "0 0 0 1px rgba(250,234,92,0.35), 1.25px 0px 1px -0.75px rgb(219 219 219 / 35%), -1.25px 0px 1px -0.75px rgb(219 219 219 / 35%), 0px 0px 0.5px 0.5px rgb(219 219 219 / 30%), 0 10px 30px -14px rgb(0 0 0 / 55%)"
+              : undefined }}>
               <button onClick={() => setOpen(open === i ? null : i)} className="rtl"
                 style={{ width: "100%", padding: isMobile ? "16px 18px" : "20px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", background: "none", border: "none", cursor: "pointer", color: "#F5F5F7", textAlign: "right" }}>
                 <span style={{ fontSize: isMobile ? 14 : 15, fontWeight: 600, ...F, flex: 1, lineHeight: 1.5 }}>{faq.q}</span>
-                <span style={{ color: "#22C55E", marginRight: 12, flexShrink: 0 }}><IconChevron open={open === i}/></span>
+                <span style={{ color: "#faea5c", marginRight: 12, flexShrink: 0 }}><IconChevron open={open === i}/></span>
               </button>
               <div className={`faq-answer ${open === i ? "open" : ""}`}>
                 <p className="rtl" style={{ padding: isMobile ? "0 18px 16px" : "0 24px 20px", color: "rgba(245,245,247,0.55)", fontSize: 14, lineHeight: 1.75, ...F }}>{faq.a}</p>
@@ -647,11 +640,11 @@ function DownloadCTA() {
   return (
     <section style={{ padding: isMobile ? "48px 20px 64px" : "80px 24px 100px" }}>
       <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-        <div style={{ borderRadius: isMobile ? 24 : 32, background: "linear-gradient(135deg, rgba(34,197,94,0.12) 0%, rgba(22,163,74,0.06) 50%, transparent 100%)", border: "1px solid rgba(34,197,94,0.2)", padding: isMobile ? "44px 24px" : "80px 48px", textAlign: "center", position: "relative", overflow: "hidden" }}>
-          <div className="ambient-blob" style={{ width: 400, height: 400, background: "radial-gradient(circle, rgba(34,197,94,0.15) 0%, transparent 70%)", top: -100, left: "50%", transform: "translateX(-50%)" }}/>
+        <div className="glass-panel glass-static" style={{ borderRadius: isMobile ? 24 : 32, boxShadow: "0 0 0 1px rgba(250,234,92,0.2), 1.25px 0px 1px -0.75px rgb(219 219 219 / 35%), -1.25px 0px 1px -0.75px rgb(219 219 219 / 35%), 0px 0px 0.5px 0.5px rgb(219 219 219 / 30%), 0 10px 30px -14px rgb(0 0 0 / 55%)", padding: isMobile ? "44px 24px" : "80px 48px", textAlign: "center", position: "relative", overflow: "hidden" }}>
+          <div className="ambient-blob" style={{ width: 400, height: 400, background: "radial-gradient(circle, rgba(250,234,92,0.16) 0%, transparent 70%)", top: -100, left: "50%", transform: "translateX(-50%)" }}/>
           <div style={{ position: "relative", zIndex: 1 }}>
-            <div style={{ display: "inline-flex", padding: "5px 14px", borderRadius: 100, background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.3)", marginBottom: 20 }}>
-              <span style={{ color: "#22C55E", fontSize: 12, fontWeight: 600, ...F }}>همین الان دانلود کن</span>
+            <div style={{ display: "inline-flex", padding: "5px 14px", borderRadius: 100, background: "rgba(250,234,92,0.1)", border: "1px solid rgba(250,234,92,0.3)", marginBottom: 20 }}>
+              <span style={{ color: "#faea5c", fontSize: 12, fontWeight: 600, ...F }}>همین الان دانلود کن</span>
             </div>
             <h2 className="rtl" style={{ fontSize: isMobile ? "clamp(24px,7vw,36px)" : "clamp(28px,4vw,52px)", fontWeight: 800, color: "#F5F5F7", letterSpacing: "-0.02em", marginBottom: 14, ...F }}>
               سفر تناسب اندامت<br/>را امروز شروع کن
@@ -672,9 +665,7 @@ function DownloadCTA() {
                   <p style={{ fontSize: 15, fontWeight: 700, color: "#111", fontFamily: "'Inter', sans-serif", margin: 0 }}>App Store</p>
                 </div>
               </button>
-              <button style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 28px", borderRadius: 14, background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)", cursor: "pointer", transition: "transform 0.2s, background 0.2s", backdropFilter: "blur(12px)", width: isMobile ? "100%" : "auto", justifyContent: "center" }}
-                onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.background = "rgba(255,255,255,0.12)"; }}
-                onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.background = "rgba(255,255,255,0.08)"; }}
+              <button className="glass-panel" style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 28px", borderRadius: 14, cursor: "pointer", width: isMobile ? "100%" : "auto", justifyContent: "center" }}
               >
                 <IconGoogle/>
                 <div style={{ textAlign: "right" }}>
@@ -718,7 +709,7 @@ function Footer() {
           {/* Brand — full width on mobile */}
           <div style={{ gridColumn: isMobile ? "1 / -1" : "auto" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-              <div style={{ width: 32, height: 32, borderRadius: 10, background: "linear-gradient(135deg, #22C55E, #16A34A)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 12px rgba(34,197,94,0.35)" }}>
+              <div style={{ width: 32, height: 32, borderRadius: 10, background: "#faea5c", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 12px rgba(250,234,92,0.35)" }}>
                 <IconFlame/>
               </div>
               <span style={{ fontWeight: 700, fontSize: 18, color: "#F5F5F7", letterSpacing: "-0.02em" }}>Gampetoo</span>
@@ -748,7 +739,7 @@ function Footer() {
           <p style={{ color: "rgba(245,245,247,0.3)", fontSize: 13, ...F }}>© ۱۴۰۴ Gampetoo. تمامی حقوق محفوظ است.</p>
           <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
             <span style={{ color: "rgba(245,245,247,0.3)", fontSize: 13, ...F }}>ساخته شده با</span>
-            <span style={{ color: "#22C55E" }}>♥</span>
+            <span style={{ color: "#faea5c" }}>♥</span>
             <span style={{ color: "rgba(245,245,247,0.3)", fontSize: 13, ...F }}>در ایران</span>
           </div>
         </div>
