@@ -76,7 +76,7 @@ export default function AccountEditModal({
 
   return (
     <div
-      className="pt-safe fixed inset-0 z-[70] flex items-center justify-center px-6 backdrop-blur-[50px]"
+      className="pt-safe fixed inset-0 z-[70] flex items-center justify-center px-6 backdrop-blur-[30px]"
       onClick={onClose}
     >
       <div

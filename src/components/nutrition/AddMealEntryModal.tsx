@@ -145,12 +145,12 @@ export default function AddMealEntryModal({
 
   return (
     <div
-      className="pt-safe fixed inset-0 z-[70] flex items-center justify-center px-6 backdrop-blur-[50px]"
+      className="pt-safe fixed inset-0 z-[70] flex items-center justify-center px-6 backdrop-blur-[30px]"
       onClick={onClose}
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="glass-panel w-full max-w-sm space-y-4 rounded-3xl p-6"
+        className="glass-panel glass-static max-h-[85vh] w-full max-w-sm space-y-4 overflow-y-auto rounded-3xl p-6"
       >
         <h2 className="text-center text-lg font-bold text-white">
           افزودن به وعده {meal.title}
@@ -177,7 +177,7 @@ export default function AddMealEntryModal({
           </button>
         </div>
 
-        <div className="max-h-56 space-y-2 overflow-y-auto">
+        <div className="space-y-2">
           {isFiltering && loading && (
             <p className="py-2 text-center text-sm text-white">
               در حال جستجو...

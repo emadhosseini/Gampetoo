@@ -40,12 +40,12 @@ export default function MealOverviewModal({
 
   return (
     <div
-      className="pt-safe fixed inset-0 z-[70] flex items-center justify-center px-6 backdrop-blur-[50px]"
+      className="pt-safe fixed inset-0 z-[70] flex items-center justify-center px-6 backdrop-blur-[30px]"
       onClick={onClose}
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="glass-panel w-full max-w-sm space-y-4 rounded-3xl p-6"
+        className="glass-panel glass-static w-full max-w-sm space-y-4 rounded-3xl p-6"
       >
         <h2 className="text-center text-lg font-bold text-white">
           {meal.title}
