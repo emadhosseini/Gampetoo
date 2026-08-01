@@ -41,7 +41,7 @@ export default function MeshGradientBackground({
                 opacity: [0.55, 0.8, 0.65, 0.55],
               }
         }
-        transition={prefersReducedMotion ? undefined : glowTransition(24)}
+        transition={prefersReducedMotion ? undefined : glowTransition(12)}
       />
 
       <motion.div
@@ -57,7 +57,7 @@ export default function MeshGradientBackground({
                 opacity: [0.55, 0.85, 0.6, 0.55],
               }
         }
-        transition={prefersReducedMotion ? undefined : glowTransition(29)}
+        transition={prefersReducedMotion ? undefined : glowTransition(15)}
       />
 
       <NoiseLayer />

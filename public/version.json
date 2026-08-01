@@ -1,6 +1,14 @@
 {
-  "current": "2.1.16",
+  "current": "2.1.17",
   "history": [
+    {
+      "version": "2.1.17",
+      "date": "2026-08-01",
+      "description": "Sped up the mesh-gradient background animation (already active on every page via MobileContainer, plus the setup and error-fallback screens) so the glow movement is more noticeable — both glow blobs' animation cycle roughly halved from 24s/29s to 12s/15s.",
+      "highlights": [
+        "✨ سرعت حرکت افکت پس‌زمینه‌ی میگ گرادینت (فیگما مش) بیشتر شد تا بهتر حس بشه"
+      ]
+    },
     {
       "version": "2.1.16",
       "date": "2026-08-01",
