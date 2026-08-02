@@ -39,6 +39,21 @@
   }
 }
 
+/* `100dvh` on a descendant is unreliable in an iOS home-screen-installed
+   (standalone) PWA — WebKit has long-standing bugs where it under-reports
+   the viewport height there, leaving a gap (rendered black, the WKWebView's
+   native background) below the home indicator that nothing paints into, so
+   fixed elements positioned via `bottom: env(safe-area-inset-bottom)` end up
+   sitting above the true screen edge instead of flush with it. Cascading an
+   explicit `height: 100%` from html through #root, and sizing
+   MobileContainer with `h-full` instead of `h-dvh`, resolves against the
+   WKWebView's actual content bounds (which correctly include the safe area
+   given viewport-fit=cover) instead of the buggy viewport-unit calculation. */
+html,
+body {
+  height: 100%;
+}
+
 html {
   direction: rtl;
 }
@@ -48,6 +63,10 @@ body {
   font-family: "Vazirmatn", sans-serif;
   background: var(--color-forest-950);
   color: #ffffff;
+}
+
+#root {
+  height: 100%;
 }
 
 /* This is an app, not a document — text/buttons shouldn't highlight into a

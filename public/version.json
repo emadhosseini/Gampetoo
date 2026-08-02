@@ -1,6 +1,14 @@
 {
-  "current": "2.1.17",
+  "current": "2.1.18",
   "history": [
+    {
+      "version": "2.1.18",
+      "date": "2026-08-01",
+      "description": "Fixed a black gap below the home indicator (and the bottom nav floating above it, not flush with the screen edge) when the app is opened as an installed home-screen PWA on iOS. Root cause: MobileContainer sized itself with height:100dvh, and WebKit has a long-standing bug where dvh under-reports the true viewport height in standalone display mode. Switched to a height:100% cascade (html/body/#root all explicit height:100%, MobileContainer using h-full instead of h-dvh), which resolves against the WKWebView's actual content bounds instead of the buggy viewport-unit calculation.",
+      "highlights": [
+        "🐛 رفع باگ فاصله‌ی خالی زیر صفحه و ناهم‌راستایی منوی پایین وقتی اپ از روی صفحه‌ی اصلی گوشی (نصب‌شده) باز می‌شه"
+      ]
+    },
     {
       "version": "2.1.17",
       "date": "2026-08-01",

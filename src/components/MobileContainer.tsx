@@ -6,7 +6,7 @@ type MobileContainerProps = {
 
 function MobileContainer({ children }: MobileContainerProps) {
   return (
-    <div className="app-gradient-bg pt-safe relative mx-auto h-dvh max-w-md overflow-hidden shadow-2xl">
+    <div className="app-gradient-bg pt-safe relative mx-auto h-full max-w-md overflow-hidden shadow-2xl">
       <MeshGradientBackground colorA="#3b9149" colorB="#faea5c" />
       <div className="relative z-10 h-full">{children}</div>
     </div>
