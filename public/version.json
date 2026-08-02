@@ -1,6 +1,15 @@
 {
-  "current": "2.1.22",
+  "current": "2.1.23",
   "history": [
+    {
+      "version": "2.1.23",
+      "date": "2026-08-01",
+      "description": "Added a selectable calorie-tracking mode: per-meal (existing 9-slot cards) or daily (one unified list, no meal categorization). Both modes write into the exact same dailyLogEngine storage, just under different slot keys — nothing is migrated or deleted when switching, so it's non-destructive by construction. The Progress page's daily-calorie total now sums every logged entry regardless of which mode wrote it (new getTodaysTotalCalories in dailyLogEngine.ts), so it stays correct across a mode switch. A new row in the side menu (SideMenu.tsx) opens a picker to change the mode any time; if it hasn't been chosen yet, the ثبت روزانه page's وعده غذایی tab shows an inline choice prompt first. Verified end to end: logged 381 calories in daily mode, confirmed it appears on the Progress page, switched to per-meal mode via the side menu, confirmed the 9 meal cards render empty (data preserved under its own key, not lost) while the Progress total still correctly shows 381.",
+      "highlights": [
+        "🍽️ حالا می‌تونی روش ثبت کالری رو انتخاب کنی: وعده‌ای (مثل قبل) یا روزانه (یک لیست یکپارچه بدون تقسیم‌بندی وعده)",
+        "⚙️ از منوی کناری هر وقت خواستی روش رو عوض کن — کالری روزانه و آمار پیشرفت با جابه‌جایی بین حالت‌ها بهم نمی‌ریزه"
+      ]
+    },
     {
       "version": "2.1.22",
       "date": "2026-08-01",

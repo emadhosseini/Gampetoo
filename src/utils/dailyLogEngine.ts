@@ -79,3 +79,14 @@ export function removeLoggedEntry(mealId: string, entryId: string) {
 export function resetDailyLog() {
   localStorage.removeItem(storageKey());
 }
+
+// Sums every entry under every slot key present today, regardless of which
+// calorie-tracking mode (per-meal or daily) logged it — this is what keeps
+// the total correct across a mode switch: nothing is migrated when the mode
+// changes, so a switch just means today's entries live under a different
+// set of keys, and this still adds all of them up.
+export function getTodaysTotalCalories(): number {
+  return Object.values(readState().meals)
+    .flat()
+    .reduce((sum, entry) => sum + (entry.calories ?? 0), 0);
+}

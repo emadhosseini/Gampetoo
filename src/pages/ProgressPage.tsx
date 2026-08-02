@@ -1,19 +1,10 @@
 import WeightSummaryCard from "@/components/progress/WeightSummaryCard";
 import StatCard from "@/components/progress/StatCard";
-import { getMealSlots } from "@/data/nutrition/foodCatalog";
-import { getLoggedEntries } from "@/utils/dailyLogEngine";
+import { getTodaysTotalCalories } from "@/utils/dailyLogEngine";
 import { toFaDigits } from "@/utils/numberFormat";
 
-function getTodaysCalories(): number {
-  return getMealSlots().reduce((sum, meal) => {
-    const entries = getLoggedEntries(meal.id);
-
-    return sum + entries.reduce((mealSum, entry) => mealSum + (entry.calories ?? 0), 0);
-  }, 0);
-}
-
 export default function ProgressPage() {
-  const todaysCalories = getTodaysCalories();
+  const todaysCalories = getTodaysTotalCalories();
 
   return (
     <div className="space-y-4 px-5 pb-5 pt-10">
