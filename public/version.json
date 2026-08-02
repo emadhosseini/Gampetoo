@@ -1,6 +1,14 @@
 {
-  "current": "2.1.18",
+  "current": "2.1.19",
   "history": [
+    {
+      "version": "2.1.19",
+      "date": "2026-08-01",
+      "description": "The 2.1.18 fix (height:100% cascade) made the standalone-PWA gap worse: it removed the only mechanism (a native dvh recalculation, incidentally triggered whenever the user scrolled) that let the layout self-correct, so the too-short initial height became permanent instead of fixable by scrolling. Replaced it with a JS-measured height: MobileContainer now sizes itself from window.innerHeight in a small hook that re-measures a few times shortly after mount (plus on resize/orientationchange/pageshow), since iOS reports a stale too-short value on a standalone cold launch that only settles after a later layout pass. This reproduces what scrolling used to accidentally trigger, automatically, without the user having to scroll.",
+      "highlights": [
+        "🐛 رفع (این‌بار درست) مشکل فاصله‌ی خالی زیر صفحه در حالت نصب‌شده روی آیفون — بدون نیاز به اسکرول کردن"
+      ]
+    },
     {
       "version": "2.1.18",
       "date": "2026-08-01",
