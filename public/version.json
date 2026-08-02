@@ -1,6 +1,14 @@
 {
-  "current": "2.1.28",
+  "current": "2.1.29",
   "history": [
+    {
+      "version": "2.1.29",
+      "date": "2026-08-02",
+      "description": "Fixed the AI meal-parsing edge function, which was failing end-to-end: switched from gemini-1.5-flash (doesn't exist for the configured API key) to gemini-flash-lite-latest, the one model that both exists and has working free-tier quota for that key. Verified with a real request through the deployed function. Also committed the Supabase CLI's project scaffolding (config.toml, .gitignore) so the setup is reproducible.",
+      "highlights": [
+        "🤖 «افزودن با هوش مصنوعی» رفع شد — قبلاً مدل جمنای اشتباه بود و همیشه خطا می‌داد"
+      ]
+    },
     {
       "version": "2.1.28",
       "date": "2026-08-02",
