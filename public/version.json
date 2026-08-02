@@ -1,6 +1,15 @@
 {
-  "current": "2.1.23",
+  "current": "2.1.24",
   "history": [
+    {
+      "version": "2.1.24",
+      "date": "2026-08-01",
+      "description": "Fixed the calorie-tracking mode switch (side menu) not being reflected immediately on the ثبت روزانه page — the meal tab only read the saved mode once on mount with no shared reactive store, so switching elsewhere left it stale until a manual reload. CalorieModePickerModal now reloads the page after an actual mode change, matching how the rest of the app already handles this (e.g. ProgramBuilderPage). Also: switching modes now warns first if there's anything logged today (window.confirm, same pattern as logout/delete-account) since a per-meal breakdown and a single daily total can't be reconciled into one view — confirming clears today's log (dailyLogEngine's new hasTodaysLoggedEntries/resetDailyLog), canceling leaves the mode and data untouched. No warning when there's nothing to lose.",
+      "highlights": [
+        "🔄 تغییر روش ثبت کالری از منوی کناری حالا بلافاصله توی صفحه‌ی ثبت روزانه اعمال می‌شه",
+        "⚠️ اگه امروز غذایی ثبت کرده باشی، قبل از تغییر روش بهت هشدار می‌ده و در صورت تأیید پاکش می‌کنه"
+      ]
+    },
     {
       "version": "2.1.23",
       "date": "2026-08-01",

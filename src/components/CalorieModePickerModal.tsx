@@ -6,17 +6,16 @@ import {
   setCalorieTrackingMode,
   type CalorieTrackingMode,
 } from "@/utils/calorieModeEngine";
+import { hasTodaysLoggedEntries, resetDailyLog } from "@/utils/dailyLogEngine";
 
 export interface CalorieModePickerModalProps {
   open: boolean;
   onClose: () => void;
-  onSaved: () => void;
 }
 
 export default function CalorieModePickerModal({
   open,
   onClose,
-  onSaved,
 }: CalorieModePickerModalProps) {
   const [mode, setMode] = useState<CalorieTrackingMode>(
     () => getCalorieTrackingMode() ?? "perMeal",
@@ -27,8 +26,33 @@ export default function CalorieModePickerModal({
   }
 
   function handleSave() {
+    const currentMode = getCalorieTrackingMode();
+    const isActualChange = currentMode !== null && currentMode !== mode;
+
+    if (isActualChange && hasTodaysLoggedEntries()) {
+      const confirmed = window.confirm(
+        "با تغییر روش ثبت کالری، غذاهایی که امروز ثبت کردی پاک می‌شن و قابل بازگردانی نیستن.\n\nادامه می‌دی؟",
+      );
+
+      if (!confirmed) {
+        return;
+      }
+
+      resetDailyLog();
+    }
+
     setCalorieTrackingMode(mode);
-    onSaved();
+
+    if (isActualChange) {
+      // Every page that depends on the mode (the meal tab, the side menu's
+      // own subtitle) read it into local state once on mount — there's no
+      // shared reactive store, so a full reload is what actually gets them
+      // all to reflect the change, matching how the rest of the app handles
+      // this (e.g. ProgramBuilderPage after updateWorkoutDay).
+      window.location.reload();
+      return;
+    }
+
     onClose();
   }
 

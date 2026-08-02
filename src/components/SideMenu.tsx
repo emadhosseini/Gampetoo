@@ -81,7 +81,6 @@ export default function SideMenu({ children }: SideMenuProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [drawerWidth, setDrawerWidth] = useState(0);
   const [calorieModalOpen, setCalorieModalOpen] = useState(false);
-  const [, setCalorieModeVersion] = useState(0);
   const prefersReducedMotion = useReducedMotion();
   const navigate = useNavigate();
   const { pathname } = useLocation();
@@ -375,7 +374,6 @@ export default function SideMenu({ children }: SideMenuProps) {
       <CalorieModePickerModal
         open={calorieModalOpen}
         onClose={() => setCalorieModalOpen(false)}
-        onSaved={() => setCalorieModeVersion((v) => v + 1)}
       />
 
       {!open && (
