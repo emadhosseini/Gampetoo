@@ -1,6 +1,14 @@
 {
-  "current": "2.1.21",
+  "current": "2.1.22",
   "history": [
+    {
+      "version": "2.1.22",
+      "date": "2026-08-01",
+      "description": "Fixed every popup in the app (all of them share ModalOverlay) rendering with no blur behind them on a real iOS device — a screenshot showed the height picker's card sitting directly on top of fully sharp, unblurred page content. Verified the CSS/positioning itself was correct (Chromium renders it fine, backdrop-filter computes to blur(25px) and covers the full viewport) — this is a well-known WebKit bug where backdrop-filter on a position:fixed element intermittently fails to render at all. Forced the blurred backdrop onto its own GPU compositing layer (transform:translateZ(0) + will-change:backdrop-filter), the standard mitigation for this exact bug.",
+      "highlights": [
+        "🐛 رفع باگ نبود بلر پشت پاپ‌اپ‌ها روی آیفون — الان زیر همه‌ی پاپ‌اپ‌های نرم‌افزار درست بلر می‌شه"
+      ]
+    },
     {
       "version": "2.1.21",
       "date": "2026-08-01",

@@ -33,6 +33,13 @@ export default function ModalOverlay({
     <>
       <div
         className={`fixed inset-0 ${zIndexClass} touch-none backdrop-blur-[25px]`}
+        // iOS Safari has a long-standing bug where backdrop-filter on a
+        // position:fixed element intermittently doesn't render at all
+        // (not a positioning issue — the element is where it should be,
+        // it just paints as if backdrop-filter were none). Forcing this
+        // onto its own GPU compositing layer is the standard, well-known
+        // mitigation.
+        style={{ transform: "translateZ(0)", willChange: "backdrop-filter" }}
         onClick={onClose}
       />
 
