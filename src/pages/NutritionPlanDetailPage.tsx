@@ -2,6 +2,7 @@ import { ChevronDown, Search } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 
+import Toggle from "@/components/Toggle";
 import { getActiveProgram, updateProgram } from "@/utils/programEngine";
 import { getMealSlots } from "@/data/nutrition/foodCatalog";
 import {
@@ -116,12 +117,7 @@ function MealFoodList({
               key={entry.id}
               className="glass-chip glass-static flex flex-wrap items-center gap-3 rounded-xl p-3"
             >
-              <input
-                type="checkbox"
-                checked={!!selected}
-                onChange={() => onToggleFood(entry)}
-                className="h-5 w-5 shrink-0"
-              />
+              <Toggle checked={!!selected} onChange={() => onToggleFood(entry)} />
 
               <span className="flex-1 text-sm font-semibold text-white">
                 {entry.nameFa}
@@ -418,13 +414,8 @@ export default function NutritionPlanDetailPage() {
               key={meal.id}
               className="glass-panel glass-static rounded-2xl p-4"
             >
-              <div className="grid grid-cols-[24px_1fr_auto_24px] items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={enabled}
-                  onChange={() => toggleMealEnabled(meal.id)}
-                  className="h-5 w-5"
-                />
+              <div className="grid grid-cols-[44px_1fr_auto_24px] items-center gap-2">
+                <Toggle checked={enabled} onChange={() => toggleMealEnabled(meal.id)} />
 
                 <button
                   onClick={() =>

@@ -1,6 +1,14 @@
 {
-  "current": "2.1.20",
+  "current": "2.1.21",
   "history": [
+    {
+      "version": "2.1.21",
+      "date": "2026-08-01",
+      "description": "Replaced every plain HTML checkbox in the app with a new shared iOS-style Toggle component (src/components/Toggle.tsx): the specialized-warmup group toggle and per-exercise enable toggle on the workout detail page, and the per-food add toggle plus the per-meal enable toggle on the nutrition plan detail page. The toggle's thumb is anchored at the RTL start (right) edge and slides left when on, matching how iOS actually mirrors switches in RTL locales; widened the meal-row grid's first column (24px to 44px) to fit it.",
+      "highlights": [
+        "🔘 چک‌باکس‌های نرم‌افزار (تمرین‌ها، گرم کردن تخصصی، مواد غذایی، وعده‌های غذایی) به کلید روشن/خاموش شبیه iOS تبدیل شدن"
+      ]
+    },
     {
       "version": "2.1.20",
       "date": "2026-08-01",

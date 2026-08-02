@@ -2,6 +2,7 @@ import { ChevronDown, Minus, Plus } from "lucide-react";
 import { useState } from "react";
 import { useParams } from "react-router-dom";
 
+import Toggle from "@/components/Toggle";
 import { getWorkout, saveWorkoutExercises } from "@/store/workoutLibraryStore";
 import {
   getSpecializedWarmup,
@@ -117,11 +118,9 @@ export default function WorkoutDetailPage() {
                     className="glass-chip glass-static rounded-xl p-4"
                   >
                     <div className="flex items-center gap-3">
-                      <input
-                        type="checkbox"
+                      <Toggle
                         checked={group.enabled}
                         onChange={() => toggleWarmupGroup(group.id)}
-                        className="h-5 w-5 shrink-0"
                       />
 
                       <span className="flex-1 font-medium">
@@ -185,15 +184,13 @@ export default function WorkoutDetailPage() {
                           workout.id === "warmup" ? "" : "mb-4"
                         }`}
                       >
-                        <input
-                          type="checkbox"
+                        <Toggle
                           checked={exercise.enabled}
                           onChange={() =>
                             updateExercise(group.id, exercise.id, {
                               enabled: !exercise.enabled,
                             })
                           }
-                          className="h-5 w-5 shrink-0"
                         />
 
                         <span className="flex-1 font-medium">
