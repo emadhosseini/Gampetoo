@@ -158,6 +158,11 @@ export default function AiMealEntryModal({ meal, onClose, onChange }: AiMealEntr
                       <span className="mr-1 text-white/60">
                         ({toFaDigits(item.quantity)} {item.unit.label})
                       </span>
+                      {item.estimated && (
+                        <span className="mr-1 rounded-full bg-avocado-yellow/20 px-2 py-0.5 text-[10px] text-avocado-yellow">
+                          تخمینی
+                        </span>
+                      )}
                     </span>
                     <span className="text-white/70">{toFaDigits(item.calories)} کالری</span>
                   </motion.div>

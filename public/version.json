@@ -1,6 +1,14 @@
 {
-  "current": "2.1.30",
+  "current": "2.1.31",
   "history": [
+    {
+      "version": "2.1.31",
+      "date": "2026-08-02",
+      "description": "Added a third, last-resort fallback to AI meal logging: when a food matches neither the local/learned database nor the external API, Gemini's own nutrition estimate (now requested directly in the parse-meal prompt, alongside name/quantity/unit) is used instead of leaving the item unmatched — clearly labeled 'تخمینی' (estimated) in the results list so it's never confused with a real database value, and still saved to the learned-foods store for next time.",
+      "highlights": [
+        "🤖 وقتی هیچ‌جا پیدا نشه، جمنای خودش تخمین می‌زنه — با برچسب واضح «تخمینی»"
+      ]
+    },
     {
       "version": "2.1.30",
       "date": "2026-08-02",
