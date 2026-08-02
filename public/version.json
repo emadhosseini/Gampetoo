@@ -1,6 +1,14 @@
 {
-  "current": "2.1.25",
+  "current": "2.1.26",
   "history": [
+    {
+      "version": "2.1.26",
+      "date": "2026-08-01",
+      "description": "Disabled pinch-zoom and double-tap-zoom app-wide. Two layers, since some browsers ignore the viewport meta's user-scalable=no for accessibility reasons: index.html's viewport meta gained maximum-scale=1.0 and user-scalable=no, and html got touch-action: manipulation in index.css (the more reliable modern approach) — manipulation still permits panning/scrolling, so it doesn't affect the app's scrollable containers or the wheel-pickers' own touch-action: pan-y. Verified no scroll regression on the main page and the wheel-picker.",
+      "highlights": [
+        "🔒 امکان زوم کردن با دو انگشت یا دابل‌تپ از کل نرم‌افزار حذف شد"
+      ]
+    },
     {
       "version": "2.1.25",
       "date": "2026-08-01",

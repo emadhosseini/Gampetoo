@@ -41,6 +41,13 @@
 
 html {
   direction: rtl;
+  /* Blocks pinch-zoom and double-tap-zoom everywhere. The viewport meta's
+     user-scalable=no (index.html) covers most browsers, but some ignore it
+     for accessibility reasons — this is the more reliable, modern way to
+     get the same result. "manipulation" (not "none") still permits
+     panning/scrolling, so it doesn't affect any of the app's scrollable
+     containers or the wheel-pickers' own touch-action: pan-y. */
+  touch-action: manipulation;
 }
 
 body {
