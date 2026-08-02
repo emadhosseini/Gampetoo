@@ -1,6 +1,14 @@
 {
-  "current": "2.1.26",
+  "current": "2.1.27",
   "history": [
+    {
+      "version": "2.1.27",
+      "date": "2026-08-01",
+      "description": "Disabled swiping between pages — every bottom-nav tab is its own React Router route, and WKWebView's native edge-swipe-to-navigate-history gesture lives on the same right edge as SideMenu's own open-drawer gesture in this RTL app, so dragging from the edge could pop back to the previous route (visible as two pages caught mid-transition) instead of, or as well as, opening the menu. Added overscroll-behavior-x: none to html, the standard fix for this in Safari/WebKit — SideMenu's own drag-to-open isn't affected since it runs on pointer events it captures directly, not this browser-level gesture. Verified no regression: the side menu still opens via the same edge-drag.",
+      "highlights": [
+        "🚫 سوایپ برای جابه‌جایی بین صفحات غیرفعال شد — فقط منوی کناری این قابلیت رو داره"
+      ]
+    },
     {
       "version": "2.1.26",
       "date": "2026-08-01",

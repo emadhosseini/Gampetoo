@@ -48,6 +48,15 @@ html {
      panning/scrolling, so it doesn't affect any of the app's scrollable
      containers or the wheel-pickers' own touch-action: pan-y. */
   touch-action: manipulation;
+  /* Suppresses WKWebView's native edge-swipe-to-navigate-browser-history
+     gesture. Every bottom-nav tab is its own React Router route (pushed to
+     history), and in this RTL app that swipe lives on the same right edge
+     as SideMenu's own open-drawer gesture — without this, dragging from
+     the edge could pop back to the previous route (visible as two pages
+     mid-transition) instead of, or as well as, opening the menu. SideMenu
+     itself isn't affected: its drag handlers already run on pointer events
+     it captures directly, not on this browser-level gesture. */
+  overscroll-behavior-x: none;
 }
 
 body {
