@@ -9,7 +9,7 @@
 // Then set the secret: Edge Functions -> parse-meal -> Secrets ->
 // GEMINI_API_KEY, or via the CLI: `supabase secrets set GEMINI_API_KEY=...`.
 
-const GEMINI_MODEL = "gemini-2.0-flash";
+const GEMINI_MODEL = "gemini-flash-lite-latest";
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
 const SYSTEM_PROMPT = `شما یک استخراج‌کننده‌ی اطلاعات تغذیه‌ای برای یک اپلیکیشن فارسی‌زبان هستید. کاربر وعده‌ی غذایی خودش رو به فارسی وارد می‌کنه (مثلاً «یک بشقاب قرمه سبزی و دو کفگیر برنج»). آیتم‌های غذایی رو استخراج کن و فقط یک آرایه‌ی JSON با این ساختار برگردون:
