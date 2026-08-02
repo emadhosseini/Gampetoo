@@ -1,4 +1,4 @@
-import { X } from "lucide-react";
+import { Sparkles, X } from "lucide-react";
 
 import ModalOverlay from "@/components/ModalOverlay";
 import type { MealSlot } from "@/data/nutrition/foodCatalog";
@@ -9,18 +9,21 @@ export interface MealOverviewModalProps {
   meal: MealSlot | null;
   onClose: () => void;
   onAdd: () => void;
+  onAddAi: () => void;
   // Bumped after a removal so the card behind this modal (whose own state
   // was read before it opened) shows the fresh totals once this closes.
   onChange: () => void;
 }
 
 // Opened by tapping the whole meal card — a review of what's already been
-// logged for that meal, one level up from the actual food-search screen
-// (AddMealEntryModal), which only "افزودن" here drills into.
+// logged for that meal, one level up from the two actual add screens:
+// AddMealEntryModal (manual food search, one item at a time) or
+// AiMealEntryModal (free-text description, AI-computed later).
 export default function MealOverviewModal({
   meal,
   onClose,
   onAdd,
+  onAddAi,
   onChange,
 }: MealOverviewModalProps) {
   if (!meal) {
@@ -94,7 +97,15 @@ export default function MealOverviewModal({
           onClick={onAdd}
           className="glass-tap w-full rounded-2xl bg-avocado-yellow py-3 font-bold text-black"
         >
-          افزودن
+          افزودن تکی خوراکی‌ها
+        </button>
+
+        <button
+          onClick={onAddAi}
+          className="glass-tap selector-pill flex w-full items-center justify-center gap-2 rounded-2xl py-3 font-bold text-white"
+        >
+          <Sparkles size={18} className="text-avocado-yellow" />
+          افزودن با هوش مصنوعی
         </button>
 
         <button

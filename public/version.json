@@ -1,6 +1,15 @@
 {
-  "current": "2.1.24",
+  "current": "2.1.25",
   "history": [
+    {
+      "version": "2.1.25",
+      "date": "2026-08-01",
+      "description": "The meal-overview popup's single 'افزودن' button is now two: 'افزودن تکی خوراکی‌ها' (unchanged — opens the existing manual food-search screen) and 'افزودن با هوش مصنوعی', a new free-text entry point (AiMealEntryModal.tsx) with a textarea to describe what was eaten and a 'محاسبه' button. The actual AI calorie calculation isn't built yet, so calculating shows an honest 'این قابلیت به‌زودی تکمیل می‌شه' note instead of fabricating a result — same pattern the app already uses for the not-yet-built فعالیت tab. Both add screens close all the way back to the meal list.",
+      "highlights": [
+        "🤖 یه راه جدید برای ثبت غذا اضافه شد: توضیح متنی + دکمه محاسبه (هوش مصنوعیش به‌زودی تکمیل می‌شه)",
+        "🍽️ دکمه‌ی افزودن قبلی هم موند، فقط اسمش شد «افزودن تکی خوراکی‌ها» تا از حالت جدید مشخص بشه"
+      ]
+    },
     {
       "version": "2.1.24",
       "date": "2026-08-01",

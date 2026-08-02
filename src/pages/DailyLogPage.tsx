@@ -5,6 +5,7 @@ import PillTabBar, { type PillTabBarItem } from "@/components/PillTabBar";
 import MealLogCard from "@/components/nutrition/MealLogCard";
 import MealOverviewModal from "@/components/nutrition/MealOverviewModal";
 import AddMealEntryModal from "@/components/nutrition/AddMealEntryModal";
+import AiMealEntryModal from "@/components/nutrition/AiMealEntryModal";
 import {
   DAILY_MODE_SLOT,
   getMealSlots,
@@ -101,16 +102,17 @@ function CalorieModeChoicePrompt({
   );
 }
 
-type ModalScreen = { meal: MealSlot; screen: "overview" | "add" } | null;
+type ModalScreen = { meal: MealSlot; screen: "overview" | "add" | "ai" } | null;
 
 // Fully independent of the prescribed nutrition plan (program.nutrition) —
 // this logs whatever the user actually ate against a fixed catalog of
 // meal-time slots (صبحانه، ناهار، ...), or a single unified slot for
 // "daily" mode. Tapping a whole card opens an overview of what's already
-// logged for it; "افزودن" there drills one level deeper into the actual
-// food-search screen. "بستن" on the food-search screen closes everything
-// straight back to this list, not just one level back to the overview —
-// closing there means "I'm done", not "go back".
+// logged for it; the overview's two "افزودن" buttons each drill one level
+// deeper — either the manual food-search screen (AddMealEntryModal) or the
+// AI free-text screen (AiMealEntryModal). "بستن" on either add screen
+// closes everything straight back to this list, not just one level back to
+// the overview — closing there means "I'm done", not "go back".
 function MealLogTab({ slots }: { slots: MealSlot[] }) {
   const [modal, setModal] = useState<ModalScreen>(null);
   // Bumped after every add/remove so the cards (whose own state was read
@@ -132,6 +134,7 @@ function MealLogTab({ slots }: { slots: MealSlot[] }) {
         meal={modal?.screen === "overview" ? modal.meal : null}
         onClose={() => setModal(null)}
         onAdd={() => setModal(modal && { meal: modal.meal, screen: "add" })}
+        onAddAi={() => setModal(modal && { meal: modal.meal, screen: "ai" })}
         onChange={() => setVersion((v) => v + 1)}
       />
 
@@ -139,6 +142,11 @@ function MealLogTab({ slots }: { slots: MealSlot[] }) {
         meal={modal?.screen === "add" ? modal.meal : null}
         onClose={() => setModal(null)}
         onChange={() => setVersion((v) => v + 1)}
+      />
+
+      <AiMealEntryModal
+        meal={modal?.screen === "ai" ? modal.meal : null}
+        onClose={() => setModal(null)}
       />
     </div>
   );
