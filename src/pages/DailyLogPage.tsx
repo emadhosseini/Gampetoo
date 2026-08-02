@@ -147,6 +147,7 @@ function MealLogTab({ slots }: { slots: MealSlot[] }) {
       <AiMealEntryModal
         meal={modal?.screen === "ai" ? modal.meal : null}
         onClose={() => setModal(null)}
+        onChange={() => setVersion((v) => v + 1)}
       />
     </div>
   );

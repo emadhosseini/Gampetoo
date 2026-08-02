@@ -1,6 +1,15 @@
 {
-  "current": "2.1.27",
+  "current": "2.1.28",
   "history": [
+    {
+      "version": "2.1.28",
+      "date": "2026-08-02",
+      "description": "Implemented the real logic behind 'افزودن با هوش مصنوعی': the free-text meal description is now sent to a Supabase Edge Function (supabase/functions/parse-meal) that proxies to the Gemini API server-side, keeping the API key off the client bundle entirely (the client never talks to Gemini directly, and the key is never a VITE_* env var). The extracted (name, quantity, unit) items are matched against the app's real local food database (aiFoodMatching.ts, reusing foodSearch.ts's caloriesForServing) and shown as a confirmable itemized list with per-item calories and a total before anything is actually logged; unmatched items are called out separately instead of being silently dropped. Requires the user to deploy the edge function and set the GEMINI_API_KEY secret in their Supabase project — instructions provided separately, since this sandbox has no live Supabase project to deploy to or test the round-trip against.",
+      "highlights": [
+        "🤖 «افزودن با هوش مصنوعی» حالا واقعاً کار می‌کنه — توضیح متنی‌ات رو با Gemini تحلیل می‌کنه و قبل از ثبت، خلاصه‌ی کالری رو نشونت می‌ده",
+        "🔒 کلید API جمنای فقط سمت سرور (Supabase) نگهداری می‌شه، هیچ‌وقت توی اپ فرستاده نمی‌شه"
+      ]
+    },
     {
       "version": "2.1.27",
       "date": "2026-08-01",

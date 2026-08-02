@@ -1,78 +1,211 @@
 import { useEffect, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { Sparkles } from "lucide-react";
 
 import ModalOverlay from "@/components/ModalOverlay";
 import type { MealSlot } from "@/data/nutrition/foodCatalog";
+import { parseMealDescription } from "@/domain/nutrition/aiFoodParser";
+import {
+  matchAiExtractedItems,
+  type MatchedAiFoodItem,
+  type UnmatchedAiFoodItem,
+} from "@/domain/nutrition/aiFoodMatching";
+import { addLoggedEntry } from "@/utils/dailyLogEngine";
+import { toFaDigits } from "@/utils/numberFormat";
 
 export interface AiMealEntryModalProps {
   meal: MealSlot | null;
   onClose: () => void;
+  // Bumped after every add/remove so the card behind the modal shows the
+  // fresh totals once this closes — matches AddMealEntryModal's contract.
+  onChange: () => void;
 }
 
+type Screen =
+  | { step: "input" }
+  | { step: "loading" }
+  | { step: "results"; matched: MatchedAiFoodItem[]; unmatched: UnmatchedAiFoodItem[] }
+  | { step: "error"; message: string };
+
 // Free-text "describe what you ate" entry point for AI-computed calorie
-// logging. The actual AI calculation isn't built yet — "محاسبه" is a
-// placeholder for now (shows a coming-soon note instead of pretending to
-// compute something), same honesty the app already uses elsewhere for
-// features that aren't wired up yet (e.g. DailyLogPage's "فعالیت" tab).
-export default function AiMealEntryModal({ meal, onClose }: AiMealEntryModalProps) {
+// logging. Sends the description to the parse-meal Supabase Edge Function
+// (which holds the Gemini key server-side — see
+// src/domain/nutrition/aiFoodParser.ts), matches whatever it extracts
+// against the app's real local food database (aiFoodMatching.ts), and lets
+// the user confirm before anything is actually logged.
+export default function AiMealEntryModal({ meal, onClose, onChange }: AiMealEntryModalProps) {
   const [description, setDescription] = useState("");
-  const [showComingSoon, setShowComingSoon] = useState(false);
+  const [screen, setScreen] = useState<Screen>({ step: "input" });
 
   useEffect(() => {
     // Reset every time a different meal's modal opens.
     setDescription("");
-    setShowComingSoon(false);
+    setScreen({ step: "input" });
   }, [meal]);
 
   if (!meal) {
     return null;
   }
 
-  function handleCalculate() {
-    if (!description.trim()) return;
+  async function handleCalculate() {
+    const trimmed = description.trim();
+    if (!trimmed) return;
 
-    setShowComingSoon(true);
+    setScreen({ step: "loading" });
+
+    const result = await parseMealDescription(trimmed);
+
+    if (!result.ok) {
+      setScreen({ step: "error", message: result.error ?? "خطایی پیش اومد." });
+      return;
+    }
+
+    const { matched, unmatched } = matchAiExtractedItems(result.items);
+
+    if (matched.length === 0) {
+      setScreen({
+        step: "error",
+        message: "هیچ‌کدوم از خوراکی‌هایی که نوشتی توی دیتابیس پیدا نشد.",
+      });
+      return;
+    }
+
+    setScreen({ step: "results", matched, unmatched });
   }
+
+  function handleConfirmAdd() {
+    if (screen.step !== "results") return;
+
+    for (const item of screen.matched) {
+      addLoggedEntry(meal!.id, {
+        name: item.food.nameFa,
+        amount: `${toFaDigits(item.quantity)} ${item.unit.label}`,
+        calories: item.calories,
+      });
+    }
+
+    onChange();
+    onClose();
+  }
+
+  function handleRetry() {
+    setScreen({ step: "input" });
+  }
+
+  const totalCalories =
+    screen.step === "results" ? screen.matched.reduce((sum, m) => sum + m.calories, 0) : 0;
 
   return (
     <ModalOverlay onClose={onClose}>
-      <div className="glass-panel glass-static space-y-4 rounded-3xl p-6">
+      <div className="glass-panel glass-static max-h-[85vh] space-y-4 overflow-y-auto rounded-3xl p-6">
         <h2 className="flex items-center justify-center gap-2 text-center text-lg font-bold text-white">
           <Sparkles size={20} className="text-avocado-yellow" />
           افزودن با هوش مصنوعی به وعده {meal.title}
         </h2>
 
-        <textarea
-          value={description}
-          onChange={(e) => {
-            setDescription(e.target.value);
-            setShowComingSoon(false);
-          }}
-          placeholder="مثلاً: یک بشقاب چلوکباب با یک لیوان دوغ"
-          rows={4}
-          className="glass-chip w-full resize-none rounded-xl p-3 text-sm text-white placeholder:text-white/50 outline-none"
-        />
+        {(screen.step === "input" || screen.step === "loading") && (
+          <>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="مثلاً: یک بشقاب چلوکباب با یک لیوان دوغ"
+              rows={4}
+              disabled={screen.step === "loading"}
+              className="glass-chip w-full resize-none rounded-xl p-3 text-sm text-white placeholder:text-white/50 outline-none disabled:opacity-60"
+            />
 
-        {showComingSoon && (
-          <p className="text-center text-sm text-avocado-yellow">
-            این قابلیت به‌زودی تکمیل می‌شه.
-          </p>
+            <button
+              onClick={() => void handleCalculate()}
+              disabled={!description.trim() || screen.step === "loading"}
+              className="glass-tap w-full rounded-2xl bg-avocado-yellow py-3 font-bold text-black disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              {screen.step === "loading" ? "در حال محاسبه..." : "محاسبه"}
+            </button>
+          </>
         )}
 
-        <button
-          onClick={handleCalculate}
-          disabled={!description.trim()}
-          className="glass-tap w-full rounded-2xl bg-avocado-yellow py-3 font-bold text-black disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          محاسبه
-        </button>
+        {screen.step === "error" && (
+          <div className="space-y-4">
+            <p className="text-center text-sm text-avocado-yellow">{screen.message}</p>
+            <button
+              onClick={handleRetry}
+              className="glass-tap w-full rounded-2xl bg-avocado-yellow py-3 font-bold text-black"
+            >
+              تلاش دوباره
+            </button>
+          </div>
+        )}
 
-        <button
-          onClick={onClose}
-          className="ghost-action w-full rounded-2xl py-3 font-medium text-white"
-        >
-          بستن
-        </button>
+        {screen.step === "results" && (
+          <AnimatePresence initial={false}>
+            <motion.div
+              key="results"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-3"
+            >
+              <div className="space-y-2">
+                {screen.matched.map((item, i) => (
+                  <motion.div
+                    key={`${item.food.id}-${i}`}
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                    className="glass-chip flex items-center justify-between rounded-xl p-3 text-sm text-white"
+                  >
+                    <span className="font-medium">
+                      {item.food.nameFa}
+                      <span className="mr-1 text-white/60">
+                        ({toFaDigits(item.quantity)} {item.unit.label})
+                      </span>
+                    </span>
+                    <span className="text-white/70">{toFaDigits(item.calories)} کالری</span>
+                  </motion.div>
+                ))}
+              </div>
+
+              {screen.unmatched.length > 0 && (
+                <div className="space-y-1 rounded-xl border border-dashed border-white/20 p-3">
+                  <p className="text-xs text-white/60">
+                    این موارد پیدا نشدن و اضافه نمی‌شن:
+                  </p>
+                  {screen.unmatched.map((item, i) => (
+                    <p key={i} className="text-xs text-white/50">
+                      {item.extracted.name}
+                    </p>
+                  ))}
+                </div>
+              )}
+
+              <p className="text-center text-sm font-semibold text-white">
+                جمع کالری: {toFaDigits(totalCalories)}
+              </p>
+
+              <button
+                onClick={handleConfirmAdd}
+                className="glass-tap w-full rounded-2xl bg-avocado-yellow py-3 font-bold text-black"
+              >
+                افزودن به وعده
+              </button>
+
+              <button
+                onClick={handleRetry}
+                className="ghost-action w-full rounded-2xl py-3 font-medium text-white"
+              >
+                بازگشت
+              </button>
+            </motion.div>
+          </AnimatePresence>
+        )}
+
+        {screen.step !== "results" && (
+          <button
+            onClick={onClose}
+            className="ghost-action w-full rounded-2xl py-3 font-medium text-white"
+          >
+            بستن
+          </button>
+        )}
       </div>
     </ModalOverlay>
   );
