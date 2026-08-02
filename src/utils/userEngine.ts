@@ -8,6 +8,9 @@ const NAME_KEY = "emad-user-name";
 // Per-account gender (scoped by username), used to pick a matching avatar.
 const GENDER_KEY = "emad-user-gender";
 
+// Per-account height in cm (scoped by username), used for the BMI card.
+const HEIGHT_KEY = "emad-user-height";
+
 export type Gender = "male" | "female";
 
 // Pre-username scheme: a single global name that also acted as the data scope.
@@ -23,6 +26,7 @@ const SCOPED_BASES = [
   "emad-workout-library-overrides",
   "emad-warmup-library-overrides",
   "emad-user-gender",
+  "emad-user-height",
 ];
 
 export function getCurrentUsername(): string | null {
@@ -67,6 +71,16 @@ export function getCurrentUserGender(): Gender | null {
 
 export function setCurrentUserGender(gender: Gender) {
   localStorage.setItem(scopedKey(GENDER_KEY), gender);
+}
+
+export function getCurrentUserHeight(): number | null {
+  const value = Number(localStorage.getItem(scopedKey(HEIGHT_KEY)));
+
+  return Number.isFinite(value) && value > 0 ? value : null;
+}
+
+export function setCurrentUserHeight(heightCm: number) {
+  localStorage.setItem(scopedKey(HEIGHT_KEY), String(heightCm));
 }
 
 export function hasCurrentUser(): boolean {
@@ -139,6 +153,7 @@ export function logoutCurrentUser() {
 export function resetCurrentUser() {
   localStorage.removeItem(scopedKey(NAME_KEY));
   localStorage.removeItem(scopedKey(GENDER_KEY));
+  localStorage.removeItem(scopedKey(HEIGHT_KEY));
   localStorage.removeItem(USERNAME_KEY);
   localStorage.removeItem(LEGACY_NAME_KEY);
 }

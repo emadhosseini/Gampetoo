@@ -3,16 +3,34 @@ import { ChevronLeft, Mars, User, Venus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import AccountEditModal from "@/components/AccountEditModal";
-import { getCurrentUserGender, getCurrentUserName } from "@/utils/userEngine";
+import HeightModal from "@/components/HeightModal";
+import {
+  getCurrentUserGender,
+  getCurrentUserHeight,
+  getCurrentUserName,
+} from "@/utils/userEngine";
 import { getLatestWeight } from "@/utils/weightEngine";
 import { toFaDigits } from "@/utils/numberFormat";
 
+function bmiCategoryLabel(bmi: number): string {
+  if (bmi < 18.5) return "کم‌وزن";
+  if (bmi < 25) return "طبیعی";
+  if (bmi < 30) return "اضافه‌وزن";
+  return "چاق";
+}
+
 export default function ProfilePage() {
   const navigate = useNavigate();
+  const [accountModalOpen, setAccountModalOpen] = useState(false);
+  const [heightModalOpen, setHeightModalOpen] = useState(false);
+  const [, setVersion] = useState(0);
+
   const userName = getCurrentUserName() ?? "";
   const gender = getCurrentUserGender();
   const weight = getLatestWeight();
-  const [accountModalOpen, setAccountModalOpen] = useState(false);
+  const height = getCurrentUserHeight();
+
+  const bmi = weight !== null && height !== null ? weight / (height / 100) ** 2 : null;
 
   const GenderIcon = gender === "male" ? Mars : gender === "female" ? Venus : User;
 
@@ -60,12 +78,35 @@ export default function ProfilePage() {
           </p>
         </button>
 
-        {/* No height storage/editing exists yet — plain display card for now. */}
-        <div className="glass-panel flex-1 rounded-3xl p-4 text-center">
+        <button
+          onClick={() => setHeightModalOpen(true)}
+          className="glass-panel flex-1 rounded-3xl p-4 text-center"
+        >
           <p className="text-lg font-bold text-white">قد</p>
-          <p className="mt-1 text-sm text-white">ثبت نشده</p>
-        </div>
+          <p className="mt-1 text-sm text-white">
+            {height !== null ? `${toFaDigits(height)} سانتی‌متر` : "ثبت نشده"}
+          </p>
+        </button>
       </div>
+
+      <div className="glass-panel rounded-3xl p-4 text-center">
+        <p className="text-lg font-bold text-white">BMI</p>
+        {bmi !== null ? (
+          <p className="mt-1 text-sm text-white">
+            {toFaDigits(bmi.toFixed(1))} ({bmiCategoryLabel(bmi)})
+          </p>
+        ) : (
+          <p className="mt-1 text-sm text-white">
+            برای محاسبه، وزن و قد رو ثبت کن
+          </p>
+        )}
+      </div>
+
+      <HeightModal
+        open={heightModalOpen}
+        onClose={() => setHeightModalOpen(false)}
+        onSaved={() => setVersion((v) => v + 1)}
+      />
     </div>
   );
 }

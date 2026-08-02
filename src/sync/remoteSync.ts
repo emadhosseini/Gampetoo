@@ -14,6 +14,7 @@ const SYNCED_BASE_KEYS = [
   "emad-free-meal-settings",
   "emad-user-name",
   "emad-user-gender",
+  "emad-user-height",
   "emad-weight-log",
   "emad-weight-target",
   "emad-daily-log",

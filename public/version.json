@@ -1,6 +1,15 @@
 {
-  "current": "2.1.19",
+  "current": "2.1.20",
   "history": [
+    {
+      "version": "2.1.20",
+      "date": "2026-08-01",
+      "description": "Wired up the height card on the account page (previously a static 'not set yet' placeholder): tapping it opens a wheel-picker popup (matching the target-weight picker's iOS-style scroll/snap feel, extracted the shared wheel-column logic into WheelColumn.tsx so both pickers reuse it) and saves the value per-account, synced like every other profile field. Added a BMI card below it, same size/style as the weight and height cards, computed live from the latest logged weight and the saved height, with a WHO-standard category label (کم‌وزن/طبیعی/اضافه‌وزن/چاق) next to the number — shows a prompt to fill in both values first if either is missing.",
+      "highlights": [
+        "📏 دکمه‌ی قد توی صفحه‌ی حساب کاربری فعال شد — با ضربه زدن روش قدت رو ثبت کن",
+        "⚖️ کارت BMI زیر وزن و قد اضافه شد — خودکار از روی وزن و قد محاسبه می‌شه و وضعیتش (طبیعی/اضافه‌وزن و...) رو هم نشون می‌ده"
+      ]
+    },
     {
       "version": "2.1.19",
       "date": "2026-08-01",
