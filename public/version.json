@@ -1,6 +1,17 @@
 {
-  "current": "2.1.29",
+  "current": "2.1.30",
   "history": [
+    {
+      "version": "2.1.30",
+      "date": "2026-08-02",
+      "description": "Fixed the AI meal-parsing edge function's CORS allowlist to also accept dev.gampetoo.com (it was only allowing the production domain and localhost:5173, so requests from the dev domain were silently rejected by the browser). Grew the Iranian food database from 28 to 66 items (missing staples like زیره پلو and drinks/fruit/vegetables like نوشابه, سیب, خیار). The AI matching path now falls back to a live external lookup (the same Open Food Facts API the manual search already uses) when a food isn't in the local database, and permanently saves whatever it finds into the account's own learned-foods list (synced across devices) so future lookups — AI or manual — never repeat the network round-trip. A food that still isn't found anywhere is skipped with a warning instead of blocking the rest of the meal from being logged. Also fixed serving-unit matching ('قاشق' now matches 'قاشق غذاخوری' instead of silently falling back to the wrong default unit).",
+      "highlights": [
+        "🌐 رفع باگ CORS که باعث می‌شد «افزودن با هوش مصنوعی» روی dev.gampetoo.com کار نکنه",
+        "🍽️ دیتابیس غذاهای ایرانی از ۲۸ به ۶۶ مورد رسید (نوشابه، میوه‌ها، سبزیجات و چند غذای اصلی که جا افتاده بودن)",
+        "🌍 وقتی غذایی توی دیتابیس نیست، خودکار آنلاین پیدا و برای همیشه به دیتابیس شخصی‌ات اضافه می‌شه",
+        "⚠️ اگه یکی از غذاها هیچ‌جا پیدا نشه، فقط همون رد می‌شه، نه کل وعده"
+      ]
+    },
     {
       "version": "2.1.29",
       "date": "2026-08-02",

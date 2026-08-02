@@ -16,7 +16,11 @@ const SYSTEM_PROMPT = `شما یک استخراج‌کننده‌ی اطلاعا
 [{ "name": string, "quantity": number, "unit": string }]
 هیچ متن، توضیح یا بلاک markdown دیگه‌ای برنگردون — فقط خود آرایه‌ی JSON.`;
 
-const ALLOWED_ORIGINS = new Set(["https://pwa.gampetoo.com", "http://localhost:5173"]);
+const ALLOWED_ORIGINS = new Set([
+  "https://pwa.gampetoo.com",
+  "https://dev.gampetoo.com",
+  "http://localhost:5173",
+]);
 
 function corsHeaders(origin: string | null) {
   const allowOrigin = origin && ALLOWED_ORIGINS.has(origin) ? origin : "https://pwa.gampetoo.com";

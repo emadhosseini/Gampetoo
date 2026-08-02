@@ -19,6 +19,7 @@ const SYNCED_BASE_KEYS = [
   "emad-weight-target",
   "emad-daily-log",
   "emad-calorie-mode",
+  "emad-learned-foods",
 ];
 
 const PUSH_DEBOUNCE_MS = 1000;

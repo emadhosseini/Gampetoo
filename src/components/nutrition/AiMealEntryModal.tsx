@@ -60,7 +60,7 @@ export default function AiMealEntryModal({ meal, onClose, onChange }: AiMealEntr
       return;
     }
 
-    const { matched, unmatched } = matchAiExtractedItems(result.items);
+    const { matched, unmatched } = await matchAiExtractedItems(result.items);
 
     if (matched.length === 0) {
       setScreen({

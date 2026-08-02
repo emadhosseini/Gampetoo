@@ -4,6 +4,7 @@ import { internationalFoodsDatabase } from "@/data/nutrition/internationalFoodsD
 import { gymFoodsDatabase } from "@/data/nutrition/gymFoodsDatabase";
 import { supplementsDatabase } from "@/data/nutrition/supplementsDatabase";
 import { searchExternalFoods } from "@/lib/openFoodFactsApi";
+import { getLearnedFoods } from "@/store/learnedFoodsStore";
 
 const MIN_LOCAL_RESULTS_BEFORE_EXTERNAL_LOOKUP = 5;
 
@@ -62,7 +63,10 @@ function searchLocal(query: string): FoodItem[] {
 
   if (!qFa) return [];
 
-  return localFoods.filter(
+  // Learned foods (discovered via an external lookup elsewhere — see
+  // learnedFoodsStore.ts) count as local from here on, so a manual search
+  // benefits from anything the AI meal-parsing flow already found.
+  return [...localFoods, ...getLearnedFoods()].filter(
     (food) =>
       matchesWordPrefix(normalizeFa(food.nameFa), qFa) ||
       matchesWordPrefix(food.nameEn.toLowerCase(), qEn),
