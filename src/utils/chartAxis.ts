@@ -33,12 +33,20 @@ export interface YAxisRange {
   stepSize: number;
 }
 
+// The highest value's own point may never sit above this fraction of the
+// chart height — i.e. the top third always stays empty headroom instead
+// of the latest/highest value pinning itself to the ceiling.
+const MAX_TOP_POSITION_FRACTION = 2 / 3;
+
 // Computes a Y-axis min/max/stepSize with EXACTLY `rows` gridlines
 // (never fewer, so a single/flat value never collapses onto one edge),
 // each at least `minStep` apart, snapped to nice round numbers, and
 // centered on the data's own min/max rather than floored/ceiled outward
-// from it (which would push a narrow-range value toward the bottom edge
-// instead of the middle of the chart).
+// from it (which would push a narrow-range value toward an edge instead
+// of the middle of the chart). A pure midpoint-center can still land the
+// data's max exactly on the top gridline when the range is wide relative
+// to the span (e.g. a distant target line pulls the center down) — the
+// headroom check below escalates further in that case specifically.
 export function computeYAxisRange(values: number[], rows: number, minStep: number): YAxisRange {
   const finiteValues = values.filter((value) => Number.isFinite(value));
 
@@ -52,19 +60,35 @@ export function computeYAxisRange(values: number[], rows: number, minStep: numbe
 
   let stepSize = Math.max(niceStep((dataMax - dataMin) / Math.max(rows - 1, 1)), minStep);
 
-  // Escalates the step until a `rows`-tall span centered on the data's
-  // midpoint actually contains the full data range — needed because
-  // rounding the centered min to a step-grid boundary can occasionally
-  // clip a fraction of a step off one side.
   for (;;) {
     const span = stepSize * (rows - 1);
     const min = Math.round((center - span / 2) / stepSize) * stepSize;
     const max = min + span;
 
-    if (dataMin >= min - 1e-9 && dataMax <= max + 1e-9) {
+    const containsData = dataMin >= min - 1e-9 && dataMax <= max + 1e-9;
+    const hasTopHeadroom = dataMax - min <= span * MAX_TOP_POSITION_FRACTION + 1e-9;
+
+    if (containsData && hasTopHeadroom) {
       return { min, max, stepSize };
     }
 
     stepSize = nextNiceStep(stepSize);
   }
+}
+
+// Grows an already-computed range outward (in stepSize increments, so
+// gridlines stay evenly spaced) just enough to include `value` — for a
+// reference/target line that may sit far outside the data's own range.
+// Deliberately NOT run back through computeYAxisRange's centering/headroom
+// logic: a target far from the real data should be free to land near an
+// edge (that's informative — it really is far away), rather than dragging
+// the whole axis's resolution down to keep it centered too.
+export function extendYAxisRangeToInclude(range: YAxisRange, value: number): YAxisRange {
+  let { min, max } = range;
+  const { stepSize } = range;
+
+  while (value < min) min -= stepSize;
+  while (value > max) max += stepSize;
+
+  return { min, max, stepSize };
 }

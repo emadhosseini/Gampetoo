@@ -1,5 +1,5 @@
 import type { DailyMetricEntry } from "./dailyMetricLog";
-import { formatGregorianMonth, formatGregorianShort } from "./dateFormat";
+import { formatDayNumber, formatMonthNumber } from "./dateFormat";
 
 export interface StatBucket {
   label: string;
@@ -27,7 +27,7 @@ export function buildDailyBuckets(history: DailyMetricEntry[], days: number): St
 
     const iso = toIsoDate(date);
 
-    buckets.push({ label: formatGregorianShort(date), value: byDate.get(iso) ?? null });
+    buckets.push({ label: formatDayNumber(date), value: byDate.get(iso) ?? null });
   }
 
   return buckets;
@@ -51,7 +51,7 @@ export function buildMonthlyBuckets(history: DailyMetricEntry[], months: number)
 
     const value = values.length > 0 ? values.reduce((sum, v) => sum + v, 0) / values.length : null;
 
-    buckets.push({ label: formatGregorianMonth(monthDate), value });
+    buckets.push({ label: formatMonthNumber(monthDate), value });
   }
 
   return buckets;

@@ -15,8 +15,8 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 
 import type { DailyMetricEntry } from "@/utils/dailyMetricLog";
-import { computeYAxisRange } from "@/utils/chartAxis";
-import { formatGregorianShort } from "@/utils/dateFormat";
+import { computeYAxisRange, extendYAxisRangeToInclude } from "@/utils/chartAxis";
+import { formatDayNumber, formatGregorianShort } from "@/utils/dateFormat";
 import { toFaDigits } from "@/utils/numberFormat";
 import { buildDailyBuckets, buildMonthlyBuckets, type StatBucket } from "@/utils/statBuckets";
 
@@ -116,7 +116,7 @@ export default function StatChartPage({
     if (range === "year") return buildMonthlyBuckets(history, 12);
 
     return entries.map((entry) => ({
-      label: formatGregorianShort(isoToLocalDate(entry.date)),
+      label: formatDayNumber(isoToLocalDate(entry.date)),
       value: entry.value,
     }));
   }, [range, history, entries]);
@@ -135,14 +135,18 @@ export default function StatChartPage({
         : `${formatGregorianShort(isoToLocalDate(entries[0].date))} – ${formatGregorianShort(isoToLocalDate(entries[entries.length - 1].date))}`
       : "—";
 
-  // The target line is included in the axis range calculation too, so the
-  // chart always stretches to show how far the data actually is from the
-  // goal instead of cropping it out.
-  const yAxis = computeYAxisRange(
-    [...chartPoints.map((p) => p.value ?? NaN), targetValue ?? NaN],
+  // Sized from the real data only, so the target line (which can sit far
+  // from it) never drags the resolution down around the actual trend —
+  // extended afterward, separately, just enough to fit the target in too.
+  let yAxis = computeYAxisRange(
+    chartPoints.map((p) => p.value ?? NaN),
     Y_AXIS_ROWS,
     minYStep,
   );
+
+  if (targetValue !== undefined) {
+    yAxis = extendYAxisRangeToInclude(yAxis, targetValue);
+  }
 
   // Denser buckets (month's 30 days) get smaller points so they don't
   // visually collide into each other.
@@ -233,7 +237,7 @@ export default function StatChartPage({
           itself, so it always rendered cramped. Rounded on the bottom
           only, since it's pinned to the top edge. */}
       <div
-        className="glass-panel glass-panel-flush-top glass-static flex h-[46dvh] min-h-95 flex-col rounded-b-3xl rounded-t-none px-5 pb-3 pt-safe"
+        className="glass-panel glass-panel-flush-top glass-static flex h-[58dvh] min-h-115 flex-col rounded-b-3xl rounded-t-none px-5 pb-3 pt-safe"
       >
         <div className="relative flex items-center justify-center pt-3">
           <button

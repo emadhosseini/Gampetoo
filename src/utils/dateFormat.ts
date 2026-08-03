@@ -21,7 +21,12 @@ export function formatGregorianShort(date: Date): string {
   return `${day} ${month}`;
 }
 
-/** e.g. "جولای" — just the Gregorian month name, for monthly-bucketed charts. */
-export function formatGregorianMonth(date: Date): string {
-  return gregorianMonthNamesFa[date.getMonth()];
+/** e.g. "۲۲" — just the day-of-month, Persian digits, for dense chart x-axes. */
+export function formatDayNumber(date: Date): string {
+  return date.getDate().toLocaleString("fa-IR");
+}
+
+/** e.g. "۸" for August — the Gregorian month's 1-12 number, Persian digits. */
+export function formatMonthNumber(date: Date): string {
+  return (date.getMonth() + 1).toLocaleString("fa-IR");
 }
