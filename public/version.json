@@ -1,6 +1,15 @@
 {
-  "current": "2.1.45",
+  "current": "2.1.46",
   "history": [
+    {
+      "version": "2.1.46",
+      "date": "2026-08-03",
+      "description": "Compacted the progress page's weight and calories cards into two square tiles sharing one row (weight on the right per RTL order), instead of two full-width stacked cards. Weight lost its 'وزن' title and date line, keeping the BMI dial, the value with its unit, and the colored category. Calories lost its 'کالری روزانه' title and the three-segment percentage bar with its 50%/100% labels and pointer — the intake status now shows as just its colored label under the ring, mirroring the weight tile's layout exactly. The calorie-target subtitle went too, so both tiles read the same way (visual, value, status); the full breakdown still lives one tap away on each detail page. Water and activity stay full-width rows below. Verified both tiles render identically sized (167x188) across logged, partial, and empty states.",
+      "highlights": [
+        "📐 کارت‌های وزن و کالری کوچک و مربعی شدن و کنار هم توی یک ردیف قرار گرفتن",
+        "🧹 عنوان و تاریخ و نوار درصد حذف شدن — فقط نمودار، عدد و وضعیت رنگی موند"
+      ]
+    },
     {
       "version": "2.1.45",
       "date": "2026-08-03",

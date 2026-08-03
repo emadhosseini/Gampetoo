@@ -16,9 +16,13 @@ export default function ProgressPage() {
     <div className="space-y-4 px-5 pb-5 pt-10">
       <h1 className="text-center text-2xl font-bold text-white">پیشرفت</h1>
 
-      <WeightGaugeCard onClick={() => navigate("/progress/weight")} />
+      {/* Weight and calories share one row as square tiles; water and
+          activity stay full-width rows below them. */}
+      <div className="grid grid-cols-2 gap-4">
+        <WeightGaugeCard onClick={() => navigate("/progress/weight")} />
 
-      <CalorieRingCard onClick={() => navigate("/progress/calories")} />
+        <CalorieRingCard onClick={() => navigate("/progress/calories")} />
+      </div>
 
       <StatCard
         title="آب"

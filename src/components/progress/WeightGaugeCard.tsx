@@ -1,6 +1,5 @@
 import { getCurrentUserHeight } from "@/utils/userEngine";
 import { getWeightLog } from "@/utils/weightEngine";
-import { formatGregorianShort } from "@/utils/dateFormat";
 import { toFaDigits } from "@/utils/numberFormat";
 
 // The gauge's BMI window and zone boundaries (WHO categories, same
@@ -50,11 +49,13 @@ export interface WeightGaugeCardProps {
   onClick: () => void;
 }
 
-// The progress page's weight card, styled after an iOS Health-style gauge:
-// a semicircular BMI dial with the current weight in the hollow and the
-// BMI category (computed from the profile's height) named and colored
-// under it. Falls back gracefully when weight or height isn't logged yet —
-// a neutral dial with no pointer, never a fabricated status.
+// The progress page's weight card: a compact square tile (it shares a
+// row with the calories tile) holding a semicircular BMI dial, the
+// current weight in its hollow, and the BMI category — computed from the
+// profile's height — named and colored underneath. No title/date line:
+// the dial and unit already say what this is, and the row needs the
+// vertical space. Falls back gracefully when weight or height isn't
+// logged yet — a neutral dial with no pointer, never a fabricated status.
 export default function WeightGaugeCard({ onClick }: WeightGaugeCardProps) {
   const entries = getWeightLog();
   const latest = entries.length > 0 ? entries[entries.length - 1] : null;
@@ -72,19 +73,12 @@ export default function WeightGaugeCard({ onClick }: WeightGaugeCardProps) {
 
   const pointer = bmi !== null ? polar(bmiToAngle(bmi), RADIUS) : null;
 
-  const [year, month, day] = latest ? latest.date.split("-").map(Number) : [0, 0, 0];
-
   return (
     <button
       onClick={onClick}
-      className="glass-panel w-full rounded-2xl p-5 text-right"
+      className="glass-panel flex w-full flex-col justify-center rounded-2xl p-4"
     >
-      <h2 className="text-lg font-semibold text-white">وزن</h2>
-      <p className="text-sm text-white/60">
-        {latest ? formatGregorianShort(new Date(year, month - 1, day)) : "ثبت نشده"}
-      </p>
-
-      <div className="relative mx-auto mt-2 w-60 max-w-full">
+      <div className="relative mx-auto w-full">
         <svg viewBox="0 0 200 112" className="w-full">
           {BMI_ZONES.map((zone) => {
             const from = bmiToAngle(zone.from) - SEGMENT_GAP_DEG;
@@ -113,25 +107,23 @@ export default function WeightGaugeCard({ onClick }: WeightGaugeCardProps) {
         </svg>
 
         <div className="absolute inset-x-0 bottom-0 text-center">
-          <p className="text-3xl font-bold text-white">
+          <p className="text-2xl font-bold leading-tight text-white">
             {latest ? toFaDigits(latest.weight) : "—"}
           </p>
-          <p className="text-sm text-white/60">کیلوگرم</p>
+          <p className="text-xs text-white/60">کیلوگرم</p>
         </div>
       </div>
 
       {activeZone !== null ? (
         <p
-          className="mt-2 text-center font-semibold"
+          className="mt-2 text-center text-sm font-semibold"
           style={{ color: activeZone.color }}
         >
           {activeZone.label}
         </p>
       ) : (
-        <p className="mt-2 text-center text-sm text-white/50">
-          {latest
-            ? "برای نمایش وضعیت، قدت رو توی حساب کاربری ثبت کن"
-            : "هنوز وزنی ثبت نکردی"}
+        <p className="mt-2 text-center text-xs leading-5 text-white/50">
+          {latest ? "قدت رو ثبت کن" : "وزنی ثبت نشده"}
         </p>
       )}
     </button>
