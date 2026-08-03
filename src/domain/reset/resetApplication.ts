@@ -7,6 +7,8 @@ import { resetFreeMeal } from "../../utils/freeMealEngine";
 import { resetWeightLog } from "../../utils/weightEngine";
 import { resetDailyLog } from "../../utils/dailyLogEngine";
 import { resetCalorieTrackingMode } from "../../utils/calorieModeEngine";
+import { resetWaterLog } from "../../utils/waterEngine";
+import { resetActivityLog } from "../../utils/activityLogEngine";
 import { signOutRemote } from "../../auth/authEngine";
 import { flushPendingSync, resetSyncMarkers } from "../../sync/remoteSync";
 
@@ -25,6 +27,8 @@ export async function resetApplication() {
   resetWeightLog();
   resetDailyLog();
   resetCalorieTrackingMode();
+  resetWaterLog();
+  resetActivityLog();
 
   if (username) {
     await flushPendingSync(username);

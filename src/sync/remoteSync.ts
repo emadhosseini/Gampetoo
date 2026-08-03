@@ -23,6 +23,7 @@ const SYNCED_BASE_KEYS = [
   "emad-calorie-mode",
   "emad-learned-foods",
   "emad-water-log",
+  "emad-water-goal",
   "emad-activity-log",
 ];
 

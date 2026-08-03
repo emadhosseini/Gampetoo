@@ -1,6 +1,17 @@
 {
-  "current": "2.1.46",
+  "current": "2.1.47",
   "history": [
+    {
+      "version": "2.1.47",
+      "date": "2026-08-03",
+      "description": "Water and activity became square tiles too, so the progress page is now a clean 2x2 grid of equally-sized tiles. Built the water feature out properly: the tile draws a glass that literally fills to today's share of the goal, and the water page dropped its chart entirely (a glass count is a small number you top up through the day — 'how full am I now' is the useful view, not a trend line) in favour of a big jug that fills as you log, plus a tappable grid of glasses: tap the glass you're up to and it fills to there, tap the one you're already at to take it back, with +/- buttons for going past the goal. Added a settable daily glass goal (default 8, range 4-16) since a fillable glass grid needs a target to fill toward; it syncs across devices like every other setting. Activity's tile deliberately has no progress ring — unlike calories there's no activity goal, and a ring at some arbitrary fraction would be inventing one. Also fixed a real pre-existing bug: factory reset never cleared the water or activity logs (both were missing from resetApplication). Removed the now-unused StatCard component.",
+      "highlights": [
+        "💧 صفحه‌ی آب کامل بازطراحی شد — لیوان‌ها رو مستقیم لمس کن تا پر بشن، بدون نمودار اضافه",
+        "🎯 هدف روزانه‌ی آب اضافه شد (پیش‌فرض ۸ لیوان) که خودت می‌تونی تغییرش بدی",
+        "📐 حالا هر چهار کارت پیشرفت مربعی و هم‌اندازه‌ان، دو‌تا در هر ردیف",
+        "🐛 رفع باگ: ریست کارخانه‌ای، اطلاعات آب و فعالیت رو پاک نمی‌کرد"
+      ]
+    },
     {
       "version": "2.1.46",
       "date": "2026-08-03",
