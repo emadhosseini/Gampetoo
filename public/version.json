@@ -1,6 +1,14 @@
 {
-  "current": "2.1.39",
+  "current": "2.1.40",
   "history": [
+    {
+      "version": "2.1.40",
+      "date": "2026-08-03",
+      "description": "Fixed the stat detail pages' chart rendering at a stale, too-narrow width in the installed PWA — pushed against the right edge (RTL start-alignment of a canvas narrower than its wrapper) and clipped at the screen edge. Same root cause as the 2.1.39 viewport bug: iOS standalone cold launch lays the page out against a stale viewport and WebKit's late correction doesn't reliably reach chart.js's own ResizeObserver, freezing the canvas at the stale size. StatChartPage now mirrors MobileContainer's exact settle-signal set (staggered timers, resize, orientationchange, pageshow, visualViewport resize) and imperatively calls chart.resize() on each — a no-op when the size is already right. The chart wrapper also gained overflow-hidden so a transiently mis-sized canvas clips inside the panel instead of painting past the screen edge. Verified: baseline canvas exactly spans its wrapper; a forced stale-narrow canvas (270px vs 350px) snaps back to full width on the first settle signal.",
+      "highlights": [
+        "📊 رفع مشکل عرض نمودار صفحات وزن/کالری/آب/فعالیت در نسخه نصب‌شده — دیگه نمودار جمع‌شده و بیرون‌زده از لبه صفحه نمایش داده نمی‌شه"
+      ]
+    },
     {
       "version": "2.1.39",
       "date": "2026-08-03",

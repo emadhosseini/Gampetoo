@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { ChevronRight, Plus } from "lucide-react";
 import {
   CategoryScale,
@@ -43,6 +43,43 @@ const RANGES: { key: RangeKey; label: string; days: number }[] = [
 // entries directly — gated behind `bucketingReady` for stats that don't
 // have this figured out for their own unit yet (water/activity).
 const COMPRESSED_RANGES: RangeKey[] = ["month", "year"];
+
+/* On an iOS home-screen-installed (standalone) PWA, cold launch can lay
+   the page out against a stale viewport that WebKit only corrects a
+   moment later — and that late correction doesn't reliably reach
+   chart.js's own ResizeObserver, leaving the canvas frozen at the stale
+   width: start-aligned (= pushed against the right edge in this RTL app)
+   and clipped at the screen edge. Same root cause as MobileContainer's
+   useViewportHeight, so this mirrors its exact signal set — staggered
+   settle timers plus every resize-ish event — and imperatively tells the
+   chart to re-measure its container on each one. resize() is a no-op
+   when the size hasn't actually changed, so the extra calls are free. */
+function useChartResizeOnViewportSettle() {
+  const chartRef = useRef<ChartJS<"line"> | null>(null);
+
+  useEffect(() => {
+    const resize = () => chartRef.current?.resize();
+
+    const settleTimers = [100, 400, 1000, 2500].map((delay) =>
+      window.setTimeout(resize, delay)
+    );
+
+    window.addEventListener("resize", resize);
+    window.addEventListener("orientationchange", resize);
+    window.addEventListener("pageshow", resize);
+    window.visualViewport?.addEventListener("resize", resize);
+
+    return () => {
+      settleTimers.forEach((timer) => window.clearTimeout(timer));
+      window.removeEventListener("resize", resize);
+      window.removeEventListener("orientationchange", resize);
+      window.removeEventListener("pageshow", resize);
+      window.visualViewport?.removeEventListener("resize", resize);
+    };
+  }, []);
+
+  return chartRef;
+}
 
 function isoToLocalDate(iso: string): Date {
   const [y, m, d] = iso.split("-").map(Number);
@@ -102,6 +139,7 @@ export default function StatChartPage({
 }: StatChartPageProps) {
   const navigate = useNavigate();
   const [range, setRange] = useState<RangeKey>("month");
+  const chartRef = useChartResizeOnViewportSettle();
 
   const activeRange = RANGES.find((r) => r.key === range)!;
 
@@ -302,14 +340,18 @@ export default function StatChartPage({
           <p className="text-xs text-white/50">{dateRangeLabel}</p>
         </div>
 
-        <div className="relative mt-2 min-h-0 flex-1">
+        {/* overflow-hidden: if the canvas is ever transiently mis-sized
+            (the stale-viewport case useChartResizeOnViewportSettle exists
+            for), it clips inside the panel instead of painting past the
+            screen edge until the next resize signal lands. */}
+        <div className="relative mt-2 min-h-0 flex-1 overflow-hidden">
           {isComingSoon ? (
             <div className="flex h-full items-center justify-center">
               <p className="text-sm text-white/50">به زودی این قابلیت اضافه می‌شه</p>
             </div>
           ) : (
             <>
-              <Line data={chartData} options={chartOptions} />
+              <Line ref={chartRef} data={chartData} options={chartOptions} />
 
               {!hasData && (
                 <div className="absolute inset-0 flex items-center justify-center">
