@@ -30,7 +30,7 @@ export default function WeightDetailPage() {
         onAdd={() => navigate("/settings/weight")}
         addLabel="افزودن وزن"
       >
-        <div className="glass-panel space-y-3 rounded-3xl p-5">
+        <div className="glass-panel glass-static space-y-3 rounded-3xl p-5">
           <button
             onClick={() => setTargetModalOpen(true)}
             className="flex w-full items-center justify-between"

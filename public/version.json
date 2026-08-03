@@ -1,6 +1,16 @@
 {
-  "current": "2.1.32",
+  "current": "2.1.33",
   "history": [
+    {
+      "version": "2.1.33",
+      "date": "2026-08-03",
+      "description": "Removed the accidental press-scale animation on the progress detail pages' top glass panel and the weight page's target/current-weight box — tapping a nested button (back, +, range pill, target-weight row) was also visibly scaling the whole outer container due to CSS :active bubbling to ancestors. Replaced the progress page's weight card (which embedded its own mini chart, target/current-weight rows, and add-weight button) with a plain stat card matching the calorie/water/activity cards exactly — tap it to open the weight detail page instead. Fixed a real filtering bug in the new stat detail pages' day/week/month/6-month/year range selector: the day range was actually filtering the last 7 days, week was showing 30 days, and month was showing 90 days (each one off by a slot) — day now correctly shows just today, week the last 7 days, and month the last 30.",
+      "highlights": [
+        "🐛 رفع باگ فیلتر بازه‌ی روز/هفته/ماه در نمودارهای صفحه پیشرفت — قبلاً هرکدوم بازه‌ی اشتباهی رو نشون می‌دادن",
+        "🎨 حذف انیمیشن فشرده‌شدن کادر بالای صفحات جزئیات هنگام لمس دکمه‌های داخلش",
+        "⚖️ کارت وزن در صفحه پیشرفت حالا دقیقاً مثل کارت‌های کالری/آب/فعالیت است (بدون نمودار داخلش)"
+      ]
+    },
     {
       "version": "2.1.32",
       "date": "2026-08-03",

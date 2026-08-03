@@ -26,9 +26,9 @@ const CHART_FONT_FAMILY = "Vazirmatn";
 type RangeKey = "day" | "week" | "month" | "sixMonth" | "year";
 
 const RANGES: { key: RangeKey; label: string; days: number }[] = [
-  { key: "day", label: "روز", days: 7 },
-  { key: "week", label: "هفته", days: 30 },
-  { key: "month", label: "ماه", days: 90 },
+  { key: "day", label: "روز", days: 0 },
+  { key: "week", label: "هفته", days: 7 },
+  { key: "month", label: "ماه", days: 30 },
   { key: "sixMonth", label: "۶ ماه", days: 180 },
   { key: "year", label: "سال", days: 365 },
 ];
@@ -160,7 +160,7 @@ export default function StatChartPage({
           the reference design this was built from. Rounded on the bottom
           only, since it's pinned to the top edge. */}
       <div
-        className="glass-panel flex h-[33dvh] min-h-[230px] flex-col rounded-b-3xl rounded-t-none px-5 pb-3 pt-safe"
+        className="glass-panel glass-static flex h-[33dvh] min-h-[230px] flex-col rounded-b-3xl rounded-t-none px-5 pb-3 pt-safe"
       >
         <div className="relative flex items-center justify-center pt-3">
           <button
