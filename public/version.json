@@ -1,6 +1,14 @@
 {
-  "current": "2.1.49",
+  "current": "2.1.50",
   "history": [
+    {
+      "version": "2.1.50",
+      "date": "2026-08-03",
+      "description": "The quick-add circle no longer reads as a disc floating over the bottom navigation — it's now part of the bar's actual shape. The cause was structural: the bar and the circle were two overlapping .glass-panel elements, and each drew its own hairline rim, so the bar's rim ran straight through the circle while the circle's rim closed underneath it. Both are now a single SVG silhouette — a pill unioned with a semicircle centred on its top edge — carrying one continuous fill, one continuous hairline (matching .glass-panel's own values) and a drop-shadow that follows the whole outline, so there are no interior seams left to give it away. The button keeps only the icon and its hit area, with the plus nudged into the bump's exposed half. The path is measured in real pixels via ResizeObserver so the bump stays a true circle at any width. Quick-add drawer behaviour is unchanged (all four shortcuts and tap-outside-to-close re-verified).",
+      "highlights": [
+        "➕ دکمه‌ی گرد افزودن حالا واقعاً بخشی از منوی پایینه، نه یه دایره‌ی جدا روی اون"
+      ]
+    },
     {
       "version": "2.1.49",
       "date": "2026-08-03",
