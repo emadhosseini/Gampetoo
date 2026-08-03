@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { ChevronLeft, Mars, User, Venus } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 
 import AccountEditModal from "@/components/AccountEditModal";
 import BmiCard from "@/components/BmiCard";
+import WeightModal from "@/components/WeightModal";
 import HeightModal from "@/components/HeightModal";
 import {
   getCurrentUserGender,
@@ -14,9 +14,9 @@ import { getLatestWeight } from "@/utils/weightEngine";
 import { toFaDigits } from "@/utils/numberFormat";
 
 export default function ProfilePage() {
-  const navigate = useNavigate();
   const [accountModalOpen, setAccountModalOpen] = useState(false);
   const [heightModalOpen, setHeightModalOpen] = useState(false);
+  const [weightModalOpen, setWeightModalOpen] = useState(false);
   const [, setVersion] = useState(0);
 
   const userName = getCurrentUserName() ?? "";
@@ -61,7 +61,7 @@ export default function ProfilePage() {
 
       <div className="flex gap-4">
         <button
-          onClick={() => navigate("/settings/weight")}
+          onClick={() => setWeightModalOpen(true)}
           className="glass-panel flex-1 rounded-3xl p-4 text-center"
         >
           <p className="text-lg font-bold text-white">وزن</p>
@@ -82,6 +82,12 @@ export default function ProfilePage() {
       </div>
 
       <BmiCard />
+
+      <WeightModal
+        open={weightModalOpen}
+        onClose={() => setWeightModalOpen(false)}
+        onSaved={() => setVersion((v) => v + 1)}
+      />
 
       <HeightModal
         open={heightModalOpen}

@@ -60,7 +60,7 @@ export default function WeightPicker({
         className="w-16"
       />
 
-      <span className="text-forest-900 pb-1 text-2xl font-bold">.</span>
+      <span className="pb-1 text-2xl font-bold text-white">.</span>
 
       <WheelColumn
         values={gramValues}

@@ -40,17 +40,23 @@ function WheelItem({ scrollY, index, label }: WheelItemProps) {
     [0.65, 1.15, 0.65],
   );
 
+  // 0.45 rather than 0.35 for the neighbours: they still recede clearly
+  // behind the centered value, but stay legible enough to see what you're
+  // scrolling toward.
   const opacity = useTransform(
     distance,
     [-ITEM_HEIGHT, 0, ITEM_HEIGHT],
-    [0.35, 1, 0.35],
+    [0.45, 1, 0.45],
   );
 
   return (
     <div style={{ height: ITEM_HEIGHT, scrollSnapAlign: "center" }}>
+      {/* White, not forest-900: these digits used to sit on a light surface,
+          but every panel that holds a picker is glass now — dark green on a
+          dark translucent panel was effectively invisible. */}
       <motion.div
         style={{ scale, opacity }}
-        className="text-forest-900 flex h-full items-center justify-center text-2xl font-bold tabular-nums"
+        className="flex h-full items-center justify-center text-2xl font-bold tabular-nums text-white"
       >
         {label}
       </motion.div>

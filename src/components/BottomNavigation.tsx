@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 
 import ActivityLogModal from "@/components/progress/ActivityLogModal";
+import WeightModal from "@/components/WeightModal";
 import { logGlass } from "@/utils/waterEngine";
 import { logActivityCalories } from "@/utils/activityLogEngine";
 
@@ -84,6 +85,7 @@ export default function BottomNavigation({
   const navigate = useNavigate();
   const [drawerOpen, setDrawerOpenState] = useState(false);
   const [activityModalOpen, setActivityModalOpen] = useState(false);
+  const [weightModalOpen, setWeightModalOpen] = useState(false);
 
   function setDrawerOpen(open: boolean | ((prev: boolean) => boolean)) {
     setDrawerOpenState((prev) => {
@@ -127,7 +129,7 @@ export default function BottomNavigation({
     {
       label: "ثبت وزن",
       icon: "⚖️",
-      onSelect: () => navigate("/settings/weight"),
+      onSelect: () => setWeightModalOpen(true),
     },
     {
       label: "ثبت آب",
@@ -312,6 +314,12 @@ export default function BottomNavigation({
           </div>
         </div>
       </div>
+
+      <WeightModal
+        open={weightModalOpen}
+        onClose={() => setWeightModalOpen(false)}
+        onSaved={() => navigate("/progress/weight")}
+      />
 
       <ActivityLogModal
         open={activityModalOpen}

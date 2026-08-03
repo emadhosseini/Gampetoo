@@ -1,6 +1,15 @@
 {
-  "current": "2.1.53",
+  "current": "2.1.54",
   "history": [
+    {
+      "version": "2.1.54",
+      "date": "2026-08-03",
+      "description": "Fixed the wheel pickers' unreadable digits: they were text-forest-900 (dark green), which was fine back when the pickers sat on a light surface, but every panel holding one is glass now — dark green on a dark translucent panel was effectively invisible. They are white now, with the off-centre rows lifted from 0.35 to 0.45 opacity so you can still see what you are scrolling toward. Weight entry is now a popup identical to the height one: same shell, title, picker, ذخیره/بستن stack and wording, instead of the separate full page it used to be (the two halves of 'record your measurements' looked like different features). Everywhere that previously navigated to /settings/weight — the profile weight card, the weight detail page's + button, and the quick-add drawer's ثبت وزن — now opens that popup in place. The old page and its route were removed rather than left unreachable.",
+      "highlights": [
+        "🔢 اعداد چرخ‌های وزن و قد دیگه محو نیستن و کاملاً خوانان",
+        "⚖️ ثبت وزن حالا دقیقاً مثل قد یه پاپ‌آپه، نه یک صفحه‌ی جدا"
+      ]
+    },
     {
       "version": "2.1.53",
       "date": "2026-08-03",
