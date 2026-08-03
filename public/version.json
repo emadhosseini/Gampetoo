@@ -1,6 +1,14 @@
 {
-  "current": "2.1.40",
+  "current": "2.1.41",
   "history": [
+    {
+      "version": "2.1.41",
+      "date": "2026-08-03",
+      "description": "Redesigned the progress page's weight card as a Health-style semicircular gauge (per the user's reference screenshot): a segmented BMI dial (four WHO zones — same thresholds as the profile page's BMI card) with the active zone colored (blue/green/amber/red), a white arrow pointing at the exact BMI position computed from the profile's height, the current weight and unit in the dial's hollow, the last-logged date under the title, and the zone name (کم‌وزن/طبیعی/اضافه‌وزن/چاق) colored to match below. Falls back honestly: no height set → value shown with a 'ثبت قد' hint and a neutral dial (no fabricated status); no weight logged → neutral dial with a dash. Tapping still opens the weight detail page. New WeightGaugeCard component; the other three stat cards are unchanged.",
+      "highlights": [
+        "⚖️ کارت وزن صفحه پیشرفت حالا یه گیج نیم‌دایره‌ای شبیه اپ Health داره — عقربه روی وضعیت BMI، رنگ ناحیه و برچسب کم‌وزن/طبیعی/اضافه‌وزن/چاق"
+      ]
+    },
     {
       "version": "2.1.40",
       "date": "2026-08-03",
