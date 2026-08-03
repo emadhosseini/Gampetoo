@@ -1,63 +1,47 @@
-import { motion, useReducedMotion } from "framer-motion";
-
 import NoiseLayer from "@/components/background/NoiseLayer";
 
 interface MeshGradientBackgroundProps {
-  /** Hex color for the top-left glow (e.g. home team). */
+  /** Hex color for the top-left glow. */
   colorA: string;
-  /** Hex color for the top-right glow (e.g. away team). */
+  /** Hex color for the top-right glow. */
   colorB: string;
   className?: string;
 }
 
-const glowTransition = (duration: number) => ({
-  duration,
-  repeat: Infinity,
-  ease: "easeInOut" as const,
-});
-
+// Static, filter-free glow layer. This used to be two framer-motion divs
+// with filter: blur(110px) animating x/y/scale/opacity in an infinite
+// loop — imperceptible on a desktop GPU, catastrophic on iOS WebKit: a
+// 110px blur keeps two multi-megapixel intermediate buffers alive, and
+// the never-ending animation re-composited them at 60fps on every single
+// screen (this component sits under the whole app shell, the login page,
+// and the error screen). That pegged the phone's GPU permanently — hot
+// device even at idle, and seconds of tap latency because every real
+// interaction had to fight the background for GPU time. A radial
+// gradient IS a soft glow: painted once, no filter, no animation,
+// visually near-identical, and free after first paint. Do not reintroduce
+// large blur() layers or infinite animations here.
 export default function MeshGradientBackground({
   colorA,
   colorB,
   className = "",
 }: MeshGradientBackgroundProps) {
-  const prefersReducedMotion = useReducedMotion();
-
   return (
     <div
       className={`pointer-events-none absolute inset-0 overflow-hidden ${className}`}
       aria-hidden="true"
     >
-      <motion.div
-        className="absolute -left-1/4 -top-1/4 h-[110%] w-[85%] rounded-full blur-[110px]"
-        style={{ backgroundColor: colorA, willChange: "transform, opacity" }}
-        animate={
-          prefersReducedMotion
-            ? { opacity: 0.65 }
-            : {
-                x: [0, 24, -8, 0],
-                y: [0, 16, 6, 0],
-                scale: [1, 1.15, 1.05, 1],
-                opacity: [0.55, 0.8, 0.65, 0.55],
-              }
-        }
-        transition={prefersReducedMotion ? undefined : glowTransition(12)}
+      <div
+        className="absolute -left-1/4 -top-1/4 h-[110%] w-[85%]"
+        style={{
+          background: `radial-gradient(closest-side, ${colorA}99 0%, ${colorA}4d 40%, ${colorA}1a 65%, transparent 88%)`,
+        }}
       />
 
-      <motion.div
-        className="absolute -right-1/4 -top-1/4 h-[110%] w-[85%] rounded-full blur-[110px]"
-        style={{ backgroundColor: colorB, willChange: "transform, opacity" }}
-        animate={
-          prefersReducedMotion
-            ? { opacity: 0.7 }
-            : {
-                x: [0, -24, 10, 0],
-                y: [0, 20, -6, 0],
-                scale: [1, 1.2, 1.08, 1],
-                opacity: [0.55, 0.85, 0.6, 0.55],
-              }
-        }
-        transition={prefersReducedMotion ? undefined : glowTransition(15)}
+      <div
+        className="absolute -right-1/4 -top-1/4 h-[110%] w-[85%]"
+        style={{
+          background: `radial-gradient(closest-side, ${colorB}99 0%, ${colorB}4d 40%, ${colorB}1a 65%, transparent 88%)`,
+        }}
       />
 
       <NoiseLayer />

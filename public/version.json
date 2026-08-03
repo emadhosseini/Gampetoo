@@ -1,6 +1,15 @@
 {
-  "current": "2.1.43",
+  "current": "2.1.44",
   "history": [
+    {
+      "version": "2.1.44",
+      "date": "2026-08-03",
+      "description": "Performance: eliminated the app's single biggest constant GPU load — the background glow (MeshGradientBackground, present under every screen including login and the error page) was two huge divs with filter: blur(110px) running infinite framer-motion x/y/scale/opacity loops (12s/15s, forever). On iOS WebKit a 110px blur keeps two multi-megapixel intermediate buffers alive and the never-ending animation re-composited them at 60fps, permanently pegging the phone's GPU — hot device even at idle, and seconds of tap latency because every real interaction had to fight the background for GPU time (this, not just the 2.1.43 viewport loop, was the remaining cause of the reported browser hang/heat). Replaced with static radial gradients — a radial gradient IS a soft glow: painted once, no filter, no animation, visually near-identical (verified by screenshot comparison), zero ongoing cost. This was the only infinite animation in the app (verified by grep). Benefits both browser and installed PWA — cooler device and better battery everywhere.",
+      "highlights": [
+        "🔋 هاله‌ی پس‌زمینه دیگه انیمیشن دائمی و بلور سنگین نداره — گوشی خنک می‌مونه و دکمه‌ها فوری جواب می‌دن",
+        "🎨 ظاهر پس‌زمینه تقریباً همون قبلیه، فقط بی‌حرکت"
+      ]
+    },
     {
       "version": "2.1.43",
       "date": "2026-08-03",
