@@ -6,7 +6,7 @@ import {
   useReducedMotion,
   useTransform,
 } from "framer-motion";
-import { Check, ChevronRight } from "lucide-react";
+import { ArrowRight, Check } from "lucide-react";
 
 interface SlideToCompleteButtonProps {
   label: string;
@@ -17,11 +17,13 @@ interface SlideToCompleteButtonProps {
 // instead of snapping back to the start.
 const COMPLETE_THRESHOLD = 0.75;
 
-// How far (in px) into the drag the yellow fill takes to fade fully in —
-// it's fully hidden at rest and eases in as soon as the drag starts.
-const FILL_FADE_IN_DISTANCE = 28;
+// How far (in px) into the drag the blurred trail takes to fade fully in.
+// It's hidden at rest — at x=0 the trail is exactly the handle's width, and
+// a blurred patch sitting under the circle before you've touched anything
+// just looks like a rendering artifact.
+const TRAIL_FADE_IN_DISTANCE = 28;
 
-const HANDLE_SIZE = 84;
+const HANDLE_SIZE = 56;
 const TRACK_INSET = 4;
 
 export default function SlideToCompleteButton({
@@ -34,8 +36,8 @@ export default function SlideToCompleteButton({
   const prefersReducedMotion = useReducedMotion();
 
   const x = useMotionValue(0);
-  const fillWidth = useTransform(x, (value) => `${TRACK_INSET + HANDLE_SIZE + value}px`);
-  const fillOpacity = useTransform(x, [0, FILL_FADE_IN_DISTANCE], [0, 1]);
+  const trailWidth = useTransform(x, (value) => `${TRACK_INSET + HANDLE_SIZE + value}px`);
+  const trailOpacity = useTransform(x, [0, TRAIL_FADE_IN_DISTANCE], [0, 1]);
   const labelOpacity = useTransform(x, [0, Math.max(maxDrag * 0.5, 1)], [1, 0]);
 
   useLayoutEffect(() => {
@@ -75,52 +77,55 @@ export default function SlideToCompleteButton({
   }
 
   return (
+    // Same pill shape and glass treatment as the bottom navigation bar, so
+    // the two read as one family rather than two different button styles.
     <div
       ref={trackRef}
       role="button"
       aria-label={label}
-      className="glass-panel relative mt-6 h-16 w-full overflow-hidden rounded-2xl"
+      className="glass-panel relative mt-6 h-16 w-full overflow-hidden rounded-full"
     >
+      {/* The trail the handle leaves behind: a blur of whatever the page is
+          showing underneath, not a colored fill. Deliberately carries no
+          mask-image — WebKit can drop backdrop-filter entirely when it's
+          combined with a mask, and this app has already hit iOS
+          backdrop-filter bugs (see ModalOverlay), so the leading edge is
+          capped by the handle circle instead. translateZ(0)/will-change is
+          the same GPU-layer promotion ModalOverlay needs to make
+          backdrop-filter paint reliably on iOS. */}
       <motion.div
-        className="pointer-events-none absolute inset-y-0 left-0 bg-avocado-yellow"
+        className="pointer-events-none absolute inset-y-0 left-0 bg-white/10 backdrop-blur-[30px]"
         style={{
-          width: fillWidth,
-          opacity: completed ? 1 : fillOpacity,
-          maskImage: "linear-gradient(to right, black 82%, transparent 100%)",
-          WebkitMaskImage: "linear-gradient(to right, black 82%, transparent 100%)",
+          width: trailWidth,
+          opacity: completed ? 1 : trailOpacity,
+          transform: "translateZ(0)",
+          willChange: "backdrop-filter",
         }}
       />
 
       <motion.span
-        className="pointer-events-none absolute inset-0 flex items-center justify-center px-16 text-center text-sm font-bold text-white"
+        className="pointer-events-none absolute inset-0 flex items-center justify-center px-20 text-center text-sm font-bold text-white"
         style={{ opacity: completed ? 0 : labelOpacity }}
       >
         {label}
       </motion.span>
 
       <motion.div
-        className="absolute top-0 left-1 flex h-16 items-center justify-center"
-        style={{ x, width: HANDLE_SIZE }}
+        className="absolute top-1 left-1 flex items-center justify-center"
+        style={{ x, width: HANDLE_SIZE, height: HANDLE_SIZE }}
         drag={completed ? false : "x"}
         dragConstraints={{ left: 0, right: maxDrag }}
         dragElastic={0.02}
         dragMomentum={false}
         onDragEnd={handleDragEnd}
       >
-        {completed ? (
-          // The fill is solid yellow behind this by the time it shows —
-          // black reads correctly there, matching the app's solid-yellow-CTA
-          // convention (yellow background, black icon/text).
-          <Check size={28} className="text-black" />
-        ) : (
-          // Forced ltr: this row's left-to-right brightest-to-faintest
-          // order must hold regardless of the page's global RTL direction.
-          <div dir="ltr" className="flex items-center">
-            <ChevronRight size={36} className="-mr-4 text-avocado-yellow opacity-100" />
-            <ChevronRight size={36} className="-mr-4 text-avocado-yellow opacity-60" />
-            <ChevronRight size={36} className="text-avocado-yellow opacity-30" />
-          </div>
-        )}
+        {/* .glass-panel forces position: relative in index.css and would
+            beat an "absolute" utility class, so the draggable wrapper above
+            owns the positioning and this inner circle only carries the
+            look — same split used for the bottom nav's own round button. */}
+        <div className="glass-panel flex h-full w-full items-center justify-center rounded-full text-white">
+          {completed ? <Check size={26} /> : <ArrowRight size={26} />}
+        </div>
       </motion.div>
     </div>
   );

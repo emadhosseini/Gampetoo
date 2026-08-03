@@ -1,6 +1,15 @@
 {
-  "current": "2.1.47",
+  "current": "2.1.48",
   "history": [
+    {
+      "version": "2.1.48",
+      "date": "2026-08-03",
+      "description": "Restyled the slide-to-complete button to match the bottom navigation bar: same pill shape and glass treatment, with the three yellow chevrons replaced by a single round glass handle holding an arrow, sized and styled like the nav's own round button. Dragging now pulls a 30px blurred trail across the track instead of a yellow fill — it fades in over the first 28px so there's no blurred patch sitting under the handle at rest. The trail deliberately carries no mask-image: WebKit can drop backdrop-filter entirely when combined with a mask (this app has already hit iOS backdrop-filter bugs), so the leading edge is capped by the handle circle instead, and the same GPU-layer promotion ModalOverlay relies on is applied so the blur paints reliably on iOS. Verified drag, release-below-threshold snap-back, and full-drag completion all still work.",
+      "highlights": [
+        "🎚️ اسلایدر «تمرین امروز رو انجام دادم» هم‌شکل منوی پایین شد — دایره‌ای با فلش در سمت چپ",
+        "💫 موقع کشیدن، به‌جای رنگ زرد یک بلر شیشه‌ای تا انتها کشیده می‌شه"
+      ]
+    },
     {
       "version": "2.1.47",
       "date": "2026-08-03",
