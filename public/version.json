@@ -1,6 +1,14 @@
 {
-  "current": "2.1.41",
+  "current": "2.1.42",
   "history": [
+    {
+      "version": "2.1.42",
+      "date": "2026-08-03",
+      "description": "Redesigned the progress page's daily-calories card to match the user's second reference screenshot: a circular progress ring (today's total in the hollow, arc and position dot colored by status, dot resting at 12 o'clock when nothing's logged — like the reference) beside a status line ('وضعیت مصرف' + colored کمتر از نیاز/مناسب/بیشتر از هدف) and a three-segment bar with a pointer marking today's intake as a percentage of the calorie target (segments span 0–50–100–150%, labels at the ۵۰٪/۱۰۰٪ boundaries, filling right-to-left per RTL). The ring caps at one lap; the bar's third segment is where over-target overflow shows. Without a calorie target there's no honest percentage, so the ring stays neutral and the bar is replaced by a hint to set one from the calories detail page. New CalorieRingCard component; water/activity cards unchanged.",
+      "highlights": [
+        "🍽️ کارت کالری روزانه هم مثل کارت وزن بازطراحی شد — حلقه پیشرفت دور عدد، وضعیت رنگی و نوار سه‌قسمتی با نشانگر نسبت به کالری هدف"
+      ]
+    },
     {
       "version": "2.1.41",
       "date": "2026-08-03",

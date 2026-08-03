@@ -2,17 +2,15 @@ import { useNavigate } from "react-router-dom";
 
 import StatCard from "@/components/progress/StatCard";
 import WeightGaugeCard from "@/components/progress/WeightGaugeCard";
-import { getCalorieTarget, getTodaysTotalCalories } from "@/utils/dailyLogEngine";
+import CalorieRingCard from "@/components/progress/CalorieRingCard";
 import { getTodayGlasses } from "@/utils/waterEngine";
 import { getTodayActivityCalories } from "@/utils/activityLogEngine";
 import { toFaDigits } from "@/utils/numberFormat";
 
 export default function ProgressPage() {
   const navigate = useNavigate();
-  const todaysCalories = getTodaysTotalCalories();
   const todaysGlasses = getTodayGlasses();
   const todaysActivityCalories = getTodayActivityCalories();
-  const calorieTarget = getCalorieTarget();
 
   return (
     <div className="space-y-4 px-5 pb-5 pt-10">
@@ -20,13 +18,7 @@ export default function ProgressPage() {
 
       <WeightGaugeCard onClick={() => navigate("/progress/weight")} />
 
-      <StatCard
-        title="کالری روزانه"
-        icon="🍽️"
-        value={`${toFaDigits(todaysCalories)} کالری`}
-        goalLabel={calorieTarget !== null ? `کالری هدف: ${toFaDigits(calorieTarget)} کالری` : "بدون هدف"}
-        onClick={() => navigate("/progress/calories")}
-      />
+      <CalorieRingCard onClick={() => navigate("/progress/calories")} />
 
       <StatCard
         title="آب"
