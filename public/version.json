@@ -1,6 +1,15 @@
 {
-  "current": "2.1.37",
+  "current": "2.1.38",
   "history": [
+    {
+      "version": "2.1.38",
+      "date": "2026-08-03",
+      "description": "Added a quick-add drawer to the bottom navigation: a circular '+' button sits centered on the nav pill's top edge and, on tap, a panel rises up from behind it (built by animating height with the panel's bottom edge pinned to the button, so it reads as growing out from behind rather than sliding in) showing four shortcuts — افزودن غذا, ثبت وزن, ثبت آب, ثبت فعالیت — matching the same four domains and icons as the progress page's stat cards. The '+' rotates 45 degrees into an '×' while the drawer is open. A blurred backdrop (same treatment as every other popup in the app) sits behind it for legibility and closes the drawer on tap. Water logs a glass immediately; the rest hand off to their existing add flow (weight page, activity modal, or the daily-log meal tab).",
+      "highlights": [
+        "➕ دکمه‌ی جدید روی نوار پایین برای ثبت سریع — غذا، وزن، آب و فعالیت با یک ضربه",
+        "🔄 دکمه‌ی + هنگام باز شدن کادر، ۴۵ درجه می‌چرخه و به × تبدیل می‌شه"
+      ]
+    },
     {
       "version": "2.1.37",
       "date": "2026-08-03",
