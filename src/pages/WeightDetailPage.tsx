@@ -3,12 +3,14 @@ import { useNavigate } from "react-router-dom";
 
 import StatChartPage from "@/components/progress/StatChartPage";
 import TargetWeightModal from "@/components/progress/TargetWeightModal";
+import WeightHistoryModal from "@/components/progress/WeightHistoryModal";
 import { getLatestWeight, getTargetWeight, getWeightLog } from "@/utils/weightEngine";
 import { toFaDigits } from "@/utils/numberFormat";
 
 export default function WeightDetailPage() {
   const navigate = useNavigate();
   const [targetModalOpen, setTargetModalOpen] = useState(false);
+  const [historyModalOpen, setHistoryModalOpen] = useState(false);
   // Only the setter is needed — forces a re-render so the plain
   // getTargetWeight()/getLatestWeight() reads below pick up the change;
   // they're not memoized, so any re-render already refreshes them.
@@ -62,12 +64,25 @@ export default function WeightDetailPage() {
             </span>
           </div>
         </div>
+
+        <button
+          onClick={() => setHistoryModalOpen(true)}
+          className="ghost-action w-full rounded-2xl py-3 text-sm font-medium text-white"
+        >
+          مشاهده و ویرایش تاریخچه وزن
+        </button>
       </StatChartPage>
 
       <TargetWeightModal
         open={targetModalOpen}
         onClose={() => setTargetModalOpen(false)}
         onSaved={() => setVersion((v) => v + 1)}
+      />
+
+      <WeightHistoryModal
+        open={historyModalOpen}
+        onClose={() => setHistoryModalOpen(false)}
+        onChange={() => setVersion((v) => v + 1)}
       />
     </>
   );

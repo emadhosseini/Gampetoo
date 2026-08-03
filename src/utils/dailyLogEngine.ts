@@ -3,6 +3,7 @@ import { scopedKey } from "./userEngine";
 import { createDailyMetricLog, type DailyMetricEntry } from "./dailyMetricLog";
 
 const STORAGE_KEY = "emad-daily-log";
+const TARGET_KEY = "emad-daily-calorie-target";
 
 // Today's meals (below) get discarded the moment the date rolls over — see
 // readState(). Before that happens, its final total is archived here, so
@@ -122,4 +123,15 @@ export function getCalorieHistory(): DailyMetricEntry[] {
 // into one coherent view once both have entries.
 export function hasTodaysLoggedEntries(): boolean {
   return Object.values(readState().meals).some((entries) => entries.length > 0);
+}
+
+export function getCalorieTarget(): number | null {
+  const saved = localStorage.getItem(scopedKey(TARGET_KEY));
+  const parsed = saved ? Number(saved) : NaN;
+
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+export function setCalorieTarget(calories: number) {
+  localStorage.setItem(scopedKey(TARGET_KEY), String(Math.round(calories)));
 }

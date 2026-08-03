@@ -19,6 +19,7 @@ export default function WaterDetailPage() {
       // would just be an extra step for no benefit.
       onAdd={() => setHistory(logGlass())}
       addLabel="ثبت یک لیوان آب"
+      bucketingReady={false}
     />
   );
 }

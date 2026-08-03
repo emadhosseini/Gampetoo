@@ -19,6 +19,7 @@ export default function ActivityDetailPage() {
         history={history}
         onAdd={() => setModalOpen(true)}
         addLabel="ثبت فعالیت"
+        bucketingReady={false}
       />
 
       <ActivityLogModal

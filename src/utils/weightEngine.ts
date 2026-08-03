@@ -65,6 +65,14 @@ export function logWeight(weight: number, date: string = today()): WeightEntry[]
   return entries;
 }
 
+export function deleteWeightEntry(id: string): WeightEntry[] {
+  const entries = getWeightLog().filter((entry) => entry.id !== id);
+
+  saveWeightLog(entries);
+
+  return entries;
+}
+
 export function getTargetWeight(): number | null {
   const saved = localStorage.getItem(scopedKey(TARGET_KEY));
   const parsed = saved ? Number(saved) : NaN;

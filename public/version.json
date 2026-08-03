@@ -1,6 +1,16 @@
 {
-  "current": "2.1.35",
+  "current": "2.1.36",
   "history": [
+    {
+      "version": "2.1.36",
+      "date": "2026-08-03",
+      "description": "Added a daily calorie target, mirroring the weight page's target feature exactly: a settable goal (TargetCaloriesModal, 100-calorie steps), a dashed target reference line on the calories chart, a target/current-calories row block, and the goal now shown on the progress overview's calorie card the same way the weight card already does. Water and activity's month/year chart ranges (the 'compressed' bucket-aggregation views) now show an honest 'به زودی این قابلیت اضافه می‌شه' placeholder instead of a chart that hasn't been designed for those units yet — day/week/6-month still work normally. Added a weight-history view: a 'مشاهده و ویرایش تاریخچه وزن' button on the weight detail page opens a list of every logged entry (newest first) with a per-entry delete button, so a mistaken or unwanted weight entry can be removed directly instead of only ever being able to add new ones.",
+      "highlights": [
+        "🎯 کالری روزانه هم مثل وزن، هدف قابل تنظیم و خط هدف روی نمودار داره",
+        "🗑️ صفحه وزن حالا یه تاریخچه کامل داره — هر ثبت رو جدا می‌شه حذف کرد",
+        "🚧 آب و فعالیت توی بازه‌های ماه/سال فعلاً «به زودی اضافه می‌شه» نشون می‌دن به‌جای نمودار نصفه‌کاره"
+      ]
+    },
     {
       "version": "2.1.35",
       "date": "2026-08-03",

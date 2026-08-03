@@ -19,6 +19,7 @@ const SYNCED_BASE_KEYS = [
   "emad-weight-target",
   "emad-daily-log",
   "emad-daily-log-history",
+  "emad-daily-calorie-target",
   "emad-calorie-mode",
   "emad-learned-foods",
   "emad-water-log",

@@ -38,6 +38,12 @@ const RANGES: { key: RangeKey; label: string; days: number }[] = [
   { key: "year", label: "سال", days: 365 },
 ];
 
+// The ranges that compress into aggregated buckets (month's 30 daily
+// buckets, year's 12 monthly averages) rather than just plotting real
+// entries directly — gated behind `bucketingReady` for stats that don't
+// have this figured out for their own unit yet (water/activity).
+const COMPRESSED_RANGES: RangeKey[] = ["month", "year"];
+
 function isoToLocalDate(iso: string): Date {
   const [y, m, d] = iso.split("-").map(Number);
 
@@ -70,6 +76,11 @@ export interface StatChartPageProps {
   // activity).
   targetValue?: number;
   targetLabel?: string;
+  // Whether the month/year "compressed" bucketing (see COMPRESSED_RANGES)
+  // is ready for this stat's unit — off for water/activity, which show a
+  // "coming soon" placeholder on those two ranges instead of a half-baked
+  // aggregation. Defaults to true (weight/calories).
+  bucketingReady?: boolean;
   // Extra content below the chart panel, in the page's normal scroll flow
   // (e.g. the weight page's target/current-weight rows).
   children?: ReactNode;
@@ -86,6 +97,7 @@ export default function StatChartPage({
   addLabel,
   targetValue,
   targetLabel = "هدف",
+  bucketingReady = true,
   children,
 }: StatChartPageProps) {
   const navigate = useNavigate();
@@ -122,6 +134,7 @@ export default function StatChartPage({
   }, [range, history, entries]);
 
   const hasData = chartPoints.some((point) => point.value !== null);
+  const isComingSoon = !bucketingReady && COMPRESSED_RANGES.includes(range);
 
   const average =
     entries.length > 0
@@ -290,12 +303,20 @@ export default function StatChartPage({
         </div>
 
         <div className="relative mt-2 min-h-0 flex-1">
-          <Line data={chartData} options={chartOptions} />
-
-          {!hasData && (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <p className="text-sm text-white/50">چیزی ثبت نشده</p>
+          {isComingSoon ? (
+            <div className="flex h-full items-center justify-center">
+              <p className="text-sm text-white/50">به زودی این قابلیت اضافه می‌شه</p>
             </div>
+          ) : (
+            <>
+              <Line data={chartData} options={chartOptions} />
+
+              {!hasData && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <p className="text-sm text-white/50">چیزی ثبت نشده</p>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
