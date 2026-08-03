@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+import BmiCard from "@/components/BmiCard";
 import StatChartPage from "@/components/progress/StatChartPage";
 import TargetWeightModal from "@/components/progress/TargetWeightModal";
 import WeightHistoryModal from "@/components/progress/WeightHistoryModal";
@@ -64,6 +65,8 @@ export default function WeightDetailPage() {
             </span>
           </div>
         </div>
+
+        <BmiCard />
 
         <button
           onClick={() => setHistoryModalOpen(true)}

@@ -1,6 +1,15 @@
 {
-  "current": "2.1.44",
+  "current": "2.1.45",
   "history": [
+    {
+      "version": "2.1.45",
+      "date": "2026-08-03",
+      "description": "Rebuilt the BMI readout as a full card matching the user's reference screenshot: the BMI value and its colored category heading, a short explanation of what that category means, and a four-segment color bar (blue/green/amber/red) with the 18.5/25.0/30.0 boundary values printed at the seams, the zone names underneath (active one colored), and a ring marker at the exact BMI position. Segments are equal quarters with piecewise-linear positioning inside each, exactly like the reference — BMI 27.5 lands dead-centre in the اضافه‌وزن segment. Laid out right-to-left per the app's RTL flow (lowest zone at the right edge). Extracted as a shared BmiCard component: it replaces the old one-line BMI box on the profile page and is now also shown on the weight detail page under the target/current-weight panel. Keeps honest fallbacks — names exactly which of weight/height is still missing rather than showing an empty bar.",
+      "highlights": [
+        "📊 کارت BMI بازطراحی شد — نوار رنگی چهاربخشی با نشانگر، مرزهای ۱۸.۵/۲۵/۳۰ و توضیح وضعیتت",
+        "⚖️ همین کارت حالا توی صفحه‌ی وزن هم نمایش داده می‌شه، نه فقط حساب کاربری"
+      ]
+    },
     {
       "version": "2.1.44",
       "date": "2026-08-03",

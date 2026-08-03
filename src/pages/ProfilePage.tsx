@@ -3,6 +3,7 @@ import { ChevronLeft, Mars, User, Venus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import AccountEditModal from "@/components/AccountEditModal";
+import BmiCard from "@/components/BmiCard";
 import HeightModal from "@/components/HeightModal";
 import {
   getCurrentUserGender,
@@ -11,13 +12,6 @@ import {
 } from "@/utils/userEngine";
 import { getLatestWeight } from "@/utils/weightEngine";
 import { toFaDigits } from "@/utils/numberFormat";
-
-function bmiCategoryLabel(bmi: number): string {
-  if (bmi < 18.5) return "کم‌وزن";
-  if (bmi < 25) return "طبیعی";
-  if (bmi < 30) return "اضافه‌وزن";
-  return "چاق";
-}
 
 export default function ProfilePage() {
   const navigate = useNavigate();
@@ -29,8 +23,6 @@ export default function ProfilePage() {
   const gender = getCurrentUserGender();
   const weight = getLatestWeight();
   const height = getCurrentUserHeight();
-
-  const bmi = weight !== null && height !== null ? weight / (height / 100) ** 2 : null;
 
   const GenderIcon = gender === "male" ? Mars : gender === "female" ? Venus : User;
 
@@ -89,18 +81,7 @@ export default function ProfilePage() {
         </button>
       </div>
 
-      <div className="glass-panel rounded-3xl p-4 text-center">
-        <p className="text-lg font-bold text-white">BMI</p>
-        {bmi !== null ? (
-          <p className="mt-1 text-sm text-white">
-            {toFaDigits(bmi.toFixed(1))} ({bmiCategoryLabel(bmi)})
-          </p>
-        ) : (
-          <p className="mt-1 text-sm text-white">
-            برای محاسبه، وزن و قد رو ثبت کن
-          </p>
-        )}
-      </div>
+      <BmiCard />
 
       <HeightModal
         open={heightModalOpen}
