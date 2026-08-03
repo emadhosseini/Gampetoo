@@ -124,7 +124,7 @@ export default function AccountEditModal({
         <div className="flex flex-col items-center gap-2 pt-2">
           <button
             onClick={handleLogout}
-            className="glass-tap rounded-full border border-forest-500 px-5 py-2 text-sm text-white"
+            className="ghost-action rounded-full px-5 py-2 text-sm text-white"
           >
             خروج از حساب کاربری
           </button>

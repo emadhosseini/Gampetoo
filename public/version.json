@@ -1,6 +1,15 @@
 {
-  "current": "2.1.52",
+  "current": "2.1.53",
   "history": [
+    {
+      "version": "2.1.53",
+      "date": "2026-08-03",
+      "description": "Swept the whole codebase for anything still painting a solid green or yellow surface after the 2.1.52 glass conversion, and converted the rest. The program builder's day cards lost their vivid forest-to-lime gradient (the largest solid surface left in the app) and became glass panels; the .day-card-gradient class was deleted rather than left as dead CSS. The meal cards' round add button was the last solid coloured button fill (lime with a black icon) and is now .glass-action with a white icon. The yellow tint circles behind icons in the update prompt, workout header, side-menu avatar and the AI 'تخمینی' badge became glass chips — the icons keep their accent colour, the surfaces don't. The account popup's logout button swapped a hardcoded forest outline for the shared .ghost-action, and the wheel picker's selection band swapped dark forest lines for white ones now that it sits inside a glass modal. Verified by scanning every main screen at runtime: the only element still painting a solid theme colour is the app's own page background, which is the intended base canvas. Yellow now exists solely as a text/icon accent (active nav tab, AI sparkle, warnings); the only remaining coloured fill anywhere is the toggle switch's on-state, which needs colour to signal on/off at all.",
+      "highlights": [
+        "🧹 آخرین سطح‌های سبز و زرد توپُر هم شیشه‌ای شدن — کارت‌های روز برنامه، دکمه‌ی افزودن وعده‌ها و حلقه‌های پشت آیکون‌ها",
+        "🔍 تمام صفحات اسکن شدن؛ تنها رنگ توپُر باقی‌مونده خودِ پس‌زمینه‌ی اپه"
+      ]
+    },
     {
       "version": "2.1.52",
       "date": "2026-08-03",

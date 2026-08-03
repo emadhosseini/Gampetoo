@@ -310,7 +310,7 @@ export default function SideMenu({ children }: SideMenuProps) {
             >
               <div className="flex items-center gap-3">
                 {/* Placeholder avatar — swap for a gender-based picture later. */}
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-avocado-yellow/20 text-avocado-yellow">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center glass-chip rounded-full text-avocado-yellow">
                   <User size={20} />
                 </div>
 

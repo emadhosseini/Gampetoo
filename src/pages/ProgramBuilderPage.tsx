@@ -110,7 +110,7 @@ function ProgramBuilderPage() {
       {days.map((day, index) => (
         <div
           key={day.id}
-          className="day-card-gradient rounded-2xl p-4"
+          className="glass-panel glass-static rounded-2xl p-4"
         >
           <div className="flex items-center justify-between">
             <div className="text-lg font-bold text-white">

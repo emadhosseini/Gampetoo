@@ -134,7 +134,7 @@ export function WheelColumn({
 
       {/* Center selection band — a thin indicator line only, no fill. */}
       <div
-        className="border-forest-900/25 pointer-events-none absolute inset-x-0 top-1/2 -translate-y-1/2 border-y"
+        className="pointer-events-none border-white/20 absolute inset-x-0 top-1/2 -translate-y-1/2 border-y"
         style={{ height: ITEM_HEIGHT }}
       />
     </div>

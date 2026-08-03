@@ -10,11 +10,14 @@
   --color-forest-600: #327b3e;
   --color-forest-500: #3b9149;
 
-  /* The mascot icon's yellow (its avocado flesh) — the app's primary button color. */
+  /* The mascot icon's yellow (its avocado flesh). Buttons no longer use it
+     as a fill — every button surface is glass now — so it survives purely
+     as a text/icon accent (the active nav tab, the AI sparkle, warnings). */
   --color-avocado-yellow: #faea5c;
 
-  /* A brighter lime-green, used only as the light end of the day-card
-     gradient (day-card-gradient below). */
+  /* A brighter lime-green. Only the Toggle's on-state still uses it: a
+     switch has to signal on/off with colour, which glass can't do, and
+     lime already reads as "affirmative" in this app. */
   --color-avocado-lime: #9dc730;
 }
 
@@ -217,25 +220,17 @@ textarea {
 }
 
 /* Interactive-element system, by function:
-   - .day-card-gradient: the editable "day" container (holds a select and a
-     delete action) — a vivid solid gradient, not glass, since it's the
-     thing being directly worked on rather than a passive info card. No
-     press-transform: it wraps smaller controls, and scaling it would shift
-     them out from under the finger mid-tap (see .glass-static above).
    - .selector-pill: a choice control (native <select>, a stepper row, a
      toggle in a choice group) — glass like the rest of the app, one step
      lighter than .glass-chip so it still reads as "nested inside"
      whatever card holds it.
    - .ghost-action: a secondary/optional action (add, cancel) — outline
-     only, no fill, so it never competes with the primary CTA. */
-.day-card-gradient {
-  background: linear-gradient(
-    120deg,
-    var(--color-forest-500) 0%,
-    var(--color-avocado-lime) 100%
-  );
-}
+     only, no fill, so it never competes with the primary CTA.
 
+   (.day-card-gradient lived here too — a vivid forest-to-lime fill for the
+   program builder's day cards. It was the last large solid surface in the
+   app once everything else went glass, so the day cards became .glass-panel
+   and the class was dropped rather than left as dead CSS.) */
 .selector-pill {
   background-color: rgb(255 255 255 / 10%);
   box-shadow: 0px 0px 0.5px 0.5px rgb(219 219 219 / 25%);

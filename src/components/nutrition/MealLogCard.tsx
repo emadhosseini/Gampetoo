@@ -46,7 +46,7 @@ export default function MealLogCard({
       <button
         onClick={() => onAdd(meal)}
         aria-label={`افزودن ${meal.title}`}
-        className="glass-tap flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-avocado-lime text-black"
+        className="glass-action flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white"
       >
         <Plus size={20} />
       </button>

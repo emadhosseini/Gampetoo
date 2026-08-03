@@ -51,7 +51,7 @@ export default function WorkoutHeader({
       {showForgotButton && open && (
         <ModalOverlay onClose={() => setOpen(false)}>
           <div className="glass-panel glass-static rounded-3xl p-6 text-center">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-avocado-yellow/10 text-2xl">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center glass-chip rounded-full text-2xl">
               🤦
             </div>
 
