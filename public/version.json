@@ -1,6 +1,14 @@
 {
-  "current": "2.1.38",
+  "current": "2.1.39",
   "history": [
+    {
+      "version": "2.1.39",
+      "date": "2026-08-03",
+      "description": "Fixed the installed (home-screen) PWA intermittently not filling the full screen — a dead black strip would sometimes appear under the app, because window.innerHeight reports a stale, too-short value on cold launch and after the keyboard closes, and WebKit doesn't reliably fire any event when it later corrects itself. The JS-measured height now (1) also listens to visualViewport resize (keyboard dismissal often only announces itself there, not on window.resize) with an extra late settle timer, and (2) in iOS standalone mode (navigator.standalone, which covers home-screen installs from both Safari and Chrome since both are WebKit) clamps up to screen.height in portrait — a standalone app with viewport-fit=cover always covers the entire screen, so screen.height is correct even while innerHeight is still stale, without waiting on WebKit to catch up. Regular browser-tab behavior is unchanged (verified: container tracks innerHeight exactly there). Verified via simulated standalone (stale innerHeight 800 vs screen 844 → container renders 844).",
+      "highlights": [
+        "📱 رفع مشکل پر نشدن کامل صفحه در نسخه نصب‌شده (PWA) — اون نوار خالی که گاهی پایین اپ می‌موند دیگه پیش نمیاد"
+      ]
+    },
     {
       "version": "2.1.38",
       "date": "2026-08-03",
