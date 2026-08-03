@@ -1,6 +1,17 @@
 {
-  "current": "2.1.48",
+  "current": "2.1.49",
   "history": [
+    {
+      "version": "2.1.49",
+      "date": "2026-08-03",
+      "description": "The slide-to-complete button's handle now exactly fills the track's height (68px, no inset gap) instead of sitting slightly smaller with a small border around it. Completing now requires dragging all the way to the literal end — the previous 75%-and-release threshold is gone, so releasing anywhere short of 100% always snaps back to the start. Reaching the end no longer completes the workout immediately: it locks the handle in place and opens a confirmation popup showing today's workout title and exercise/set summary, with its own 'تایید' button — confirming logs the workout and goes home, cancelling snaps the slider back to the start so it can be tried again. The walk/rest-day version still completes immediately on reaching the end (nothing to summarize there). The 'تمرین امروز رو انجام دادی' completed-state box (all three places it can show) is now the same glass pill treatment as the bottom nav and the slider itself, instead of a plain solid-yellow rounded box.",
+      "highlights": [
+        "🎯 اسلایدر تمرین حالا فقط با رسیدن دقیق به ۱۰۰٪ تایید می‌شه، نه یک آستانه‌ی جزئی",
+        "📋 بعد از رسیدن به انتها، پاپ‌آپ خلاصه‌ی تمرین با دکمه تایید باز می‌شه — با انصراف، دوباره میره اول",
+        "⚪ دایره‌ی اسلایدر حالا دقیقاً هم‌قطر نوار زیرشه، بدون فاصله",
+        "✅ کادر «تمرین امروز رو انجام دادی» هم‌شکل نوار پایین شد"
+      ]
+    },
     {
       "version": "2.1.48",
       "date": "2026-08-03",

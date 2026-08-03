@@ -10,12 +10,14 @@ import { ArrowRight, Check } from "lucide-react";
 
 interface SlideToCompleteButtonProps {
   label: string;
-  onComplete: () => void;
+  // Fires once the handle is dragged all the way to the end (not a
+  // partial-drag threshold — releasing anywhere short of the very end
+  // snaps back to the start instead). The button locks at the end,
+  // showing a checkmark, until the caller either acts on it or resets it
+  // (e.g. by changing this component's `key` to remount it) if whatever
+  // confirmation the caller shows gets cancelled.
+  onReachEnd: () => void;
 }
-
-// Releasing past this fraction of the track snaps forward to complete
-// instead of snapping back to the start.
-const COMPLETE_THRESHOLD = 0.75;
 
 // How far (in px) into the drag the blurred trail takes to fade fully in.
 // It's hidden at rest — at x=0 the trail is exactly the handle's width, and
@@ -23,12 +25,13 @@ const COMPLETE_THRESHOLD = 0.75;
 // just looks like a rendering artifact.
 const TRAIL_FADE_IN_DISTANCE = 28;
 
-const HANDLE_SIZE = 56;
-const TRACK_INSET = 4;
+// Matches the bottom navigation's own pill height (h-17) exactly, and the
+// handle is sized to fill it edge to edge — no inset gap around the circle.
+const HANDLE_SIZE = 68;
 
 export default function SlideToCompleteButton({
   label,
-  onComplete,
+  onReachEnd,
 }: SlideToCompleteButtonProps) {
   const trackRef = useRef<HTMLDivElement>(null);
   const [maxDrag, setMaxDrag] = useState(0);
@@ -36,14 +39,14 @@ export default function SlideToCompleteButton({
   const prefersReducedMotion = useReducedMotion();
 
   const x = useMotionValue(0);
-  const trailWidth = useTransform(x, (value) => `${TRACK_INSET + HANDLE_SIZE + value}px`);
+  const trailWidth = useTransform(x, (value) => `${HANDLE_SIZE + value}px`);
   const trailOpacity = useTransform(x, [0, TRAIL_FADE_IN_DISTANCE], [0, 1]);
   const labelOpacity = useTransform(x, [0, Math.max(maxDrag * 0.5, 1)], [1, 0]);
 
   useLayoutEffect(() => {
     function measure() {
       const width = trackRef.current?.getBoundingClientRect().width ?? 0;
-      setMaxDrag(Math.max(width - HANDLE_SIZE - TRACK_INSET * 2, 0));
+      setMaxDrag(Math.max(width - HANDLE_SIZE, 0));
     }
 
     measure();
@@ -57,18 +60,21 @@ export default function SlideToCompleteButton({
   function handleDragEnd() {
     if (completed) return;
 
-    const progress = maxDrag > 0 ? x.get() / maxDrag : 0;
+    // A tiny tolerance for sub-pixel drag-constraint rounding — anything
+    // short of the actual end still snaps all the way back, per the "only
+    // 100% counts" requirement (no partial-drag threshold like before).
+    const reachedEnd = maxDrag > 0 && x.get() >= maxDrag - 1;
     const snapTransition = prefersReducedMotion
       ? { duration: 0 }
       : { type: "spring" as const, stiffness: 420, damping: 38 };
 
-    if (progress >= COMPLETE_THRESHOLD) {
+    if (reachedEnd) {
       setCompleted(true);
 
       animate(x, maxDrag, {
         ...snapTransition,
         onComplete: () => {
-          window.setTimeout(onComplete, 250);
+          window.setTimeout(onReachEnd, 250);
         },
       });
     } else {
@@ -83,7 +89,7 @@ export default function SlideToCompleteButton({
       ref={trackRef}
       role="button"
       aria-label={label}
-      className="glass-panel relative mt-6 h-16 w-full overflow-hidden rounded-full"
+      className="glass-panel relative mt-6 h-17 w-full overflow-hidden rounded-full"
     >
       {/* The trail the handle leaves behind: a blur of whatever the page is
           showing underneath, not a colored fill. Deliberately carries no
@@ -111,7 +117,7 @@ export default function SlideToCompleteButton({
       </motion.span>
 
       <motion.div
-        className="absolute top-1 left-1 flex items-center justify-center"
+        className="absolute top-0 left-0 flex items-center justify-center"
         style={{ x, width: HANDLE_SIZE, height: HANDLE_SIZE }}
         drag={completed ? false : "x"}
         dragConstraints={{ left: 0, right: maxDrag }}

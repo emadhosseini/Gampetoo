@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import WorkoutHeader from "@/components/WorkoutHeader";
 import WorkoutSummary from "@/components/WorkoutSummary";
+import WorkoutCompleteModal from "@/components/WorkoutCompleteModal";
 import ExerciseCard from "@/components/ExerciseCard";
 import CompleteWorkoutButton from "@/components/CompleteWorkoutButton";
 import WarmupBlock from "@/components/WarmupBlock";
@@ -39,6 +41,13 @@ async function goHomeAfterCompleting() {
 
 function WorkoutPage() {
   const navigate = useNavigate();
+
+  // resetKey is bumped to remount SlideToCompleteButton (snapping its
+  // handle back to the start) when the confirm popup is cancelled — the
+  // button itself has no "go back to start" API, so a fresh mount is the
+  // simplest way to force it.
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [resetKey, setResetKey] = useState(0);
 
   const session = getSession();
 
@@ -107,7 +116,7 @@ const workout = workoutType
         )}
 
         {session.completed && (
-          <div className="mt-6 rounded-2xl bg-avocado-yellow py-4 text-center text-lg font-semibold text-black">
+          <div className="glass-panel mt-6 rounded-full py-4 text-center text-lg font-semibold text-white">
             تمرین امروز رو انجام دادی☺️
           </div>
         )}
@@ -148,7 +157,7 @@ const workout = workoutType
         )}
 
         {session.completed && (
-          <div className="mt-6 rounded-2xl bg-avocado-yellow py-4 text-center text-lg font-semibold text-black">
+          <div className="glass-panel mt-6 rounded-full py-4 text-center text-lg font-semibold text-white">
             تمرین امروز رو انجام دادی ☺️
           </div>
         )}
@@ -194,20 +203,34 @@ const workout = workoutType
 
       {!session.completed && (
         <CompleteWorkoutButton
+          key={resetKey}
           variant="accent"
           label="تمرین امروز رو انجام دادم 💪🏻"
-          onClick={() => {
-            completeWorkout();
-            void goHomeAfterCompleting();
-          }}
+          onClick={() => setConfirmOpen(true)}
         />
       )}
 
       {session.completed && (
-        <div className="mt-6 rounded-2xl bg-avocado-yellow py-4 text-center text-lg font-semibold text-black">
+        <div className="glass-panel mt-6 rounded-full py-4 text-center text-lg font-semibold text-white">
           تمرین امروز رو انجام دادی☺️
         </div>
       )}
+
+      <WorkoutCompleteModal
+        open={confirmOpen}
+        workoutTitle={workout.title}
+        exercises={exercises.length}
+        sets={totalSets}
+        onCancel={() => {
+          setConfirmOpen(false);
+          setResetKey((key) => key + 1);
+        }}
+        onConfirm={() => {
+          setConfirmOpen(false);
+          completeWorkout();
+          void goHomeAfterCompleting();
+        }}
+      />
     </div>
   );
 }

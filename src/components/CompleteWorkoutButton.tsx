@@ -12,7 +12,7 @@ export default function CompleteWorkoutButton({
   variant = "primary",
 }: CompleteWorkoutButtonProps) {
   if (variant === "accent") {
-    return <SlideToCompleteButton label={label} onComplete={onClick} />;
+    return <SlideToCompleteButton label={label} onReachEnd={onClick} />;
   }
 
   return (
