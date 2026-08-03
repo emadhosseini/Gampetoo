@@ -95,7 +95,7 @@ export default function MealOverviewModal({
 
         <button
           onClick={onAdd}
-          className="glass-tap w-full rounded-2xl bg-avocado-yellow py-3 font-bold text-black"
+          className="w-full glass-action rounded-2xl py-3 font-bold text-white"
         >
           افزودن تکی خوراکی‌ها
         </button>

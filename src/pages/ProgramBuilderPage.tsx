@@ -162,7 +162,7 @@ function ProgramBuilderPage() {
       <button
         onClick={handleSave}
         disabled={days.length === 0}
-        className="w-full rounded-2xl bg-avocado-yellow py-4 text-lg font-bold text-black disabled:cursor-not-allowed disabled:opacity-40"
+        className="w-full rounded-2xl glass-action py-4 text-lg font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
       >
         {isFirstTime ? "شروع برنامه" : "ذخیره تغییرات"}
       </button>

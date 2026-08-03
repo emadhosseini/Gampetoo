@@ -35,7 +35,7 @@ export default function WeightTrackerPage() {
 
         <button
           onClick={handleLog}
-          className="mt-4 w-full rounded-2xl bg-avocado-yellow py-3 text-lg font-bold text-black"
+          className="mt-4 w-full rounded-2xl glass-action py-3 text-lg font-bold text-white"
         >
           {saved ? "ثبت شد ✅" : alreadyLoggedToday ? "بروزرسانی وزن" : "ثبت وزن"}
         </button>

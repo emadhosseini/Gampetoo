@@ -77,7 +77,7 @@ export default function AccountEditModal({
 
   return (
     <ModalOverlay onClose={onClose}>
-      <div className="space-y-4 rounded-2xl border border-forest-600 bg-forest-700 p-6 shadow-2xl">
+      <div className="glass-panel glass-static space-y-4 rounded-3xl p-6">
         <h2 className="text-center text-lg font-bold text-white">
           حساب کاربری
         </h2>
@@ -95,8 +95,8 @@ export default function AccountEditModal({
             onClick={() => setGender("male")}
             className={`glass-tap flex-1 rounded-xl py-4 font-bold transition-colors ${
               gender === "male"
-                ? "bg-avocado-yellow text-black"
-                : "selector-pill text-white"
+                ? "glass-selected text-white"
+                : "glass-chip text-white"
             }`}
           >
             مرد
@@ -106,8 +106,8 @@ export default function AccountEditModal({
             onClick={() => setGender("female")}
             className={`glass-tap flex-1 rounded-xl py-4 font-bold transition-colors ${
               gender === "female"
-                ? "bg-avocado-yellow text-black"
-                : "selector-pill text-white"
+                ? "glass-selected text-white"
+                : "glass-chip text-white"
             }`}
           >
             زن
@@ -116,7 +116,7 @@ export default function AccountEditModal({
 
         <button
           onClick={handleSave}
-          className="glass-tap w-full rounded-2xl bg-avocado-yellow py-4 text-lg font-bold text-black"
+          className="w-full glass-action rounded-2xl py-4 text-lg font-bold text-white"
         >
           ذخیره
         </button>
@@ -129,9 +129,11 @@ export default function AccountEditModal({
             خروج از حساب کاربری
           </button>
 
+          {/* Red because it's the one irreversible action in here — it
+              shouldn't read like the neutral secondary text it sat next to. */}
           <button
             onClick={() => void handleDeleteAccount()}
-            className="text-xs text-white/60"
+            className="text-xs font-semibold text-red-400"
           >
             پاک کردن حساب کاربری
           </button>

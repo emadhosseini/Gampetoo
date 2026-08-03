@@ -17,8 +17,13 @@ export default function Toggle({ checked, onChange, className = "" }: ToggleProp
       role="switch"
       aria-checked={checked}
       onClick={onChange}
+      // On-state used to be avocado-yellow; with every button fill in the
+      // app now glass, that would have been the last yellow fill left and
+      // read as a leftover. Lime is the palette's existing "affirmative"
+      // colour (the day-card gradient, the meal cards' add buttons) and,
+      // unlike a white track, still contrasts against the white thumb.
       className={`relative h-6 w-11 shrink-0 touch-manipulation rounded-full transition-colors duration-200 ${
-        checked ? "bg-avocado-yellow" : "bg-white/20"
+        checked ? "bg-avocado-lime" : "bg-white/20"
       } ${className}`}
     >
       <span

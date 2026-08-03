@@ -53,7 +53,7 @@ export default function TargetCaloriesModal({
 
         <button
           onClick={handleSave}
-          className="glass-tap w-full rounded-2xl bg-avocado-yellow py-3 font-bold text-black"
+          className="w-full glass-action rounded-2xl py-3 font-bold text-white"
         >
           ذخیره
         </button>

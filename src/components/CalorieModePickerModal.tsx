@@ -66,8 +66,8 @@ export default function CalorieModePickerModal({
             onClick={() => setMode("perMeal")}
             className={`glass-tap flex-1 rounded-xl py-4 font-bold transition-colors ${
               mode === "perMeal"
-                ? "bg-avocado-yellow text-black"
-                : "selector-pill text-white"
+                ? "glass-selected text-white"
+                : "glass-chip text-white"
             }`}
           >
             وعده‌ای
@@ -77,8 +77,8 @@ export default function CalorieModePickerModal({
             onClick={() => setMode("daily")}
             className={`glass-tap flex-1 rounded-xl py-4 font-bold transition-colors ${
               mode === "daily"
-                ? "bg-avocado-yellow text-black"
-                : "selector-pill text-white"
+                ? "glass-selected text-white"
+                : "glass-chip text-white"
             }`}
           >
             روزانه
@@ -87,7 +87,7 @@ export default function CalorieModePickerModal({
 
         <button
           onClick={handleSave}
-          className="glass-tap w-full rounded-2xl bg-avocado-yellow py-3 font-bold text-black"
+          className="w-full glass-action rounded-2xl py-3 font-bold text-white"
         >
           ذخیره
         </button>

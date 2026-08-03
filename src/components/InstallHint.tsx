@@ -39,7 +39,7 @@ export default function InstallHint() {
 
   return (
     <ModalOverlay onClose={dismiss} zIndexClass="z-50" paddingTop="">
-      <div className="rounded-2xl border border-forest-600 bg-forest-700 p-6 text-center shadow-2xl">
+      <div className="glass-panel glass-static rounded-3xl p-6 text-center">
         <p className="text-base font-bold text-white">
           برای دسترسی راحت‌تر به برنامه
         </p>
@@ -60,7 +60,7 @@ export default function InstallHint() {
 
         <button
           onClick={dismiss}
-          className="mt-6 w-full rounded-2xl bg-avocado-yellow py-3 text-lg font-bold text-black"
+          className="mt-6 w-full rounded-2xl glass-action py-3 text-lg font-bold text-white"
         >
           متوجه شدم
         </button>

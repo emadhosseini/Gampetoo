@@ -29,7 +29,7 @@ export default function UpdateModal({
     // No backdrop-tap-to-close — this choice (later/update) should be
     // explicit, not accidentally dismissed by a stray tap outside the card.
     <ModalOverlay onClose={() => {}}>
-      <div className="rounded-2xl border border-forest-600 bg-forest-700 p-6 text-center shadow-2xl">
+      <div className="glass-panel glass-static rounded-3xl p-6 text-center">
         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-avocado-yellow/10 text-avocado-yellow">
           <RefreshCw size={22} />
         </div>
@@ -44,7 +44,7 @@ export default function UpdateModal({
           برای استفاده از آخرین امکانات و رفع باگ‌ها برنامه را بروزرسانی کنید.
         </p>
 
-        <div className="mt-4 flex items-center justify-center gap-6 rounded-xl bg-forest-600/60 py-3">
+        <div className="mt-4 flex items-center justify-center gap-6 glass-chip rounded-xl py-3">
           <div className="text-center">
             <p className="text-xs text-white">نسخه فعلی</p>
             <p dir="ltr" className="mt-1 font-bold text-white">
@@ -74,7 +74,7 @@ export default function UpdateModal({
           <button
             onClick={onUpdate}
             disabled={updating}
-            className="flex-1 rounded-2xl bg-avocado-yellow py-3 font-bold text-black disabled:cursor-not-allowed disabled:opacity-40"
+            className="flex-1 rounded-2xl glass-action py-3 font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
           >
             {updating ? "..." : "بروزرسانی"}
           </button>

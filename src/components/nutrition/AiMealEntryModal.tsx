@@ -117,7 +117,7 @@ export default function AiMealEntryModal({ meal, onClose, onChange }: AiMealEntr
             <button
               onClick={() => void handleCalculate()}
               disabled={!description.trim() || screen.step === "loading"}
-              className="glass-tap w-full rounded-2xl bg-avocado-yellow py-3 font-bold text-black disabled:cursor-not-allowed disabled:opacity-40"
+              className="w-full glass-action rounded-2xl py-3 font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
             >
               {screen.step === "loading" ? "در حال محاسبه..." : "محاسبه"}
             </button>
@@ -129,7 +129,7 @@ export default function AiMealEntryModal({ meal, onClose, onChange }: AiMealEntr
             <p className="text-center text-sm text-avocado-yellow">{screen.message}</p>
             <button
               onClick={handleRetry}
-              className="glass-tap w-full rounded-2xl bg-avocado-yellow py-3 font-bold text-black"
+              className="w-full glass-action rounded-2xl py-3 font-bold text-white"
             >
               تلاش دوباره
             </button>
@@ -188,7 +188,7 @@ export default function AiMealEntryModal({ meal, onClose, onChange }: AiMealEntr
 
               <button
                 onClick={handleConfirmAdd}
-                className="glass-tap w-full rounded-2xl bg-avocado-yellow py-3 font-bold text-black"
+                className="w-full glass-action rounded-2xl py-3 font-bold text-white"
               >
                 افزودن به وعده
               </button>

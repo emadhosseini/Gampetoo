@@ -201,7 +201,7 @@ export default function AddMealEntryModal({
           <button
             onClick={submitSearch}
             aria-label="جستجو"
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-avocado-yellow text-black"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg glass-action text-white"
           >
             <Search size={16} />
           </button>
@@ -269,7 +269,7 @@ export default function AddMealEntryModal({
                 min={0}
                 value={quantity}
                 onChange={(e) => setQuantity(Number(e.target.value))}
-                className="w-16 rounded-lg border border-forest-500 bg-forest-600 px-2 py-2 text-center text-sm text-white"
+                className="w-16 glass-chip rounded-lg px-2 py-2 text-center text-sm text-white"
               />
 
               <select
@@ -281,7 +281,7 @@ export default function AddMealEntryModal({
                     ) ?? selected.servingUnits[0];
                   setUnit(next);
                 }}
-                className="glass-static w-full flex-1 rounded-lg border border-forest-500 bg-forest-600 px-2 py-2 text-sm text-white"
+                className="glass-static w-full flex-1 glass-chip rounded-lg px-2 py-2 text-sm text-white"
               >
                 {selected.servingUnits.map((u) => (
                   <option key={u.label} value={u.label}>
@@ -300,7 +300,7 @@ export default function AddMealEntryModal({
         <button
           onClick={handleAdd}
           disabled={!selected}
-          className="glass-tap w-full rounded-2xl bg-avocado-yellow py-3 font-bold text-black disabled:cursor-not-allowed disabled:opacity-40"
+          className="w-full glass-action rounded-2xl py-3 font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
         >
           افزودن
         </button>

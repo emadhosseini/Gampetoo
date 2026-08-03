@@ -50,7 +50,7 @@ export default function WorkoutHeader({
 
       {showForgotButton && open && (
         <ModalOverlay onClose={() => setOpen(false)}>
-          <div className="rounded-2xl border border-forest-600 bg-forest-700 p-6 text-center shadow-2xl">
+          <div className="glass-panel glass-static rounded-3xl p-6 text-center">
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-avocado-yellow/10 text-2xl">
               🤦
             </div>
@@ -68,7 +68,7 @@ export default function WorkoutHeader({
             <div className="mt-6 flex flex-col gap-3">
               <button
                 onClick={handleConfirm}
-                className="w-full rounded-2xl bg-avocado-yellow py-3 font-bold text-black"
+                className="w-full rounded-2xl glass-action py-3 font-bold text-white"
               >
                 فراموشی ثبت تمرین
               </button>

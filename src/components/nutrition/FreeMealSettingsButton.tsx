@@ -37,7 +37,7 @@ export default function FreeMealSettingsButton() {
 
       {open && (
         <ModalOverlay onClose={() => setOpen(false)}>
-          <div className="rounded-2xl border border-forest-600 bg-forest-700 p-6 text-center shadow-2xl">
+          <div className="glass-panel glass-static rounded-3xl p-6 text-center">
             <h2 className="text-lg font-bold text-white">
               تعداد وعده آزاد هفته خودتو مشخص کن
             </h2>
@@ -59,7 +59,7 @@ export default function FreeMealSettingsButton() {
             <div className="mt-6 flex flex-col gap-3">
               <button
                 onClick={handleSave}
-                className="w-full rounded-2xl bg-avocado-yellow py-3 font-bold text-black"
+                className="w-full rounded-2xl glass-action py-3 font-bold text-white"
               >
                 {saved ? "ذخیره شد ✅" : "ذخیره"}
               </button>

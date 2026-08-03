@@ -52,7 +52,7 @@ export default function ActivityLogModal({ open, onClose, onLog }: ActivityLogMo
         <button
           onClick={handleSave}
           disabled={calories <= 0}
-          className="glass-tap w-full rounded-2xl bg-avocado-yellow py-3 font-bold text-black disabled:cursor-not-allowed disabled:opacity-40"
+          className="w-full glass-action rounded-2xl py-3 font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
         >
           ثبت
         </button>

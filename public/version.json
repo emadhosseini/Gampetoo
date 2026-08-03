@@ -1,6 +1,16 @@
 {
-  "current": "2.1.51",
+  "current": "2.1.52",
   "history": [
+    {
+      "version": "2.1.52",
+      "date": "2026-08-03",
+      "description": "Finished the glass conversion across the whole app. Every popup still using the old solid-green card (account, height, what's-new, update-available, install hint, workout header/complete, free-meal settings, error screen) now uses the same glass panel as the newer ones, so nothing reads as left over from the previous design. Removed every solid yellow button fill — the primary call-to-action is now a new .glass-action (a lighter fill and brighter rim than .glass-chip, so it still carries CTA weight without a colour outside the system) with white text instead of black, and the picked option in a choice group is .glass-selected (brighter still, plus a full ring, since selected/unselected can no longer lean on yellow-vs-green). .selector-pill became glass as well, and the remaining solid-green surfaces inside popups (steppers, number/unit inputs, changelog rows) became glass chips. The toggle switch's on-state moved from yellow to the palette's lime — with every button fill now glass it would have been the last yellow fill in the app, and lime is already the app's affirmative colour while still contrasting against the white thumb. Yellow survives only as an accent (active nav tab, icon tints), never as a button fill. 'پاک کردن حساب کاربری' is now red, since it's the one irreversible action in that popup and read like neutral secondary text next to logout.",
+      "highlights": [
+        "🪟 همه‌ی پاپ‌آپ‌های سبز قدیمی شیشه‌ای شدن — دیگه جایی از طراحی قبلی باقی نمونده",
+        "🎨 هیچ دکمه‌ای زرد نیست؛ دکمه‌ی اصلی و گزینه‌ی انتخاب‌شده هر دو شیشه‌ای‌ان",
+        "🔴 «پاک کردن حساب کاربری» قرمز شد"
+      ]
+    },
     {
       "version": "2.1.51",
       "date": "2026-08-03",

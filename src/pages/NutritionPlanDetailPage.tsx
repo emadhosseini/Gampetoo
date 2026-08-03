@@ -88,7 +88,7 @@ function MealFoodList({
         <button
           onClick={onSubmitSearch}
           aria-label="جستجو"
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-avocado-yellow text-black"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg glass-action text-white"
         >
           <Search size={16} />
         </button>
@@ -138,7 +138,7 @@ function MealFoodList({
                     onChange={(e) =>
                       onUpdateQuantity(entry, Number(e.target.value), selectedUnit)
                     }
-                    className="w-14 rounded-lg border border-forest-500 bg-forest-600 px-2 py-1 text-center text-sm text-white"
+                    className="w-14 glass-chip rounded-lg px-2 py-1 text-center text-sm text-white"
                   />
 
                   <select
@@ -149,7 +149,7 @@ function MealFoodList({
                         entry.servingUnits[0];
                       onUpdateQuantity(entry, quantity, unit);
                     }}
-                    className="glass-static rounded-lg border border-forest-500 bg-forest-600 px-2 py-1 text-sm text-white"
+                    className="glass-static glass-chip rounded-lg px-2 py-1 text-sm text-white"
                   >
                     {entry.servingUnits.map((unit) => (
                       <option key={unit.label} value={unit.label}>
@@ -492,7 +492,7 @@ export default function NutritionPlanDetailPage() {
 
       <button
         onClick={handleSave}
-        className="glass-tap w-full rounded-2xl bg-avocado-yellow py-4 text-lg font-bold text-black"
+        className="w-full glass-action rounded-2xl py-4 text-lg font-bold text-white"
       >
         {saved ? "ذخیره شد ✅" : "ذخیره"}
       </button>

@@ -18,7 +18,7 @@ export default function CompleteWorkoutButton({
   return (
     <button
       onClick={onClick}
-      className="mt-6 w-full rounded-2xl bg-forest-900 py-4 text-lg font-semibold text-white"
+      className="mt-6 glass-action w-full rounded-2xl py-4 text-lg font-semibold text-white"
     >
       {label}
     </button>

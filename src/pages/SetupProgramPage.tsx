@@ -166,7 +166,7 @@ export default function SetupProgramPage() {
             <div className="space-y-3">
               <button
                 onClick={() => goToMode("login")}
-                className="glass-tap w-full rounded-2xl bg-avocado-yellow py-4 text-xl font-bold text-black"
+                className="w-full glass-action rounded-2xl py-4 text-xl font-bold text-white"
               >
                 ورود
               </button>
@@ -226,7 +226,7 @@ export default function SetupProgramPage() {
               <button
                 onClick={() => void submitLogin()}
                 disabled={!canSubmitLogin}
-                className="glass-tap w-full rounded-2xl bg-avocado-yellow py-4 text-xl font-bold text-black disabled:cursor-not-allowed disabled:opacity-40"
+                className="w-full glass-action rounded-2xl py-4 text-xl font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {busy ? "..." : "ورود"}
               </button>
@@ -320,7 +320,7 @@ export default function SetupProgramPage() {
               <button
                 onClick={() => void submitSignup()}
                 disabled={!canSubmitSignup}
-                className="glass-tap w-full rounded-2xl bg-avocado-yellow py-4 text-xl font-bold text-black disabled:cursor-not-allowed disabled:opacity-40"
+                className="w-full glass-action rounded-2xl py-4 text-xl font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {busy ? "..." : "ثبت نام"}
               </button>

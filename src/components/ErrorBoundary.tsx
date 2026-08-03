@@ -53,7 +53,7 @@ export default class ErrorBoundary extends Component<Props, State> {
       <div className="app-gradient-bg pt-safe relative flex min-h-screen flex-col items-center justify-center px-6">
         <MeshGradientBackground colorA="#3b9149" colorB="#faea5c" />
 
-        <div className="relative z-10 w-full max-w-sm rounded-2xl border border-forest-600 bg-forest-700 p-6 text-center">
+        <div className="relative z-10 w-full max-w-sm glass-panel glass-static rounded-3xl p-6 text-center">
           <h1 className="text-lg font-bold text-white">
             مشکلی پیش اومد
           </h1>
@@ -66,7 +66,7 @@ export default class ErrorBoundary extends Component<Props, State> {
           <div className="mt-6 flex flex-col gap-3">
             <button
               onClick={this.handleRetry}
-              className="w-full rounded-2xl bg-avocado-yellow py-3 font-bold text-black"
+              className="w-full rounded-2xl glass-action py-3 font-bold text-white"
             >
               تلاش دوباره
             </button>

@@ -20,7 +20,7 @@ export default function WhatsNewModal({
 
   return (
     <ModalOverlay onClose={onClose}>
-      <div className="rounded-2xl border border-forest-600 bg-forest-700 p-6 text-center shadow-2xl">
+      <div className="glass-panel glass-static rounded-3xl p-6 text-center">
         <h2 className="text-lg font-bold text-white">
           🎉 تغییرات این نسخه
         </h2>
@@ -33,7 +33,7 @@ export default function WhatsNewModal({
           {highlights.map((item) => (
             <li
               key={item}
-              className="rounded-xl bg-forest-600/60 px-4 py-3 text-right text-sm text-white"
+              className="glass-chip rounded-xl px-4 py-3 text-right text-sm text-white"
             >
               {item}
             </li>
@@ -42,7 +42,7 @@ export default function WhatsNewModal({
 
         <button
           onClick={onClose}
-          className="mt-6 w-full rounded-2xl bg-avocado-yellow py-3 text-lg font-bold text-black"
+          className="mt-6 w-full rounded-2xl glass-action py-3 text-lg font-bold text-white"
         >
           متوجه شدم
         </button>
