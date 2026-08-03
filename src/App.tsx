@@ -1,17 +1,46 @@
-import { useState, useEffect } from "react";
-import appScreenshot from "@/imports/413CE792-E4B2-42C6-B034-B4071E914841.png";
+import { useEffect, useState, useSyncExternalStore } from "react";
+import appScreenshot from "@/imports/app-screenshot.webp";
 import gampetooLogo from "@/imports/gampetoo-logo.png";
 
 // ─── Responsive hook ──────────────────────────────────────────────────────────
+// A single shared width store instead of each component keeping its own
+// resize listener — six+ call sites across this file previously meant six+
+// separate window.addEventListener("resize", ...) registrations, all firing
+// (and re-rendering their whole subtree) on every resize event, which on
+// mobile fires repeatedly as the browser chrome shows/hides while
+// scrolling. rAF-throttled so a drag-resize can't fire faster than a frame,
+// and useSyncExternalStore means every useW() call site shares this one
+// listener instead of adding its own.
+
+let sharedWidth = typeof window !== "undefined" ? window.innerWidth : 1200;
+const widthListeners = new Set<() => void>();
+let resizeRafId: number | null = null;
+
+function handleWindowResize() {
+  if (resizeRafId !== null) return;
+
+  resizeRafId = requestAnimationFrame(() => {
+    resizeRafId = null;
+    sharedWidth = window.innerWidth;
+    widthListeners.forEach((listener) => listener());
+  });
+}
+
+if (typeof window !== "undefined") {
+  window.addEventListener("resize", handleWindowResize);
+}
+
+function subscribeToWidth(listener: () => void) {
+  widthListeners.add(listener);
+  return () => widthListeners.delete(listener);
+}
+
+function getWidthSnapshot() {
+  return sharedWidth;
+}
 
 function useW() {
-  const [w, setW] = useState(typeof window !== "undefined" ? window.innerWidth : 1200);
-  useEffect(() => {
-    const fn = () => setW(window.innerWidth);
-    window.addEventListener("resize", fn);
-    return () => window.removeEventListener("resize", fn);
-  }, []);
-  return w;
+  return useSyncExternalStore(subscribeToWidth, getWidthSnapshot);
 }
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
@@ -78,8 +107,18 @@ function Nav() {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
-    const fn = () => setScrolled(window.scrollY > 40);
-    window.addEventListener("scroll", fn);
+    let rafId: number | null = null;
+
+    const fn = () => {
+      if (rafId !== null) return;
+
+      rafId = requestAnimationFrame(() => {
+        rafId = null;
+        setScrolled(window.scrollY > 40);
+      });
+    };
+
+    window.addEventListener("scroll", fn, { passive: true });
     return () => window.removeEventListener("scroll", fn);
   }, []);
 
@@ -149,7 +188,7 @@ function Hero() {
     <section style={{ position: "relative", overflow: "hidden", paddingTop: isMobile ? 80 : 100 }}>
       {/* Ambient blobs */}
       <div className="ambient-blob" style={{ width: isMobile ? 300 : 600, height: isMobile ? 300 : 600, background: "radial-gradient(circle, rgba(59,145,73,0.16) 0%, transparent 70%)", top: -80, right: isMobile ? -80 : -200 }}/>
-      <div className="ambient-blob" style={{ width: 400, height: 400, background: "radial-gradient(circle, rgba(250,234,92,0.08) 0%, transparent 70%)", bottom: 50, left: -100 }}/>
+      <div className="ambient-blob" style={{ width: isMobile ? 220 : 400, height: isMobile ? 220 : 400, background: "radial-gradient(circle, rgba(250,234,92,0.08) 0%, transparent 70%)", bottom: 50, left: -100 }}/>
 
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: isMobile ? "0 20px" : "0 24px", position: "relative", zIndex: 1 }}>
 
@@ -294,7 +333,7 @@ function Features() {
 
   return (
     <section style={{ padding: isMobile ? "64px 20px" : "100px 24px", position: "relative" }}>
-      <div className="ambient-blob" style={{ width: 500, height: 500, background: "radial-gradient(circle, rgba(59,145,73,0.1) 0%, transparent 70%)", top: 0, left: "50%", transform: "translateX(-50%)" }}/>
+      <div className="ambient-blob" style={{ width: isMobile ? 280 : 500, height: isMobile ? 280 : 500, background: "radial-gradient(circle, rgba(59,145,73,0.1) 0%, transparent 70%)", top: 0, left: "50%", transform: "translateX(-50%)" }}/>
       <div style={{ maxWidth: 1200, margin: "0 auto", position: "relative", zIndex: 1 }}>
         <SectionHeader badge="ویژگی‌های برجسته" title={<>هر چیزی که برای مدیریت مسیر <span className="gradient-text">تناسب اندام</span> نیاز داری</>} sub="گامپتو به جای ساخت برنامه، تمام ابزارهای لازم برای ثبت، مدیریت و پیگیری برنامه‌های شخصی تو را در اختیارت قرار می‌دهد."/>
         <div style={{ display: "grid", gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: isMobile ? 14 : 20 }}>

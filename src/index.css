@@ -1,5 +1,9 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap');
+/* Font loading lives in index.html now (preconnect + a real <link>, not a
+   CSS @import) — @import is render-blocking behind an extra network
+   round-trip (HTML → this file → the @import URL → the actual font CSS)
+   that a <link> in <head> avoids by starting in parallel with everything
+   else. Also trimmed to the 4 weights actually used (400/600/700/800)
+   instead of all 7 Google serves by default. */
 @import 'tailwindcss';
 
 /* Same palette as the app (beta-v3 src/index.css): dark forest green base,
@@ -151,12 +155,17 @@ body {
   opacity: 0.4;
 }
 
-/* Ambient gradient blobs */
+/* Ambient gradient blobs. blur(120px) over a large, unclipped area is one
+   of the more expensive things a mobile GPU can paint/composite — 90px
+   reads almost identically soft at the sizes these render at, for
+   noticeably less compositing cost. will-change promotes each blob to its
+   own layer once, instead of the browser re-deciding on every repaint. */
 .ambient-blob {
   position: absolute;
   border-radius: 50%;
-  filter: blur(120px);
+  filter: blur(90px);
   pointer-events: none;
+  will-change: opacity;
 }
 
 /* Phone mockup styles */
@@ -243,6 +252,18 @@ body {
 .animate-fade-in { animation: fadeIn 0.8s ease forwards; }
 .animate-fade-in-up { animation: fadeInUp 0.8s ease forwards; }
 .animate-pulse-green { animation: pulse-green 2s ease-in-out infinite; }
+
+/* The floating phone mockups and pulsing badge dot are purely decorative
+   continuous animations — stop them for anyone who's asked the OS for
+   reduced motion, and as a side effect stop paying their repaint cost. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-float,
+  .animate-float-2,
+  .animate-float-3,
+  .animate-pulse-green {
+    animation: none;
+  }
+}
 
 /* Responsive */
 @media (max-width: 768px) {
