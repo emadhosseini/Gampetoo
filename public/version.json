@@ -1,6 +1,15 @@
 {
-  "current": "2.1.50",
+  "current": "2.1.51",
   "history": [
+    {
+      "version": "2.1.51",
+      "date": "2026-08-03",
+      "description": "Fixed the intermittent popup/drawer backdrop blur on iOS for good — the maddening 'sometimes blurred at the agreed strength, sometimes not at all'. Root cause: every popup and the quick-add backdrop rendered inside SideMenu's motion.div, and whether framer-motion leaves a transform on that wrapper at any given moment is timing-dependent; on WebKit a transformed ancestor changes what backdrop-filter may sample, so the blur worked or silently didn't depending on which state the wrapper happened to be in. Two structural fixes: (1) ModalOverlay now renders through a portal to document.body — no transformed ancestor, ever — plus an explicit -webkit-backdrop-filter and a mount ramp (insert at blur(0), switch to blur(25px) two frames later) since WebKit also fails to paint a backdrop-filter already present at DOM insertion; the ramp doubles as a fade-in. (2) The quick-add drawer stopped using backdrop-filter entirely: Layout now puts a real CSS filter blur(15px) on <main> while the drawer is open — a plain filter on the content itself always renders, no sampling dependency to break. Verified: drawer open/close toggles the main filter, modal backdrop is portaled to body at computed blur(25px), tap-outside-to-close and all four quick-add shortcuts unchanged.",
+      "highlights": [
+        "🌫️ بلر پشت پاپ‌آپ‌ها و کشوی افزودن دیگه شانسی نیست — همیشه و با همون شدت توافق‌شده رندر می‌شه",
+        "📖 محتوای پشت کشوی افزودن حالا واقعاً محو می‌شه و نوشته‌ها توی هم نمی‌رن"
+      ]
+    },
     {
       "version": "2.1.50",
       "date": "2026-08-03",

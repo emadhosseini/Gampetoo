@@ -71,10 +71,29 @@ const items = [
   },
 ];
 
-export default function BottomNavigation() {
+export interface BottomNavigationProps {
+  // Fires whenever the quick-add drawer opens/closes so Layout can blur
+  // the page content behind it (a real CSS filter on <main>, applied by
+  // Layout since <main> is this component's sibling, not its child).
+  onDrawerOpenChange?: (open: boolean) => void;
+}
+
+export default function BottomNavigation({
+  onDrawerOpenChange,
+}: BottomNavigationProps) {
   const navigate = useNavigate();
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerOpen, setDrawerOpenState] = useState(false);
   const [activityModalOpen, setActivityModalOpen] = useState(false);
+
+  function setDrawerOpen(open: boolean | ((prev: boolean) => boolean)) {
+    setDrawerOpenState((prev) => {
+      const next = typeof open === "function" ? open(prev) : open;
+
+      if (next !== prev) onDrawerOpenChange?.(next);
+
+      return next;
+    });
+  }
 
   // The silhouette path is in real pixels (so the bump stays a true
   // circle), which means it has to be rebuilt whenever the bar's width
@@ -132,24 +151,21 @@ export default function BottomNavigation() {
 
   return (
     <>
-      {/* Same blurred-backdrop treatment as ModalOverlay (and the same iOS
-          Safari backdrop-filter-on-fixed-elements bug mitigation: forcing a
-          GPU layer via translateZ(0)) so the drawer stays legible over
-          whatever page content sits behind it, and tapping outside closes
-          it like every other overlay in the app. */}
-      <AnimatePresence>
-        {drawerOpen && (
-          <motion.div
-            key="quick-add-backdrop"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setDrawerOpen(false)}
-            className="fixed inset-0 z-30 backdrop-blur-[15px]"
-            style={{ transform: "translateZ(0)", willChange: "backdrop-filter" }}
-          />
-        )}
-      </AnimatePresence>
+      {/* Invisible tap-catcher only — no backdrop-filter here anymore. The
+          blur behind the open drawer is a real CSS filter that Layout puts
+          on <main> (via onDrawerOpenChange): backdrop-filter on this fixed
+          layer rendered or silently didn't depending on whether the
+          SideMenu wrapper happened to be carrying a transform at that
+          moment (WebKit changes what a backdrop-filter may sample under a
+          transformed ancestor), which is exactly the "sometimes blurred,
+          sometimes not" bug. A plain filter on the content itself has no
+          such dependency — it always renders. */}
+      {drawerOpen && (
+        <div
+          onClick={() => setDrawerOpen(false)}
+          className="fixed inset-0 z-30"
+        />
+      )}
 
       <div
         className="pointer-events-none fixed inset-x-0 z-40"

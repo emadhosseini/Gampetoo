@@ -1,4 +1,5 @@
-import type { MouseEvent, ReactNode } from "react";
+import { useEffect, useState, type MouseEvent, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 
 export interface ModalOverlayProps {
   onClose: () => void;
@@ -19,27 +20,65 @@ export interface ModalOverlayProps {
 // that: the card-positioning layer is pointer-events-none (so it doesn't
 // itself capture touches in the space around the card — those fall through
 // to the backdrop below), and only the card re-enables pointer-events.
+//
+// Rendered through a portal to document.body, NOT in place. In place, every
+// popup sat inside SideMenu's motion.div — and whether framer-motion leaves
+// a transform on that wrapper at any given moment is timing-dependent. On
+// WebKit, a transformed ancestor changes what backdrop-filter is allowed to
+// sample, so the backdrop blur worked or silently didn't depending on which
+// state the wrapper happened to be in — the maddening "sometimes blurred,
+// sometimes not" popups on iOS. At body level there is no transformed
+// ancestor, ever.
 export default function ModalOverlay({
   onClose,
   children,
   zIndexClass = "z-[70]",
   paddingTop = "pt-safe",
 }: ModalOverlayProps) {
+  // WebKit can also fail to paint a backdrop-filter that is already present
+  // on an element at DOM-insertion time — it sticks unblurred until some
+  // later repaint. Mounting with blur(0) and switching it on a couple of
+  // frames later makes WebKit build the backdrop layer via a property
+  // *change*, which it handles reliably; the short transition doubles as a
+  // pleasant fade-in.
+  const [blurOn, setBlurOn] = useState(false);
+
+  useEffect(() => {
+    let raf2 = 0;
+
+    const raf1 = requestAnimationFrame(() => {
+      raf2 = requestAnimationFrame(() => setBlurOn(true));
+    });
+
+    return () => {
+      cancelAnimationFrame(raf1);
+      cancelAnimationFrame(raf2);
+    };
+  }, []);
+
   function stopPropagation(e: MouseEvent) {
     e.stopPropagation();
   }
 
-  return (
+  const blur = blurOn ? "blur(25px)" : "blur(0px)";
+
+  return createPortal(
     <>
       <div
-        className={`fixed inset-0 ${zIndexClass} touch-none backdrop-blur-[25px]`}
-        // iOS Safari has a long-standing bug where backdrop-filter on a
-        // position:fixed element intermittently doesn't render at all
-        // (not a positioning issue — the element is where it should be,
-        // it just paints as if backdrop-filter were none). Forcing this
-        // onto its own GPU compositing layer is the standard, well-known
-        // mitigation.
-        style={{ transform: "translateZ(0)", willChange: "backdrop-filter" }}
+        className={`fixed inset-0 ${zIndexClass} touch-none`}
+        // translateZ(0)/will-change force a GPU compositing layer — the
+        // long-standing mitigation for iOS Safari intermittently not
+        // rendering backdrop-filter on position:fixed elements at all. The
+        // -webkit- prefixed property is set explicitly since not every
+        // WebKit version honors the unprefixed one.
+        style={{
+          transform: "translateZ(0)",
+          willChange: "backdrop-filter",
+          backdropFilter: blur,
+          WebkitBackdropFilter: blur,
+          transition:
+            "backdrop-filter 250ms ease, -webkit-backdrop-filter 250ms ease",
+        }}
         onClick={onClose}
       />
 
@@ -53,6 +92,7 @@ export default function ModalOverlay({
           {children}
         </div>
       </div>
-    </>
+    </>,
+    document.body,
   );
 }
