@@ -29,21 +29,37 @@ type MobileContainerProps = {
 function measureViewportHeight(): number {
   if (typeof window === "undefined") return 0;
 
+  // navigator.standalone is WebKit-only, and true for home-screen apps
+  // whether they were installed from Safari or Chrome (both are WebKit on
+  // iOS). Deliberately NOT the display-mode:standalone media query — that
+  // also matches Android, where the status bar sits outside the webview
+  // and screen.height would overshoot.
+  const iosStandalone =
+    (navigator as Navigator & { standalone?: boolean }).standalone === true;
+
+  // Browser tab: innerHeight alone — the long-stable behavior. The extra
+  // candidates below are ONLY safe in standalone, where the webview always
+  // covers the whole screen. In a Safari/Chrome tab the layout viewport
+  // (documentElement.clientHeight) is routinely TALLER than the visible
+  // area while the URL bar is showing (the classic iOS 100vh quirk), and
+  // sizing the app off it once made the document scrollable → scrolling
+  // collapses/expands the toolbar → visualViewport resize fires → height
+  // flips between the two values → full re-layout every frame: a feedback
+  // loop that pegged the CPU (frozen app, hot phone) in iPhone browser
+  // tabs while the installed PWA — toolbar-less, all candidates equal —
+  // was completely unaffected.
+  if (!iosStandalone) {
+    return window.innerHeight;
+  }
+
   const candidates = [
     window.innerHeight,
     document.documentElement.clientHeight,
   ];
 
-  // navigator.standalone is WebKit-only, and true for home-screen apps
-  // whether they were installed from Safari or Chrome (both are WebKit on
-  // iOS). Deliberately NOT the display-mode:standalone media query — that
-  // also matches Android, where the status bar sits outside the webview
-  // and screen.height would overshoot. Portrait-only because iOS reports
-  // screen.height as the portrait long edge regardless of rotation.
-  const iosStandalone =
-    (navigator as Navigator & { standalone?: boolean }).standalone === true;
-
-  if (iosStandalone && window.matchMedia("(orientation: portrait)").matches) {
+  // Portrait-only because iOS reports screen.height as the portrait long
+  // edge regardless of rotation.
+  if (window.matchMedia("(orientation: portrait)").matches) {
     candidates.push(window.screen.height);
   }
 

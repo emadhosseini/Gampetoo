@@ -1,6 +1,15 @@
 {
-  "current": "2.1.42",
+  "current": "2.1.43",
   "history": [
+    {
+      "version": "2.1.43",
+      "date": "2026-08-03",
+      "description": "Critical fix: opening the app in an iPhone BROWSER tab (Safari/Chrome, not the installed PWA) could peg the CPU — frozen UI, phone heating up. Root cause was a side effect of 2.1.39's viewport-height fix: documentElement.clientHeight was included in the height measurement in every mode, but in an iOS browser tab the layout viewport is routinely taller than the visible area while the URL bar is showing (the classic 100vh quirk). Sizing the app off it made the document scrollable, scrolling collapsed/expanded the toolbar, that fired the (also newly-added) visualViewport resize listener, the measured height flipped between the two values, and the whole app re-laid-out every frame — a genuine feedback loop. The installed PWA was unaffected (no toolbar, all candidates equal), which is why it only showed in the browser. Browser tabs now measure exactly as they did before 2.1.39 (window.innerHeight only); the extra clientHeight/screen.height candidates apply only in iOS standalone mode where the webview always covers the whole screen and they're guaranteed correct. Verified all three prior scenarios still pass (standalone stale clamps to 844, browser tab tracks 800, settled standalone unchanged).",
+      "highlights": [
+        "🔥 رفع باگ مهم: باز کردن اپ توی مرورگر آیفون دیگه باعث هنگ کردن و داغ شدن گوشی نمی‌شه",
+        "✅ اصلاح نسخه ۲.۱.۳۹ برای نسخه نصب‌شده (نوار سیاه پایین) دست‌نخورده سر جاشه"
+      ]
+    },
     {
       "version": "2.1.42",
       "date": "2026-08-03",
