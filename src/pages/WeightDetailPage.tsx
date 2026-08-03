@@ -29,6 +29,8 @@ export default function WeightDetailPage() {
         history={entries.map((entry) => ({ date: entry.date, value: entry.weight }))}
         onAdd={() => navigate("/settings/weight")}
         addLabel="افزودن وزن"
+        targetValue={targetWeight ?? undefined}
+        targetLabel="وزن هدف"
       >
         <div className="glass-panel glass-static space-y-3 rounded-3xl p-5">
           <button

@@ -1,131 +1,18 @@
-import { useMemo, useRef, useState } from "react";
-import {
-  CategoryScale,
-  Chart as ChartJS,
-  Filler,
-  LinearScale,
-  LineElement,
-  PointElement,
-  Tooltip,
-  type TooltipItem,
-} from "chart.js";
-import zoomPlugin from "chartjs-plugin-zoom";
-import { Line } from "react-chartjs-2";
+import { useState } from "react";
 
 import WeightPicker from "@/components/WeightPicker";
-import {
-  getLatestWeight,
-  getTodaysWeight,
-  getWeightLog,
-  logWeight,
-} from "@/utils/weightEngine";
-import { formatGregorianShort } from "@/utils/dateFormat";
-import { toFaDigits } from "@/utils/numberFormat";
-
-const CHART_FONT_FAMILY = "Vazirmatn";
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Filler,
-  Tooltip,
-  zoomPlugin,
-);
-
-const DEFAULT_VISIBLE_POINTS = 5;
-
-function isoToLocalDate(iso: string): Date {
-  const [y, m, d] = iso.split("-").map(Number);
-
-  return new Date(y, m - 1, d);
-}
+import { getLatestWeight, getTodaysWeight, logWeight } from "@/utils/weightEngine";
 
 export default function WeightTrackerPage() {
-  const [entries, setEntries] = useState(() => getWeightLog());
   const [weight, setWeight] = useState(() => getLatestWeight() ?? 50);
   const [saved, setSaved] = useState(false);
-
-  const chartRef = useRef<ChartJS<"line"> | null>(null);
-
-  const alreadyLoggedToday = getTodaysWeight() !== null;
+  const [alreadyLoggedToday, setAlreadyLoggedToday] = useState(() => getTodaysWeight() !== null);
 
   function handleLog() {
-    setEntries(logWeight(weight));
+    logWeight(weight);
     setSaved(true);
+    setAlreadyLoggedToday(true);
   }
-
-  const chartData = useMemo(
-    () => ({
-      labels: entries.map((entry) => formatGregorianShort(isoToLocalDate(entry.date))),
-      datasets: [
-        {
-          data: entries.map((entry) => entry.weight),
-          borderColor: "#34d399",
-          backgroundColor: "rgba(52, 211, 153, 0.15)",
-          pointBackgroundColor: "#34d399",
-          pointRadius: 4,
-          pointHoverRadius: 6,
-          tension: 0.3,
-          fill: true,
-        },
-      ],
-    }),
-    [entries],
-  );
-
-  const initialWindow = useMemo(() => {
-    const lastIndex = entries.length - 1;
-    const firstVisible = Math.max(0, entries.length - DEFAULT_VISIBLE_POINTS);
-
-    return { min: firstVisible, max: Math.max(lastIndex, 0) };
-  }, [entries]);
-
-  const chartOptions = useMemo(
-    () => ({
-      responsive: true,
-      maintainAspectRatio: false,
-      scales: {
-        x: {
-          min: initialWindow.min,
-          max: initialWindow.max,
-          ticks: { color: "#ffffff", font: { family: CHART_FONT_FAMILY } },
-          grid: { color: "#327b3e" },
-        },
-        y: {
-          ticks: {
-            color: "#ffffff",
-            font: { family: CHART_FONT_FAMILY },
-            callback: (value: number | string) => toFaDigits(value),
-          },
-          grid: { color: "#327b3e" },
-        },
-      },
-      plugins: {
-        tooltip: {
-          titleFont: { family: CHART_FONT_FAMILY },
-          bodyFont: { family: CHART_FONT_FAMILY },
-          callbacks: {
-            label: (context: TooltipItem<"line">) =>
-              `${toFaDigits(context.parsed.y ?? 0)} کیلوگرم`,
-          },
-        },
-        zoom: {
-          pan: { enabled: true, mode: "x" as const },
-          zoom: {
-            wheel: { enabled: true },
-            pinch: { enabled: true },
-            mode: "x" as const,
-          },
-          limits: {
-            x: { min: 0, max: Math.max(entries.length - 1, 0), minRange: 1 },
-          },
-        },
-      },
-    }),
-    [initialWindow, entries.length],
-  );
 
   return (
     <div className="space-y-6 px-5 pb-5 pt-10">
@@ -152,35 +39,6 @@ export default function WeightTrackerPage() {
         >
           {saved ? "ثبت شد ✅" : alreadyLoggedToday ? "بروزرسانی وزن" : "ثبت وزن"}
         </button>
-      </div>
-
-      <div className="glass-panel glass-static rounded-2xl p-4">
-        <p className="mb-3 text-center text-sm text-white">
-          نمودار وزن
-        </p>
-
-        {entries.length === 0 ? (
-          <p className="py-8 text-center text-white">
-            هنوز وزنی ثبت نکردی.
-          </p>
-        ) : (
-          <>
-            <div className="-ml-3 h-64">
-              <Line ref={chartRef} data={chartData} options={chartOptions} />
-            </div>
-
-            <p className="mt-3 text-center text-xs text-white">
-              با اسکرول یا دو انگشتی زوم کن، برای دیدن وزن‌های قبلی بکش
-            </p>
-
-            <button
-              onClick={() => chartRef.current?.resetZoom()}
-              className="mx-auto mt-2 block text-xs text-white underline"
-            >
-              بازنشانی نمودار
-            </button>
-          </>
-        )}
       </div>
     </div>
   );

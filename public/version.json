@@ -1,6 +1,17 @@
 {
-  "current": "2.1.33",
+  "current": "2.1.34",
   "history": [
+    {
+      "version": "2.1.34",
+      "date": "2026-08-03",
+      "description": "Removed the old zoomable weight chart from the weight-entry page (/settings/weight) — the weight chart now only lives on the progress detail page. Fixed the progress overview's weight card goal label to say 'وزن هدف: ...' instead of just the bare number. Rebuilt the stat detail pages' Y-axis to always center the data within exactly 4 gridlines instead of floor/ceil-ing outward (which pushed a narrow value range toward the bottom edge), added x-axis offset so a single point renders centered instead of pinned to the plot edge, and gave week/month fixed-width calendar-day buckets (real gaps for days with nothing logged, instead of the chart shrinking to only the days with data) while year now aggregates into 12 monthly-average points. The weight chart also gained a dashed target-weight reference line (the Y-axis now stretches to include the target too, so the gap to goal is visible at a glance), and its panel grew from ~33% to ~46% of the screen since the header/range-selector/average text left almost no room for the chart itself at the old size. Removed the glass-panel press-scale animation's stray hairline along the very top edge of the flush-to-top panel (it's pinned to the screen edge, so a border there read as an unwanted seam) and gave pages built around that panel (all 4 progress detail pages) a way to bleed their background under the safe-area/status-bar strip instead of showing a plain gap above them in the installed PWA.",
+      "highlights": [
+        "📏 نمودارهای صفحه جزئیات همیشه ۴ ردیف نشون می‌دن و نقطه‌ها وسط‌چین می‌شن، نه چسبیده به گوشه",
+        "🎯 نمودار وزن حالا خط نقطه‌چین وزن هدف داره و کادرش بزرگ‌تر شد",
+        "📅 هفته/ماه به بازه‌ی تقویمی ثابت تبدیل شدن (با گپ واقعی برای روزهای ثبت‌نشده)، سال هم ماهانه تجمیع می‌شه",
+        "🐛 رفع گپ/مرز بالای کادر در PWA و حذف نمودار قدیمی از صفحه ثبت وزن"
+      ]
+    },
     {
       "version": "2.1.33",
       "date": "2026-08-03",

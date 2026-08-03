@@ -18,6 +18,11 @@ import type { DailyMetricEntry } from "@/utils/dailyMetricLog";
 import { computeYAxisRange } from "@/utils/chartAxis";
 import { formatGregorianShort } from "@/utils/dateFormat";
 import { toFaDigits } from "@/utils/numberFormat";
+import { buildDailyBuckets, buildMonthlyBuckets, type StatBucket } from "@/utils/statBuckets";
+
+// Rows the Y-axis always shows, regardless of range — never fewer, so a
+// single point (or a flat week) never collapses onto the bottom edge.
+const Y_AXIS_ROWS = 4;
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Filler, Tooltip);
 
@@ -59,6 +64,12 @@ export interface StatChartPageProps {
   valuePrecision?: number;
   onAdd: () => void;
   addLabel: string;
+  // Draws a dashed horizontal reference line at this value (e.g. the
+  // weight page's target weight) so the chart can be read against a goal
+  // at a glance — omit for stats with no such goal (calories/water/
+  // activity).
+  targetValue?: number;
+  targetLabel?: string;
   // Extra content below the chart panel, in the page's normal scroll flow
   // (e.g. the weight page's target/current-weight rows).
   children?: ReactNode;
@@ -73,6 +84,8 @@ export default function StatChartPage({
   valuePrecision = 1,
   onAdd,
   addLabel,
+  targetValue,
+  targetLabel = "هدف",
   children,
 }: StatChartPageProps) {
   const navigate = useNavigate();
@@ -80,6 +93,9 @@ export default function StatChartPage({
 
   const activeRange = RANGES.find((r) => r.key === range)!;
 
+  // The real logged entries within the active window — used for the
+  // average/date-range text (which should reflect what was actually
+  // logged, not the zero-filled/aggregated chart buckets below).
   const entries = useMemo(() => {
     const cutoff = daysAgoIso(activeRange.days);
 
@@ -87,6 +103,25 @@ export default function StatChartPage({
       .filter((entry) => entry.date >= cutoff)
       .sort((a, b) => (a.date < b.date ? -1 : 1));
   }, [history, activeRange.days]);
+
+  // What the chart itself renders. Week/month get one bucket per calendar
+  // day (even days with nothing logged, as a real gap — not skipped, so
+  // the chart always spans the full window instead of shrinking to
+  // wherever the sparse data happens to sit) and year aggregates into one
+  // bucket per month so ~365 daily points compress into 12. Day/6-month
+  // just plot the real entries directly.
+  const chartPoints: StatBucket[] = useMemo(() => {
+    if (range === "week") return buildDailyBuckets(history, 7);
+    if (range === "month") return buildDailyBuckets(history, 30);
+    if (range === "year") return buildMonthlyBuckets(history, 12);
+
+    return entries.map((entry) => ({
+      label: formatGregorianShort(isoToLocalDate(entry.date)),
+      value: entry.value,
+    }));
+  }, [range, history, entries]);
+
+  const hasData = chartPoints.some((point) => point.value !== null);
 
   const average =
     entries.length > 0
@@ -100,25 +135,48 @@ export default function StatChartPage({
         : `${formatGregorianShort(isoToLocalDate(entries[0].date))} – ${formatGregorianShort(isoToLocalDate(entries[entries.length - 1].date))}`
       : "—";
 
+  // The target line is included in the axis range calculation too, so the
+  // chart always stretches to show how far the data actually is from the
+  // goal instead of cropping it out.
   const yAxis = computeYAxisRange(
-    entries.map((e) => e.value),
-    3,
+    [...chartPoints.map((p) => p.value ?? NaN), targetValue ?? NaN],
+    Y_AXIS_ROWS,
     minYStep,
   );
 
+  // Denser buckets (month's 30 days) get smaller points so they don't
+  // visually collide into each other.
+  const pointRadius = range === "month" ? 2 : 3;
+
   const chartData = {
-    labels: entries.map((entry) => formatGregorianShort(isoToLocalDate(entry.date))),
+    labels: chartPoints.map((point) => point.label),
     datasets: [
       {
-        data: entries.map((entry) => entry.value),
+        data: chartPoints.map((point) => point.value),
+        spanGaps: false,
         borderColor: color,
         backgroundColor: `${color}26`,
         pointBackgroundColor: color,
-        pointRadius: 3,
-        pointHoverRadius: 5,
+        pointRadius,
+        pointHoverRadius: pointRadius + 2,
         tension: 0.3,
         fill: true,
       },
+      ...(targetValue !== undefined
+        ? [
+            {
+              label: targetLabel,
+              data: chartPoints.map(() => targetValue),
+              borderColor: "#f87171",
+              borderDash: [6, 4],
+              borderWidth: 1.5,
+              pointRadius: 0,
+              pointHoverRadius: 0,
+              fill: false,
+              tension: 0,
+            },
+          ]
+        : []),
     ],
   };
 
@@ -127,7 +185,17 @@ export default function StatChartPage({
     maintainAspectRatio: false,
     scales: {
       x: {
-        ticks: { color: "#ffffff", font: { family: CHART_FONT_FAMILY, size: 10 } },
+        // Centers points within their slot instead of pinning the first/
+        // last one flush to the plot edge — matters most for a single
+        // point (the day range), which would otherwise sit right at the
+        // edge instead of the middle of the chart.
+        offset: true,
+        ticks: {
+          color: "#ffffff",
+          font: { family: CHART_FONT_FAMILY, size: 10 },
+          autoSkip: true,
+          maxRotation: 0,
+        },
         grid: { display: false },
       },
       y: {
@@ -147,8 +215,11 @@ export default function StatChartPage({
         titleFont: { family: CHART_FONT_FAMILY },
         bodyFont: { family: CHART_FONT_FAMILY },
         callbacks: {
-          label: (context: TooltipItem<"line">) =>
-            `${toFaDigits((context.parsed.y ?? 0).toFixed(valuePrecision))} ${unitLabel}`,
+          label: (context: TooltipItem<"line">) => {
+            const value = `${toFaDigits((context.parsed.y ?? 0).toFixed(valuePrecision))} ${unitLabel}`;
+
+            return context.dataset.label ? `${context.dataset.label}: ${value}` : value;
+          },
         },
       },
     },
@@ -156,11 +227,13 @@ export default function StatChartPage({
 
   return (
     <div>
-      {/* Flush to the very top of the safe area, ~1/3 of the screen —
-          the reference design this was built from. Rounded on the bottom
+      {/* Flush to the very top of the safe area. Taller than the original
+          ~1/3-screen reference design — at that size the header row, range
+          pills, and average text left barely any room for the chart
+          itself, so it always rendered cramped. Rounded on the bottom
           only, since it's pinned to the top edge. */}
       <div
-        className="glass-panel glass-static flex h-[33dvh] min-h-[230px] flex-col rounded-b-3xl rounded-t-none px-5 pb-3 pt-safe"
+        className="glass-panel glass-panel-flush-top glass-static flex h-[46dvh] min-h-95 flex-col rounded-b-3xl rounded-t-none px-5 pb-3 pt-safe"
       >
         <div className="relative flex items-center justify-center pt-3">
           <button
@@ -212,11 +285,11 @@ export default function StatChartPage({
           <p className="text-xs text-white/50">{dateRangeLabel}</p>
         </div>
 
-        <div className="mt-2 min-h-0 flex-1">
-          {entries.length > 0 ? (
-            <Line data={chartData} options={chartOptions} />
-          ) : (
-            <div className="flex h-full items-center justify-center">
+        <div className="relative mt-2 min-h-0 flex-1">
+          <Line data={chartData} options={chartOptions} />
+
+          {!hasData && (
+            <div className="absolute inset-0 flex items-center justify-center">
               <p className="text-sm text-white/50">چیزی ثبت نشده</p>
             </div>
           )}

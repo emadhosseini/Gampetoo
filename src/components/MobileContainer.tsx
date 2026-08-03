@@ -4,6 +4,13 @@ import MeshGradientBackground from "@/components/background/MeshGradientBackgrou
 
 type MobileContainerProps = {
   children: React.ReactNode;
+  // When true, the content wrapper bleeds up into the reserved safe-area
+  // strip (see .bleed-top-safe) so a page with its own full-bleed top
+  // panel (StatChartPage) can paint that panel's background flush to the
+  // real top of the screen instead of showing this container's plain
+  // background above it. Every other page leaves this off and keeps
+  // relying on this container's own pt-safe as before.
+  bleedTop?: boolean;
 };
 
 /* On an iOS home-screen-installed (standalone) PWA, window.innerHeight
@@ -40,7 +47,7 @@ function useViewportHeight() {
   return height;
 }
 
-function MobileContainer({ children }: MobileContainerProps) {
+function MobileContainer({ children, bleedTop = false }: MobileContainerProps) {
   const viewportHeight = useViewportHeight();
 
   return (
@@ -49,7 +56,9 @@ function MobileContainer({ children }: MobileContainerProps) {
       style={{ height: viewportHeight }}
     >
       <MeshGradientBackground colorA="#3b9149" colorB="#faea5c" />
-      <div className="relative z-10 h-full">{children}</div>
+      <div className={`relative z-10 h-full ${bleedTop ? "bleed-top-safe" : ""}`}>
+        {children}
+      </div>
     </div>
   );
 }

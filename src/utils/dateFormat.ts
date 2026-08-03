@@ -20,3 +20,8 @@ export function formatGregorianShort(date: Date): string {
 
   return `${day} ${month}`;
 }
+
+/** e.g. "جولای" — just the Gregorian month name, for monthly-bucketed charts. */
+export function formatGregorianMonth(date: Date): string {
+  return gregorianMonthNamesFa[date.getMonth()];
+}

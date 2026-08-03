@@ -23,7 +23,7 @@ export default function ProgressPage() {
         title="وزن"
         icon="⚖️"
         value={currentWeight !== null ? `${toFaDigits(currentWeight)} کیلوگرم` : "ثبت نشده"}
-        goalLabel={targetWeight !== null ? `${toFaDigits(targetWeight)} کیلوگرم` : "بدون هدف"}
+        goalLabel={targetWeight !== null ? `وزن هدف: ${toFaDigits(targetWeight)} کیلوگرم` : "بدون هدف"}
         onClick={() => navigate("/progress/weight")}
       />
 

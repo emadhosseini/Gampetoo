@@ -113,6 +113,30 @@ textarea {
   box-shadow: 0px 0px 0.5px 0.5px rgb(219 219 219 / 20%);
 }
 
+/* .glass-panel's all-around hairline (the 3rd shadow layer above) draws a
+   thin line across every edge, including the top — wrong for a panel
+   that's flush against the actual top of the screen with nothing above it
+   to seam against (StatChartPage's header panel). Keeps the side hairlines
+   and bottom shadow, drops just the all-around rim. Combine with
+   .glass-panel, applied after it so this box-shadow wins. */
+.glass-panel-flush-top {
+  box-shadow:
+    1.25px 0px 1px -0.75px rgb(219 219 219 / 35%),
+    -1.25px 0px 1px -0.75px rgb(219 219 219 / 35%),
+    0 10px 30px -14px rgb(0 0 0 / 55%);
+}
+
+/* Pulls an element up out of an ancestor's `pt-safe` reservation so its own
+   background can extend flush to the actual top of the screen instead of
+   showing the ancestor's plain background in that strip — compensates its
+   own height by the same amount so its bottom edge doesn't recede. Used by
+   MobileContainer's content wrapper (bleedTop prop) for pages built around
+   a full-bleed top panel. */
+.bleed-top-safe {
+  margin-top: calc(-1 * env(safe-area-inset-top));
+  height: calc(100% + env(safe-area-inset-top));
+}
+
 .glass-panel,
 .glass-chip,
 .glass-tap {
