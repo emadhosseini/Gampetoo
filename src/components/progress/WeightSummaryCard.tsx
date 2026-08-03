@@ -92,17 +92,25 @@ export default function WeightSummaryCard() {
   return (
     <>
       <div className="glass-panel rounded-2xl p-5">
-        <h2 className="text-lg font-semibold text-white">وزن</h2>
+        {/* Only the title/chart area opens the detail page — the rows below
+            have their own buttons (target-weight modal, add-weight), which
+            would also fire this navigation if it wrapped the whole card. */}
+        <button
+          onClick={() => navigate("/progress/weight")}
+          className="w-full text-right"
+        >
+          <h2 className="text-lg font-semibold text-white">وزن</h2>
 
-        {entries.length > 0 ? (
-          <div className="mt-3 -ml-3 h-40">
-            <Line data={chartData} options={chartOptions} />
-          </div>
-        ) : (
-          <p className="py-6 text-center text-sm text-white/70">
-            هنوز وزنی ثبت نکردی.
-          </p>
-        )}
+          {entries.length > 0 ? (
+            <div className="mt-3 -ml-3 h-40">
+              <Line data={chartData} options={chartOptions} />
+            </div>
+          ) : (
+            <p className="py-6 text-center text-sm text-white/70">
+              هنوز وزنی ثبت نکردی.
+            </p>
+          )}
+        </button>
 
         <div className="mt-3 space-y-3 border-t border-white/10 pt-3">
           <button

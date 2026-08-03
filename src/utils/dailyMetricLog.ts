@@ -1,0 +1,67 @@
+import { scopedKey } from "./userEngine";
+
+// A date -> single-number history, the shared shape behind water, activity,
+// and the daily-calorie archive — each is otherwise identical (per-day
+// total, queried as a time series for a chart), so this one factory backs
+// all three instead of copy-pasting the same read/write logic three times.
+export interface DailyMetricEntry {
+  date: string;
+  value: number;
+}
+
+function today(): string {
+  return new Date().toISOString().split("T")[0];
+}
+
+export function createDailyMetricLog(storageKey: string) {
+  function key() {
+    return scopedKey(storageKey);
+  }
+
+  function getHistory(): DailyMetricEntry[] {
+    const saved = localStorage.getItem(key());
+
+    if (!saved) return [];
+
+    try {
+      return JSON.parse(saved) as DailyMetricEntry[];
+    } catch {
+      return [];
+    }
+  }
+
+  function saveHistory(history: DailyMetricEntry[]) {
+    localStorage.setItem(key(), JSON.stringify(history));
+  }
+
+  function getToday(): number {
+    return getHistory().find((entry) => entry.date === today())?.value ?? 0;
+  }
+
+  // Upsert an arbitrary date's total — used both for "add to today" and for
+  // archiving a past day's final value (see dailyLogEngine.ts's calorie
+  // history, which writes a day's total once it's no longer today).
+  function setEntry(date: string, value: number) {
+    const history = getHistory();
+    const idx = history.findIndex((entry) => entry.date === date);
+
+    if (idx >= 0) {
+      history[idx] = { date, value };
+    } else {
+      history.push({ date, value });
+    }
+
+    saveHistory(history);
+  }
+
+  function addToday(amount: number): DailyMetricEntry[] {
+    setEntry(today(), getToday() + amount);
+    return getHistory();
+  }
+
+  function reset() {
+    localStorage.removeItem(key());
+  }
+
+  return { getHistory, getToday, setEntry, addToday, reset };
+}

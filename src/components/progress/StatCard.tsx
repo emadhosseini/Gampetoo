@@ -5,6 +5,7 @@ export interface StatCardProps {
   goalLabel?: string;
   icon: ReactNode;
   value: string;
+  onClick?: () => void;
 }
 
 // The gauge ring stays a plain, unfilled circle — there's no goal value to
@@ -16,9 +17,14 @@ export default function StatCard({
   goalLabel = "بدون هدف",
   icon,
   value,
+  onClick,
 }: StatCardProps) {
   return (
-    <div className="glass-panel rounded-2xl p-5">
+    <button
+      onClick={onClick}
+      disabled={!onClick}
+      className="glass-panel w-full rounded-2xl p-5 text-right disabled:cursor-default"
+    >
       <h2 className="text-lg font-semibold text-white">{title}</h2>
       <p className="text-sm text-white/60">{goalLabel}</p>
 
@@ -31,6 +37,6 @@ export default function StatCard({
           {icon}
         </div>
       </div>
-    </div>
+    </button>
   );
 }

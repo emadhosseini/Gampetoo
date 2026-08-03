@@ -22,6 +22,10 @@ import NutritionPlanLibraryPage from "@/pages/NutritionPlanLibraryPage";
 import NutritionPlanDetailPage from "@/pages/NutritionPlanDetailPage";
 import WeightTrackerPage from "@/pages/WeightTrackerPage";
 import ProfilePage from "@/pages/ProfilePage";
+import WeightDetailPage from "@/pages/WeightDetailPage";
+import CaloriesDetailPage from "@/pages/CaloriesDetailPage";
+import WaterDetailPage from "@/pages/WaterDetailPage";
+import ActivityDetailPage from "@/pages/ActivityDetailPage";
 
 import { hasStartDate } from "@/utils/programEngine";
 import { hasCurrentUsername } from "@/utils/userEngine";
@@ -116,6 +120,26 @@ function AppRoutes() {
         <Route
           path="/profile"
           element={<ProfilePage />}
+        />
+
+        <Route
+          path="/progress/weight"
+          element={<WeightDetailPage />}
+        />
+
+        <Route
+          path="/progress/calories"
+          element={<CaloriesDetailPage />}
+        />
+
+        <Route
+          path="/progress/water"
+          element={<WaterDetailPage />}
+        />
+
+        <Route
+          path="/progress/activity"
+          element={<ActivityDetailPage />}
         />
       </Route>
 
