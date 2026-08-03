@@ -27,7 +27,6 @@ import CaloriesDetailPage from "@/pages/CaloriesDetailPage";
 import WaterDetailPage from "@/pages/WaterDetailPage";
 import ActivityDetailPage from "@/pages/ActivityDetailPage";
 
-import { hasStartDate } from "@/utils/programEngine";
 import { hasCurrentUsername } from "@/utils/userEngine";
 import { initSync } from "@/sync/remoteSync";
 
@@ -46,7 +45,7 @@ export default function App() {
 function AppRoutes() {
   useLocation();
 
-  const initialized = hasCurrentUsername() && hasStartDate();
+  const initialized = hasCurrentUsername();
 
   if (!initialized) {
     return (

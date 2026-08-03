@@ -1,6 +1,16 @@
 {
-  "current": "2.1.36",
+  "current": "2.1.37",
   "history": [
+    {
+      "version": "2.1.37",
+      "date": "2026-08-03",
+      "description": "Removed workout-day/program selection from the first-run setup screen — it's now login/signup only, and a successful signup or login always lands on the home page instead of being blocked behind program setup. The home page shows a single 'برنامه روزانه تمرینی رو انتخاب کنید' card (in the same visual format as the usual today/tomorrow/status cards) whenever no workout program has been built yet, tapping through to the existing workout-program page. That page now also handles the very first save (defaulting the start date to today and resetting today's session state) alongside its existing day-editing role, so completing it there returns the home page to its normal three-card view immediately.",
+      "highlights": [
+        "🏠 بعد از ثبت‌نام/ورود مستقیم می‌ری صفحه خانه، بدون نیاز به انتخاب برنامه اول",
+        "📋 اگه هنوز برنامه‌ای نساختی، یه کارت «برنامه روزانه تمرینی رو انتخاب کنید» جای کارت‌های همیشگی میاد",
+        "✅ ساخت برنامه از همون صفحه‌ی «برنامه تمرینی» همیشگی انجام می‌شه — بعد از ذخیره، صفحه خانه به حالت عادی برمی‌گرده"
+      ]
+    },
     {
       "version": "2.1.36",
       "date": "2026-08-03",

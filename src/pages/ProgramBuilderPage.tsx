@@ -3,9 +3,14 @@ import { useNavigate } from "react-router-dom";
 
 import { getWorkoutOptions } from "@/store/workoutLibraryStore";
 import { getActiveProgram, updateProgram } from "@/utils/programEngine";
+import { resetSession } from "@/utils/sessionEngine";
 import { generateId } from "@/utils/id";
 import type { WorkoutDay, WorkoutType } from "@/types/program";
 import { toFaDigits } from "@/utils/numberFormat";
+
+function today(): string {
+  return new Date().toISOString().split("T")[0];
+}
 
 const persianDays = [
   "اول",
@@ -25,6 +30,10 @@ function ProgramBuilderPage() {
 
   const workouts = getWorkoutOptions();
   const program = getActiveProgram();
+  // No startDate yet means this is the very first time a program is being
+  // built (the home page's "select a program" card led here) rather than
+  // an existing program being edited later.
+  const isFirstTime = !program.startDate;
 
   const [days, setDays] = useState<WorkoutDay[]>(() =>
     program.workout.days.map((day) => ({ ...day }))
@@ -71,11 +80,21 @@ function ProgramBuilderPage() {
   function handleSave() {
     updateProgram({
       ...program,
+      // First save ever starts the cycle today — an existing startDate is
+      // left untouched so editing days later doesn't shift it.
+      startDate: program.startDate || today(),
       workout: {
         ...program.workout,
         days,
       },
     });
+
+    // Only on the very first save — resetting session state (today's
+    // completed flag) on a later edit would wipe a workout the user
+    // already did today just because they tweaked a day's exercise.
+    if (isFirstTime) {
+      resetSession();
+    }
 
     navigate("/");
   }
@@ -84,7 +103,7 @@ function ProgramBuilderPage() {
     <div className="space-y-6 px-5 pb-5 pt-10">
       <div className="mb-6 mt-4 text-center">
         <h1 className="text-3xl font-bold">
-          تغییر برنامه تمرینی
+          {isFirstTime ? "برنامه تمرینی روزانه رو بساز" : "تغییر برنامه تمرینی"}
         </h1>
       </div>
 
@@ -142,9 +161,10 @@ function ProgramBuilderPage() {
 
       <button
         onClick={handleSave}
-        className="w-full rounded-2xl bg-avocado-yellow py-4 text-lg font-bold text-black"
+        disabled={days.length === 0}
+        className="w-full rounded-2xl bg-avocado-yellow py-4 text-lg font-bold text-black disabled:cursor-not-allowed disabled:opacity-40"
       >
-        ذخیره تغییرات
+        {isFirstTime ? "شروع برنامه" : "ذخیره تغییرات"}
       </button>
     </div>
   );

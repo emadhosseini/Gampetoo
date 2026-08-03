@@ -1,3 +1,5 @@
+import { useNavigate } from "react-router-dom";
+
 import Header from "@/components/Header";
 import HeroCard from "@/components/HeroCard";
 import InfoCard from "@/components/InfoCard";
@@ -15,6 +17,7 @@ import {
   getDaysUntilStart,
   getProgramDay,
   hasProgramStarted,
+  hasStartDate,
   getWorkoutTypeForDate,
 } from "@/utils/programEngine";
 
@@ -22,6 +25,28 @@ import { getWorkout } from "@/store/workoutLibraryStore";
 import { toFaDigits } from "@/utils/numberFormat";
 
 function HomePage() {
+  const navigate = useNavigate();
+
+  // No workout program built yet (first run, or an account that logged in
+  // fresh without one) — a single card replaces the usual three, since
+  // today/tomorrow/status are all meaningless without any days configured.
+  if (!hasStartDate()) {
+    return (
+      <div className="pb-32">
+        <Header />
+
+        <section className="space-y-4 px-6">
+          <HeroCard
+            title="شروع کن"
+            emoji="🗓"
+            status="برنامه روزانه تمرینی رو انتخاب کنید"
+            onClick={() => navigate("/settings/program")}
+          />
+        </section>
+      </div>
+    );
+  }
+
   const session = getSession();
 
   const day = getCurrentProgramDay();

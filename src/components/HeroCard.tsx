@@ -3,6 +3,7 @@ type HeroCardProps = {
   emoji: string;
   status: string;
   description?: string;
+  onClick?: () => void;
 };
 
 function HeroCard({
@@ -10,9 +11,15 @@ function HeroCard({
   emoji,
   status,
   description,
+  onClick,
 }: HeroCardProps) {
   return (
-    <div className="glass-panel rounded-[32px] p-8 text-center">
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={!onClick}
+      className="glass-panel w-full rounded-[32px] p-8 text-center disabled:cursor-default"
+    >
       <p className="text-sm text-white">
         {title}
       </p>
@@ -30,7 +37,7 @@ function HeroCard({
           {description}
         </p>
       )}
-    </div>
+    </button>
   );
 }
 
