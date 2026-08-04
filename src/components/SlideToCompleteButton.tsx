@@ -19,15 +19,20 @@ interface SlideToCompleteButtonProps {
   onReachEnd: () => void;
 }
 
-// How far (in px) into the drag the blurred trail takes to fade fully in.
-// It's hidden at rest — at x=0 the trail is exactly the handle's width, and
-// a blurred patch sitting under the circle before you've touched anything
-// just looks like a rendering artifact.
-const TRAIL_FADE_IN_DISTANCE = 28;
-
-// Matches the bottom navigation's own pill height (h-17) exactly, and the
-// handle is sized to fill it edge to edge — no inset gap around the circle.
+// Matches the bottom navigation's own pill height (h-17) exactly. At rest
+// the capsule is a circle of this diameter; dragging stretches it — the
+// capsule itself grows, nothing detaches and slides.
 const HANDLE_SIZE = 68;
+
+// The capsule's own glass treatment. Not .glass-panel: that class forces
+// position: relative (breaking the absolute placement here) and carries a
+// press-scale :active transform that would fire mid-drag. Same hairline
+// recipe, minus the bottom drop shadow the track already provides.
+const CAPSULE_SHADOW = [
+  "1.25px 0px 1px -0.75px rgb(219 219 219 / 35%)",
+  "-1.25px 0px 1px -0.75px rgb(219 219 219 / 35%)",
+  "0px 0px 0.5px 0.5px rgb(219 219 219 / 30%)",
+].join(", ");
 
 export default function SlideToCompleteButton({
   label,
@@ -39,8 +44,7 @@ export default function SlideToCompleteButton({
   const prefersReducedMotion = useReducedMotion();
 
   const x = useMotionValue(0);
-  const trailWidth = useTransform(x, (value) => `${HANDLE_SIZE + value}px`);
-  const trailOpacity = useTransform(x, [0, TRAIL_FADE_IN_DISTANCE], [0, 1]);
+  const capsuleWidth = useTransform(x, (value) => `${HANDLE_SIZE + value}px`);
   const labelOpacity = useTransform(x, [0, Math.max(maxDrag * 0.5, 1)], [1, 0]);
 
   useLayoutEffect(() => {
@@ -89,21 +93,22 @@ export default function SlideToCompleteButton({
       ref={trackRef}
       role="button"
       aria-label={label}
-      className="glass-panel relative mt-6 h-17 w-full overflow-hidden rounded-full"
+      className="glass-panel glass-static relative mt-6 h-17 w-full overflow-hidden rounded-full"
     >
-      {/* The trail the handle leaves behind: a blur of whatever the page is
-          showing underneath, not a colored fill. Deliberately carries no
-          mask-image — WebKit can drop backdrop-filter entirely when it's
-          combined with a mask, and this app has already hit iOS
-          backdrop-filter bugs (see ModalOverlay), so the leading edge is
-          capped by the handle circle instead. translateZ(0)/will-change is
-          the same GPU-layer promotion ModalOverlay needs to make
-          backdrop-filter paint reliably on iOS. */}
+      {/* The stretching capsule: a circle at rest that elongates with the
+          drag, blurring whatever the page shows underneath it. rounded-full
+          on the element itself keeps the backdrop blur clipped inside the
+          capsule shape (not spilling past its curved leading edge).
+          Deliberately carries no mask-image — WebKit can drop
+          backdrop-filter entirely when it's combined with a mask, and this
+          app has already hit iOS backdrop-filter bugs (see ModalOverlay), so
+          translateZ(0)/will-change is the same GPU-layer promotion
+          ModalOverlay needs to make backdrop-filter paint reliably on iOS. */}
       <motion.div
-        className="pointer-events-none absolute inset-y-0 left-0 bg-white/10 backdrop-blur-[30px]"
+        className="pointer-events-none absolute inset-y-0 left-0 rounded-full bg-white/10 backdrop-blur-[30px]"
         style={{
-          width: trailWidth,
-          opacity: completed ? 1 : trailOpacity,
+          width: capsuleWidth,
+          boxShadow: CAPSULE_SHADOW,
           transform: "translateZ(0)",
           willChange: "backdrop-filter",
         }}
@@ -116,8 +121,11 @@ export default function SlideToCompleteButton({
         {label}
       </motion.span>
 
+      {/* Invisible drag surface riding the capsule's leading edge — it only
+          carries the icon, so the arrow stays centered on the round end of
+          the capsule while the capsule itself does the visual moving. */}
       <motion.div
-        className="absolute top-0 left-0 flex items-center justify-center"
+        className="absolute top-0 left-0 flex items-center justify-center text-white"
         style={{ x, width: HANDLE_SIZE, height: HANDLE_SIZE }}
         drag={completed ? false : "x"}
         dragConstraints={{ left: 0, right: maxDrag }}
@@ -125,13 +133,7 @@ export default function SlideToCompleteButton({
         dragMomentum={false}
         onDragEnd={handleDragEnd}
       >
-        {/* .glass-panel forces position: relative in index.css and would
-            beat an "absolute" utility class, so the draggable wrapper above
-            owns the positioning and this inner circle only carries the
-            look — same split used for the bottom nav's own round button. */}
-        <div className="glass-panel flex h-full w-full items-center justify-center rounded-full text-white">
-          {completed ? <Check size={26} /> : <ArrowRight size={26} />}
-        </div>
+        {completed ? <Check size={26} /> : <ArrowRight size={26} />}
       </motion.div>
     </div>
   );

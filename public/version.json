@@ -1,6 +1,16 @@
 {
-  "current": "2.1.54",
+  "current": "2.1.55",
   "history": [
+    {
+      "version": "2.1.55",
+      "date": "2026-08-04",
+      "description": "Reworked the slide-to-complete button's drag visual: instead of a detached circle handle sliding along the track over a separate blurred trail, the pill itself now stretches — at rest it's a 68px circle, and dragging elongates it into a capsule whose right end follows the finger, with the arrow riding centered on the capsule's round leading edge. The backdrop blur is now clipped inside the capsule shape itself (rounded-full on the blurring element) instead of spilling past it as a square-edged trail behind the handle. The capsule carries its own glass hairline (inline, not .glass-panel — that class forces position: relative and a press-scale that would fire mid-drag), and the track gained .glass-static so it no longer press-scales while being dragged. Verified via drag simulation: rest state is a circle with arrow, mid-drag shows the stretched capsule, releasing short of the end snaps back to the circle, full drag fills the track and opens the confirmation popup as before.",
+      "highlights": [
+        "💊 اسلایدر تمرین حالا موقع کشیدن به‌صورت کپسولی کش میاد، به‌جای اینکه دایره جدا حرکت کنه",
+        "🌫️ بلر شیشه‌ای حالا داخل خود کپسول محدوده و بیرونش نمی‌زنه",
+        "➡️ فلش روی لبه‌ی گرد جلوی کپسول می‌مونه و همراهش حرکت می‌کنه"
+      ]
+    },
     {
       "version": "2.1.54",
       "date": "2026-08-03",
