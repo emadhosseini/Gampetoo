@@ -17,8 +17,9 @@ export interface ExerciseGroup {
 // (see ProgramBuilderPage). Every other entry here exists purely so the
 // workout library's browsing taxonomy (workoutTaxonomy.ts) has somewhere
 // to link its leaves to — most of them start out with no exercises, filled
-// in later, and getWorkoutOptions() already excludes anything with an
-// empty groups list from the program-day picker.
+// in later, and pruneToSelectable() (workoutTaxonomy.ts) already excludes
+// anything with an empty groups list from the program-day picker
+// (WorkoutPickerModal).
 export interface WorkoutDefinition {
   id: string;
   title: string;
@@ -905,7 +906,8 @@ export const workoutLibrary: WorkoutDefinition[] = [
   // Placeholder entries for the newer taxonomy branches — no exercises yet
   // (WorkoutDetailPage shows a "coming soon" message for these until
   // content gets filled in), and excluded from the program-day picker by
-  // getWorkoutOptions() until they have at least one exercise.
+  // pruneToSelectable() (workoutTaxonomy.ts) until they have at least one
+  // exercise.
   { id: "bro-split", title: "برو اسپلیت", groups: [] },
   { id: "hiit", title: "HIIT", groups: [] },
   { id: "circuit-training", title: "تمرین دوره‌ای (سیرکویت)", groups: [] },

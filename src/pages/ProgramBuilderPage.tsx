@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { getWorkoutOptions } from "@/store/workoutLibraryStore";
+import WorkoutPickerModal from "@/components/WorkoutPickerModal";
+import { getWorkout } from "@/store/workoutLibraryStore";
 import { getActiveProgram, updateProgram } from "@/utils/programEngine";
 import { resetSession } from "@/utils/sessionEngine";
 import { generateId } from "@/utils/id";
@@ -28,7 +29,6 @@ const persianDays = [
 function ProgramBuilderPage() {
   const navigate = useNavigate();
 
-  const workouts = getWorkoutOptions();
   const program = getActiveProgram();
   // No startDate yet means this is the very first time a program is being
   // built (the home page's "select a program" card led here) rather than
@@ -38,6 +38,9 @@ function ProgramBuilderPage() {
   const [days, setDays] = useState<WorkoutDay[]>(() =>
     program.workout.days.map((day) => ({ ...day }))
   );
+  // Which day's WorkoutPickerModal is open — index into `days`, or null
+  // when closed.
+  const [pickerDayIndex, setPickerDayIndex] = useState<number | null>(null);
 
   function updateDayWorkout(
     index: number,
@@ -48,7 +51,7 @@ function ProgramBuilderPage() {
         if (i !== index) return day;
 
         const workoutTitle = workoutId
-          ? workouts.find((w) => w.id === workoutId)?.title ?? ""
+          ? (getWorkout(workoutId)?.title ?? "")
           : "استراحت";
 
         return {
@@ -126,29 +129,12 @@ function ProgramBuilderPage() {
             </button>
           </div>
 
-          <select
-            className="selector-pill mt-3 w-full rounded-xl p-3 font-bold text-white"
-            value={day.workoutId ?? ""}
-            onChange={(e) => {
-              updateDayWorkout(
-                index,
-                e.target.value === ""
-                  ? null
-                  : (e.target.value as WorkoutType)
-              );
-            }}
+          <button
+            onClick={() => setPickerDayIndex(index)}
+            className="selector-pill mt-3 w-full rounded-xl p-3 text-right font-bold text-white"
           >
-            <option value="">استراحت / پیاده‌روی</option>
-
-            {workouts.map((workout) => (
-              <option
-                key={workout.id}
-                value={workout.id}
-              >
-                {workout.title}
-              </option>
-            ))}
-          </select>
+            {day.workoutId ? day.title : "استراحت / پیاده‌روی"}
+          </button>
         </div>
       ))}
 
@@ -166,6 +152,16 @@ function ProgramBuilderPage() {
       >
         {isFirstTime ? "شروع برنامه" : "ذخیره تغییرات"}
       </button>
+
+      <WorkoutPickerModal
+        open={pickerDayIndex !== null}
+        onClose={() => setPickerDayIndex(null)}
+        onPick={(workoutId) => {
+          if (pickerDayIndex !== null) {
+            updateDayWorkout(pickerDayIndex, workoutId as WorkoutType | null);
+          }
+        }}
+      />
     </div>
   );
 }

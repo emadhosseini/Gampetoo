@@ -51,9 +51,6 @@ export const workoutTaxonomy: WorkoutTaxonomyBranch[] = [
       leaf("pull", "Pull (پشتی/کمر، زیربغل، جلو‌بازو)", "🔙", "pull"),
       leaf("legs", "Legs (چهارسر، همسترینگ، ساق، سرینی)", "🦵", "legs"),
     ]),
-    leaf("push", "Push (سینه، سرشانه، پشت‌بازو)", "💪", "push"),
-    leaf("pull", "Pull (پشتی/کمر، زیربغل، جلو‌بازو)", "🔙", "pull"),
-    leaf("legs", "Legs (چهارسر، همسترینگ، ساق، سرینی)", "🦵", "legs"),
     branch("upper-lower", "Upper / Lower (تفکیک بالاتنه و پایین‌تنه)", "🔀", [
       leaf("upper", "Upper (بالاتنه)", "⬆️", "upper"),
       leaf("lower", "Lower (پایین‌تنه)", "⬇️", "lower"),
@@ -159,15 +156,13 @@ export const workoutTaxonomy: WorkoutTaxonomyBranch[] = [
 
   branch("warmup", "گرم کردن", "🌡️", [
     leaf("general", "گرم کردن عمومی", "🔥", "warmup"),
+    // One entry per category rather than a full per-workout breakdown —
+    // every one of those (گرم کردن Push, گرم کردن Pull, ...) pointed at
+    // the exact same destination as the matching leaf under "strength"
+    // above (WorkoutDetailPage shows a workout's specialized warmup right
+    // on its own page), so the per-workout list here was pure duplication.
     branch("specialized-warmup", "گرم کردن تخصصی", "🎯", [
-      branch("strength", "بدنسازی و هایپرتروفی", "🏋️‍♂️", [
-        leaf("push", "گرم کردن Push", "💪", "push"),
-        leaf("pull", "گرم کردن Pull", "🔙", "pull"),
-        leaf("legs", "گرم کردن Legs", "🦵", "legs"),
-        leaf("upper", "گرم کردن Upper", "⬆️", "upper"),
-        leaf("lower", "گرم کردن Lower", "⬇️", "lower"),
-        leaf("full-body", "گرم کردن Full Body", "🧍", "full_body"),
-      ]),
+      leaf("strength", "گرم کردن بدنسازی و هایپرتروفی", "🏋️‍♂️", "push"),
     ]),
   ]),
 ];
@@ -186,4 +181,35 @@ export function findTaxonomyNode(
   }
 
   return node;
+}
+
+// Filters the tree down to what's valid to assign as a program day's
+// workout: a leaf survives only if hasContent says its workout actually
+// has exercises (the newer categories mostly don't yet — see
+// workoutLibrary.ts), and a branch survives only if at least one of its
+// descendants did. Branches that end up empty (every category besides
+// "بدنسازی و هایپرتروفی", for now) simply disappear rather than showing an
+// empty screen — the tree fills in on its own as more categories get real
+// content, no picker changes needed later. The "گرم کردن" category is
+// dropped outright regardless of content: general warm-up was never a
+// selectable day type (see the old getWorkoutOptions() filter it
+// replaces), and specialized warm-up only ever pointed at the exact same
+// workouts already reachable elsewhere in the tree.
+export function pruneToSelectable(
+  nodes: WorkoutTaxonomyNode[],
+  hasContent: (workoutId: string) => boolean,
+): WorkoutTaxonomyNode[] {
+  return nodes.reduce<WorkoutTaxonomyNode[]>((acc, node) => {
+    if (node.kind === "leaf") {
+      if (hasContent(node.workoutId)) acc.push(node);
+      return acc;
+    }
+
+    if (node.id === "warmup") return acc;
+
+    const children = pruneToSelectable(node.children, hasContent);
+    if (children.length > 0) acc.push({ ...node, children });
+
+    return acc;
+  }, []);
 }

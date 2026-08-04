@@ -1,6 +1,16 @@
 {
-  "current": "2.1.71",
+  "current": "2.1.72",
   "history": [
+    {
+      "version": "2.1.72",
+      "date": "2026-08-04",
+      "description": "Two cleanups to the workout library taxonomy: Push/Pull/Legs no longer appear as standalone cards alongside the PPL grouping under بدنسازی و هایپرتروفی — they only live inside PPL now. And گرم کردن تخصصی collapsed from a per-workout breakdown (six near-duplicate cards each pointing at the same destination as the matching main workout) down to one card per category. Then the bigger change: picking a program day's workout no longer uses a flat dropdown — tapping a day now opens the exact same category browser the workout library itself uses, drilling down to the actual workout. Categories/workouts with no exercises yet are automatically left out of this picker (same as before), so it only ever offers something that's actually usable.",
+      "highlights": [
+        "🧹 حذف تکرار Push/Pull/Legs از شاخه اصلی بدنسازی — فقط داخل PPL موندن",
+        "🧹 گرم کردن تخصصی از ۶ کارت تکراری به ۱ کارت در هر دسته ساده شد",
+        "📅 انتخاب برنامه تمرینی هر روز حالا از همون کتابخانه‌ی دسته‌بندی‌شده انجام می‌شه"
+      ]
+    },
     {
       "version": "2.1.71",
       "date": "2026-08-04",
