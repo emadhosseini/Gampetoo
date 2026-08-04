@@ -1,5 +1,3 @@
-import type { WorkoutType } from "../types/program";
-
 export interface Exercise {
   id: string;
   name: string;
@@ -14,8 +12,15 @@ export interface ExerciseGroup {
   exercises: Exercise[];
 }
 
+// Not scoped to WorkoutType: only the original push/pull/legs/upper/lower/
+// full_body/warmup entries double as an actual program day's workoutId
+// (see ProgramBuilderPage). Every other entry here exists purely so the
+// workout library's browsing taxonomy (workoutTaxonomy.ts) has somewhere
+// to link its leaves to — most of them start out with no exercises, filled
+// in later, and getWorkoutOptions() already excludes anything with an
+// empty groups list from the program-day picker.
 export interface WorkoutDefinition {
-  id: WorkoutType;
+  id: string;
   title: string;
   groups: ExerciseGroup[];
 }
@@ -896,4 +901,28 @@ export const workoutLibrary: WorkoutDefinition[] = [
       },
     ],
   },
+
+  // Placeholder entries for the newer taxonomy branches — no exercises yet
+  // (WorkoutDetailPage shows a "coming soon" message for these until
+  // content gets filled in), and excluded from the program-day picker by
+  // getWorkoutOptions() until they have at least one exercise.
+  { id: "bro-split", title: "برو اسپلیت", groups: [] },
+  { id: "hiit", title: "HIIT", groups: [] },
+  { id: "circuit-training", title: "تمرین دوره‌ای (سیرکویت)", groups: [] },
+  { id: "calisthenics-bodyweight", title: "کالیستنیکس / وزن بدن", groups: [] },
+  { id: "cardio-stamina", title: "کاردیو و استقامت", groups: [] },
+  { id: "pilates-core-stability", title: "پیلاتس - ثبات مرکزی", groups: [] },
+  {
+    id: "pilates-full-body-sculpt",
+    title: "پیلاتس - فرم‌دهی تمام بدن",
+    groups: [],
+  },
+  { id: "yoga-vinyasa", title: "یوگا - وینیاسا", groups: [] },
+  { id: "yoga-hatha", title: "یوگا - هاتا", groups: [] },
+  { id: "mobility-stretching", title: "تحرک مفاصل و کشش", groups: [] },
+  { id: "recovery-active-rest", title: "بازیابی فعال", groups: [] },
+  { id: "core-abs-focus", title: "تمرکز شکم و پهلو", groups: [] },
+  { id: "posture-back-health", title: "اصلاح وضعیت بدنی", groups: [] },
+  { id: "home-workout", title: "تمرین در خانه", groups: [] },
+  { id: "express-15min", title: "تمرین فشرده ۱۵ دقیقه‌ای", groups: [] },
 ];

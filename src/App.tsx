@@ -16,6 +16,7 @@ import ProgressPage from "@/pages/ProgressPage";
 import DailyLogPage from "@/pages/DailyLogPage";
 import SetupProgramPage from "@/pages/SetupProgramPage";
 import WorkoutLibraryPage from "@/pages/WorkoutLibraryPage";
+import WorkoutCategoryPage from "@/pages/WorkoutCategoryPage";
 import WorkoutDetailPage from "@/pages/WorkoutDetailPage";
 import ProgramBuilderPage from "@/pages/ProgramBuilderPage";
 import NutritionPlanLibraryPage from "@/pages/NutritionPlanLibraryPage";
@@ -88,6 +89,11 @@ function AppRoutes() {
         <Route
           path="/settings/workouts"
           element={<WorkoutLibraryPage />}
+        />
+
+        <Route
+          path="/settings/workouts/browse/*"
+          element={<WorkoutCategoryPage />}
         />
 
         <Route

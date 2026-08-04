@@ -120,7 +120,7 @@ export function getWorkout(
 
 export function getWorkoutOptions() {
   return workoutLibrary
-    .filter((workout) => workout.id !== "warmup")
+    .filter((workout) => workout.id !== "warmup" && workout.groups.length > 0)
     .map((workout) => ({
       id: workout.id,
       title: workout.title,

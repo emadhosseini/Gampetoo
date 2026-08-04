@@ -147,6 +147,14 @@ export default function WorkoutDetailPage() {
           </div>
         )}
 
+        {groups.length === 0 && (
+          <div className="glass-panel rounded-2xl p-6 text-center">
+            <p className="text-white">
+              حرکتی برای این تمرین هنوز اضافه نشده — به‌زودی اضافه می‌شه.
+            </p>
+          </div>
+        )}
+
         {groups.map((group) => {
           const isOpen = openGroupId === group.id;
 
@@ -274,12 +282,14 @@ export default function WorkoutDetailPage() {
         })}
       </div>
 
-      <button
-        onClick={handleSave}
-        className="w-full glass-action rounded-2xl py-4 text-lg font-bold text-white"
-      >
-        {saved ? "ذخیره شد ✅" : "ذخیره"}
-      </button>
+      {(groups.length > 0 || specializedWarmup) && (
+        <button
+          onClick={handleSave}
+          className="w-full glass-action rounded-2xl py-4 text-lg font-bold text-white"
+        >
+          {saved ? "ذخیره شد ✅" : "ذخیره"}
+        </button>
+      )}
     </div>
   );
 }

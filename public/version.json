@@ -1,6 +1,15 @@
 {
-  "current": "2.1.68",
+  "current": "2.1.69",
   "history": [
+    {
+      "version": "2.1.69",
+      "date": "2026-08-04",
+      "description": "Rebuilt the workout library as a proper category browser instead of a flat list. The library now opens on six square cards (two per row): بدنسازی و هایپرتروفی، چربی‌سوزی و استقامت، ذهن جسم و انعطاف، هسته بدن و اصلاحی، برنامه‌های ویژه، and گرم کردن — each drilling down (some up to three levels) into the requested sub-categories, ending on the actual workouts. Push/Pull/Legs/Upper/Lower/Full Body and the specialized per-workout warmups keep their real exercise content, reachable from multiple places in the tree (e.g. both directly and inside the PPL/Upper-Lower groupings) since they're the same underlying workout either way. The many newer categories (HIIT, Circuit Training, Pilates, Yoga, Mobility, Home Workout, Bro Split, and the rest) are fully browsable now with a 'coming soon' placeholder where they don't have exercises yet, and stay out of the program-builder's day picker until they do.",
+      "highlights": [
+        "🗂️ کتابخانه تمرین‌ها به یک مرورگر دسته‌بندی‌شده با کارت‌های مربعی بازسازی شد",
+        "🏋️‍♂️🔥🧘‍♀️🩺⚡🌡️ شش دسته‌ی اصلی، هرکدوم با زیرشاخه‌های خودشون تا رسیدن به تمرین واقعی"
+      ]
+    },
     {
       "version": "2.1.68",
       "date": "2026-08-04",
