@@ -31,3 +31,7 @@ export function addLearnedFood(food: FoodItem) {
   foods.push(food);
   localStorage.setItem(storageKey(), JSON.stringify(foods));
 }
+
+export function resetLearnedFoods() {
+  localStorage.removeItem(storageKey());
+}

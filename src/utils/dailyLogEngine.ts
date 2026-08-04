@@ -104,8 +104,14 @@ export function removeLoggedEntry(mealId: string, entryId: string) {
   writeState(state);
 }
 
+// Clears everything this module owns, not just today's meals: the archived
+// per-day calorie history behind the progress chart and the daily target
+// live under their own keys, and leaving them behind was why a deleted
+// account's calories reappeared the moment it was recreated.
 export function resetDailyLog() {
   localStorage.removeItem(storageKey());
+  localStorage.removeItem(scopedKey(TARGET_KEY));
+  calorieHistory.reset();
 }
 
 // Sums every entry under every slot key present today, regardless of which

@@ -1,6 +1,17 @@
 {
-  "current": "2.1.83",
+  "current": "2.1.84",
   "history": [
+    {
+      "version": "2.1.84",
+      "date": "2026-08-04",
+      "description": "Fixed account deletion, which was deleting neither the account nor all of its data. It never removed the auth user at all — only signed out — so the username stayed registered forever and could not be used to create a new account. Deleting one now goes through a new delete-account edge function, which is the only place that can do it: removing an auth user requires the service-role key, which must never reach the browser. The function identifies the account from the caller's own token, deletes its data row and then the user itself, and the username is free again. On the data side, three keys survived a delete and came back at the next login: the archived per-day calorie history and the daily calorie target (resetDailyLog only cleared today's meals — this is the leftover calories that were visible after recreating an account), the learned-foods cache (never cleared by anything), and the profile fields, which were cleared only after the emptied snapshot had already been pushed, so the server kept its copy. Underneath all of them, the reset now also sweeps every key the sync layer declares as synced, so a key added later can't quietly survive a reset by being forgotten. Deletion also reports failure instead of pretending: if the server can't be reached the account is left exactly as it was and the reason is shown, rather than wiping the device and leaving the real account behind. The error screen's recovery button is unchanged — it still wipes the data and keeps the account.",
+      "highlights": [
+        "🗑️ پاک کردن حساب حالا واقعاً حساب رو حذف می‌کنه و نام کاربری آزاد می‌شه",
+        "🍽️ تاریخچه‌ی کالری، هدف کالری و غذاهای ذخیره‌شده دیگه بعد از حذف حساب برنمی‌گردن",
+        "☁️ اطلاعات پروفایل (اسم، قد، سن، جنسیت) دیگه روی سرور باقی نمی‌مونه",
+        "⚠️ اگه ارتباط با سرور برقرار نشه، حساب دست‌نخورده می‌مونه و خطا نشون داده می‌شه"
+      ]
+    },
     {
       "version": "2.1.83",
       "date": "2026-08-04",

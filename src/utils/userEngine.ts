@@ -162,14 +162,24 @@ export function logoutCurrentUser() {
 }
 
 /**
- * Clear the active identity as part of a factory reset. Must run AFTER the
- * scoped reset*() calls (which rely on the username still being set).
+ * Clear the profile fields that belong to the account itself. Separate from
+ * resetCurrentUser() below because these are synced keys: they have to be
+ * gone before a reset pushes its snapshot to the server, or the server keeps
+ * a copy and hands it back at the next login.
  */
-export function resetCurrentUser() {
+export function resetUserProfile() {
   localStorage.removeItem(scopedKey(NAME_KEY));
   localStorage.removeItem(scopedKey(GENDER_KEY));
   localStorage.removeItem(scopedKey(HEIGHT_KEY));
   localStorage.removeItem(scopedKey(AGE_KEY));
+}
+
+/**
+ * Clear the active identity as part of a factory reset. Must run AFTER the
+ * scoped reset*() calls (which rely on the username still being set).
+ */
+export function resetCurrentUser() {
+  resetUserProfile();
   localStorage.removeItem(USERNAME_KEY);
   localStorage.removeItem(LEGACY_NAME_KEY);
 }

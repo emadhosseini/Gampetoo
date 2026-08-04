@@ -235,7 +235,34 @@ export async function syncAfterLogin(username: string): Promise<void> {
   }
 }
 
+/**
+ * Removes every synced key for `username` from this device.
+ *
+ * The engines' own reset*() calls are the real wipe — each owns its keys and
+ * knows what "empty" means for them. This is the backstop underneath, so
+ * that "a reset leaves nothing synced behind" holds by construction instead
+ * of by everyone remembering to wire their new key into resetApplication().
+ * The list it walks is the same one that defines what syncing even means, so
+ * the two can't drift apart. A key that was already reset is simply removed
+ * twice.
+ *
+ * Uses the unpatched removeItem: the caller pushes (or deletes the account)
+ * straight after, and there's no point queueing one debounced push per key.
+ */
+export function clearSyncedKeys(username: string) {
+  for (const base of SYNCED_BASE_KEYS) {
+    originalRemoveItem(`${base}:${username}`);
+  }
+}
+
 export function resetSyncMarkers(username: string) {
+  // A push queued by the writes that led here would otherwise fire a second
+  // later, against an account that may no longer exist.
+  if (pushTimer) {
+    clearTimeout(pushTimer);
+    pushTimer = null;
+  }
+
   originalRemoveItem(pendingKey(username));
   originalRemoveItem(lastSyncedKey(username));
 }

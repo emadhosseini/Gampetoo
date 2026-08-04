@@ -10,7 +10,7 @@ import {
   setCurrentUserName,
   type Gender,
 } from "@/utils/userEngine";
-import { resetApplication } from "@/domain/reset/resetApplication";
+import { deleteAccount } from "@/domain/reset/resetApplication";
 import { signOutRemote } from "@/auth/authEngine";
 
 export interface AccountEditModalProps {
@@ -27,6 +27,8 @@ export default function AccountEditModal({
   const [gender, setGender] = useState<Gender | null>(() =>
     getCurrentUserGender(),
   );
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   if (!open) {
     return null;
@@ -63,14 +65,26 @@ export default function AccountEditModal({
 
   async function handleDeleteAccount() {
     const confirmed = window.confirm(
-      "تمام اطلاعات برنامه، جلسات ثبت‌شده و پیشرفت شما حذف می‌شود و امکان بازگردانی وجود ندارد.\n\nآیا مطمئن هستید؟",
+      "حساب کاربریت به‌کلی حذف می‌شه: تمام اطلاعات برنامه، جلسات ثبت‌شده و پیشرفتت، هم روی این دستگاه و هم روی سرور. نام کاربریت هم آزاد می‌شه. امکان بازگردانی وجود نداره.\n\nمطمئنی؟",
     );
 
     if (!confirmed) {
       return;
     }
 
-    await resetApplication();
+    setDeleteError(null);
+    setDeleting(true);
+
+    const result = await deleteAccount();
+
+    // Only navigate on a real deletion. Leaving the modal open with the
+    // reason is the honest outcome when the server said no — the account is
+    // still there, untouched.
+    if (!result.ok) {
+      setDeleting(false);
+      setDeleteError(result.error ?? "حذف حساب انجام نشد.");
+      return;
+    }
 
     navigate("/setup", { replace: true });
   }
@@ -133,10 +147,15 @@ export default function AccountEditModal({
               shouldn't read like the neutral secondary text it sat next to. */}
           <button
             onClick={() => void handleDeleteAccount()}
-            className="text-xs font-semibold text-red-400"
+            disabled={deleting}
+            className="text-xs font-semibold text-red-400 disabled:opacity-50"
           >
-            پاک کردن حساب کاربری
+            {deleting ? "در حال حذف…" : "پاک کردن حساب کاربری"}
           </button>
+
+          {deleteError && (
+            <p className="text-center text-xs text-red-400">{deleteError}</p>
+          )}
         </div>
       </div>
     </ModalOverlay>
