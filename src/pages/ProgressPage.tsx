@@ -10,8 +10,6 @@ export default function ProgressPage() {
 
   return (
     <div className="space-y-4 px-5 pb-5 pt-10">
-      <h1 className="text-center text-2xl font-bold text-white">پیشرفت</h1>
-
       {/* All four stats as equal square tiles, two per row. */}
       <div className="grid grid-cols-2 gap-4">
         <WeightGaugeCard onClick={() => navigate("/progress/weight")} />

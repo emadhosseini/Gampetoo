@@ -1,6 +1,15 @@
 {
-  "current": "2.1.87",
+  "current": "2.1.88",
   "history": [
+    {
+      "version": "2.1.88",
+      "date": "2026-08-04",
+      "description": "Reverted the previous version's activity-tile change — 'فعالیت' is back under the flame badge. Also removed the 'پیشرفت' heading from the top of the progress page; the bottom nav already names the page, so the tiles now start right under the safe-area padding.",
+      "highlights": [
+        "🔥 نوشته «فعالیت» به کارت فعالیت برگشت",
+        "🗑️ عنوان «پیشرفت» از بالای صفحه پیشرفت حذف شد"
+      ]
+    },
     {
       "version": "2.1.87",
       "date": "2026-08-04",
