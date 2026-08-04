@@ -1,6 +1,15 @@
 {
-  "current": "2.1.85",
+  "current": "2.1.86",
   "history": [
+    {
+      "version": "2.1.86",
+      "date": "2026-08-04",
+      "description": "Reworked the app-wide background glow to match a reference screenshot: the bright yellow-green glow now anchors at the top-right corner and fades through the mid-tone green into near-black by the bottom, via a radial gradient instead of the previous top-left-to-bottom-right diagonal. Also removed the faint grain texture (NoiseLayer, a 5%-opacity fractal-noise overlay) that sat on top of it everywhere it was used, so the surface is a flat gradient with no added noise, per request.",
+      "highlights": [
+        "🎨 هاله‌ی پس‌زمینه حالا از گوشه‌ی بالا-راست می‌تابه و به سیاه ختم می‌شه، دقیقاً مثل تصویر مرجع",
+        "🧹 لایه‌ی نویز ریز روی پس‌زمینه حذف شد"
+      ]
+    },
     {
       "version": "2.1.85",
       "date": "2026-08-04",

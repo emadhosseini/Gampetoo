@@ -1,9 +1,7 @@
-import NoiseLayer from "@/components/background/NoiseLayer";
-
 interface MeshGradientBackgroundProps {
-  /** Hex color for the top-left end of the gradient. */
+  /** Hex color the glow fades through, just past the bright corner. */
   colorA: string;
-  /** Hex color for the bottom-right end of the gradient. */
+  /** Hex color for the bright glow anchored at the top-right corner. */
   colorB: string;
   className?: string;
 }
@@ -16,11 +14,10 @@ interface MeshGradientBackgroundProps {
 // screen (this component sits under the whole app shell, the login page,
 // and the error screen). That pegged the phone's GPU permanently — hot
 // device even at idle, and seconds of tap latency because every real
-// interaction had to fight the background for GPU time. A single diagonal
-// linear-gradient is even cheaper than the two-blob radial version this
-// replaced: one paint, no filter, no animation, no visible seam where the
-// two blobs used to overlap. Do not reintroduce large blur() layers or
-// infinite animations here.
+// interaction had to fight the background for GPU time. A single radial
+// gradient is just as cheap as the diagonal linear one this replaced: one
+// paint, no filter, no animation, no noise texture on top. Do not
+// reintroduce large blur() layers or infinite animations here.
 export default function MeshGradientBackground({
   colorA,
   colorB,
@@ -30,9 +27,9 @@ export default function MeshGradientBackground({
     <div
       className={`pointer-events-none absolute inset-0 overflow-hidden ${className}`}
       aria-hidden="true"
-      style={{ background: `linear-gradient(135deg, ${colorA} 0%, ${colorB} 100%)` }}
-    >
-      <NoiseLayer />
-    </div>
+      style={{
+        background: `radial-gradient(130% 100% at 100% 0%, ${colorB} 0%, ${colorA} 30%, #0a140f 62%, #040705 100%)`,
+      }}
+    />
   );
 }
