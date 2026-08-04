@@ -1,6 +1,16 @@
 {
-  "current": "2.1.55",
+  "current": "2.1.56",
   "history": [
+    {
+      "version": "2.1.56",
+      "date": "2026-08-04",
+      "description": "The side menu's backdrop no longer darkens the page behind it — it dropped the black tint layer entirely and now relies on the existing blur alone, matching how every other popup in the app (ModalOverlay) already separates itself from the page without a dark scrim. The small profile avatar in the side menu's top row is now a 👤 emoji instead of a plain outline person icon, and the large gender avatar on the account page is now the ♂️/♀️ emoji (👤 before a gender is set) instead of the Mars/Venus line icons — both render in Apple's own emoji style on iOS/macOS.",
+      "highlights": [
+        "🌫️ پس‌زمینه‌ی منوی کناری دیگه تیره نمی‌شه — فقط بلر می‌مونه",
+        "👤 آیکون کوچیک پروفایل توی منو حالا ایموجیه",
+        "♂️♀️ آیکون جنسیت توی صفحه حساب کاربری هم حالا ایموجی اپل شد"
+      ]
+    },
     {
       "version": "2.1.55",
       "date": "2026-08-04",

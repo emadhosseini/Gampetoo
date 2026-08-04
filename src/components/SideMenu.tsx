@@ -4,7 +4,6 @@ import {
   Dumbbell,
   Menu,
   SlidersHorizontal,
-  User,
   UtensilsCrossed,
 } from "lucide-react";
 import {
@@ -57,10 +56,10 @@ const CLOSE_DRAG_DISTANCE = 60;
 // tracking) is deferred until the finger has actually moved past this many
 // px, distinguishing a real drag from a tap/click.
 const DRAG_START_THRESHOLD = 8;
-// How dark the backdrop over the rest of the page gets at fully open.
-const BACKDROP_MAX_OPACITY = 0.55;
 // How blurred the page behind the menu gets at fully open — the menu now
-// overlays the page (like a modal) instead of pushing it aside.
+// overlays the page (like a modal) instead of pushing it aside. No darkening
+// tint on top, matching every other popup in the app (see ModalOverlay):
+// blur alone does the visual separation.
 const CONTENT_BLUR_MAX_PX = 5;
 
 interface SideMenuProps {
@@ -220,11 +219,6 @@ export default function SideMenu({ children }: SideMenuProps) {
   };
 
   const asideX = useTransform(openPx, (value) => drawerWidth - value);
-  const backdropOpacity = useTransform(
-    openPx,
-    [0, drawerWidth || 1],
-    [0, BACKDROP_MAX_OPACITY],
-  );
   const contentBlurPx = useTransform(
     openPx,
     [0, drawerWidth || 1],
@@ -244,9 +238,8 @@ export default function SideMenu({ children }: SideMenuProps) {
         {children}
       </motion.div>
 
-      <motion.div
-        style={{ opacity: backdropOpacity }}
-        className={`absolute inset-0 z-40 bg-black ${
+      <div
+        className={`absolute inset-0 z-40 ${
           open ? "pointer-events-auto" : "pointer-events-none"
         }`}
         aria-hidden={!open}
@@ -309,9 +302,8 @@ export default function SideMenu({ children }: SideMenuProps) {
               className="glass-panel flex w-full items-center justify-between rounded-3xl p-7"
             >
               <div className="flex items-center gap-3">
-                {/* Placeholder avatar — swap for a gender-based picture later. */}
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center glass-chip rounded-full text-avocado-yellow">
-                  <User size={20} />
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center glass-chip rounded-full text-xl">
+                  👤
                 </div>
 
                 <span className="font-semibold text-white">{userName}</span>

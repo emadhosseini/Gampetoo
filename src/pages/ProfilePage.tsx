@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronLeft, Mars, User, Venus } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 
 import AccountEditModal from "@/components/AccountEditModal";
 import BmiCard from "@/components/BmiCard";
@@ -24,7 +24,7 @@ export default function ProfilePage() {
   const weight = getLatestWeight();
   const height = getCurrentUserHeight();
 
-  const GenderIcon = gender === "male" ? Mars : gender === "female" ? Venus : User;
+  const genderEmoji = gender === "male" ? "♂️" : gender === "female" ? "♀️" : "👤";
 
   return (
     <div className="space-y-4 px-5 pb-5 pt-10">
@@ -37,10 +37,10 @@ export default function ProfilePage() {
         className="glass-panel flex w-full items-center justify-between rounded-3xl p-5"
       >
         <div className="flex items-center gap-4">
-          {/* Gender-based avatar icon, chosen once the user picks a gender
-              in the account-edit popup — a generic person icon until then. */}
-          <div className="flex aspect-square w-24 shrink-0 items-center justify-center rounded-3xl bg-white/10 text-avocado-yellow">
-            <GenderIcon size={40} />
+          {/* Gender-based avatar emoji, chosen once the user picks a gender
+              in the account-edit popup — a generic person emoji until then. */}
+          <div className="flex aspect-square w-24 shrink-0 items-center justify-center rounded-3xl bg-white/10 text-4xl">
+            {genderEmoji}
           </div>
 
           <span className="font-semibold text-white">{userName}</span>
