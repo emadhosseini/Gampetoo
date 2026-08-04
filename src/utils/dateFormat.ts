@@ -1,3 +1,26 @@
+import DateObject from "react-date-object";
+import persianCalendar from "react-date-object/calendars/persian";
+import persian_fa from "react-date-object/locales/persian_fa";
+
+// startDate (and every other program-cycle date) is stored as a Gregorian
+// ISO string (YYYY-MM-DD) — parsed with the year/month/day constructor
+// rather than `new Date(iso)` to avoid that overload's UTC parsing, which
+// is one day off from the intended local calendar date in some timezones.
+function isoToLocalDate(iso: string): Date {
+  const [y, m, d] = iso.split("-").map(Number);
+
+  return new Date(y, m - 1, d);
+}
+
+/** e.g. "۱۴ مرداد ۱۴۰۵" — Jalali calendar, Persian digits/script. */
+export function formatJalaliFull(iso: string): string {
+  return new DateObject({
+    date: isoToLocalDate(iso),
+    calendar: persianCalendar,
+    locale: persian_fa,
+  }).format("D MMMM YYYY");
+}
+
 const gregorianMonthNamesFa = [
   "ژانویه",
   "فوریه",

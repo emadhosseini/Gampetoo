@@ -2,12 +2,14 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import WorkoutPickerModal from "@/components/WorkoutPickerModal";
+import StartDateModal from "@/components/StartDateModal";
 import { getWorkout } from "@/store/workoutLibraryStore";
 import { getActiveProgram, updateProgram } from "@/utils/programEngine";
 import { resetSession } from "@/utils/sessionEngine";
 import { generateId } from "@/utils/id";
 import type { WorkoutDay, WorkoutType } from "@/types/program";
 import { toFaDigits } from "@/utils/numberFormat";
+import { formatJalaliFull } from "@/utils/dateFormat";
 
 function today(): string {
   return new Date().toISOString().split("T")[0];
@@ -41,6 +43,11 @@ function ProgramBuilderPage() {
   // Which day's WorkoutPickerModal is open — index into `days`, or null
   // when closed.
   const [pickerDayIndex, setPickerDayIndex] = useState<number | null>(null);
+  // Empty until explicitly chosen via StartDateModal — handleSave falls
+  // back to program.startDate (an existing cycle's own date, untouched) or
+  // today (brand new cycle, never asked) when this is still empty.
+  const [startDate, setStartDate] = useState("");
+  const [startDateModalOpen, setStartDateModalOpen] = useState(false);
 
   function updateDayWorkout(
     index: number,
@@ -83,9 +90,11 @@ function ProgramBuilderPage() {
   function handleSave() {
     updateProgram({
       ...program,
-      // First save ever starts the cycle today — an existing startDate is
-      // left untouched so editing days later doesn't shift it.
-      startDate: program.startDate || today(),
+      // Explicitly picked via the "روز شروع برنامه" button takes priority;
+      // otherwise an existing cycle's own startDate is left untouched (so
+      // editing days later doesn't shift it), falling back to today only
+      // for a brand new cycle that was never asked.
+      startDate: startDate || program.startDate || today(),
       workout: {
         ...program.workout,
         days,
@@ -146,6 +155,15 @@ function ProgramBuilderPage() {
       </button>
 
       <button
+        onClick={() => setStartDateModalOpen(true)}
+        className="selector-pill w-full rounded-2xl py-4 text-center font-bold text-white"
+      >
+        {startDate
+          ? `شروع از ${formatJalaliFull(startDate)}`
+          : "روز شروع برنامه"}
+      </button>
+
+      <button
         onClick={handleSave}
         disabled={days.length === 0}
         className="w-full rounded-2xl glass-action py-4 text-lg font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
@@ -161,6 +179,12 @@ function ProgramBuilderPage() {
             updateDayWorkout(pickerDayIndex, workoutId as WorkoutType | null);
           }
         }}
+      />
+
+      <StartDateModal
+        open={startDateModalOpen}
+        onClose={() => setStartDateModalOpen(false)}
+        onPick={setStartDate}
       />
     </div>
   );

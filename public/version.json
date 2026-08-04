@@ -1,6 +1,14 @@
 {
-  "current": "2.1.74",
+  "current": "2.1.75",
   "history": [
+    {
+      "version": "2.1.75",
+      "date": "2026-08-04",
+      "description": "Added a 'روز شروع برنامه' button to the workout-program settings page, right before 'ذخیره تغییرات'. Tapping it opens a popup with امروز (today) and انتخاب تاریخ (pick a date) — امروز sets the cycle's start date to today right away, and انتخاب تاریخ opens the same Jalali calendar the very first setup screen used to show before program-cycle setup was split out of it. Either way you land back on the program page with the date set and ready to save.",
+      "highlights": [
+        "📅 دکمه‌ی «روز شروع برنامه» قبل از «ذخیره تغییرات» اضافه شد — امروز یا یک تاریخ دلخواه رو انتخاب کن"
+      ]
+    },
     {
       "version": "2.1.74",
       "date": "2026-08-04",
