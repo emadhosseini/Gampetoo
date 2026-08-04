@@ -18,9 +18,14 @@ export default function WaterTileCard({ onClick }: WaterTileCardProps) {
 
   const fill = Math.min(1, goal > 0 ? glasses / goal : 0);
 
-  // Glass body spans y=14 (rim) to y=86 (base) in the 100x100 viewBox;
-  // the water surface rises from the base as `fill` grows.
-  const waterTop = 86 - fill * 72;
+  // Glass outline corners: top-left (28,16), top-right (72,16), bottom-right
+  // (65,84), bottom-left (35,84). Drawn as its own trapezoid straight to
+  // those edges rather than a rect clipped with `clip-path: url(#...)` —
+  // see WaterDetailPage's identical fix for why the clip-path version is
+  // unreliable on WebKit.
+  const waterY = 84 - fill * 68;
+  const leftX = 35 - fill * 7;
+  const rightX = 65 + fill * 7;
 
   return (
     <button
@@ -32,23 +37,10 @@ export default function WaterTileCard({ onClick }: WaterTileCardProps) {
           being readable at exactly the fill levels people hit most. */}
       <div className="mx-auto flex aspect-square w-full max-w-32 flex-col items-center justify-center">
         <svg viewBox="0 0 100 100" className="h-16 w-16">
-          <defs>
-            {/* Clips the water rectangle to the glass's tapered shape, so
-                the liquid narrows toward the base exactly like the glass
-                does instead of showing square corners. */}
-            <clipPath id="water-tile-glass">
-              <path d="M 28 16 L 72 16 L 65 84 L 35 84 Z" />
-            </clipPath>
-          </defs>
-
-          <rect
-            x="20"
-            y={waterTop}
-            width="60"
-            height={86 - waterTop}
+          <path
+            d={`M 35 84 L 65 84 L ${rightX} ${waterY} L ${leftX} ${waterY} Z`}
             fill={WATER_COLOR}
             fillOpacity="0.85"
-            clipPath="url(#water-tile-glass)"
           />
 
           <path

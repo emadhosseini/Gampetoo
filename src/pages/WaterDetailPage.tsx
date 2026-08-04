@@ -27,8 +27,25 @@ export default function WaterDetailPage() {
   const fill = Math.min(1, goal > 0 ? glasses / goal : 0);
   const reached = glasses >= goal;
 
-  // Jug body spans y=18 (rim) to y=88 (base) in the 100x100 viewBox.
-  const waterTop = 88 - fill * 70;
+  // Jug outline corners: top-left (26,20), top-right (74,20), bottom-right
+  // (66,86), bottom-left (34,86). The water surface is drawn as its own
+  // trapezoid straight to those edges — filled height AND the two side
+  // edges are all linear in `fill`, since the jug tapers in a straight
+  // line — rather than a full-height rect clipped with `clip-path:
+  // url(#...)`. WebKit is known to not reliably repaint a url()-referenced
+  // SVG clip-path when the clipped element's geometry changes every
+  // animation frame (this app has already hit the same class of bug with
+  // backdrop-filter + masks, see SlideToCompleteButton/ModalOverlay) — the
+  // fill would stay clipped to a stale, near-empty shape at low counts and
+  // only look right at the two extremes. A directly-computed path has
+  // nothing to go stale.
+  const waterJugPath = (f: number) => {
+    const waterY = 86 - f * 66;
+    const leftX = 34 - f * 8;
+    const rightX = 66 + f * 8;
+
+    return `M 34 86 L 66 86 L ${rightX} ${waterY} L ${leftX} ${waterY} Z`;
+  };
 
   function applyCount(next: number) {
     const clamped = Math.max(0, next);
@@ -67,20 +84,11 @@ export default function WaterDetailPage() {
 
         <div className="mx-auto mt-4 h-36 w-36">
           <svg viewBox="0 0 100 100" className="h-full w-full">
-            <defs>
-              <clipPath id="water-page-jug">
-                <path d="M 26 20 L 74 20 L 66 86 L 34 86 Z" />
-              </clipPath>
-            </defs>
-
-            <motion.rect
-              x="18"
-              width="64"
+            <motion.path
               fill={WATER_COLOR}
               fillOpacity="0.85"
-              clipPath="url(#water-page-jug)"
               initial={false}
-              animate={{ y: waterTop, height: 88 - waterTop }}
+              animate={{ d: waterJugPath(fill) }}
               transition={{ type: "spring", stiffness: 220, damping: 26 }}
             />
 

@@ -1,6 +1,14 @@
 {
-  "current": "2.1.57",
+  "current": "2.1.58",
   "history": [
+    {
+      "version": "2.1.58",
+      "date": "2026-08-04",
+      "description": "Fixed the water glass showing almost no fill at low counts (1-2 out of 8) and only a thin sliver at 3 out of 8, despite the count and full-glass state both being correct. It was drawing the water as a full-height rectangle clipped to the glass's tapered outline via clip-path: url(#...) — WebKit doesn't reliably repaint that kind of clip-path reference as the clipped rectangle's height keeps changing every animation frame, so it stayed clipped to a stale, near-empty shape at every fill level except the two extremes it happened to render correctly at rest. Replaced it with a directly-computed trapezoid path (both jug shapes: the big glass on the water detail page, and the smaller tile on the progress page) that needs no clip-path at all, so there's nothing left to go stale.",
+      "highlights": [
+        "🥤 لیوان آب حالا هر مقداری که ثبت کنی رو درست و متناسب نشون می‌ده، نه فقط توی حالت خالی یا کامل"
+      ]
+    },
     {
       "version": "2.1.57",
       "date": "2026-08-04",
