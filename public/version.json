@@ -1,6 +1,17 @@
 {
-  "current": "2.1.81",
+  "current": "2.1.82",
   "history": [
+    {
+      "version": "2.1.82",
+      "date": "2026-08-04",
+      "description": "Redrew the weight chart as a hand-written SVG instead of chart.js, following Apple Health's visual rules. The Y axis now picks its own step from the spread of the readings in view — under 5kg apart gets 1kg lines, 5 to 10kg gets 2kg, and anything wider gets 5kg — so a week where the weight barely moved is no longer a flat line squashed against the middle of an oversized scale. A far-away goal escalates the step further rather than stacking a dozen gridlines. A day with no weigh-in stays genuinely missing: it gets no dot, and the line runs straight from the last real reading to the next one rather than dipping toward zero, and a range holding a single reading draws that one hollow ring with no line at all. Styling follows Apple: neon purple at 2.5px, hollow rings for the readings, solid faint horizontal gridlines against dashed vertical ones, and the numbers on the right edge. The other charts (calories, activity) still use chart.js — only the weight page swaps in the new component.",
+      "highlights": [
+        "📈 نمودار وزن از نو با SVG اختصاصی و به سبک Apple Health کشیده شد",
+        "📏 فاصله‌ی خطوط محور عمودی هوشمند شد — ۱، ۲ یا ۵ کیلو، بسته به اختلاف وزن‌های همان بازه",
+        "⭕️ روزهای بدون وزن‌کشی دیگر نقطه نمی‌گیرند و خط به سمت صفر سقوط نمی‌کند",
+        "🎨 نقاط توخالی بنفش، خطوط افقی یکدست و خطوط عمودی نقطه‌چین"
+      ]
+    },
     {
       "version": "2.1.81",
       "date": "2026-08-04",

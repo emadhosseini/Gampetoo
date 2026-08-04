@@ -119,6 +119,11 @@ export interface StatChartPageProps {
   // monthly figures a real per-day average instead of an average over
   // only the days that happened to get logged.
   missingDays?: MissingDayMeaning;
+  // Swaps the built-in chart.js line for a custom renderer, given the same
+  // buckets this component already computed for the selected range. The
+  // weight page uses it for a hand-drawn SVG chart with its own axis
+  // rules; everything else leaves it off and keeps the shared chart.
+  renderChart?: (points: StatBucket[]) => ReactNode;
   // Extra content below the chart panel, in the page's normal scroll flow
   // (e.g. the weight page's target/current-weight rows).
   children?: ReactNode;
@@ -136,6 +141,7 @@ export default function StatChartPage({
   targetValue,
   targetLabel = "هدف",
   missingDays = "gap",
+  renderChart,
   children,
 }: StatChartPageProps) {
   const navigate = useNavigate();
@@ -380,7 +386,11 @@ export default function StatChartPage({
             for), it clips inside the panel instead of painting past the
             screen edge until the next resize signal lands. */}
         <div className="relative mt-2 min-h-0 flex-1 overflow-hidden">
-          <Line ref={chartRef} data={chartData} options={chartOptions} />
+          {renderChart ? (
+            renderChart(chartPoints)
+          ) : (
+            <Line ref={chartRef} data={chartData} options={chartOptions} />
+          )}
 
           {!hasData && (
             <div className="absolute inset-0 flex items-center justify-center">

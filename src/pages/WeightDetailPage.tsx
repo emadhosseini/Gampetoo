@@ -5,6 +5,7 @@ import StatChartPage from "@/components/progress/StatChartPage";
 import TargetWeightModal from "@/components/progress/TargetWeightModal";
 import WeightHistoryModal from "@/components/progress/WeightHistoryModal";
 import WeightModal from "@/components/WeightModal";
+import WeightChart from "@/components/progress/WeightChart";
 import { getLatestWeight, getTargetWeight, getWeightLog } from "@/utils/weightEngine";
 import { toFaDigits } from "@/utils/numberFormat";
 
@@ -34,6 +35,9 @@ export default function WeightDetailPage() {
         addLabel="افزودن وزن"
         targetValue={targetWeight ?? undefined}
         targetLabel="وزن هدف"
+        renderChart={(points) => (
+          <WeightChart points={points} targetValue={targetWeight ?? undefined} />
+        )}
       >
         <div className="glass-panel glass-static space-y-3 rounded-3xl p-5">
           <button
