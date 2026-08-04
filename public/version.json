@@ -1,6 +1,15 @@
 {
-  "current": "2.1.72",
+  "current": "2.1.73",
   "history": [
+    {
+      "version": "2.1.73",
+      "date": "2026-08-04",
+      "description": "The program day's workout picker now shows every category card up front — 'استراحت / پیاده‌روی' included, as a card in the same grid instead of a separate pill above it — rather than only the ones with real exercises. Categories (and workouts) with nothing in them yet still show, blurred with 'فعلاً تمرینی برای این وجود نداره' instead of being left out, so the full shape of the library is always visible even before every branch is filled in.",
+      "highlights": [
+        "🎴 استراحت / پیاده‌روی حالا یک کارت توی همون گرید انتخاب برنامه‌ست",
+        "🌫️ دسته‌بندی‌ها و تمرین‌های خالی هم دیده می‌شن، با یک لایه بلر و پیام «فعلاً تمرینی وجود نداره»"
+      ]
+    },
     {
       "version": "2.1.72",
       "date": "2026-08-04",

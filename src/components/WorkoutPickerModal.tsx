@@ -2,10 +2,9 @@ import { useEffect, useState } from "react";
 import { ChevronRight } from "lucide-react";
 
 import ModalOverlay from "@/components/ModalOverlay";
-import WorkoutTaxonomyGrid from "@/components/WorkoutTaxonomyGrid";
 import {
   findTaxonomyNode,
-  pruneToSelectable,
+  hasSelectableContent,
   workoutTaxonomy,
   type WorkoutTaxonomyNode,
 } from "@/data/workoutTaxonomy";
@@ -20,6 +19,41 @@ export interface WorkoutPickerModalProps {
 
 function hasContent(workoutId: string): boolean {
   return (getWorkout(workoutId)?.groups.length ?? 0) > 0;
+}
+
+interface PickerCardProps {
+  icon: string;
+  title: string;
+  disabled?: boolean;
+  onClick: () => void;
+}
+
+// Every card in this picker, real taxonomy node or the synthetic "rest day"
+// option alike — nothing here is ever hidden. A card with nothing behind
+// it yet (no exercises anywhere inside it) still shows, just blurred and
+// labeled, so the full shape of the library is always visible even before
+// it's fully populated.
+function PickerCard({ icon, title, disabled, onClick }: PickerCardProps) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className="glass-panel relative flex aspect-square flex-col items-center justify-center gap-2 overflow-hidden rounded-3xl p-3 text-center"
+    >
+      <span className="text-3xl">{icon}</span>
+      <span className="text-sm leading-snug font-semibold text-white">
+        {title}
+      </span>
+
+      {disabled && (
+        <div className="absolute inset-0 flex items-center justify-center rounded-3xl bg-black/25 p-3 backdrop-blur-md">
+          <p className="text-xs font-medium text-white">
+            فعلاً تمرینی برای این وجود نداره
+          </p>
+        </div>
+      )}
+    </button>
+  );
 }
 
 // Assigning a program day's workout now browses the exact same category
@@ -45,14 +79,8 @@ export default function WorkoutPickerModal({
     return null;
   }
 
-  const selectableRoot = pruneToSelectable(workoutTaxonomy, hasContent);
   const node = path.length === 0 ? null : findTaxonomyNode(path);
-  const nodes =
-    path.length === 0
-      ? selectableRoot
-      : node?.kind === "branch"
-        ? pruneToSelectable(node.children, hasContent)
-        : [];
+  const nodes = path.length === 0 ? workoutTaxonomy : (node?.kind === "branch" ? node.children : []);
   const title = path.length === 0 ? "انتخاب برنامه تمرینی" : (node?.title ?? "");
 
   function handleSelect(child: WorkoutTaxonomyNode) {
@@ -81,19 +109,28 @@ export default function WorkoutPickerModal({
           <h2 className="text-lg font-bold text-white">{title}</h2>
         </div>
 
-        {path.length === 0 && (
-          <button
-            onClick={() => {
-              onPick(null);
-              onClose();
-            }}
-            className="glass-tap selector-pill w-full rounded-2xl py-3 font-bold text-white"
-          >
-            استراحت / پیاده‌روی
-          </button>
-        )}
+        <div className="grid grid-cols-2 gap-3">
+          {path.length === 0 && (
+            <PickerCard
+              icon="🚶"
+              title="استراحت / پیاده‌روی"
+              onClick={() => {
+                onPick(null);
+                onClose();
+              }}
+            />
+          )}
 
-        <WorkoutTaxonomyGrid nodes={nodes} onSelect={handleSelect} />
+          {nodes.map((child) => (
+            <PickerCard
+              key={child.id}
+              icon={child.icon}
+              title={child.title}
+              disabled={!hasSelectableContent(child, hasContent)}
+              onClick={() => handleSelect(child)}
+            />
+          ))}
+        </div>
 
         <button
           onClick={onClose}

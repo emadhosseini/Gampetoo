@@ -183,33 +183,18 @@ export function findTaxonomyNode(
   return node;
 }
 
-// Filters the tree down to what's valid to assign as a program day's
-// workout: a leaf survives only if hasContent says its workout actually
-// has exercises (the newer categories mostly don't yet — see
-// workoutLibrary.ts), and a branch survives only if at least one of its
-// descendants did. Branches that end up empty (every category besides
-// "بدنسازی و هایپرتروفی", for now) simply disappear rather than showing an
-// empty screen — the tree fills in on its own as more categories get real
-// content, no picker changes needed later. The "گرم کردن" category is
-// dropped outright regardless of content: general warm-up was never a
-// selectable day type (see the old getWorkoutOptions() filter it
-// replaces), and specialized warm-up only ever pointed at the exact same
-// workouts already reachable elsewhere in the tree.
-export function pruneToSelectable(
-  nodes: WorkoutTaxonomyNode[],
+// Whether a node has anything worth assigning to a program day: a leaf
+// counts only if hasContent says its workout actually has exercises (the
+// newer categories mostly don't yet — see workoutLibrary.ts), and a branch
+// counts if any descendant does. Used to flag empty cards in
+// WorkoutPickerModal (shown blurred with a "coming soon" label) rather
+// than filtering them out — everything in the tree stays visible and
+// tappable-in-principle, it just won't lead anywhere useful yet.
+export function hasSelectableContent(
+  node: WorkoutTaxonomyNode,
   hasContent: (workoutId: string) => boolean,
-): WorkoutTaxonomyNode[] {
-  return nodes.reduce<WorkoutTaxonomyNode[]>((acc, node) => {
-    if (node.kind === "leaf") {
-      if (hasContent(node.workoutId)) acc.push(node);
-      return acc;
-    }
+): boolean {
+  if (node.kind === "leaf") return hasContent(node.workoutId);
 
-    if (node.id === "warmup") return acc;
-
-    const children = pruneToSelectable(node.children, hasContent);
-    if (children.length > 0) acc.push({ ...node, children });
-
-    return acc;
-  }, []);
+  return node.children.some((child) => hasSelectableContent(child, hasContent));
 }
