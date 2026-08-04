@@ -1,6 +1,14 @@
 {
-  "current": "2.1.70",
+  "current": "2.1.71",
   "history": [
+    {
+      "version": "2.1.71",
+      "date": "2026-08-04",
+      "description": "Each meal card in ثبت روزانه now has a small chevron at its bottom that expands an 'ارزش‌های غذایی' panel showing that meal's total protein/carbs/fat/fiber (summed across everything logged for it) — the display side of last release's macro-persistence work. It's the same card growing taller, not a second box, so the top edge never shifts whether it's open or closed.",
+      "highlights": [
+        "📊 هر کارت وعده غذایی حالا یک کشوی «ارزش‌های غذایی» داره که با کلیک باز و بسته می‌شه"
+      ]
+    },
     {
       "version": "2.1.70",
       "date": "2026-08-04",
