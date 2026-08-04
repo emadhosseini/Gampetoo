@@ -65,3 +65,23 @@ export function createDailyMetricLog(storageKey: string) {
 
   return { getHistory, getToday, setEntry, addToday, reset };
 }
+
+// Combines two independent daily-metric histories (e.g. workout-derived and
+// manually-logged activity calories — see ActivityDetailPage) into one
+// summed-per-date series, so a chart built on the result reflects the same
+// combined total shown elsewhere (the progress-page tile, the details card
+// underneath the chart) instead of just one of the two sources.
+export function mergeDailyMetricHistories(
+  a: DailyMetricEntry[],
+  b: DailyMetricEntry[],
+): DailyMetricEntry[] {
+  const totals = new Map<string, number>();
+
+  for (const entry of [...a, ...b]) {
+    totals.set(entry.date, (totals.get(entry.date) ?? 0) + entry.value);
+  }
+
+  return Array.from(totals, ([date, value]) => ({ date, value })).sort(
+    (x, y) => (x.date < y.date ? -1 : x.date > y.date ? 1 : 0),
+  );
+}

@@ -1,6 +1,14 @@
 {
-  "current": "2.1.77",
+  "current": "2.1.78",
   "history": [
+    {
+      "version": "2.1.78",
+      "date": "2026-08-04",
+      "description": "The activity report page (opened from the progress page's فعالیت tile) now has a details card matching the daily-log activity tab's split: today's combined total, then برنامه تمرینی and سایر فعالیت‌ها broken out separately. The chart above it now charts the two sources merged together too, so its own میانگین matches this card's total instead of quietly meaning just the manually-logged half.",
+      "highlights": [
+        "📊 صفحه‌ی گزارش فعالیت حالا یک کادر جزئیات داره — مجموع، برنامه تمرینی، و سایر فعالیت‌ها"
+      ]
+    },
     {
       "version": "2.1.77",
       "date": "2026-08-04",
