@@ -1,6 +1,14 @@
 {
-  "current": "2.1.66",
+  "current": "2.1.67",
   "history": [
+    {
+      "version": "2.1.67",
+      "date": "2026-08-04",
+      "description": "The 'افزودن غذا' quick-add shortcut no longer jumps straight into the manual food-search screen after resolving a meal (directly in daily mode, or after picking one in per-meal mode) — it now opens the same overview popup the rest of the app already uses (what's logged so far, plus a choice between 'افزودن تکی خوراکی‌ها' and 'افزودن با هوش مصنوعی'), matching the normal in-app flow of tapping a meal card. Picking either option from there opens the matching screen, same as everywhere else.",
+      "highlights": [
+        "🍽️ شورتکات «افزودن غذا» حالا قبل از افزودن تکی، بین افزودن تکی و هوش مصنوعی می‌ذاره انتخاب کنی"
+      ]
+    },
     {
       "version": "2.1.66",
       "date": "2026-08-04",

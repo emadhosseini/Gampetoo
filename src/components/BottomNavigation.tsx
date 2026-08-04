@@ -12,11 +12,18 @@ import {
 import ActivityLogModal from "@/components/progress/ActivityLogModal";
 import WeightModal from "@/components/WeightModal";
 import WaterLogModal from "@/components/WaterLogModal";
+import MealPickerModal from "@/components/nutrition/MealPickerModal";
+import MealOverviewModal from "@/components/nutrition/MealOverviewModal";
 import AddMealEntryModal from "@/components/nutrition/AddMealEntryModal";
+import AiMealEntryModal from "@/components/nutrition/AiMealEntryModal";
 import { logGlasses } from "@/utils/waterEngine";
 import { logActivityCalories } from "@/utils/activityLogEngine";
 import { getCalorieTrackingMode } from "@/utils/calorieModeEngine";
-import { DAILY_MODE_SLOT, getMealSlots } from "@/data/nutrition/foodCatalog";
+import {
+  DAILY_MODE_SLOT,
+  getMealSlots,
+  type MealSlot,
+} from "@/data/nutrition/foodCatalog";
 
 // Bar height (h-17 = 68px) and the radius of the quick-add bump that rises
 // out of its top edge. Both feed the single silhouette path below, so they
@@ -105,12 +112,17 @@ export default function BottomNavigation({
   const [activityModalOpen, setActivityModalOpen] = useState(false);
   const [weightModalOpen, setWeightModalOpen] = useState(false);
   const [waterModalOpen, setWaterModalOpen] = useState(false);
-  // "daily" → opens straight on the single daily-total slot, no picker.
-  // "perMeal" → there's no meal context from a shortcut tap, so the modal
-  // opens on its own slot picker instead. null → closed.
-  const [foodModalMode, setFoodModalMode] = useState<"daily" | "perMeal" | null>(
-    null,
-  );
+  // The quick-add shortcut's own food-logging flow — mirrors DailyLogPage's
+  // MealLogTab step-by-step (pick a meal if needed → overview, with its
+  // AI-vs-manual choice → the picked screen), just entered from a
+  // different starting point instead of a meal card tap.
+  const [foodStep, setFoodStep] = useState<
+    | { step: "pickMeal" }
+    | { step: "overview"; meal: MealSlot }
+    | { step: "add"; meal: MealSlot }
+    | { step: "ai"; meal: MealSlot }
+    | null
+  >(null);
 
   function setDrawerOpen(open: boolean | ((prev: boolean) => boolean)) {
     setDrawerOpenState((prev) => {
@@ -159,7 +171,11 @@ export default function BottomNavigation({
           return;
         }
 
-        setFoodModalMode(mode);
+        setFoodStep(
+          mode === "daily"
+            ? { step: "overview", meal: DAILY_MODE_SLOT }
+            : { step: "pickMeal" },
+        );
       },
     },
     {
@@ -384,10 +400,42 @@ export default function BottomNavigation({
         }}
       />
 
+      <MealPickerModal
+        open={foodStep?.step === "pickMeal"}
+        options={getMealSlots()}
+        onClose={() => setFoodStep(null)}
+        onPick={(meal) => setFoodStep({ step: "overview", meal })}
+      />
+
+      <MealOverviewModal
+        meal={foodStep?.step === "overview" ? foodStep.meal : null}
+        onClose={() => setFoodStep(null)}
+        onAdd={() =>
+          setFoodStep(
+            foodStep?.step === "overview"
+              ? { step: "add", meal: foodStep.meal }
+              : foodStep,
+          )
+        }
+        onAddAi={() =>
+          setFoodStep(
+            foodStep?.step === "overview"
+              ? { step: "ai", meal: foodStep.meal }
+              : foodStep,
+          )
+        }
+        onChange={() => {}}
+      />
+
       <AddMealEntryModal
-        meal={foodModalMode === "daily" ? DAILY_MODE_SLOT : null}
-        mealOptions={foodModalMode === "perMeal" ? getMealSlots() : null}
-        onClose={() => setFoodModalMode(null)}
+        meal={foodStep?.step === "add" ? foodStep.meal : null}
+        onClose={() => setFoodStep(null)}
+        onChange={() => {}}
+      />
+
+      <AiMealEntryModal
+        meal={foodStep?.step === "ai" ? foodStep.meal : null}
+        onClose={() => setFoodStep(null)}
         onChange={() => {}}
       />
     </>
