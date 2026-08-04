@@ -1,6 +1,14 @@
 {
-  "current": "2.1.64",
+  "current": "2.1.65",
   "history": [
+    {
+      "version": "2.1.65",
+      "date": "2026-08-04",
+      "description": "Hid the native browser scrollbar on the add-food popup's food list — it has its own custom thumb indicator already, and the native one was showing alongside it while scrolling, reading as two overlapping scrollbars.",
+      "highlights": [
+        "📜 لیست غذاها توی پاپ‌آپ افزودن غذا دیگه دو تا نوار اسکرول هم‌زمان نشون نمی‌ده"
+      ]
+    },
     {
       "version": "2.1.64",
       "date": "2026-08-04",

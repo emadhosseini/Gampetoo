@@ -257,7 +257,7 @@ export default function AddMealEntryModal({
               <div
                 ref={listRef}
                 onScroll={updateScrollThumb}
-                className="max-h-[200px] flex-1 space-y-2 overflow-y-auto"
+                className="no-scrollbar max-h-50 flex-1 space-y-2 overflow-y-auto"
               >
                 {isFiltering && loading && (
                   <p className="py-2 text-center text-sm text-white">
