@@ -1,6 +1,14 @@
 {
-  "current": "2.1.61",
+  "current": "2.1.62",
   "history": [
+    {
+      "version": "2.1.62",
+      "date": "2026-08-04",
+      "description": "Replaced the app-wide background glow — two overlapping radial-gradient blobs anchored to the top corners — with a single smooth diagonal gradient (dark green at the top-left, yellow at the bottom-right), matching a reference image the user sent. Same two colors, same performance profile (still just one CSS gradient, no filters or animation), just one continuous wash instead of two distinct blob shapes.",
+      "highlights": [
+        "🎨 پس‌زمینه‌ی کل اپ حالا یک گرادیان مورب صاف و یکدسته، به‌جای دو تا لکه‌ی نور جدا"
+      ]
+    },
     {
       "version": "2.1.61",
       "date": "2026-08-04",
