@@ -1,6 +1,43 @@
 import { useEffect, useState, type MouseEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 
+// Module-level, not component state: more than one ModalOverlay can be
+// mounted at the same moment in edge cases (one closing while another
+// opens), and only the last one to unmount should actually restore
+// scrolling. Locking always sets the same fixed values rather than saving
+// whatever was there before — unlocking removes the inline override
+// entirely, which already falls back correctly to #app-scroll-root's own
+// overflow-y-auto class (see Layout.tsx).
+let openOverlayCount = 0;
+
+function lockBackgroundScroll() {
+  openOverlayCount += 1;
+  if (openOverlayCount > 1) return;
+
+  document.body.style.overflow = "hidden";
+  document.body.style.touchAction = "none";
+
+  const scrollRoot = document.getElementById("app-scroll-root");
+  if (scrollRoot) {
+    scrollRoot.style.overflow = "hidden";
+    scrollRoot.style.touchAction = "none";
+  }
+}
+
+function unlockBackgroundScroll() {
+  openOverlayCount = Math.max(0, openOverlayCount - 1);
+  if (openOverlayCount > 0) return;
+
+  document.body.style.removeProperty("overflow");
+  document.body.style.removeProperty("touch-action");
+
+  const scrollRoot = document.getElementById("app-scroll-root");
+  if (scrollRoot) {
+    scrollRoot.style.removeProperty("overflow");
+    scrollRoot.style.removeProperty("touch-action");
+  }
+}
+
 export interface ModalOverlayProps {
   onClose: () => void;
   children: ReactNode;
@@ -54,6 +91,21 @@ export default function ModalOverlay({
       cancelAnimationFrame(raf1);
       cancelAnimationFrame(raf2);
     };
+  }, []);
+
+  // Every popup in the app is built on this component, so locking scroll
+  // here covers all of them at once. Without this, a touch-drag starting
+  // over the backdrop (the empty space around the card — nothing below it
+  // blocks the gesture) could scroll the page behind it, and a drag that
+  // starts on the card's own scrollable content and runs past its
+  // top/bottom edge chains into scrolling that same page underneath,
+  // fighting the popup for the gesture. `<main>` (Layout's
+  // #app-scroll-root) is the actual scrolling element — MobileContainer
+  // itself doesn't scroll — so that's what needs locking, not
+  // document.body.
+  useEffect(() => {
+    lockBackgroundScroll();
+    return unlockBackgroundScroll;
   }, []);
 
   function stopPropagation(e: MouseEvent) {

@@ -1,6 +1,15 @@
 {
-  "current": "2.1.65",
+  "current": "2.1.66",
   "history": [
+    {
+      "version": "2.1.66",
+      "date": "2026-08-04",
+      "description": "Reverted the previous release's fix for the add-food popup's food list: the custom scroll indicator it kept turned out to be the broken one (it stayed static instead of tracking the actual scroll position), and the native scrollbar it hid was the one that actually worked — removed the whole custom indicator and its tracking logic, leaving just the native scrollbar. Separately, every popup in the app now locks the page behind it while open: the page could still be scrolled or touched underneath a popup before (a drag over the popup's own scrollable content that ran past its top/bottom edge would chain into scrolling the page behind it, fighting the popup for the gesture), and now it can't — fixed once in the shared ModalOverlay component all popups are built on, so it applies everywhere at once.",
+      "highlights": [
+        "📜 نوار اسکرول لیست غذا به حالت واقعی و درست برگشت",
+        "🔒 وقتی هر پاپ‌آپی باز باشه، صفحه‌ی پشتش دیگه اسکرول یا لمس نمی‌شه"
+      ]
+    },
     {
       "version": "2.1.65",
       "date": "2026-08-04",

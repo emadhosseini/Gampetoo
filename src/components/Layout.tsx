@@ -23,6 +23,7 @@ function Layout() {
     <MobileContainer bleedTop={BLEED_TOP_ROUTES.includes(pathname)}>
       <SideMenu>
         <main
+          id="app-scroll-root"
           className="h-full overflow-y-auto pb-36"
           style={{
             filter: quickAddOpen ? "blur(15px)" : "none",
