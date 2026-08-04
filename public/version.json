@@ -1,6 +1,14 @@
 {
-  "current": "2.1.58",
+  "current": "2.1.59",
   "history": [
+    {
+      "version": "2.1.59",
+      "date": "2026-08-04",
+      "description": "The 'ثبت آب' quick-add shortcut no longer logs one glass and jumps straight to the water page — it now opens a popup with a glass showing the count in its middle and a + / - button on either side, so you can log any number of glasses at once (e.g. after drinking 3 glasses back to back). Confirming adds that number to today's total instead of replacing it.",
+      "highlights": [
+        "💧 دکمه‌ی «ثبت آب» توی ثبت سریع حالا یک پاپ‌آپ باز می‌کنه که می‌تونی تعداد لیوان رو انتخاب کنی و به مقدار امروز اضافه بشه"
+      ]
+    },
     {
       "version": "2.1.58",
       "date": "2026-08-04",

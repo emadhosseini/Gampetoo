@@ -21,8 +21,8 @@ export function getTodayGlasses(): number {
   return store.getToday();
 }
 
-export function logGlass(): DailyMetricEntry[] {
-  return store.addToday(1);
+export function logGlasses(count: number): DailyMetricEntry[] {
+  return store.addToday(Math.max(0, Math.round(count)));
 }
 
 /**

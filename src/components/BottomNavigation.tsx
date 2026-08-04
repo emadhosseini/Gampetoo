@@ -11,7 +11,8 @@ import {
 
 import ActivityLogModal from "@/components/progress/ActivityLogModal";
 import WeightModal from "@/components/WeightModal";
-import { logGlass } from "@/utils/waterEngine";
+import WaterLogModal from "@/components/WaterLogModal";
+import { logGlasses } from "@/utils/waterEngine";
 import { logActivityCalories } from "@/utils/activityLogEngine";
 
 // Bar height (h-17 = 68px) and the radius of the quick-add bump that rises
@@ -86,6 +87,7 @@ export default function BottomNavigation({
   const [drawerOpen, setDrawerOpenState] = useState(false);
   const [activityModalOpen, setActivityModalOpen] = useState(false);
   const [weightModalOpen, setWeightModalOpen] = useState(false);
+  const [waterModalOpen, setWaterModalOpen] = useState(false);
 
   function setDrawerOpen(open: boolean | ((prev: boolean) => boolean)) {
     setDrawerOpenState((prev) => {
@@ -118,8 +120,7 @@ export default function BottomNavigation({
 
   // Same four domains as ProgressPage's stat cards, same emoji per domain —
   // this is just a faster on-ramp into each one's existing log flow, not a
-  // new logging path. Water logs immediately (no value worth typing in, same
-  // as WaterDetailPage's own "+"); the rest hand off to their real flow.
+  // new logging path.
   const quickActions = [
     {
       label: "افزودن غذا",
@@ -134,10 +135,7 @@ export default function BottomNavigation({
     {
       label: "ثبت آب",
       icon: "💧",
-      onSelect: () => {
-        logGlass();
-        navigate("/progress/water");
-      },
+      onSelect: () => setWaterModalOpen(true),
     },
     {
       label: "ثبت فعالیت",
@@ -327,6 +325,15 @@ export default function BottomNavigation({
         onLog={(calories) => {
           logActivityCalories(calories);
           navigate("/progress/activity");
+        }}
+      />
+
+      <WaterLogModal
+        open={waterModalOpen}
+        onClose={() => setWaterModalOpen(false)}
+        onLog={(glasses) => {
+          logGlasses(glasses);
+          navigate("/progress/water");
         }}
       />
     </>
