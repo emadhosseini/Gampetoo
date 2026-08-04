@@ -41,10 +41,6 @@ export default function ActivityTileCard({ onClick }: ActivityTileCardProps) {
         </span>
         <span className="text-xs text-white/60">کالری</span>
       </div>
-
-      <p className="mt-2 text-center text-sm font-semibold" style={{ color: FLAME_COLOR }}>
-        فعالیت
-      </p>
     </button>
   );
 }

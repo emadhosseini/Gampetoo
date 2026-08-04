@@ -16,7 +16,7 @@ export default function WorkoutLibraryPage() {
 
   return (
     <div className="space-y-4 px-5 pb-5 pt-10">
-      <h1 className="text-2xl font-bold">کتابخانه تمرین‌ها</h1>
+      <h1 className="text-center text-2xl font-bold">کتابخانه تمرین‌ها</h1>
 
       <WorkoutTaxonomyGrid nodes={workoutTaxonomy} onSelect={handleSelect} />
     </div>

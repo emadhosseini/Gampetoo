@@ -1,6 +1,15 @@
 {
-  "current": "2.1.86",
+  "current": "2.1.87",
   "history": [
+    {
+      "version": "2.1.87",
+      "date": "2026-08-04",
+      "description": "Two small layout fixes. Dropped the 'فعالیت' label under the progress page's activity tile — the flame badge and calorie count already say what it is, so the word underneath was redundant with the other three tiles' more informative labels ('مناسب', 'طبیعی', a glass count). Centered the 'کتابخانه تمرین‌ها' heading on the workout-library page, which had been left-aligned by default.",
+      "highlights": [
+        "🔥 نوشته «فعالیت» از زیر کارت فعالیت صفحه پیشرفت حذف شد",
+        "📚 عنوان «کتابخانه تمرین‌ها» وسط‌چین شد"
+      ]
+    },
     {
       "version": "2.1.86",
       "date": "2026-08-04",
