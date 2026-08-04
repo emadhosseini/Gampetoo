@@ -1,6 +1,7 @@
 import { Flame } from "lucide-react";
 
 import { getTodayActivityCalories } from "@/utils/activityLogEngine";
+import { getTodayWorkoutCalories } from "@/utils/workoutCalorieEngine";
 import { toFaDigits } from "@/utils/numberFormat";
 
 const FLAME_COLOR = "#f97316";
@@ -15,7 +16,12 @@ export interface ActivityTileCardProps {
 // inventing one. A flame badge over the burned-calorie count keeps the
 // tile's visual weight in line with the three it shares the grid with.
 export default function ActivityTileCard({ onClick }: ActivityTileCardProps) {
-  const calories = getTodayActivityCalories();
+  // Manually-logged activity and workout-program calories (see
+  // sessionEngine.ts's toggleExerciseChecked) are tracked separately —
+  // see DailyLogPage's activity tab for the two reported individually —
+  // but this tile's own "how much did I burn today" number stays a single
+  // combined total across both sources.
+  const calories = getTodayActivityCalories() + getTodayWorkoutCalories();
 
   return (
     <button

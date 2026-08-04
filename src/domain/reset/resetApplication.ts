@@ -9,6 +9,7 @@ import { resetDailyLog } from "../../utils/dailyLogEngine";
 import { resetCalorieTrackingMode } from "../../utils/calorieModeEngine";
 import { resetWaterLog } from "../../utils/waterEngine";
 import { resetActivityLog } from "../../utils/activityLogEngine";
+import { resetWorkoutCalorieLog } from "../../utils/workoutCalorieEngine";
 import { signOutRemote } from "../../auth/authEngine";
 import { flushPendingSync, resetSyncMarkers } from "../../sync/remoteSync";
 
@@ -29,6 +30,7 @@ export async function resetApplication() {
   resetCalorieTrackingMode();
   resetWaterLog();
   resetActivityLog();
+  resetWorkoutCalorieLog();
 
   if (username) {
     await flushPendingSync(username);

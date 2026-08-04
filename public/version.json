@@ -1,6 +1,14 @@
 {
-  "current": "2.1.76",
+  "current": "2.1.77",
   "history": [
+    {
+      "version": "2.1.77",
+      "date": "2026-08-04",
+      "description": "The فعالیت tab in ثبت روزانه — previously a 'coming soon' placeholder — now has two cards: 'کالری سوخته‌شده برنامه تمرینی روزانه', a pure report of today's MET-calculated workout calories (from checking exercises off — see last release), and 'سایر فعالیت‌ها' for everything else, logged manually the same way it already could be from the quick-add drawer. Workout and manual calories are now tracked as two separate daily totals rather than one blended number; the progress page's فعالیت tile still shows their combined sum so nothing there changed.",
+      "highlights": [
+        "🔥 تب «فعالیت» توی ثبت روزانه حالا کالری برنامه تمرینی و سایر فعالیت‌ها رو جدا نشون می‌ده"
+      ]
+    },
     {
       "version": "2.1.76",
       "date": "2026-08-04",

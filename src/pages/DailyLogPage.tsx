@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { Activity, UtensilsCrossed } from "lucide-react";
+import { Activity, Flame, Plus, UtensilsCrossed } from "lucide-react";
 
 import PillTabBar, { type PillTabBarItem } from "@/components/PillTabBar";
 import MealLogCard from "@/components/nutrition/MealLogCard";
 import MealOverviewModal from "@/components/nutrition/MealOverviewModal";
 import AddMealEntryModal from "@/components/nutrition/AddMealEntryModal";
 import AiMealEntryModal from "@/components/nutrition/AiMealEntryModal";
+import ActivityLogModal from "@/components/progress/ActivityLogModal";
 import {
   DAILY_MODE_SLOT,
   getMealSlots,
@@ -16,6 +17,9 @@ import {
   setCalorieTrackingMode,
   type CalorieTrackingMode,
 } from "@/utils/calorieModeEngine";
+import { getTodayActivityCalories, logActivityCalories } from "@/utils/activityLogEngine";
+import { getTodayWorkoutCalories } from "@/utils/workoutCalorieEngine";
+import { toFaDigits } from "@/utils/numberFormat";
 
 type Tab = "meal" | "activity";
 
@@ -39,13 +43,70 @@ export default function DailyLogPage() {
         layoutId="daily-log-tab-selection"
       />
 
-      {tab === "meal" ? (
-        <MealTabRoot />
-      ) : (
-        <div className="flex min-h-[40vh] flex-col items-center justify-center px-5 text-center">
-          <p className="text-white">این بخش به‌زودی اضافه می‌شود.</p>
+      {tab === "meal" ? <MealTabRoot /> : <ActivityTabRoot />}
+    </div>
+  );
+}
+
+// Two numbers, kept as separate cards because they come from separate
+// sources: the first is a pure report (no add button — see
+// sessionEngine.ts's toggleExerciseChecked, which is the only thing that
+// ever changes it), the second is manually logged the same way it already
+// was before workout-derived calories existed (ActivityLogModal, also
+// reachable from the quick-add drawer).
+function ActivityTabRoot() {
+  const [activityModalOpen, setActivityModalOpen] = useState(false);
+  const [, setVersion] = useState(0);
+
+  const workoutCalories = getTodayWorkoutCalories();
+  const manualCalories = getTodayActivityCalories();
+
+  return (
+    <div className="space-y-4 px-5 pb-5 pt-6">
+      <div className="glass-panel rounded-3xl p-5 text-center">
+        <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white">
+          <Flame size={20} />
         </div>
-      )}
+
+        <p className="mt-3 font-semibold text-white">
+          کالری سوخته‌شده برنامه تمرینی روزانه
+        </p>
+
+        <p className="mt-1 text-3xl font-bold text-white">
+          {toFaDigits(workoutCalories)}
+        </p>
+
+        <p className="text-sm text-white/60">کالری</p>
+      </div>
+
+      <div className="glass-panel flex items-center justify-between gap-3 rounded-3xl p-5">
+        <div className="flex-1 text-right">
+          <p className="font-semibold text-white">سایر فعالیت‌ها</p>
+
+          <p className="mt-1 text-sm text-white/70">
+            {manualCalories > 0
+              ? `${toFaDigits(manualCalories)} کالری ثبت‌شده`
+              : "چیزی ثبت نشده"}
+          </p>
+        </div>
+
+        <button
+          onClick={() => setActivityModalOpen(true)}
+          aria-label="افزودن فعالیت"
+          className="glass-action flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white"
+        >
+          <Plus size={20} />
+        </button>
+      </div>
+
+      <ActivityLogModal
+        open={activityModalOpen}
+        onClose={() => setActivityModalOpen(false)}
+        onLog={(calories) => {
+          logActivityCalories(calories);
+          setVersion((v) => v + 1);
+        }}
+      />
     </div>
   );
 }

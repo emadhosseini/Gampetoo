@@ -25,6 +25,7 @@ const SYNCED_BASE_KEYS = [
   "emad-water-log",
   "emad-water-goal",
   "emad-activity-log",
+  "emad-workout-calorie-log",
 ];
 
 const PUSH_DEBOUNCE_MS = 1000;

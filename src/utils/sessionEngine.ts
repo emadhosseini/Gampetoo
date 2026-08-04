@@ -1,7 +1,7 @@
 import { calculateBurnedCalories } from "@/domain/services/calorieCalculator";
 import { getCurrentProgramDay } from "./programEngine";
 import { getLatestWeight } from "./weightEngine";
-import { logActivityCalories } from "./activityLogEngine";
+import { logWorkoutCalories } from "./workoutCalorieEngine";
 import { scopedKey } from "./userEngine";
 
 const STORAGE_KEY = "emad-session";
@@ -91,8 +91,9 @@ export function getSession() {
 // (unique within the workout it's shown from). Also logs — or reverses,
 // on an uncheck — that exercise's estimated burned calories
 // (calculateBurnedCalories, the standard MET formula) against today's
-// dailyBurnedCalories (activityLogEngine.ts), so checking exercises off is
-// itself what drives that total rather than a separate manual entry.
+// workout-calorie total (workoutCalorieEngine.ts), kept separate from
+// activityLogEngine.ts's manually-logged activity so the two can be
+// reported as distinct numbers (see DailyLogPage's activity tab).
 export function toggleExerciseChecked(
   exerciseId: string,
   metValue: number,
@@ -116,7 +117,7 @@ export function toggleExerciseChecked(
   const durationMinutes = sets * ASSUMED_MINUTES_PER_SET;
   const calories = calculateBurnedCalories(metValue, weightKg, durationMinutes);
 
-  logActivityCalories(wasChecked ? -calories : calories);
+  logWorkoutCalories(wasChecked ? -calories : calories);
 }
 
 export function saveSession(session: SessionState) {
