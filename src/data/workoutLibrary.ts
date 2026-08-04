@@ -1,9 +1,18 @@
+// MET (Metabolic Equivalent of Task) values are approximate, per the
+// Compendium of Physical Activities' general categories (moderate-vigorous
+// resistance training ≈ 5.0, light cardio/warmup work differentiated
+// individually below) — same "typical/average estimate, not a clinical
+// source" spirit as the food databases' macros (see
+// src/data/nutrition/iranianFoodsDatabase.ts). Used by
+// domain/services/calorieCalculator.ts to estimate calories burned once a
+// workout is checked off.
 export interface Exercise {
   id: string;
   name: string;
   sets: number;
   reps: number;
   enabled: boolean;
+  metValue: number;
 }
 
 export interface ExerciseGroup {
@@ -41,6 +50,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "dumbbell-bench-press",
@@ -48,6 +58,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "incline-barbell-press",
@@ -55,6 +66,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "incline-dumbbell-press",
@@ -62,6 +74,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "decline-bench-press",
@@ -69,6 +82,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "dumbbell-fly",
@@ -76,6 +90,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "cable-fly",
@@ -83,6 +98,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "cable-crossover",
@@ -90,6 +106,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "pushup",
@@ -97,6 +114,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "chest-dip",
@@ -104,6 +122,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
         ],
       },
@@ -117,6 +136,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "dumbbell-shoulder-press",
@@ -124,6 +144,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "arnold-press",
@@ -131,6 +152,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "lateral-raise",
@@ -138,6 +160,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "front-raise",
@@ -145,6 +168,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "bent-over-raise",
@@ -152,6 +176,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "machine-shoulder-press",
@@ -159,6 +184,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
         ],
       },
@@ -172,6 +198,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "rope-pushdown",
@@ -179,6 +206,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "lying-barbell-extension",
@@ -186,6 +214,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "overhead-dumbbell-extension",
@@ -193,6 +222,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "triceps-dip",
@@ -200,6 +230,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "triceps-kickback",
@@ -207,6 +238,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "machine-triceps",
@@ -214,6 +246,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
         ],
       },
@@ -234,6 +267,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "lat-pulldown",
@@ -241,6 +275,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "barbell-row",
@@ -248,6 +283,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "seated-row",
@@ -255,6 +291,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "t-bar-row",
@@ -262,6 +299,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "dumbbell-row",
@@ -269,6 +307,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "face-pull",
@@ -276,6 +315,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
         ],
       },
@@ -289,6 +329,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "bent-over-raise",
@@ -296,6 +337,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "face-pull",
@@ -303,6 +345,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
         ],
       },
@@ -316,6 +359,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "alternating-dumbbell-curl",
@@ -323,6 +367,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "hammer-curl",
@@ -330,6 +375,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "cable-curl",
@@ -337,6 +383,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
         ],
       },
@@ -350,6 +397,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "dumbbell-shrug",
@@ -357,6 +405,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "reverse-wrist-curl",
@@ -364,6 +413,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "barbell-wrist-curl",
@@ -371,6 +421,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
         ],
       },
@@ -391,6 +442,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "leg-press",
@@ -398,6 +450,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "hack-squat",
@@ -405,6 +458,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "dumbbell-lunge",
@@ -412,6 +466,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "walking-lunge",
@@ -419,6 +474,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "step-up",
@@ -426,6 +482,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "romanian-deadlift",
@@ -433,6 +490,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "lying-leg-curl",
@@ -440,6 +498,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "leg-extension",
@@ -447,6 +506,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "hip-thrust",
@@ -454,6 +514,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "calf-raise",
@@ -461,6 +522,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "seated-calf-raise",
@@ -468,6 +530,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
         ],
       },
@@ -481,6 +544,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "machine-crunch",
@@ -488,6 +552,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "cable-crunch",
@@ -495,6 +560,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "leg-raise",
@@ -502,6 +568,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "knee-raise",
@@ -509,6 +576,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "reverse-crunch",
@@ -516,6 +584,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "plank",
@@ -523,6 +592,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "side-plank",
@@ -530,6 +600,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "dead-bug",
@@ -537,6 +608,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "ab-wheel",
@@ -544,6 +616,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "pallof-press",
@@ -551,6 +624,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "wood-chop",
@@ -558,6 +632,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "russian-twist",
@@ -565,6 +640,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "v-up",
@@ -572,6 +648,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "toes-to-bar",
@@ -579,6 +656,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "hollow-hold",
@@ -586,6 +664,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "bird-dog",
@@ -593,6 +672,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "back-extension",
@@ -600,6 +680,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
         ],
       },
@@ -620,6 +701,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "shoulder-press",
@@ -627,6 +709,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "pull-up",
@@ -634,6 +717,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "lat-pulldown",
@@ -641,6 +725,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "row",
@@ -648,6 +733,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "lateral-raise",
@@ -655,6 +741,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "biceps-curl",
@@ -662,6 +749,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "triceps-extension",
@@ -669,6 +757,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
         ],
       },
@@ -689,6 +778,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "leg-press",
@@ -696,6 +786,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "deadlift",
@@ -703,6 +794,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "lunge",
@@ -710,6 +802,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "leg-extension",
@@ -717,6 +810,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "leg-curl",
@@ -724,6 +818,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "calf-raise",
@@ -731,6 +826,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "hip-thrust",
@@ -738,6 +834,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "adductor-machine",
@@ -745,6 +842,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "abductor-machine",
@@ -752,6 +850,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
         ],
       },
@@ -772,6 +871,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "deadlift",
@@ -779,6 +879,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "chest-press",
@@ -786,6 +887,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "shoulder-press",
@@ -793,6 +895,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "pull-up",
@@ -800,6 +903,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "lat-pulldown",
@@ -807,6 +911,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "biceps-curl",
@@ -814,6 +919,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "triceps-extension",
@@ -821,6 +927,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "plank",
@@ -828,6 +935,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "crunch",
@@ -835,6 +943,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "torso-twist",
@@ -842,6 +951,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 3,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
         ],
       },
@@ -862,6 +972,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 1,
             reps: 10,
             enabled: false,
+            metValue: 3.5,
           },
           {
             id: "light-jog",
@@ -869,6 +980,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 1,
             reps: 10,
             enabled: false,
+            metValue: 7,
           },
           {
             id: "stationary-bike",
@@ -876,6 +988,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 1,
             reps: 10,
             enabled: false,
+            metValue: 5.5,
           },
           {
             id: "elliptical",
@@ -883,6 +996,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 1,
             reps: 10,
             enabled: false,
+            metValue: 5,
           },
           {
             id: "jump-rope",
@@ -890,6 +1004,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 1,
             reps: 10,
             enabled: false,
+            metValue: 8,
           },
           {
             id: "light-rowing",
@@ -897,6 +1012,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
             sets: 1,
             reps: 10,
             enabled: false,
+            metValue: 4.8,
           },
         ],
       },

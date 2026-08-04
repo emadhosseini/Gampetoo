@@ -17,6 +17,7 @@ import {
 
 import { getWorkout } from "@/store/workoutLibraryStore";
 import { getSpecializedWarmup } from "@/store/warmupLibraryStore";
+import type { Exercise } from "@/data/workoutLibrary";
 
 import {
   getSession,
@@ -56,8 +57,8 @@ function WorkoutPage() {
 
   const session = getSession();
 
-  function handleToggleExercise(exerciseId: string) {
-    toggleExerciseChecked(exerciseId);
+  function handleToggleExercise(exercise: Exercise) {
+    toggleExerciseChecked(exercise.id, exercise.metValue, exercise.sets);
     forceRerender((n) => n + 1);
   }
 
@@ -217,7 +218,7 @@ const workout = workoutType
             key={exercise.id}
             exercise={exercise}
             checked={checkedExerciseIds.has(exercise.id)}
-            onToggleChecked={() => handleToggleExercise(exercise.id)}
+            onToggleChecked={() => handleToggleExercise(exercise)}
           />
         ))}
       </div>

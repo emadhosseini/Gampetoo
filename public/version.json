@@ -1,6 +1,14 @@
 {
-  "current": "2.1.75",
+  "current": "2.1.76",
   "history": [
+    {
+      "version": "2.1.76",
+      "date": "2026-08-04",
+      "description": "Checking an exercise off during today's workout now estimates and logs the calories it burned, using the standard MET formula (Calories = MET × 3.5 × weightKg / 200 × durationMinutes) against your latest logged weight — added to today's total right alongside manually-logged activity, and reversed automatically if you uncheck it. Every exercise now carries its own metValue (approximate, per the Compendium of Physical Activities' general categories). The formula itself lives in a pure domain function (domain/services/calorieCalculator.ts) with zero UI-layer math, matching this project's existing plain-function engine pattern rather than introducing a new state-management dependency.",
+      "highlights": [
+        "🔥 تیک زدن یک تمرین، کالری سوخته‌شده‌اش رو خودکار به کالری امروز اضافه می‌کنه"
+      ]
+    },
     {
       "version": "2.1.75",
       "date": "2026-08-04",
