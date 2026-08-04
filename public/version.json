@@ -1,6 +1,14 @@
 {
-  "current": "2.1.88",
+  "current": "2.1.89",
   "history": [
+    {
+      "version": "2.1.89",
+      "date": "2026-08-04",
+      "description": "Matched the quick-add drawer's bottom corners to the bottom nav's own curvature. The drawer used a uniform rounded-3xl (24px) on all four corners, while the pill it overlaps has fully rounded ends (34px, half its height) — so where the two shapes met, the drawer's tighter corner sat visibly inside the bar's wider one instead of following it. The bottom-left and bottom-right corners now use that same radius, so the drawer's edge and the bar's edge are literally the same curve rather than two different ones stacked together.",
+      "highlights": [
+        "🧩 لبه‌های پایین کادر افزودن سریع دقیقاً روی انحنای منوی پایین می‌شینه"
+      ]
+    },
     {
       "version": "2.1.88",
       "date": "2026-08-04",

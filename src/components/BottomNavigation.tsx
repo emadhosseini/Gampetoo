@@ -242,9 +242,19 @@ export default function BottomNavigation({
                   // .glass-panel sets position: relative in index.css, which
                   // (same specificity, later in source order) beats the
                   // "absolute" utility class — an explicit inline style is
-                  // needed to actually win the cascade.
-                  style={{ position: "absolute", bottom: -2 }}
-                  className="glass-panel inset-x-0 z-10 overflow-hidden rounded-3xl"
+                  // needed to actually win the cascade. Bottom corners are
+                  // set to the pill's own radius (BAR_HEIGHT / 2) rather than
+                  // Tailwind's rounded-3xl, so where the drawer overlaps the
+                  // bar underneath (see the -2px anchor) the two curves are
+                  // literally the same one instead of a tighter corner
+                  // sitting inside a wider pill end.
+                  style={{
+                    position: "absolute",
+                    bottom: -2,
+                    borderBottomLeftRadius: BAR_HEIGHT / 2,
+                    borderBottomRightRadius: BAR_HEIGHT / 2,
+                  }}
+                  className="glass-panel inset-x-0 z-10 overflow-hidden rounded-t-3xl"
                 >
                   {/* The panel's own box now reaches all the way down past
                       the pill (see the bottom: -2 anchor above), but the
