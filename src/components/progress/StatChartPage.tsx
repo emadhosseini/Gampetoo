@@ -39,10 +39,12 @@ const RANGES: { key: RangeKey; label: string; days: number }[] = [
 ];
 
 // The ranges that compress into aggregated buckets (month's 30 daily
-// buckets, year's 12 monthly averages) rather than just plotting real
-// entries directly — gated behind `bucketingReady` for stats that don't
-// have this figured out for their own unit yet (water/activity).
-const COMPRESSED_RANGES: RangeKey[] = ["month", "year"];
+// buckets, 6-month's and year's monthly averages) rather than just
+// plotting real entries directly — gated behind `bucketingReady` for
+// stats that don't have this figured out for their own unit yet
+// (water/activity). 6-month joined the list when it stopped plotting raw
+// entries and started averaging per month like the year range.
+const COMPRESSED_RANGES: RangeKey[] = ["month", "sixMonth", "year"];
 
 /* On an iOS home-screen-installed (standalone) PWA, cold launch can lay
    the page out against a stale viewport that WebKit only corrects a
@@ -157,12 +159,14 @@ export default function StatChartPage({
   // What the chart itself renders. Week/month get one bucket per calendar
   // day (even days with nothing logged, as a real gap — not skipped, so
   // the chart always spans the full window instead of shrinking to
-  // wherever the sparse data happens to sit) and year aggregates into one
-  // bucket per month so ~365 daily points compress into 12. Day/6-month
-  // just plot the real entries directly.
+  // wherever the sparse data happens to sit); 6-month and year aggregate
+  // into one bucket per month, so 6-month always shows exactly six ticks
+  // labelled with the last six month numbers, each the average of what was
+  // logged that month. Only the day range plots a real entry directly.
   const chartPoints: StatBucket[] = useMemo(() => {
     if (range === "week") return buildDailyBuckets(history, 7);
     if (range === "month") return buildDailyBuckets(history, 30);
+    if (range === "sixMonth") return buildMonthlyBuckets(history, 6);
     if (range === "year") return buildMonthlyBuckets(history, 12);
 
     return entries.map((entry) => ({
@@ -179,12 +183,27 @@ export default function StatChartPage({
       ? entries.reduce((sum, entry) => sum + entry.value, 0) / entries.length
       : null;
 
-  const dateRangeLabel =
-    entries.length > 0
-      ? entries.length === 1
-        ? formatGregorianShort(isoToLocalDate(entries[0].date))
-        : `${formatGregorianShort(isoToLocalDate(entries[0].date))} – ${formatGregorianShort(isoToLocalDate(entries[entries.length - 1].date))}`
-      : "—";
+  // Describes the selected period itself — the same window the chart's
+  // x-axis spans — not the first/last day that happens to have an entry.
+  // Reading "۳۱ جولای – ۳ آگوست" while the ماه tab is selected made the
+  // range look like it only covered the days with data.
+  const dateRangeLabel = useMemo(() => {
+    const today = new Date();
+
+    if (range === "day") {
+      return formatGregorianShort(today);
+    }
+
+    const start = new Date();
+
+    if (range === "week") start.setDate(today.getDate() - 6);
+    else if (range === "month") start.setDate(today.getDate() - 29);
+    // 6-month/year are bucketed per month, so their window starts at the
+    // first of the oldest month shown rather than a rolling day count.
+    else start.setFullYear(today.getFullYear(), today.getMonth() - (range === "sixMonth" ? 5 : 11), 1);
+
+    return `${formatGregorianShort(start)} – ${formatGregorianShort(today)}`;
+  }, [range]);
 
   // Sized from the real data only, so the target line (which can sit far
   // from it) never drags the resolution down around the actual trend —
@@ -196,7 +215,11 @@ export default function StatChartPage({
   );
 
   if (targetValue !== undefined) {
-    yAxis = extendYAxisRangeToInclude(yAxis, targetValue);
+    // One extra row's headroom over the data-only axis: stretching to a
+    // distant target needs somewhere to put the wider span without
+    // collapsing to a very coarse step (a 4-row cap on the 85–101 case
+    // would force 10kg gridlines; 5 rows lands on the natural 5kg ones).
+    yAxis = extendYAxisRangeToInclude(yAxis, targetValue, Y_AXIS_ROWS + 1);
   }
 
   // Denser buckets (month's 30 days) get smaller points so they don't

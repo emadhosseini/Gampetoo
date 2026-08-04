@@ -1,6 +1,17 @@
 {
-  "current": "2.1.78",
+  "current": "2.1.79",
   "history": [
+    {
+      "version": "2.1.79",
+      "date": "2026-08-04",
+      "description": "Reworked the stat charts' axes. The Y-axis used to stretch to a distant target line while keeping the data's own step, so a 101kg current weight with an 85kg goal drew ~19 gridlines 1kg apart — the step is now re-picked as the range grows and that case lands on 85/90/95/100/105. Fixed a real pre-existing bug in the same file while verifying it: snapping the centred axis minimum to a step multiple could push the data high enough to fail the top-headroom test at every step, so the loop escalated without ever converging — an ordinary 98-101kg trend produced a -200..400 axis. The minimum now slides back up (never past the data's own minimum, so containment holds) instead of escalating. The date under the average now describes the selected period itself rather than the first/last day that happens to have an entry: the week tab reads as a 7-day window, month as 30 days, and 6-month/year from the first of their oldest month. The 6-month range stopped plotting raw entries and now shows exactly six ticks — the last six month numbers — each the average of what was logged that month, matching the year range; it therefore joins month/year as an aggregated view, so water and activity show their existing 'coming soon' note there until their own bucketing is designed.",
+      "highlights": [
+        "📊 فاصله‌ی خطوط نمودار وزن هوشمند شد — مثلاً با وزن ۱۰۱ و هدف ۸۵ دقیقاً ۵ کیلو ۵ کیلو می‌شه",
+        "🐛 رفع باگ: نمودار در بعضی بازه‌های وزنی محور کاملاً بی‌ربط (مثل ۲۰۰- تا ۴۰۰) نشون می‌داد",
+        "📅 تاریخ زیر میانگین دقیقاً بازه‌ی انتخاب‌شده رو نشون می‌ده، نه روزهایی که داده داشتن",
+        "📆 حالت ۶ ماه حالا شش ستون با شماره‌ی ماه‌ها داره و میانگین هر ماه رو نشون می‌ده"
+      ]
+    },
     {
       "version": "2.1.78",
       "date": "2026-08-04",

@@ -62,7 +62,25 @@ export function computeYAxisRange(values: number[], rows: number, minStep: numbe
 
   for (;;) {
     const span = stepSize * (rows - 1);
-    const min = Math.round((center - span / 2) / stepSize) * stepSize;
+
+    let min = Math.round((center - span / 2) / stepSize) * stepSize;
+
+    // Snapping the centered min to a step multiple can drop it a fraction
+    // of a step below where centering put it, which pushes the data
+    // proportionally higher and can fail the headroom test at a step that
+    // would otherwise have been fine. Sliding min back up — never past
+    // dataMin, so containment holds — recovers that headroom instead of
+    // escalating the step. Without this the loop could run away: at every
+    // step the freshly-snapped min re-broke headroom, so a perfectly
+    // ordinary 98-101kg weight trend escalated all the way to a
+    // -200..400 axis before anything satisfied both tests.
+    while (
+      dataMax - min > span * MAX_TOP_POSITION_FRACTION + 1e-9 &&
+      min + stepSize <= dataMin + 1e-9
+    ) {
+      min += stepSize;
+    }
+
     const max = min + span;
 
     const containsData = dataMin >= min - 1e-9 && dataMax <= max + 1e-9;
@@ -76,19 +94,45 @@ export function computeYAxisRange(values: number[], rows: number, minStep: numbe
   }
 }
 
-// Grows an already-computed range outward (in stepSize increments, so
-// gridlines stay evenly spaced) just enough to include `value` — for a
-// reference/target line that may sit far outside the data's own range.
-// Deliberately NOT run back through computeYAxisRange's centering/headroom
-// logic: a target far from the real data should be free to land near an
-// edge (that's informative — it really is far away), rather than dragging
-// the whole axis's resolution down to keep it centered too.
-export function extendYAxisRangeToInclude(range: YAxisRange, value: number): YAxisRange {
-  let { min, max } = range;
-  const { stepSize } = range;
+// Grows an already-computed range outward just enough to include `value`
+// — for a reference/target line that may sit far outside the data's own
+// range. Deliberately NOT run back through computeYAxisRange's
+// centering/headroom logic: a target far from the real data should be free
+// to land near an edge (that's informative — it really is far away),
+// rather than dragging the whole axis's resolution down to keep it
+// centered too.
+//
+// It does have to re-pick the step, though. Keeping the data's own step
+// while stretching to a distant target is what produced ~19 gridlines at
+// 1kg apart between a 101kg current weight and an 85kg goal — technically
+// correct, unreadable in practice. Instead the step escalates through the
+// nice-number progression until the whole span fits in `maxRows`
+// gridlines, which lands that same 85–101 case on 85/90/95/100/105.
+export function extendYAxisRangeToInclude(
+  range: YAxisRange,
+  value: number,
+  maxRows: number,
+): YAxisRange {
+  if (value >= range.min && value <= range.max) {
+    return range;
+  }
 
-  while (value < min) min -= stepSize;
-  while (value > max) max += stepSize;
+  const lo = Math.min(range.min, value);
+  const hi = Math.max(range.max, value);
 
-  return { min, max, stepSize };
+  let stepSize = range.stepSize;
+
+  for (;;) {
+    // Snapped outward to step multiples so every gridline lands on a round
+    // number (85, 90, 95…) rather than inheriting the data's arbitrary edge.
+    const min = Math.floor(lo / stepSize) * stepSize;
+    const max = Math.ceil(hi / stepSize) * stepSize;
+    const rows = Math.round((max - min) / stepSize) + 1;
+
+    if (rows <= maxRows) {
+      return { min, max, stepSize };
+    }
+
+    stepSize = nextNiceStep(stepSize);
+  }
 }
