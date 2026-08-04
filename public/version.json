@@ -1,6 +1,14 @@
 {
-  "current": "2.1.59",
+  "current": "2.1.60",
   "history": [
+    {
+      "version": "2.1.60",
+      "date": "2026-08-04",
+      "description": "Fixed the water page not updating right after logging from the quick-add shortcut while already on that page. It navigates there after logging, but React Router doesn't remount on a navigate() to the same URL — it just pushes a new history entry — so the page's initial-read state never re-ran and kept showing the pre-log count until you left and came back. It now re-reads the count and goal on every navigation to the page (keyed off the router's per-navigation history key, which changes even for a same-path navigate), so the update shows immediately.",
+      "highlights": [
+        "💧 صفحه‌ی آب حالا بلافاصله بعد از ثبت از ثبت سریع آپدیت می‌شه، بدون نیاز به خروج و برگشت"
+      ]
+    },
     {
       "version": "2.1.59",
       "date": "2026-08-04",

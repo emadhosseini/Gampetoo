@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ChevronRight, Minus, Plus } from "lucide-react";
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import {
   MAX_WATER_GOAL,
@@ -21,8 +21,21 @@ const WATER_COLOR = "#38bdf8";
 // a jug that fills as you log, plus a grid of glasses you tap directly.
 export default function WaterDetailPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [glasses, setGlasses] = useState(() => getTodayGlasses());
   const [goal, setGoal] = useState(() => getWaterGoal());
+
+  // The quick-add drawer's water shortcut logs a glass count and then
+  // navigates here — including when this page is already the one showing.
+  // React Router doesn't remount on a navigate() to the same pathname (it
+  // just pushes a new history entry), so the lazy useState initializers
+  // above never re-run and the page kept showing the pre-log count until
+  // you left and came back. `location.key` is unique per navigation (even
+  // to the same path), so re-reading on every change catches that case.
+  useEffect(() => {
+    setGlasses(getTodayGlasses());
+    setGoal(getWaterGoal());
+  }, [location.key]);
 
   const fill = Math.min(1, goal > 0 ? glasses / goal : 0);
   const reached = glasses >= goal;
