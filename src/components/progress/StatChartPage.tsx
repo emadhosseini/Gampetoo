@@ -18,7 +18,12 @@ import type { DailyMetricEntry } from "@/utils/dailyMetricLog";
 import { computeYAxisRange, extendYAxisRangeToInclude } from "@/utils/chartAxis";
 import { formatDayNumber, formatGregorianShort } from "@/utils/dateFormat";
 import { toFaDigits } from "@/utils/numberFormat";
-import { buildDailyBuckets, buildMonthlyBuckets, type StatBucket } from "@/utils/statBuckets";
+import {
+  buildDailyBuckets,
+  buildMonthlyBuckets,
+  type MissingDayMeaning,
+  type StatBucket,
+} from "@/utils/statBuckets";
 
 // Rows the Y-axis always shows, regardless of range — never fewer, so a
 // single point (or a flat week) never collapses onto the bottom edge.
@@ -37,14 +42,6 @@ const RANGES: { key: RangeKey; label: string; days: number }[] = [
   { key: "sixMonth", label: "۶ ماه", days: 180 },
   { key: "year", label: "سال", days: 365 },
 ];
-
-// The ranges that compress into aggregated buckets (month's 30 daily
-// buckets, 6-month's and year's monthly averages) rather than just
-// plotting real entries directly — gated behind `bucketingReady` for
-// stats that don't have this figured out for their own unit yet
-// (water/activity). 6-month joined the list when it stopped plotting raw
-// entries and started averaging per month like the year range.
-const COMPRESSED_RANGES: RangeKey[] = ["month", "sixMonth", "year"];
 
 /* On an iOS home-screen-installed (standalone) PWA, cold launch can lay
    the page out against a stale viewport that WebKit only corrects a
@@ -115,11 +112,13 @@ export interface StatChartPageProps {
   // activity).
   targetValue?: number;
   targetLabel?: string;
-  // Whether the month/year "compressed" bucketing (see COMPRESSED_RANGES)
-  // is ready for this stat's unit — off for water/activity, which show a
-  // "coming soon" placeholder on those two ranges instead of a half-baked
-  // aggregation. Defaults to true (weight/calories).
-  bucketingReady?: boolean;
+  // What a day with nothing logged means for this stat — see
+  // MissingDayMeaning. "gap" (the default) suits a point-in-time
+  // measurement like weight; daily totals like calories and activity pass
+  // "zero", which both keeps their line continuous and makes their
+  // monthly figures a real per-day average instead of an average over
+  // only the days that happened to get logged.
+  missingDays?: MissingDayMeaning;
   // Extra content below the chart panel, in the page's normal scroll flow
   // (e.g. the weight page's target/current-weight rows).
   children?: ReactNode;
@@ -136,7 +135,7 @@ export default function StatChartPage({
   addLabel,
   targetValue,
   targetLabel = "هدف",
-  bucketingReady = true,
+  missingDays = "gap",
   children,
 }: StatChartPageProps) {
   const navigate = useNavigate();
@@ -164,24 +163,37 @@ export default function StatChartPage({
   // labelled with the last six month numbers, each the average of what was
   // logged that month. Only the day range plots a real entry directly.
   const chartPoints: StatBucket[] = useMemo(() => {
-    if (range === "week") return buildDailyBuckets(history, 7);
-    if (range === "month") return buildDailyBuckets(history, 30);
-    if (range === "sixMonth") return buildMonthlyBuckets(history, 6);
-    if (range === "year") return buildMonthlyBuckets(history, 12);
+    if (range === "week") return buildDailyBuckets(history, 7, missingDays);
+    if (range === "month") return buildDailyBuckets(history, 30, missingDays);
+    if (range === "sixMonth") return buildMonthlyBuckets(history, 6, missingDays);
+    if (range === "year") return buildMonthlyBuckets(history, 12, missingDays);
 
     return entries.map((entry) => ({
       label: formatDayNumber(isoToLocalDate(entry.date)),
       value: entry.value,
     }));
-  }, [range, history, entries]);
+  }, [range, history, entries, missingDays]);
 
   const hasData = chartPoints.some((point) => point.value !== null);
-  const isComingSoon = !bucketingReady && COMPRESSED_RANGES.includes(range);
 
-  const average =
-    entries.length > 0
-      ? entries.reduce((sum, entry) => sum + entry.value, 0) / entries.length
-      : null;
+  // For a daily total, the headline average has to agree with the series
+  // the chart is drawing — averaging only the logged entries would report
+  // a week with two logged days as if the other five hadn't happened, and
+  // disagree with the line right underneath it. A point-in-time metric
+  // keeps averaging its actual measurements, where skipped days genuinely
+  // shouldn't count.
+  const average = useMemo(() => {
+    const source =
+      missingDays === "zero"
+        ? chartPoints
+            .map((point) => point.value)
+            .filter((value): value is number => value !== null)
+        : entries.map((entry) => entry.value);
+
+    if (source.length === 0) return null;
+
+    return source.reduce((sum, value) => sum + value, 0) / source.length;
+  }, [missingDays, chartPoints, entries]);
 
   // Describes the selected period itself — the same window the chart's
   // x-axis spans — not the first/last day that happens to have an entry.
@@ -368,20 +380,12 @@ export default function StatChartPage({
             for), it clips inside the panel instead of painting past the
             screen edge until the next resize signal lands. */}
         <div className="relative mt-2 min-h-0 flex-1 overflow-hidden">
-          {isComingSoon ? (
-            <div className="flex h-full items-center justify-center">
-              <p className="text-sm text-white/50">به زودی این قابلیت اضافه می‌شه</p>
-            </div>
-          ) : (
-            <>
-              <Line ref={chartRef} data={chartData} options={chartOptions} />
+          <Line ref={chartRef} data={chartData} options={chartOptions} />
 
-              {!hasData && (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <p className="text-sm text-white/50">چیزی ثبت نشده</p>
-                </div>
-              )}
-            </>
+          {!hasData && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <p className="text-sm text-white/50">چیزی ثبت نشده</p>
+            </div>
           )}
         </div>
       </div>

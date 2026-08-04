@@ -30,6 +30,7 @@ export default function CaloriesDetailPage() {
         addLabel="ثبت غذا"
         targetValue={calorieTarget ?? undefined}
         targetLabel="کالری هدف"
+        missingDays="zero"
       >
         <div className="glass-panel glass-static space-y-3 rounded-3xl p-5">
           <button

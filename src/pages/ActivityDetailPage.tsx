@@ -36,7 +36,7 @@ export default function ActivityDetailPage() {
         history={combinedHistory}
         onAdd={() => setModalOpen(true)}
         addLabel="ثبت فعالیت"
-        bucketingReady={false}
+        missingDays="zero"
       >
         <div className="glass-panel rounded-3xl p-5">
           <p className="text-center text-sm text-white/60">جزئیات امروز</p>

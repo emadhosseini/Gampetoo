@@ -1,6 +1,16 @@
 {
-  "current": "2.1.79",
+  "current": "2.1.80",
   "history": [
+    {
+      "version": "2.1.80",
+      "date": "2026-08-04",
+      "description": "Enabled the month/6-month/year ranges on the activity chart — they showed a 'coming soon' note before — and applied the range fixes to the calories chart properly. Both are daily totals rather than point-in-time measurements, so they now say so: a day with nothing logged counts as zero instead of a hole, which keeps their lines continuous, and a monthly figure divides by the days of that month that have actually elapsed instead of only the days that happened to get logged (a month with three logged days no longer reports itself as if every day had looked like those three). The headline average follows the same rule, so it can no longer disagree with the line drawn right under it. Weight is unchanged: a skipped weigh-in is genuinely missing data, not a zero, so it keeps its gaps and averages only real measurements. A month with nothing logged at all still shows no point rather than a zero, so months from before you started using the app don't draw a flat line.",
+      "highlights": [
+        "📈 بازه‌های ماه، ۶ ماه و سال برای نمودار فعالیت فعال شدن",
+        "🍽️ نمودار کالری هم اصلاح شد — روزهای ثبت‌نشده صفر حساب می‌شن، پس خط نمودار پیوسته‌ست و میانگین ماه واقعاً میانگین روزانه‌ی همون ماهه",
+        "⚖️ نمودار وزن مثل قبل می‌مونه؛ روزی که وزن نکردی داده‌ی گم‌شده‌ست، نه صفر"
+      ]
+    },
     {
       "version": "2.1.79",
       "date": "2026-08-04",
