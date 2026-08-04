@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Sparkles } from "lucide-react";
 
 import ModalOverlay from "@/components/ModalOverlay";
+import WaitingDots from "@/components/WaitingDots";
 import type { MealSlot } from "@/data/nutrition/foodCatalog";
 import { parseMealDescription } from "@/domain/nutrition/aiFoodParser";
 import {
@@ -123,7 +124,7 @@ export default function AiMealEntryModal({ meal, onClose, onChange }: AiMealEntr
               disabled={!description.trim() || screen.step === "loading"}
               className="w-full glass-action rounded-2xl py-3 font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
             >
-              {screen.step === "loading" ? "در حال محاسبه..." : "محاسبه"}
+              {screen.step === "loading" ? <WaitingDots /> : "محاسبه"}
             </button>
           </>
         )}

@@ -1,6 +1,14 @@
 {
-  "current": "2.1.84",
+  "current": "2.1.85",
   "history": [
+    {
+      "version": "2.1.85",
+      "date": "2026-08-04",
+      "description": "Replaced the AI meal-parsing loading text ('در حال محاسبه...') with a proper waiting indicator: 'منتظر باش' with three dots that build up one at a time and reset, looping while the request is out. Extracted as a shared WaitingDots component so any future screen that waits on an AI response can reuse the same indicator instead of a static string.",
+      "highlights": [
+        "⏳ نشانگر انتظار «منتظر باش ...» جایگزین متن ثابت «در حال محاسبه» شد"
+      ]
+    },
     {
       "version": "2.1.84",
       "date": "2026-08-04",
