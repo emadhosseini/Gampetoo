@@ -1,6 +1,14 @@
 {
-  "current": "2.1.62",
+  "current": "2.1.63",
   "history": [
+    {
+      "version": "2.1.63",
+      "date": "2026-08-04",
+      "description": "The quick-add drawer no longer floats above the nav bar with a visible gap (and the toggle button's bump peeking through it) — its rounded panel now extends all the way down to 2px past the bar's own bottom edge, tucking behind it for a seamless overlap instead of stopping short at the bump.",
+      "highlights": [
+        "📋 کادر ثبت سریع حالا دقیقاً از پایین منو شروع می‌شه، بدون فاصله‌ی قابل دیدن"
+      ]
+    },
     {
       "version": "2.1.62",
       "date": "2026-08-04",

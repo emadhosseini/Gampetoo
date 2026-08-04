@@ -187,10 +187,13 @@ export default function BottomNavigation({
       >
         <div className="pointer-events-auto mx-auto max-w-md px-5.25">
           <div className="relative">
-            {/* Grows upward from the seam where the toggle button sits,
-                bottom edge pinned to the nav pill's top edge (bottom-full)
-                so animating height alone produces the "rises from behind
-                the button" motion — no separate slide transform needed. */}
+            {/* Grows upward from directly behind the nav pill — bottom edge
+                pinned 2px below the pill's own bottom edge (rather than at
+                its top, where the bump would leave a gap showing the pill
+                underneath) so animating height alone produces a "rises from
+                behind the bar" motion with no visible seam: the pill sits
+                at z-20, above this drawer's z-10, so the 2px overlap tucks
+                cleanly out of sight instead of poking past the pill's edge. */}
             <AnimatePresence>
               {drawerOpen && (
                 <motion.div
@@ -203,10 +206,19 @@ export default function BottomNavigation({
                   // (same specificity, later in source order) beats the
                   // "absolute" utility class — an explicit inline style is
                   // needed to actually win the cascade.
-                  style={{ position: "absolute" }}
-                  className="glass-panel inset-x-0 bottom-full z-10 overflow-hidden rounded-3xl"
+                  style={{ position: "absolute", bottom: -2 }}
+                  className="glass-panel inset-x-0 z-10 overflow-hidden rounded-3xl"
                 >
-                  <div className="grid grid-cols-2 gap-3 p-4 pb-9">
+                  {/* The panel's own box now reaches all the way down past
+                      the pill (see the bottom: -2 anchor above), but the
+                      actual buttons still need to stay clear of the pill's
+                      clickable nav area sitting on top of them at z-20 — so
+                      this bottom padding grows by exactly the same amount
+                      the anchor moved (the pill's full height, 68px, plus
+                      the 2px overlap) to keep the grid's own bottom edge at
+                      the same spot it always was, just with more (blank,
+                      now-hidden-behind-the-pill) card below it. */}
+                  <div className="grid grid-cols-2 gap-3 p-4 pb-26.5">
                     {quickActions.map((action) => (
                       <button
                         key={action.label}
