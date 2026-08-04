@@ -8,6 +8,7 @@ import {
   SEARCH_DEBOUNCE_MS,
   caloriesForServing,
   localFoods,
+  macrosForServing,
   searchFood,
   searchSupplements,
   supplementFoods,
@@ -135,7 +136,7 @@ export default function AddMealEntryModal({
     addLoggedEntry(meal!.id, {
       name: selected.nameFa,
       amount: `${toFaDigits(quantity)} ${unit.label}`,
-      calories: caloriesForServing(selected, unit, quantity),
+      ...macrosForServing(selected, unit, quantity),
     });
 
     setSelected(null);

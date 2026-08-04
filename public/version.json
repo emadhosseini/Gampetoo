@@ -1,6 +1,15 @@
 {
-  "current": "2.1.69",
+  "current": "2.1.70",
   "history": [
+    {
+      "version": "2.1.70",
+      "date": "2026-08-04",
+      "description": "Logging a food now actually saves its full nutrition breakdown — protein, carbs, fat, and fiber — not just calories, whether it's added manually or via 'افزودن با هوش مصنوعی'. The food database itself already had these per-food (129 local foods, all with real values), and the app was already computing per-serving macros on both add screens, but was throwing everything except calories away the moment it saved the entry. Also added fiber to the AI meal-parsing prompt and its whole pipeline, which previously asked Gemini for calories/protein/carbs/fat but not fiber. Display for this data comes in a follow-up — this only makes sure it's captured and stored.",
+      "highlights": [
+        "🥗 ثبت غذا حالا پروتئین، کربوهیدرات، چربی و فیبر رو هم کامل ذخیره می‌کنه، نه فقط کالری",
+        "🤖 پرامپت هوش مصنوعی هم حالا فیبر رو هم می‌پرسه"
+      ]
+    },
     {
       "version": "2.1.69",
       "date": "2026-08-04",

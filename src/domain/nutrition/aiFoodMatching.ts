@@ -1,5 +1,5 @@
 import type { FoodItem, ServingUnit } from "@/types/food";
-import { caloriesForServing, localFoods } from "./foodSearch";
+import { localFoods, macrosForServing } from "./foodSearch";
 import { searchExternalFoods } from "@/lib/openFoodFactsApi";
 import { addLearnedFood, getLearnedFoods } from "@/store/learnedFoodsStore";
 import type { AiExtractedFoodItem } from "./aiFoodParser";
@@ -13,6 +13,9 @@ export interface MatchedAiFoodItem {
   protein: number;
   carbs: number;
   fat: number;
+  // Undefined when the matched food has no fiberPer100g at all (see
+  // FoodItem) — distinct from 0, which means the food genuinely has none.
+  fiber?: number;
   // True when this food came from neither the local/learned database nor
   // the external API — Gemini's own guess, used only as a last resort. The
   // UI must label this differently from a real database match.
@@ -77,6 +80,7 @@ function buildEstimatedFood(item: AiExtractedFoodItem): FoodItem | null {
     proteinPer100g: item.proteinPer100g,
     carbsPer100g: item.carbsPer100g,
     fatPer100g: item.fatPer100g,
+    fiberPer100g: item.fiberPer100g,
   };
 }
 
@@ -128,17 +132,6 @@ function findBestUnitMatch(food: FoodItem, unitLabel: string): ServingUnit {
   });
 
   return partial ?? food.servingUnits[0];
-}
-
-function macrosForServing(food: FoodItem, unit: ServingUnit, quantity: number) {
-  const grams = (unit.grams * quantity) / 100;
-
-  return {
-    calories: caloriesForServing(food, unit, quantity),
-    protein: Math.round(food.proteinPer100g * grams),
-    carbs: Math.round(food.carbsPer100g * grams),
-    fat: Math.round(food.fatPer100g * grams),
-  };
 }
 
 // Matches Gemini's extracted items against the app's food database instead

@@ -81,6 +81,10 @@ export default function AiMealEntryModal({ meal, onClose, onChange }: AiMealEntr
         name: item.food.nameFa,
         amount: `${toFaDigits(item.quantity)} ${item.unit.label}`,
         calories: item.calories,
+        protein: item.protein,
+        carbs: item.carbs,
+        fat: item.fat,
+        fiber: item.fiber,
       });
     }
 

@@ -30,6 +30,10 @@ export interface LoggedFoodEntry {
   name: string;
   amount?: string;
   calories?: number;
+  protein?: number;
+  carbs?: number;
+  fat?: number;
+  fiber?: number;
 }
 
 interface DailyLogState {

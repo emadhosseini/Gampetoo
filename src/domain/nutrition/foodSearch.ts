@@ -23,6 +23,40 @@ export function caloriesForServing(
   return Math.round((entry.caloriesPer100g * unit.grams * quantity) / 100);
 }
 
+export interface ServingMacros {
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  // Undefined when the food has no fiberPer100g at all (see FoodItem) —
+  // distinct from 0, which means the food genuinely has none.
+  fiber?: number;
+}
+
+// Same per-100g -> per-serving conversion as caloriesForServing, but for
+// every macro at once — the one place that math happens, shared by the
+// manual add flow (AddMealEntryModal) and the AI-matched flow
+// (aiFoodMatching.ts) so a logged entry carries the same numbers regardless
+// of which screen logged it.
+export function macrosForServing(
+  entry: FoodItem,
+  unit: ServingUnit,
+  quantity: number,
+): ServingMacros {
+  const grams = (unit.grams * quantity) / 100;
+
+  return {
+    calories: caloriesForServing(entry, unit, quantity),
+    protein: Math.round(entry.proteinPer100g * grams),
+    carbs: Math.round(entry.carbsPer100g * grams),
+    fat: Math.round(entry.fatPer100g * grams),
+    fiber:
+      entry.fiberPer100g !== undefined
+        ? Math.round(entry.fiberPer100g * grams)
+        : undefined,
+  };
+}
+
 // All three databases are bilingual (real Persian translations, not just the
 // English name reused) — the external API is only a fallback for foods none
 // of them cover. Exported so screens can show the full browsable list before

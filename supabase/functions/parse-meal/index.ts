@@ -18,10 +18,10 @@ const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GE
 // These numbers are only ever used as the last-resort fallback when a food
 // isn't found anywhere else, and the client always labels that case as an
 // estimate rather than a real database value.
-const SYSTEM_PROMPT = `شما یک استخراج‌کننده‌ی اطلاعات تغذیه‌ای برای یک اپلیکیشن فارسی‌زبان هستید. کاربر وعده‌ی غذایی خودش رو به فارسی وارد می‌کنه (مثلاً «یک بشقاب قرمه سبزی و دو کفگیر برنج»). برای هر آیتم غذایی، اسم، مقدار، واحد شمارش، و یک تخمین تغذیه‌ای (بر اساس دانش عمومی‌ات از غذاهای ایرانی و بین‌المللی) رو استخراج کن و فقط یک آرایه‌ی JSON با این ساختار برگردون:
-[{ "name": string, "quantity": number, "unit": string, "unitGrams": number, "caloriesPer100g": number, "proteinPer100g": number, "carbsPer100g": number, "fatPer100g": number }]
+const SYSTEM_PROMPT = `شما یک استخراج‌کننده‌ی اطلاعات تغذیه‌ای برای یک اپلیکیشن فارسی‌زبان هستید. کاربر وعده‌ی غذایی خودش رو به فارسی وارد می‌کنه (مثلاً «یک بشقاب قرمه سبزی و دو کفگیر برنج»). برای هر آیتم غذایی، اسم، مقدار، واحد شمارش، و یک تخمین تغذیه‌ای کامل (بر اساس دانش عمومی‌ات از غذاهای ایرانی و بین‌المللی) رو استخراج کن و فقط یک آرایه‌ی JSON با این ساختار برگردون:
+[{ "name": string, "quantity": number, "unit": string, "unitGrams": number, "caloriesPer100g": number, "proteinPer100g": number, "carbsPer100g": number, "fatPer100g": number, "fiberPer100g": number }]
 - unitGrams: وزن تقریبی به گرم برای یک واحد از "unit" همین غذا (مثلاً یک قاشق غذاخوری برنج پخته تقریباً ۲۰ گرمه)
-- caloriesPer100g / proteinPer100g / carbsPer100g / fatPer100g: مقادیر تغذیه‌ای تقریبی به‌ازای ۱۰۰ گرم از خودِ غذا (نه کل وعده)
+- caloriesPer100g / proteinPer100g / carbsPer100g / fatPer100g / fiberPer100g: مقادیر تغذیه‌ای تقریبی به‌ازای ۱۰۰ گرم از خودِ غذا (نه کل وعده) — هر پنج مقدار رو همیشه برگردون، فیبر رو جا ننداز، حتی اگه نزدیک صفر باشه
 هیچ متن، توضیح یا بلاک markdown دیگه‌ای برنگردون — فقط خود آرایه‌ی JSON.`;
 
 const ALLOWED_ORIGINS = new Set([

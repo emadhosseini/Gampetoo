@@ -13,6 +13,11 @@ export interface AiExtractedFoodItem {
   proteinPer100g?: number;
   carbsPer100g?: number;
   fatPer100g?: number;
+  // Independently optional (unlike the four fields above, which are
+  // all-or-nothing — see normalizeEstimate) since FoodItem.fiberPer100g
+  // itself is optional: a response missing just fiber still yields a
+  // usable estimate, it just won't report fiber for that food.
+  fiberPer100g?: number;
 }
 
 export interface AiParseResult {
@@ -42,12 +47,18 @@ function isFiniteNumber(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value);
 }
 
-// The estimate fields are optional and only trusted if every single one
-// parsed as a real number — a partial guess (e.g. calories but no protein)
-// isn't useful, since buildEstimatedFood (aiFoodMatching.ts) needs all four
-// macros plus unitGrams to construct a usable fallback FoodItem.
+// The core estimate fields are optional and only trusted if every single
+// one parsed as a real number — a partial guess (e.g. calories but no
+// protein) isn't useful, since buildEstimatedFood (aiFoodMatching.ts) needs
+// all four macros plus unitGrams to construct a usable fallback FoodItem.
+// Fiber is checked separately (see AiExtractedFoodItem) since it's fine on
+// its own either way.
 function normalizeEstimate(item: AiExtractedFoodItem): AiExtractedFoodItem {
   const raw = item as unknown as Record<string, unknown>;
+
+  const fiberPer100g = isFiniteNumber(raw.fiberPer100g)
+    ? raw.fiberPer100g
+    : undefined;
 
   const fields = [
     raw.unitGrams,
@@ -58,7 +69,12 @@ function normalizeEstimate(item: AiExtractedFoodItem): AiExtractedFoodItem {
   ];
 
   if (!fields.every(isFiniteNumber)) {
-    return { name: item.name, quantity: item.quantity, unit: item.unit };
+    return {
+      name: item.name,
+      quantity: item.quantity,
+      unit: item.unit,
+      fiberPer100g,
+    };
   }
 
   const [unitGrams, caloriesPer100g, proteinPer100g, carbsPer100g, fatPer100g] =
@@ -72,6 +88,7 @@ function normalizeEstimate(item: AiExtractedFoodItem): AiExtractedFoodItem {
     caloriesPer100g,
     proteinPer100g,
     carbsPer100g,
+    fiberPer100g,
     fatPer100g,
   };
 }
