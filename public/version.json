@@ -1,6 +1,14 @@
 {
-  "current": "2.1.73",
+  "current": "2.1.74",
   "history": [
+    {
+      "version": "2.1.74",
+      "date": "2026-08-04",
+      "description": "Each exercise card in today's workout now has a toggle to check it off as you finish it — checking one dims that card and sinks it to the bottom of the list (checked exercises still ahead of you stay put and keep their relative order), so the list naturally reorganizes into 'still to do' up top and 'done' at the bottom as you work through it. Checked-off state persists across the session and resets at the same daily rollover as the rest of today's workout state.",
+      "highlights": [
+        "✅ هر کارت تمرین یک تاگل داره — تیک بزن، محو می‌شه و می‌ره ته لیست"
+      ]
+    },
     {
       "version": "2.1.73",
       "date": "2026-08-04",

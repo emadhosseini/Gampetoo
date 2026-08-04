@@ -22,6 +22,7 @@ import {
   getSession,
   completeWorkout,
   completeWalk,
+  toggleExerciseChecked,
 } from "@/utils/sessionEngine";
 import { getCurrentUsername } from "@/utils/userEngine";
 import { flushPendingSync } from "@/sync/remoteSync";
@@ -48,8 +49,17 @@ function WorkoutPage() {
   // simplest way to force it.
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [resetKey, setResetKey] = useState(0);
+  // getSession() reads straight from localStorage on every call rather than
+  // being held in React state — bumping this after each checkbox tap is
+  // what actually triggers the re-render that picks the fresh value up.
+  const [, forceRerender] = useState(0);
 
   const session = getSession();
+
+  function handleToggleExercise(exerciseId: string) {
+    toggleExerciseChecked(exerciseId);
+    forceRerender((n) => n + 1);
+  }
 
   const day = getCurrentProgramDay();
 
@@ -170,6 +180,15 @@ const workout = workoutType
   0
 );
 
+  const checkedExerciseIds = new Set(session.checkedExercises);
+  // A stable sort just sinks checked-off exercises to the bottom, keeping
+  // both groups in their original relative order — no re-shuffling within
+  // "still to do" or "already done" as you check more of them off.
+  const sortedExercises = [...exercises].sort(
+    (a, b) =>
+      Number(checkedExerciseIds.has(a.id)) - Number(checkedExerciseIds.has(b.id)),
+  );
+
   return (
     <div className="space-y-6 px-5 pb-5 pt-10">
       <WorkoutHeader title={workout.title} showForgotButton />
@@ -193,10 +212,12 @@ const workout = workoutType
 />
 
       <div className="space-y-4">
-        {exercises.map((exercise) =>  (
+        {sortedExercises.map((exercise) => (
           <ExerciseCard
             key={exercise.id}
             exercise={exercise}
+            checked={checkedExerciseIds.has(exercise.id)}
+            onToggleChecked={() => handleToggleExercise(exercise.id)}
           />
         ))}
       </div>
