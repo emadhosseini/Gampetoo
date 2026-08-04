@@ -257,103 +257,97 @@ export default function SideMenu({ children }: SideMenuProps) {
         aria-hidden={!open}
         {...dragHandlers}
       >
-        {/* iOS-style glass fill, ported from the Figma Action Sheet component.
-            Figma's own blend layers (white multiply + gray darken) are near
-            no-ops over most backgrounds — multiply-by-white is a
-            mathematical identity — so the real "glass" tint comes from an
-            actual translucent veil here instead. A much stronger blur (40px,
-            then 24px) was tried first and softened the page behind it more
-            than intended; 5px is the tuned value — barely-there blur plus a
-            near-invisible veil so the page behind stays legible through it. */}
+        {/* Same fill as every popup/card in the app (.glass-panel's flat
+            rgb(0 0 0 / 10%) tint, no saturate boost) instead of the old
+            iOS-Action-Sheet recipe (a lighter white veil + saturate(160%))
+            that made this drawer read as a visibly different, more vividly
+            green surface than everything else. The blur still has to live
+            here rather than on a separate backdrop layer like ModalOverlay
+            — the drawer covers the page itself rather than sitting over a
+            dedicated full-screen scrim — but now matches ModalOverlay's own
+            25px so the two feel like the same material. */}
         <div
           className="relative h-full overflow-hidden rounded-l-[34px]"
-          style={{ backdropFilter: "blur(5px) saturate(160%)", WebkitBackdropFilter: "blur(5px) saturate(160%)" }}
+          style={{
+            backgroundColor: "rgb(0 0 0 / 10%)",
+            backdropFilter: "blur(25px)",
+            WebkitBackdropFilter: "blur(25px)",
+          }}
         >
           <div
-            className="pointer-events-none absolute inset-0"
-            style={{
-              backgroundColor: "rgba(255, 255, 255, 0.01)",
-              backgroundImage:
-                "linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0) 65%)",
-            }}
-          />
-
-          <div
-            className="pointer-events-none absolute inset-0"
-            style={{
-              boxShadow:
-                "inset 0px 40px 10px -40px #282828, inset 0px -40px 10px -40px #282828",
-            }}
-          />
-
-          <div
-            className="relative h-full space-y-3 overflow-y-auto px-5 pb-6"
+            className="relative flex h-full flex-col overflow-y-auto px-5 pb-6"
             style={{ paddingTop: "env(safe-area-inset-top)" }}
           >
-            {/* Profile row + the 3 menu rows below, ported from Figma
-                (node-id=0-1's loose "Notification - Collapsed"/"Toolbar"
-                instances) — same glass-panel treatment as every other card
-                (index.css), 24px corners per that component's own radius.
-                Top gap matches space-y-3 (the gap between rows) instead of
-                being its own much larger, disproportionate margin. */}
-            <button
-              onClick={() => goTo("/profile")}
-              aria-label="رفتن به پروفایل"
-              className="glass-panel flex w-full items-center justify-between rounded-3xl p-7"
-            >
-              <div className="flex items-center gap-3">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center glass-chip rounded-full text-xl">
-                  👤
+            <div className="flex-1 space-y-3">
+              {/* Profile row + the 3 menu rows below, ported from Figma
+                  (node-id=0-1's loose "Notification - Collapsed"/"Toolbar"
+                  instances) — same glass-panel treatment as every other card
+                  (index.css), 24px corners per that component's own radius.
+                  Top gap matches space-y-3 (the gap between rows) instead of
+                  being its own much larger, disproportionate margin. */}
+              <button
+                onClick={() => goTo("/profile")}
+                aria-label="رفتن به پروفایل"
+                className="glass-panel flex w-full items-center justify-between rounded-3xl p-7"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center glass-chip rounded-full text-xl">
+                    👤
+                  </div>
+
+                  <span className="font-semibold text-white">{userName}</span>
                 </div>
 
-                <span className="font-semibold text-white">{userName}</span>
-              </div>
-
-              <div
-                aria-hidden="true"
-                className="glass-chip flex h-11 w-11 shrink-0 items-center justify-center rounded-3xl"
-              >
-                <ChevronLeft size={20} />
-              </div>
-            </button>
-
-            {menuLinks.map((item) => {
-              const Icon = item.icon;
-
-              return (
-                <button
-                  key={item.to}
-                  onClick={() => goTo(item.to)}
-                  className="glass-panel flex w-full items-center gap-3 rounded-3xl p-4"
+                <div
+                  aria-hidden="true"
+                  className="glass-chip flex h-11 w-11 shrink-0 items-center justify-center rounded-3xl"
                 >
-                  <span className="flex-1 text-right font-semibold text-white">
-                    {item.label}
+                  <ChevronLeft size={20} />
+                </div>
+              </button>
+
+              {menuLinks.map((item) => {
+                const Icon = item.icon;
+
+                return (
+                  <button
+                    key={item.to}
+                    onClick={() => goTo(item.to)}
+                    className="glass-panel flex w-full items-center gap-3 rounded-3xl p-4"
+                  >
+                    <span className="flex-1 text-right font-semibold text-white">
+                      {item.label}
+                    </span>
+
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/10">
+                      <Icon size={18} />
+                    </div>
+                  </button>
+                );
+              })}
+
+              <button
+                onClick={openCalorieModePicker}
+                className="glass-panel flex w-full items-center gap-3 rounded-3xl p-4"
+              >
+                <div className="flex-1 text-right">
+                  <span className="block font-semibold text-white">
+                    روش ثبت کالری
                   </span>
+                  <span className="block text-sm text-white/60">
+                    {calorieMode === "daily" ? "روزانه" : "وعده‌ای"}
+                  </span>
+                </div>
 
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/10">
-                    <Icon size={18} />
-                  </div>
-                </button>
-              );
-            })}
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/10">
+                  <SlidersHorizontal size={18} />
+                </div>
+              </button>
+            </div>
 
-            <button
-              onClick={openCalorieModePicker}
-              className="glass-panel flex w-full items-center gap-3 rounded-3xl p-4"
-            >
-              <div className="flex-1 text-right">
-                <span className="block font-semibold text-white">
-                  روش ثبت کالری
-                </span>
-                <span className="block text-sm text-white/60">
-                  {calorieMode === "daily" ? "روزانه" : "وعده‌ای"}
-                </span>
-              </div>
-
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/10">
-                <SlidersHorizontal size={18} />
-              </div>
-            </button>
+            <p dir="ltr" className="pt-4 text-center text-xs text-white/40">
+              {__APP_VERSION__}
+            </p>
           </div>
         </div>
       </motion.aside>

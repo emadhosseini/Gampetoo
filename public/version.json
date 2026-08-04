@@ -1,6 +1,15 @@
 {
-  "current": "2.1.67",
+  "current": "2.1.68",
   "history": [
+    {
+      "version": "2.1.68",
+      "date": "2026-08-04",
+      "description": "The side menu drawer now uses the exact same glass fill as every popup and card in the app (flat rgb(0 0 0 / 10%) tint, no saturate boost, 25px blur matching ModalOverlay) instead of its own separate iOS-Action-Sheet-style recipe that made it read as a visibly more vividly green, different surface. Also added the current app version as small, muted text at the bottom of the drawer.",
+      "highlights": [
+        "🎨 استایل منوی کناری الان دقیقاً هم‌رنگ و هم‌شفافیت بقیه‌ی پاپ‌آپ‌ها و کادرهاست",
+        "🔢 شماره نسخه‌ی فعلی، کوچیک، پایین منوی کناری اضافه شد"
+      ]
+    },
     {
       "version": "2.1.67",
       "date": "2026-08-04",
