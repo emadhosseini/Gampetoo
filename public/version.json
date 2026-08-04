@@ -1,6 +1,15 @@
 {
-  "current": "2.1.63",
+  "current": "2.1.64",
   "history": [
+    {
+      "version": "2.1.64",
+      "date": "2026-08-04",
+      "description": "The quick-add drawer's 'افزودن غذا' shortcut no longer just navigates to the daily-log page — it now opens the add-food popup directly. In daily calorie-tracking mode it opens straight on the single daily slot, same as before. In per-meal mode, where the shortcut has no meal context to work from, the popup now opens on a meal picker (صبحانه/ناهار/شام/...) first, then shows the usual food search once one is picked.",
+      "highlights": [
+        "🍽️ شورتکات «افزودن غذا» حالا مستقیم پاپ‌آپ افزودن غذا رو باز می‌کنه",
+        "📋 توی حالت ثبت وعده‌ای، اول می‌تونی انتخاب کنی برای کدوم وعده ثبت می‌کنی"
+      ]
+    },
     {
       "version": "2.1.63",
       "date": "2026-08-04",

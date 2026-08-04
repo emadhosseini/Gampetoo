@@ -12,8 +12,11 @@ import {
 import ActivityLogModal from "@/components/progress/ActivityLogModal";
 import WeightModal from "@/components/WeightModal";
 import WaterLogModal from "@/components/WaterLogModal";
+import AddMealEntryModal from "@/components/nutrition/AddMealEntryModal";
 import { logGlasses } from "@/utils/waterEngine";
 import { logActivityCalories } from "@/utils/activityLogEngine";
+import { getCalorieTrackingMode } from "@/utils/calorieModeEngine";
+import { DAILY_MODE_SLOT, getMealSlots } from "@/data/nutrition/foodCatalog";
 
 // Bar height (h-17 = 68px) and the radius of the quick-add bump that rises
 // out of its top edge. Both feed the single silhouette path below, so they
@@ -102,6 +105,12 @@ export default function BottomNavigation({
   const [activityModalOpen, setActivityModalOpen] = useState(false);
   const [weightModalOpen, setWeightModalOpen] = useState(false);
   const [waterModalOpen, setWaterModalOpen] = useState(false);
+  // "daily" → opens straight on the single daily-total slot, no picker.
+  // "perMeal" → there's no meal context from a shortcut tap, so the modal
+  // opens on its own slot picker instead. null → closed.
+  const [foodModalMode, setFoodModalMode] = useState<"daily" | "perMeal" | null>(
+    null,
+  );
 
   function setDrawerOpen(open: boolean | ((prev: boolean) => boolean)) {
     setDrawerOpenState((prev) => {
@@ -139,7 +148,19 @@ export default function BottomNavigation({
     {
       label: "افزودن غذا",
       icon: "🍽️",
-      onSelect: () => navigate("/daily-log"),
+      onSelect: () => {
+        const mode = getCalorieTrackingMode();
+
+        // No mode chosen yet — there's no sensible single/per-meal slot to
+        // open the popup on, so fall back to the full page, which prompts
+        // for a mode before anything else.
+        if (mode === null) {
+          navigate("/daily-log");
+          return;
+        }
+
+        setFoodModalMode(mode);
+      },
     },
     {
       label: "ثبت وزن",
@@ -361,6 +382,13 @@ export default function BottomNavigation({
           logGlasses(glasses);
           navigate("/progress/water");
         }}
+      />
+
+      <AddMealEntryModal
+        meal={foodModalMode === "daily" ? DAILY_MODE_SLOT : null}
+        mealOptions={foodModalMode === "perMeal" ? getMealSlots() : null}
+        onClose={() => setFoodModalMode(null)}
+        onChange={() => {}}
       />
     </>
   );

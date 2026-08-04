@@ -20,7 +20,14 @@ import type { FoodItem, ServingUnit } from "@/types/food";
 const SUPPLEMENTS_MEAL_ID = "supplements";
 
 export interface AddMealEntryModalProps {
+  // Exactly one of `meal`/`mealOptions` is meaningful while the modal is
+  // open. `meal`: the existing DailyLogPage flow, opened from a specific
+  // meal's own overview — no picker, straight to the food search.
+  // `mealOptions`: the quick-add shortcut in per-meal tracking mode, where
+  // there's no meal context yet — the modal opens on a slot picker first,
+  // then shows the same food search once one is chosen.
   meal: MealSlot | null;
+  mealOptions?: MealSlot[] | null;
   onClose: () => void;
   // Bumped after every add/remove so the card behind the modal (whose own
   // state was read before the modal opened) shows the fresh totals once
@@ -31,9 +38,11 @@ export interface AddMealEntryModalProps {
 
 export default function AddMealEntryModal({
   meal,
+  mealOptions,
   onClose,
   onChange,
 }: AddMealEntryModalProps) {
+  const [pickedMealId, setPickedMealId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [searchActive, setSearchActive] = useState(false);
   const [results, setResults] = useState<FoodItem[]>([]);
@@ -42,6 +51,16 @@ export default function AddMealEntryModal({
   const [selected, setSelected] = useState<FoodItem | null>(null);
   const [unit, setUnit] = useState<ServingUnit | null>(null);
   const [quantity, setQuantity] = useState(1);
+
+  const effectiveMeal =
+    meal ?? mealOptions?.find((option) => option.id === pickedMealId) ?? null;
+
+  // Distinguishes "closed" from "open, nothing picked yet" from "open on a
+  // specific meal" — used to reset all per-session state (including which
+  // meal was picked) on every fresh open, even a picker-mode reopen where
+  // `mealOptions` is the same cached array reference as last time and
+  // wouldn't otherwise look like a change.
+  const openKey = meal ? meal.id : mealOptions ? "picker" : null;
 
   // Position/size (as 0-100 percentages) of the custom scroll indicator
   // alongside the food list — the list itself is capped to ~4 rows, so a
@@ -55,16 +74,16 @@ export default function AddMealEntryModal({
     undefined,
   );
 
-  const isSupplementsMeal = meal?.id === SUPPLEMENTS_MEAL_ID;
+  const isSupplementsMeal = effectiveMeal?.id === SUPPLEMENTS_MEAL_ID;
 
   const suggestedFoods = useMemo(
     () =>
-      !meal
+      !effectiveMeal
         ? []
         : isSupplementsMeal
           ? supplementFoods
-          : sortFoodsForMeal(localFoods, meal.id),
-    [meal, isSupplementsMeal],
+          : sortFoodsForMeal(localFoods, effectiveMeal.id),
+    [effectiveMeal, isSupplementsMeal],
   );
 
   const isFiltering =
@@ -72,15 +91,17 @@ export default function AddMealEntryModal({
   const visibleFoods = isFiltering ? results : suggestedFoods;
 
   useEffect(() => {
-    // Reset the search/selection state every time a different meal's modal
-    // opens, so leftover state from the previous meal never leaks in.
+    // Reset the search/selection state (and, in picker mode, the picked
+    // meal itself) every time the modal opens fresh, so leftover state from
+    // a previous meal or a previous picker session never leaks in.
+    setPickedMealId(null);
     setQuery("");
     setSearchActive(false);
     setResults([]);
     setSelected(null);
     setUnit(null);
     setQuantity(1);
-  }, [meal]);
+  }, [openKey]);
 
   useEffect(() => {
     return () => clearTimeout(debounceTimer.current);
@@ -154,7 +175,7 @@ export default function AddMealEntryModal({
     void runSearch(query);
   }
 
-  if (!meal) {
+  if (!meal && !mealOptions) {
     return null;
   }
 
@@ -165,9 +186,9 @@ export default function AddMealEntryModal({
   }
 
   function handleAdd() {
-    if (!selected || !unit) return;
+    if (!selected || !unit || !effectiveMeal) return;
 
-    addLoggedEntry(meal!.id, {
+    addLoggedEntry(effectiveMeal.id, {
       name: selected.nameFa,
       amount: `${toFaDigits(quantity)} ${unit.label}`,
       calories: caloriesForServing(selected, unit, quantity),
@@ -182,128 +203,155 @@ export default function AddMealEntryModal({
   return (
     <ModalOverlay onClose={onClose}>
       <div className="glass-panel glass-static max-h-[85vh] space-y-4 overflow-y-auto rounded-3xl p-6">
-        <h2 className="text-center text-lg font-bold text-white">
-          افزودن به وعده {meal.title}
-        </h2>
+        {!effectiveMeal ? (
+          <>
+            <h2 className="text-center text-lg font-bold text-white">
+              افزودن غذا
+            </h2>
 
-        <div className="glass-chip flex items-center gap-2 rounded-xl p-2">
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => handleQueryChange(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") submitSearch();
-            }}
-            placeholder="جستجوی غذا..."
-            className="flex-1 bg-transparent px-2 py-2 text-sm text-white placeholder:text-white/50 outline-none"
-          />
+            <p className="text-center text-sm text-white/60">
+              برای کدوم وعده ثبت کنم؟
+            </p>
 
-          <button
-            onClick={submitSearch}
-            aria-label="جستجو"
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg glass-action text-white"
-          >
-            <Search size={16} />
-          </button>
-        </div>
-
-        <div className="flex items-stretch gap-2">
-          <div
-            ref={listRef}
-            onScroll={updateScrollThumb}
-            className="max-h-[200px] flex-1 space-y-2 overflow-y-auto"
-          >
-            {isFiltering && loading && (
-              <p className="py-2 text-center text-sm text-white">
-                در حال جستجو...
-              </p>
-            )}
-
-            {isFiltering && !loading && visibleFoods.length === 0 && (
-              <p className="py-2 text-center text-sm text-white">
-                غذایی پیدا نشد.
-              </p>
-            )}
-
-            {(!isFiltering || !loading) &&
-              visibleFoods.map((entry) => (
+            <div className="grid grid-cols-2 gap-3">
+              {mealOptions!.map((option) => (
                 <button
-                  key={entry.id}
-                  onClick={() => selectFood(entry)}
-                  className={`glass-chip glass-static flex w-full items-center justify-between rounded-xl p-3 text-sm font-medium text-white ${
-                    selected?.id === entry.id
-                      ? "ring-2 ring-avocado-yellow"
-                      : ""
-                  }`}
+                  key={option.id}
+                  onClick={() => setPickedMealId(option.id)}
+                  className="glass-chip glass-static flex flex-col items-center gap-2 rounded-2xl py-4 text-sm font-medium text-white"
                 >
-                  {entry.nameFa}
+                  <span className="text-2xl">{option.icon}</span>
+                  {option.title}
                 </button>
               ))}
-          </div>
-
-          {listScrollable && (
-            <div
-              aria-hidden="true"
-              className="w-1 shrink-0 rounded-full bg-white/10"
-            >
-              <div
-                className="w-1 rounded-full bg-white/50"
-                style={{
-                  height: `${scrollThumb.height}%`,
-                  marginTop: `${scrollThumb.top}%`,
-                }}
-              />
             </div>
-          )}
-        </div>
+          </>
+        ) : (
+          <>
+            <h2 className="text-center text-lg font-bold text-white">
+              افزودن به وعده {effectiveMeal.title}
+            </h2>
 
-        {selected && unit && (
-          <div className="glass-chip space-y-3 rounded-xl p-3">
-            <p className="text-center text-sm font-semibold text-white">
-              {selected.nameFa}
-            </p>
-
-            <div className="flex items-center gap-2">
+            <div className="glass-chip flex items-center gap-2 rounded-xl p-2">
               <input
-                type="number"
-                min={0}
-                value={quantity}
-                onChange={(e) => setQuantity(Number(e.target.value))}
-                className="w-16 glass-chip rounded-lg px-2 py-2 text-center text-sm text-white"
+                type="text"
+                value={query}
+                onChange={(e) => handleQueryChange(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") submitSearch();
+                }}
+                placeholder="جستجوی غذا..."
+                className="flex-1 bg-transparent px-2 py-2 text-sm text-white placeholder:text-white/50 outline-none"
               />
 
-              <select
-                value={unit.label}
-                onChange={(e) => {
-                  const next =
-                    selected.servingUnits.find(
-                      (u) => u.label === e.target.value,
-                    ) ?? selected.servingUnits[0];
-                  setUnit(next);
-                }}
-                className="glass-static w-full flex-1 glass-chip rounded-lg px-2 py-2 text-sm text-white"
+              <button
+                onClick={submitSearch}
+                aria-label="جستجو"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg glass-action text-white"
               >
-                {selected.servingUnits.map((u) => (
-                  <option key={u.label} value={u.label}>
-                    {u.label}
-                  </option>
-                ))}
-              </select>
+                <Search size={16} />
+              </button>
             </div>
 
-            <p className="text-center text-sm text-white/70">
-              {toFaDigits(caloriesForServing(selected, unit, quantity))} کالری
-            </p>
-          </div>
-        )}
+            <div className="flex items-stretch gap-2">
+              <div
+                ref={listRef}
+                onScroll={updateScrollThumb}
+                className="max-h-[200px] flex-1 space-y-2 overflow-y-auto"
+              >
+                {isFiltering && loading && (
+                  <p className="py-2 text-center text-sm text-white">
+                    در حال جستجو...
+                  </p>
+                )}
 
-        <button
-          onClick={handleAdd}
-          disabled={!selected}
-          className="w-full glass-action rounded-2xl py-3 font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          افزودن
-        </button>
+                {isFiltering && !loading && visibleFoods.length === 0 && (
+                  <p className="py-2 text-center text-sm text-white">
+                    غذایی پیدا نشد.
+                  </p>
+                )}
+
+                {(!isFiltering || !loading) &&
+                  visibleFoods.map((entry) => (
+                    <button
+                      key={entry.id}
+                      onClick={() => selectFood(entry)}
+                      className={`glass-chip glass-static flex w-full items-center justify-between rounded-xl p-3 text-sm font-medium text-white ${
+                        selected?.id === entry.id
+                          ? "ring-2 ring-avocado-yellow"
+                          : ""
+                      }`}
+                    >
+                      {entry.nameFa}
+                    </button>
+                  ))}
+              </div>
+
+              {listScrollable && (
+                <div
+                  aria-hidden="true"
+                  className="w-1 shrink-0 rounded-full bg-white/10"
+                >
+                  <div
+                    className="w-1 rounded-full bg-white/50"
+                    style={{
+                      height: `${scrollThumb.height}%`,
+                      marginTop: `${scrollThumb.top}%`,
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+
+            {selected && unit && (
+              <div className="glass-chip space-y-3 rounded-xl p-3">
+                <p className="text-center text-sm font-semibold text-white">
+                  {selected.nameFa}
+                </p>
+
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min={0}
+                    value={quantity}
+                    onChange={(e) => setQuantity(Number(e.target.value))}
+                    className="w-16 glass-chip rounded-lg px-2 py-2 text-center text-sm text-white"
+                  />
+
+                  <select
+                    value={unit.label}
+                    onChange={(e) => {
+                      const next =
+                        selected.servingUnits.find(
+                          (u) => u.label === e.target.value,
+                        ) ?? selected.servingUnits[0];
+                      setUnit(next);
+                    }}
+                    className="glass-static w-full flex-1 glass-chip rounded-lg px-2 py-2 text-sm text-white"
+                  >
+                    {selected.servingUnits.map((u) => (
+                      <option key={u.label} value={u.label}>
+                        {u.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <p className="text-center text-sm text-white/70">
+                  {toFaDigits(caloriesForServing(selected, unit, quantity))} کالری
+                </p>
+              </div>
+            )}
+
+            <button
+              onClick={handleAdd}
+              disabled={!selected}
+              className="w-full glass-action rounded-2xl py-3 font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              افزودن
+            </button>
+          </>
+        )}
 
         <button
           onClick={onClose}
