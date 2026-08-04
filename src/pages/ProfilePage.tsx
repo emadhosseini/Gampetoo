@@ -24,7 +24,7 @@ export default function ProfilePage() {
   const weight = getLatestWeight();
   const height = getCurrentUserHeight();
 
-  const genderEmoji = gender === "male" ? "♂️" : gender === "female" ? "♀️" : "👤";
+  const genderEmoji = gender === "male" ? "👨" : gender === "female" ? "👩" : "👤";
 
   return (
     <div className="space-y-4 px-5 pb-5 pt-10">

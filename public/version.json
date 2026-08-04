@@ -1,6 +1,14 @@
 {
-  "current": "2.1.56",
+  "current": "2.1.57",
   "history": [
+    {
+      "version": "2.1.57",
+      "date": "2026-08-04",
+      "description": "Swapped the account page's gender avatar from the ♂️/♀️ sign emoji to the 👨/👩 person emoji instead.",
+      "highlights": [
+        "👨👩 آیکون جنسیت توی صفحه حساب کاربری از نماد به ایموجی آدم تغییر کرد"
+      ]
+    },
     {
       "version": "2.1.56",
       "date": "2026-08-04",
