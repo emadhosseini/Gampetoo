@@ -50,6 +50,20 @@ function barSilhouettePath(width: number): string {
   ].join(" ");
 }
 
+// A flat bathroom-scale pictogram for the "ثبت وزن" quick action — the
+// balance-scale emoji it replaced (⚖️) reads as a courtroom/justice scale,
+// not a bodyweight scale, so it didn't fit the actual feature. A light
+// rounded-square body with a small dark display near the top mirrors an
+// actual digital bathroom scale's silhouette instead.
+function ScaleIcon() {
+  return (
+    <svg viewBox="0 0 36 36" width="28" height="28" aria-hidden="true">
+      <rect x="2" y="2" width="32" height="32" rx="10" fill="#e4e4e7" />
+      <rect x="11" y="9" width="14" height="7" rx="2.5" fill="#18181b" />
+    </svg>
+  );
+}
+
 const items = [
   {
     to: "/",
@@ -129,7 +143,7 @@ export default function BottomNavigation({
     },
     {
       label: "ثبت وزن",
-      icon: "⚖️",
+      icon: <ScaleIcon />,
       onSelect: () => setWeightModalOpen(true),
     },
     {

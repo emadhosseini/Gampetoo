@@ -1,6 +1,14 @@
 {
-  "current": "2.1.60",
+  "current": "2.1.61",
   "history": [
+    {
+      "version": "2.1.61",
+      "date": "2026-08-04",
+      "description": "Swapped the quick-add drawer's 'ثبت وزن' icon from the ⚖️ balance-scale emoji (a courtroom/justice scale, not a bodyweight one) to a small flat pictogram of an actual digital bathroom scale — a light rounded-square body with a dark display near the top.",
+      "highlights": [
+        "⚖️➡️🩶 آیکون «ثبت وزن» توی ثبت سریع حالا شبیه یه ترازوی دیجیتال واقعیه"
+      ]
+    },
     {
       "version": "2.1.60",
       "date": "2026-08-04",
