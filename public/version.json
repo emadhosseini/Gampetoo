@@ -1,6 +1,17 @@
 {
-  "current": "2.1.80",
+  "current": "2.1.81",
   "history": [
+    {
+      "version": "2.1.81",
+      "date": "2026-08-04",
+      "description": "Added a calorie-goal calculator to the daily-calories page. A new block sits directly under the chart: before a target exists it's a single 'محاسبه هدف کالری من' button, and afterwards it shows the number with its goal type and a pencil to edit. The popup collects gender, age, height, weight, activity level and goal, pre-filled from whatever the profile already knows so most people only pick the last two, and previews the resulting number live as the choices change. The logic lives in a new src/utils/calorieEngine.ts: Mifflin-St Jeor BMR, TDEE via the activity multiplier (1.2 / 1.375 / 1.55 / 1.725) and the goal adjustment (-500 / 0 / +300), each exported as a pure function with the persistence kept separate. That engine deliberately does not write emad-daily-calorie-target itself — it hands the result to dailyLogEngine, which already owns that key, so the key keeps exactly one owner and the chart's dashed target line picks the new number up with no extra wiring. The profile inputs likewise go back to the engines that own them, so filling this form in also records today's weight and fills the height the BMI card needs. Age, activity level and goal are new synced keys and are cleared by a factory reset. The manual target stepper stays as an override.",
+      "highlights": [
+        "🧮 محاسبه‌گر هدف کالری اضافه شد — با سن، قد، وزن، جنسیت، سطح فعالیت و هدفت عدد روزانه‌ات رو حساب می‌کنه",
+        "📉 فرمول استاندارد Mifflin-St Jeor برای سوخت‌وساز پایه، ضریب سطح فعالیت برای نیاز روزانه، و کسر/اضافه‌ی هدف",
+        "📊 خط هدف روی نمودار کالری خودکار با همین عدد به‌روز می‌شه",
+        "✍️ اطلاعاتی که وارد می‌کنی وزن امروز و قدت رو هم ثبت می‌کنه، پس کارت BMI هم کامل می‌شه"
+      ]
+    },
     {
       "version": "2.1.80",
       "date": "2026-08-04",

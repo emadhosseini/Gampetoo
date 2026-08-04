@@ -7,6 +7,7 @@ import { resetFreeMeal } from "../../utils/freeMealEngine";
 import { resetWeightLog } from "../../utils/weightEngine";
 import { resetDailyLog } from "../../utils/dailyLogEngine";
 import { resetCalorieTrackingMode } from "../../utils/calorieModeEngine";
+import { resetCalorieProfile } from "../../utils/calorieEngine";
 import { resetWaterLog } from "../../utils/waterEngine";
 import { resetActivityLog } from "../../utils/activityLogEngine";
 import { resetWorkoutCalorieLog } from "../../utils/workoutCalorieEngine";
@@ -28,6 +29,7 @@ export async function resetApplication() {
   resetWeightLog();
   resetDailyLog();
   resetCalorieTrackingMode();
+  resetCalorieProfile();
   resetWaterLog();
   resetActivityLog();
   resetWorkoutCalorieLog();

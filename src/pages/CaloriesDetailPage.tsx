@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+import CalorieGoalCard from "@/components/progress/CalorieGoalCard";
 import StatChartPage from "@/components/progress/StatChartPage";
 import TargetCaloriesModal from "@/components/progress/TargetCaloriesModal";
 import { getCalorieHistory, getCalorieTarget, getTodaysTotalCalories } from "@/utils/dailyLogEngine";
@@ -32,6 +33,14 @@ export default function CaloriesDetailPage() {
         targetLabel="کالری هدف"
         missingDays="zero"
       >
+        {/* First child, so it sits directly under the chart panel — the
+            chart's own panel is flush to the top of the screen, so this is
+            as high as anything can go on this page. Saving here writes the
+            same emad-daily-calorie-target the chart's dashed line already
+            reads, and the version bump re-renders the page around it, so
+            that line follows the calculated number with no extra wiring. */}
+        <CalorieGoalCard onSaved={() => setVersion((v) => v + 1)} />
+
         <div className="glass-panel glass-static space-y-3 rounded-3xl p-5">
           <button
             onClick={() => setTargetModalOpen(true)}

@@ -11,6 +11,11 @@ const GENDER_KEY = "emad-user-gender";
 // Per-account height in cm (scoped by username), used for the BMI card.
 const HEIGHT_KEY = "emad-user-height";
 
+// Per-account age in years (scoped by username). Only the calorie-goal
+// calculator needs it (Mifflin-St Jeor takes age as an input), which is
+// why it's collected there rather than during signup.
+const AGE_KEY = "emad-user-age";
+
 export type Gender = "male" | "female";
 
 // Pre-username scheme: a single global name that also acted as the data scope.
@@ -81,6 +86,16 @@ export function getCurrentUserHeight(): number | null {
 
 export function setCurrentUserHeight(heightCm: number) {
   localStorage.setItem(scopedKey(HEIGHT_KEY), String(heightCm));
+}
+
+export function getCurrentUserAge(): number | null {
+  const value = Number(localStorage.getItem(scopedKey(AGE_KEY)));
+
+  return Number.isFinite(value) && value > 0 ? value : null;
+}
+
+export function setCurrentUserAge(years: number) {
+  localStorage.setItem(scopedKey(AGE_KEY), String(Math.round(years)));
 }
 
 export function hasCurrentUser(): boolean {
@@ -154,6 +169,7 @@ export function resetCurrentUser() {
   localStorage.removeItem(scopedKey(NAME_KEY));
   localStorage.removeItem(scopedKey(GENDER_KEY));
   localStorage.removeItem(scopedKey(HEIGHT_KEY));
+  localStorage.removeItem(scopedKey(AGE_KEY));
   localStorage.removeItem(USERNAME_KEY);
   localStorage.removeItem(LEGACY_NAME_KEY);
 }
