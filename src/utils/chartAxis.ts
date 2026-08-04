@@ -94,6 +94,37 @@ export function computeYAxisRange(values: number[], rows: number, minStep: numbe
   }
 }
 
+// The axis for a bar chart, where every bar is measured from the baseline
+// rather than from wherever the data happens to start — so unlike
+// computeYAxisRange this one never centers, it always pins min to 0. A
+// centered axis under bars would cut them off at the bottom and make a
+// 1900-vs-2000 difference look like double the height.
+//
+// The step escalates through the nice-number progression until the whole
+// span fits in `maxRows` gridlines, then the top lands on the first step
+// multiple at or above the tallest bar, so the tallest bar reaches close to
+// the top of the plot instead of leaving a fixed slab of dead space.
+export function computeZeroBasedYAxisRange(
+  values: number[],
+  maxRows: number,
+  minStep: number,
+): YAxisRange {
+  const finiteValues = values.filter((value) => Number.isFinite(value));
+  const dataMax = finiteValues.length > 0 ? Math.max(...finiteValues) : 0;
+
+  let stepSize = niceStep(minStep);
+
+  if (dataMax <= 0) {
+    return { min: 0, max: stepSize * (maxRows - 1), stepSize };
+  }
+
+  while (Math.ceil(dataMax / stepSize) > maxRows - 1) {
+    stepSize = nextNiceStep(stepSize);
+  }
+
+  return { min: 0, max: Math.ceil(dataMax / stepSize) * stepSize, stepSize };
+}
+
 // Grows an already-computed range outward just enough to include `value`
 // — for a reference/target line that may sit far outside the data's own
 // range. Deliberately NOT run back through computeYAxisRange's

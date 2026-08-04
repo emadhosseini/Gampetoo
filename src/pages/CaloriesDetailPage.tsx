@@ -32,6 +32,7 @@ export default function CaloriesDetailPage() {
         targetValue={calorieTarget ?? undefined}
         targetLabel="کالری هدف"
         missingDays="zero"
+        chartType="bar"
       >
         {/* First child, so it sits directly under the chart panel — the
             chart's own panel is flush to the top of the screen, so this is

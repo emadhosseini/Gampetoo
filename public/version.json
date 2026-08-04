@@ -1,6 +1,17 @@
 {
-  "current": "2.1.82",
+  "current": "2.1.83",
   "history": [
+    {
+      "version": "2.1.83",
+      "date": "2026-08-04",
+      "description": "Turned the calories and activity charts into bar charts. Both are daily totals — an amount belonging to one particular day rather than a value passing through it — so a column per day says what they are, where a line implied a smooth journey between days that never happened. The day, week and month ranges draw one bar per day at that day's own figure, with no averaging anywhere; only the 6-month and year ranges aggregate, one bar per month holding that month's daily average, which is the point of those ranges. The headline number follows the same rule instead of always reading میانگین: the per-day ranges now show مجموع, the sum of the bars on screen, and only the two monthly ranges show an average. Bars need a zero baseline, so those two charts get their own axis that always starts at zero and picks a step fine enough to keep the grid readable — a centred axis would have cut the columns off at the bottom and made a 1900-vs-2000 day look twice as tall. The weight chart is untouched: it's a measurement, not a total, so it keeps its line, its gaps and its average.",
+      "highlights": [
+        "📊 نمودار کالری و فعالیت ستونی شد",
+        "📅 در حالت روز، هفته و ماه هر ستون مقدار همان روز است — بدون میانگین‌گیری",
+        "🗓️ در حالت ۶ ماه و سال هر ستون میانگین روزانه‌ی همان ماه را نشان می‌دهد",
+        "➕ عدد بالای نمودار در بازه‌های روزانه «مجموع» شد و فقط در ۶ ماه و سال «میانگین» می‌ماند"
+      ]
+    },
     {
       "version": "2.1.82",
       "date": "2026-08-04",

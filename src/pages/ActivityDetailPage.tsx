@@ -37,6 +37,7 @@ export default function ActivityDetailPage() {
         onAdd={() => setModalOpen(true)}
         addLabel="ثبت فعالیت"
         missingDays="zero"
+        chartType="bar"
       >
         <div className="glass-panel rounded-3xl p-5">
           <p className="text-center text-sm text-white/60">جزئیات امروز</p>

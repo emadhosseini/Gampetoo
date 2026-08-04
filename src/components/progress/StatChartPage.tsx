@@ -1,21 +1,29 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { ChevronRight, Plus } from "lucide-react";
 import {
+  BarController,
+  BarElement,
   CategoryScale,
   Chart as ChartJS,
   Filler,
   LinearScale,
+  LineController,
   LineElement,
   PointElement,
   Tooltip,
+  type ChartData,
   type TooltipItem,
 } from "chart.js";
-import { Line } from "react-chartjs-2";
+import { Chart, Line } from "react-chartjs-2";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 
 import type { DailyMetricEntry } from "@/utils/dailyMetricLog";
-import { computeYAxisRange, extendYAxisRangeToInclude } from "@/utils/chartAxis";
+import {
+  computeYAxisRange,
+  computeZeroBasedYAxisRange,
+  extendYAxisRangeToInclude,
+} from "@/utils/chartAxis";
 import { formatDayNumber, formatGregorianShort } from "@/utils/dateFormat";
 import { toFaDigits } from "@/utils/numberFormat";
 import {
@@ -29,7 +37,26 @@ import {
 // single point (or a flat week) never collapses onto the bottom edge.
 const Y_AXIS_ROWS = 4;
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Filler, Tooltip);
+// Bars are measured from a zero baseline, so their axis can't be centered
+// on the data and needs more rows to stay readable: four rows from zero
+// would put a 2100-calorie day on a 1000-apart grid.
+const BAR_Y_AXIS_ROWS = 7;
+
+// The bar chart goes through the generic <Chart> rather than <Bar>, because
+// its goal line is a line dataset inside a bar chart and only the generic
+// component's types admit a mixed dataset list. <Chart> registers nothing on
+// its own, hence both controllers here.
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  LineController,
+  BarController,
+  Filler,
+  Tooltip,
+);
 
 const CHART_FONT_FAMILY = "Vazirmatn";
 
@@ -54,10 +81,16 @@ const RANGES: { key: RangeKey; label: string; days: number }[] = [
    chart to re-measure its container on each one. resize() is a no-op
    when the size hasn't actually changed, so the extra calls are free. */
 function useChartResizeOnViewportSettle() {
-  const chartRef = useRef<ChartJS<"line"> | null>(null);
+  // One ref per chart type, because only one of the two ever renders and
+  // chart.js types them separately. resize() on the null one is skipped.
+  const lineRef = useRef<ChartJS<"line"> | null>(null);
+  const barRef = useRef<ChartJS<"bar" | "line"> | null>(null);
 
   useEffect(() => {
-    const resize = () => chartRef.current?.resize();
+    const resize = () => {
+      lineRef.current?.resize();
+      barRef.current?.resize();
+    };
 
     const settleTimers = [100, 400, 1000, 2500].map((delay) =>
       window.setTimeout(resize, delay)
@@ -77,7 +110,7 @@ function useChartResizeOnViewportSettle() {
     };
   }, []);
 
-  return chartRef;
+  return { lineRef, barRef };
 }
 
 function isoToLocalDate(iso: string): Date {
@@ -119,6 +152,14 @@ export interface StatChartPageProps {
   // monthly figures a real per-day average instead of an average over
   // only the days that happened to get logged.
   missingDays?: MissingDayMeaning;
+  // "line" (the default) for a metric that traces a value over time.
+  // "bar" for a daily total like calories or activity, where each column
+  // is one day's own amount — day/week/month draw a bar per day, and the
+  // 6-month/year ranges a bar per month holding that month's daily
+  // average. A total is a quantity per day, not a continuous curve
+  // through them, so columns say what it is where a line implies
+  // interpolation between days that never happened.
+  chartType?: "line" | "bar";
   // Swaps the built-in chart.js line for a custom renderer, given the same
   // buckets this component already computed for the selected range. The
   // weight page uses it for a hand-drawn SVG chart with its own axis
@@ -141,12 +182,13 @@ export default function StatChartPage({
   targetValue,
   targetLabel = "هدف",
   missingDays = "gap",
+  chartType = "line",
   renderChart,
   children,
 }: StatChartPageProps) {
   const navigate = useNavigate();
   const [range, setRange] = useState<RangeKey>("month");
-  const chartRef = useChartResizeOnViewportSettle();
+  const { lineRef, barRef } = useChartResizeOnViewportSettle();
 
   const activeRange = RANGES.find((r) => r.key === range)!;
 
@@ -182,24 +224,35 @@ export default function StatChartPage({
 
   const hasData = chartPoints.some((point) => point.value !== null);
 
-  // For a daily total, the headline average has to agree with the series
-  // the chart is drawing — averaging only the logged entries would report
-  // a week with two logged days as if the other five hadn't happened, and
-  // disagree with the line right underneath it. A point-in-time metric
-  // keeps averaging its actual measurements, where skipped days genuinely
-  // shouldn't count.
-  const average = useMemo(() => {
-    const source =
-      missingDays === "zero"
-        ? chartPoints
-            .map((point) => point.value)
-            .filter((value): value is number => value !== null)
-        : entries.map((entry) => entry.value);
+  const isDailyTotal = missingDays === "zero";
+  const usesMonthlyBuckets = range === "sixMonth" || range === "year";
 
-    if (source.length === 0) return null;
+  // A daily total's day/week/month ranges draw one bar per day, each the
+  // day's own amount — so the headline reports what those bars add up to
+  // rather than flattening them into an average nobody asked for. Only the
+  // 6-month/year ranges average, because their buckets already are
+  // per-month averages and summing averages would mean nothing. A
+  // point-in-time metric (weight) still averages its real measurements,
+  // where a skipped day genuinely shouldn't count.
+  const summaryLabel = isDailyTotal && !usesMonthlyBuckets ? "مجموع" : "میانگین";
 
-    return source.reduce((sum, value) => sum + value, 0) / source.length;
-  }, [missingDays, chartPoints, entries]);
+  const summaryValue = useMemo(() => {
+    if (isDailyTotal) {
+      const values = chartPoints
+        .map((point) => point.value)
+        .filter((value): value is number => value !== null);
+
+      if (values.length === 0) return null;
+
+      const total = values.reduce((sum, value) => sum + value, 0);
+
+      return usesMonthlyBuckets ? total / values.length : total;
+    }
+
+    if (entries.length === 0) return null;
+
+    return entries.reduce((sum, entry) => sum + entry.value, 0) / entries.length;
+  }, [isDailyTotal, usesMonthlyBuckets, chartPoints, entries]);
 
   // Describes the selected period itself — the same window the chart's
   // x-axis spans — not the first/last day that happens to have an entry.
@@ -226,29 +279,49 @@ export default function StatChartPage({
   // Sized from the real data only, so the target line (which can sit far
   // from it) never drags the resolution down around the actual trend —
   // extended afterward, separately, just enough to fit the target in too.
-  let yAxis = computeYAxisRange(
-    chartPoints.map((p) => p.value ?? NaN),
-    Y_AXIS_ROWS,
-    minYStep,
-  );
+  const axisRows = chartType === "bar" ? BAR_Y_AXIS_ROWS : Y_AXIS_ROWS;
+  const dataValues = chartPoints.map((p) => p.value ?? NaN);
+
+  let yAxis =
+    chartType === "bar"
+      ? computeZeroBasedYAxisRange(dataValues, axisRows, minYStep)
+      : computeYAxisRange(dataValues, axisRows, minYStep);
 
   if (targetValue !== undefined) {
     // One extra row's headroom over the data-only axis: stretching to a
     // distant target needs somewhere to put the wider span without
     // collapsing to a very coarse step (a 4-row cap on the 85–101 case
     // would force 10kg gridlines; 5 rows lands on the natural 5kg ones).
-    yAxis = extendYAxisRangeToInclude(yAxis, targetValue, Y_AXIS_ROWS + 1);
+    yAxis = extendYAxisRangeToInclude(yAxis, targetValue, axisRows + 1);
   }
 
   // Denser buckets (month's 30 days) get smaller points so they don't
   // visually collide into each other.
   const pointRadius = range === "month" ? 2 : 3;
 
-  const chartData = {
-    labels: chartPoints.map((point) => point.label),
+  const labels = chartPoints.map((point) => point.label);
+  const values = chartPoints.map((point) => point.value);
+
+  // Drawn as a line dataset even inside the bar chart, so the goal reads as
+  // a threshold across the whole range rather than as one more column.
+  const targetDataset = {
+    type: "line" as const,
+    label: targetLabel,
+    data: chartPoints.map(() => targetValue as number),
+    borderColor: "#f87171",
+    borderDash: [6, 4],
+    borderWidth: 1.5,
+    pointRadius: 0,
+    pointHoverRadius: 0,
+    fill: false,
+    tension: 0,
+  };
+
+  const lineChartData = {
+    labels,
     datasets: [
       {
-        data: chartPoints.map((point) => point.value),
+        data: values,
         spanGaps: false,
         borderColor: color,
         backgroundColor: `${color}26`,
@@ -258,21 +331,30 @@ export default function StatChartPage({
         tension: 0.3,
         fill: true,
       },
-      ...(targetValue !== undefined
-        ? [
-            {
-              label: targetLabel,
-              data: chartPoints.map(() => targetValue),
-              borderColor: "#f87171",
-              borderDash: [6, 4],
-              borderWidth: 1.5,
-              pointRadius: 0,
-              pointHoverRadius: 0,
-              fill: false,
-              tension: 0,
-            },
-          ]
-        : []),
+      ...(targetValue !== undefined ? [targetDataset] : []),
+    ],
+  };
+
+  const barChartData: ChartData<"bar" | "line", (number | null)[], string> = {
+    labels,
+    datasets: [
+      {
+        type: "bar" as const,
+        data: values,
+        backgroundColor: color,
+        hoverBackgroundColor: color,
+        borderRadius: 4,
+        // Rounds the top corners only; a bar sitting on the baseline
+        // shouldn't have its bottom edge rounded away from it.
+        borderSkipped: "bottom" as const,
+        // A single day's bar would otherwise stretch across the whole plot.
+        maxBarThickness: 26,
+        // Leaves a visible sliver of space between columns even at 30 of
+        // them, so a month reads as separate days rather than a block.
+        categoryPercentage: 0.85,
+        barPercentage: 0.8,
+      },
+      ...(targetValue !== undefined ? [targetDataset] : []),
     ],
   };
 
@@ -311,7 +393,7 @@ export default function StatChartPage({
         titleFont: { family: CHART_FONT_FAMILY },
         bodyFont: { family: CHART_FONT_FAMILY },
         callbacks: {
-          label: (context: TooltipItem<"line">) => {
+          label: (context: TooltipItem<"line" | "bar">) => {
             const value = `${toFaDigits((context.parsed.y ?? 0).toFixed(valuePrecision))} ${unitLabel}`;
 
             return context.dataset.label ? `${context.dataset.label}: ${value}` : value;
@@ -371,10 +453,10 @@ export default function StatChartPage({
         </div>
 
         <div className="mt-3">
-          <p className="text-xs text-white/50">میانگین</p>
+          <p className="text-xs text-white/50">{summaryLabel}</p>
           <p className="text-white">
             <span className="text-2xl font-bold">
-              {average !== null ? toFaDigits(average.toFixed(valuePrecision)) : "—"}
+              {summaryValue !== null ? toFaDigits(summaryValue.toFixed(valuePrecision)) : "—"}
             </span>{" "}
             <span className="text-sm text-white/60">{unitLabel}</span>
           </p>
@@ -388,8 +470,10 @@ export default function StatChartPage({
         <div className="relative mt-2 min-h-0 flex-1 overflow-hidden">
           {renderChart ? (
             renderChart(chartPoints)
+          ) : chartType === "bar" ? (
+            <Chart type="bar" ref={barRef} data={barChartData} options={chartOptions} />
           ) : (
-            <Line ref={chartRef} data={chartData} options={chartOptions} />
+            <Line ref={lineRef} data={lineChartData} options={chartOptions} />
           )}
 
           {!hasData && (
