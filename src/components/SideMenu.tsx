@@ -25,7 +25,8 @@ import {
 import { useLocation, useNavigate } from "react-router-dom";
 
 import CalorieModePickerModal from "@/components/CalorieModePickerModal";
-import { getCurrentUserName } from "@/utils/userEngine";
+import { avatarCharacterIcon } from "@/data/characterIcons";
+import { getCurrentUserGender, getCurrentUserName } from "@/utils/userEngine";
 import { getCalorieTrackingMode } from "@/utils/calorieModeEngine";
 
 const menuLinks = [
@@ -291,8 +292,19 @@ export default function SideMenu({ children }: SideMenuProps) {
                 className="glass-panel flex w-full items-center justify-between rounded-3xl p-7"
               >
                 <div className="flex items-center gap-3">
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center glass-chip rounded-full text-xl">
-                    👤
+                  {/* Same avatar the profile page shows: the neutral
+                      portrait until a gender is picked, then that gender's.
+                      Read live from userEngine, so it follows a change made
+                      in the account popup without anything to invalidate. */}
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden glass-chip rounded-full">
+                    <img
+                      src={avatarCharacterIcon(getCurrentUserGender())}
+                      alt=""
+                      aria-hidden="true"
+                      width={44}
+                      height={44}
+                      className="h-full w-full object-contain"
+                    />
                   </div>
 
                   <span className="font-semibold text-white">{userName}</span>

@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import MeshGradientBackground from "@/components/background/MeshGradientBackground";
+import AuthIntroSlider from "@/components/AuthIntroSlider";
 import ChromaKeyVideo from "@/components/ChromaKeyVideo";
 import InstallHint from "@/components/InstallHint";
 
@@ -152,6 +153,47 @@ export default function SetupProgramPage() {
     (!syncEnabled ||
       (pin.length >= MIN_PIN_LENGTH && confirmPin.length > 0));
 
+  // The landing state is its own layout, not a variant of the form card:
+  // brand pinned to the top, the tour filling the middle, and the two
+  // choices sitting on the bottom edge where a thumb already is. The form
+  // states below stay centred, since a keyboard is about to cover the lower
+  // half of the screen.
+  if (mode === "choose") {
+    return (
+      <div className="app-gradient-bg pt-safe relative flex min-h-screen flex-col px-6 pb-safe">
+        <MeshGradientBackground />
+
+        <div className="relative z-10 mx-auto flex w-full max-w-xl flex-1 flex-col py-8">
+          <InstallHint />
+
+          <div className="mt-4">
+            <SetupBrand />
+          </div>
+
+          <div className="flex flex-1 items-center justify-center py-8">
+            <AuthIntroSlider />
+          </div>
+
+          <div className="flex gap-3">
+            <button
+              onClick={() => goToMode("login")}
+              className="w-full glass-action flex-1 rounded-2xl py-4 text-xl font-bold text-white"
+            >
+              ورود
+            </button>
+
+            <button
+              onClick={() => goToMode("signup")}
+              className="selector-pill glass-tap flex-1 rounded-2xl py-4 text-xl font-bold text-white"
+            >
+              ثبت نام
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="app-gradient-bg pt-safe relative flex min-h-screen flex-col items-center justify-center px-6 py-10">
       <MeshGradientBackground />
@@ -162,24 +204,6 @@ export default function SetupProgramPage() {
         <SetupBrand />
 
         <div className="glass-panel rounded-2xl p-6 space-y-4 text-center">
-          {mode === "choose" && (
-            <div className="space-y-3">
-              <button
-                onClick={() => goToMode("login")}
-                className="w-full glass-action rounded-2xl py-4 text-xl font-bold text-white"
-              >
-                ورود
-              </button>
-
-              <button
-                onClick={() => goToMode("signup")}
-                className="selector-pill glass-tap w-full rounded-2xl py-4 text-xl font-bold text-white"
-              >
-                ثبت نام
-              </button>
-            </div>
-          )}
-
           {mode === "login" && (
             <>
               <input

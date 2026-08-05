@@ -1,6 +1,16 @@
 {
-  "current": "2.1.96",
+  "current": "2.1.97",
   "history": [
+    {
+      "version": "2.1.97",
+      "date": "2026-08-05",
+      "description": "The sign-in screen is now a landing page: the brand at the top, a swipeable tour of three app screenshots filling the middle with a caption on each, and ورود / ثبت نام side by side along the bottom edge where a thumb already is. It advances on its own until the first swipe or dot tap, after which it stays where it was put. The login and signup forms keep their centred layout, since a keyboard is about to cover the lower half of the screen there. Upper-body illustrations landed, so that workout day now draws like the others rather than falling back to its emoji, and the side-menu profile row shows the account's avatar — the neutral portrait until a gender is chosen, then that gender's, matching the profile page.",
+      "highlights": [
+        "🚪 صفحه ورود و ثبت‌نام بازطراحی شد با اسلایدر معرفی سه‌تایی",
+        "🏋️ آیکون تمرین Upper Body اضافه شد",
+        "👤 آیکون پروفایل توی منوی کناری اضافه شد — پیش‌فرض تا وقتی جنسیت انتخاب نشده"
+      ]
+    },
     {
       "version": "2.1.96",
       "date": "2026-08-05",

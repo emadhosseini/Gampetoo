@@ -7,12 +7,9 @@ import type { Gender } from "@/utils/userEngine";
 // already covers webp), rather than being refetched on a cold start.
 const BASE = "/icons";
 
-// Which workout types have a drawn pair. `upper` is deliberately absent: no
-// icon was supplied for it, and standing in Push or Full Body would be
-// quietly wrong about what today's workout is. So are cardio, warmup and
-// custom. Callers fall back to their emoji for anything missing here, so
-// dropping upper-male.webp/upper-female.webp into public/icons and adding
-// one line below is all it takes to light it up.
+// Which workout types have a drawn pair. cardio, warmup and custom don't —
+// callers fall back to their emoji for anything missing here, so supplying
+// the two files and adding one line is all a new one needs.
 //
 // It has to be an allow-list rather than a URL built from the type name and
 // left to 404: this is a SPA, so an unknown path serves index.html with a
@@ -22,6 +19,7 @@ const WORKOUT_ICON_NAMES: Partial<Record<WorkoutType, string>> = {
   push: "push",
   pull: "pull",
   legs: "legs",
+  upper: "upper",
   lower: "lower",
   full_body: "full-body",
 };
@@ -48,7 +46,14 @@ export function walkCharacterIcon(gender: Gender | null): string {
   return `${BASE}/walk-${suffixFor(gender)}.webp`;
 }
 
-/** The account's avatar. */
+/**
+ * The account's avatar. Unlike the workout illustrations above, an unset
+ * gender gets its own neutral portrait rather than defaulting to male —
+ * there's a drawn one for exactly this case, so there's no need to guess at
+ * something the user hasn't told us.
+ */
 export function avatarCharacterIcon(gender: Gender | null): string {
-  return `${BASE}/avatar-${suffixFor(gender)}.webp`;
+  const name = gender === null ? "default" : suffixFor(gender);
+
+  return `${BASE}/avatar-${name}.webp`;
 }
