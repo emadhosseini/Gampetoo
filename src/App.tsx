@@ -198,7 +198,7 @@ function Hero() {
             {/* Badge */}
             <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "7px 14px", borderRadius: 100, background: "rgba(250,234,92,0.1)", border: "1px solid rgba(250,234,92,0.25)", marginBottom: 22 }}>
               <span className="animate-pulse-green" style={{ width: 6, height: 6, borderRadius: "50%", background: "#faea5c", display: "inline-block" }}/>
-              <span style={{ color: "#faea5c", fontSize: 12, fontWeight: 600, ...F }}>نسخه ۲.۰ اکنون در دسترس است</span>
+              <span style={{ color: "#faea5c", fontSize: 12, fontWeight: 600, ...F }}>نسخه ۱.۰ اکنون در دسترس است</span>
             </div>
 
             <h1 style={{ fontSize: "clamp(28px, 8vw, 40px)", fontWeight: 800, lineHeight: 1.3, color: "#F5F5F7", letterSpacing: "-0.02em", marginBottom: 16, ...F }}>
@@ -235,7 +235,7 @@ function Hero() {
             <div className="rtl animate-fade-in-up" style={{ animationFillMode: "forwards", opacity: 0 }}>
               <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "7px 14px", borderRadius: 100, background: "rgba(250,234,92,0.1)", border: "1px solid rgba(250,234,92,0.25)", marginBottom: 28 }}>
                 <span className="animate-pulse-green" style={{ width: 6, height: 6, borderRadius: "50%", background: "#faea5c", display: "inline-block" }}/>
-                <span style={{ color: "#faea5c", fontSize: 13, fontWeight: 600, ...F }}>نسخه ۲.۰ اکنون در دسترس است</span>
+                <span style={{ color: "#faea5c", fontSize: 13, fontWeight: 600, ...F }}>نسخه ۱.۰ اکنون در دسترس است</span>
               </div>
 
               <h1 style={{ fontSize: isTablet ? "clamp(28px,4vw,40px)" : "clamp(32px, 4vw, 54px)", fontWeight: 800, lineHeight: 1.25, color: "#F5F5F7", letterSpacing: "-0.02em", marginBottom: 20, ...F }}>
