@@ -1,6 +1,14 @@
 {
-  "current": "1.0.5",
+  "current": "1.0.6",
   "history": [
+    {
+      "version": "1.0.6",
+      "date": "2026-08-05",
+      "description": "Fixed popups showing the page behind them straight through, unblurred and undimmed, on an Android browser that doesn't support backdrop-filter at all — reported on the install-hint popup, where the setup page's own text landed directly on top of the popup's, reading as a garbled, broken layout. The popup's own card was never enough on its own (.glass-panel is only 10% black) — it always leaned on the backdrop behind it to actually obscure the page, and a browser that silently no-ops backdrop-filter left that backdrop doing nothing at all. The backdrop now also carries a plain background-color, which has no support gaps: a light one that only adds a bit of extra dimming on top of a working blur, and a near-opaque one that stands in for the blur entirely on a browser detected (via CSS.supports) not to render it. Every popup in the app goes through this same component, so all of them are covered.",
+      "highlights": [
+        "🌑 پاپ‌آپ‌ها روی مرورگرهایی که بلر پس‌زمینه رو پشتیبانی نمی‌کنن هم حالا درست و خوانا نمایش داده می‌شن"
+      ]
+    },
     {
       "version": "1.0.5",
       "date": "2026-08-05",
