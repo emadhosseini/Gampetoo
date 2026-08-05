@@ -33,3 +33,7 @@ create policy "Users can update their own data"
 --    src/auth/authEngine.ts), which can't receive a real confirmation email.
 -- 2. Project Settings → API → copy the Project URL and anon/public key into
 --    this app's .env.local (see .env.example).
+-- 3. Deploy the edge functions under supabase/functions/ — in particular
+--    "delete-account", which is what actually removes an account: deleting
+--    an auth user needs the service-role key, so the client can't do it and
+--    "پاک کردن حساب کاربری" silently left the username registered without it.

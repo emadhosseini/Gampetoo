@@ -23,6 +23,16 @@ function setState(patch: Partial<WhatsNewState>) {
  * nothing on a brand-new account (nothing to compare against) and nothing when
  * the current release has no highlights to show.
  */
+/**
+ * Forget which changelog this account has seen. Device-local (it's about this
+ * browser, not the account's data, which is why it isn't synced), but still
+ * scoped to the username — so a deleted account has to drop it, or a freshly
+ * created account reusing that username would silently inherit it.
+ */
+export function resetLastSeenVersion() {
+  localStorage.removeItem(scopedKey(LAST_SEEN_VERSION_KEY));
+}
+
 function init() {
   if (initialized) return;
 

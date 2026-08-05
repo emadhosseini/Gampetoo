@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import ModalOverlay from "@/components/ModalOverlay";
 import { shiftProgramOneDayForward } from "@/utils/programEngine";
 import { resetSession } from "@/utils/sessionEngine";
 
@@ -48,9 +49,9 @@ export default function WorkoutHeader({
       </h1>
 
       {showForgotButton && open && (
-        <div className="pt-safe fixed inset-0 z-[70] flex items-center justify-center bg-black/70 px-6 backdrop-blur-sm">
-          <div className="w-full max-w-sm rounded-2xl border border-forest-600 bg-forest-700 p-6 text-center shadow-2xl">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-avocado-yellow/10 text-2xl">
+        <ModalOverlay onClose={() => setOpen(false)}>
+          <div className="glass-panel glass-static rounded-3xl p-6 text-center">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center glass-chip rounded-full text-2xl">
               🤦
             </div>
 
@@ -67,7 +68,7 @@ export default function WorkoutHeader({
             <div className="mt-6 flex flex-col gap-3">
               <button
                 onClick={handleConfirm}
-                className="w-full rounded-2xl bg-avocado-yellow py-3 font-bold text-black"
+                className="w-full rounded-2xl glass-action py-3 font-bold text-white"
               >
                 فراموشی ثبت تمرین
               </button>
@@ -80,7 +81,7 @@ export default function WorkoutHeader({
               </button>
             </div>
           </div>
-        </div>
+        </ModalOverlay>
       )}
     </div>
   );

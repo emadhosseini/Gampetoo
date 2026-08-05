@@ -71,7 +71,7 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff,woff2}"],
+        globPatterns: ["**/*.{js,css,html,ico,png,svg,webp,woff,woff2}"],
         // Wait for the user to accept the update (prompt), but once the new
         // worker activates, claim the page so it reliably reloads into the new
         // version instead of leaving the update banner lingering.

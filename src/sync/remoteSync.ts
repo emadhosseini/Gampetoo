@@ -13,11 +13,31 @@ const SYNCED_BASE_KEYS = [
   "emad-free-meal",
   "emad-free-meal-settings",
   "emad-user-name",
+  "emad-user-gender",
+  "emad-user-height",
+  "emad-user-age",
+  "emad-user-birth-date",
+  "emad-user-activity-level",
+  "emad-user-calorie-goal",
   "emad-weight-log",
+  "emad-weight-target",
+  "emad-daily-log",
+  "emad-daily-log-history",
+  "emad-daily-calorie-target",
+  "emad-calorie-mode",
+  "emad-learned-foods",
+  "emad-water-log",
+  "emad-water-goal",
+  "emad-activity-log",
+  "emad-workout-calorie-log",
 ];
 
 const PUSH_DEBOUNCE_MS = 1000;
 const RETRY_INTERVAL_MS = 5 * 60 * 1000;
+// Returning to the app is a cheap, frequent signal — on a phone, switching
+// away and back fires it constantly. This is the floor between two pulls it
+// can actually trigger.
+const FOREGROUND_PULL_MIN_INTERVAL_MS = 10 * 1000;
 
 const originalSetItem = localStorage.setItem.bind(localStorage);
 const originalRemoveItem = localStorage.removeItem.bind(localStorage);
@@ -27,6 +47,7 @@ let initialized = false;
 let suppressing = false;
 let cachedAuthUserId: string | null = null;
 let pushTimer: ReturnType<typeof setTimeout> | null = null;
+let lastForegroundPullAt = 0;
 
 function pendingKey(username: string) {
   return `gampetoo-sync-pending:${username}`;
@@ -34,6 +55,87 @@ function pendingKey(username: string) {
 
 function lastSyncedKey(username: string) {
   return `gampetoo-last-synced-at:${username}`;
+}
+
+/**
+ * When each synced key last changed, as this device understands it — the
+ * time it was edited here, or the time it carried when it arrived from the
+ * server. Device-local bookkeeping about the account's data, never synced
+ * itself.
+ */
+function keyTimesKey(username: string) {
+  return `gampetoo-key-updated-at:${username}`;
+}
+
+// Rides along inside the server payload under a name that is not a synced
+// base key, which is precisely what makes this change safe to deploy: older
+// clients loop over SYNCED_BASE_KEYS and never look at it, so they keep
+// reading the same flat key/value pairs they always did. Nesting the values
+// instead would have made an un-updated device find no keys at all — and
+// writeLocalSnapshot deletes every key it doesn't find, so that device would
+// have wiped its own data on the first pull.
+const META_KEY = "__meta";
+const SNAPSHOT_VERSION = 2;
+
+interface SyncMeta {
+  v: number;
+  updatedAt: Record<string, string>;
+}
+
+function readKeyTimes(username: string): Record<string, string> {
+  try {
+    const raw = localStorage.getItem(keyTimesKey(username));
+
+    return raw ? (JSON.parse(raw) as Record<string, string>) : {};
+  } catch {
+    return {};
+  }
+}
+
+function writeKeyTimes(username: string, times: Record<string, string>) {
+  originalSetItem(keyTimesKey(username), JSON.stringify(times));
+}
+
+function recordLocalChange(username: string, base: string) {
+  const times = readKeyTimes(username);
+
+  times[base] = new Date().toISOString();
+
+  writeKeyTimes(username, times);
+}
+
+/**
+ * Splits a stored payload into its values and its per-key times. A row
+ * written before this existed has no times at all — every key it holds is
+ * stamped with the row's own timestamp, which is exactly what was true of
+ * it: the whole thing was written at once.
+ */
+function readRemote(
+  payload: Record<string, unknown>,
+  rowUpdatedAt: string
+): { values: Record<string, string>; times: Record<string, string> } {
+  const meta = payload[META_KEY] as SyncMeta | undefined;
+  const values: Record<string, string> = {};
+
+  for (const base of SYNCED_BASE_KEYS) {
+    const value = payload[base];
+
+    if (typeof value === "string") {
+      values[base] = value;
+    }
+  }
+
+  if (meta?.updatedAt) {
+    return { values, times: meta.updatedAt };
+  }
+
+  const times: Record<string, string> = {};
+
+  for (const base of Object.keys(values)) {
+    times[base] = rowUpdatedAt;
+  }
+
+  return { values, times };
 }
 
 function readLocalSnapshot(username: string): Record<string, string> {
@@ -66,16 +168,72 @@ function writeLocalSnapshot(
   }
 }
 
-async function pushToServer(username: string): Promise<void> {
+function snapshotsDiffer(
+  a: Record<string, string>,
+  b: Record<string, string>
+): boolean {
+  return SYNCED_BASE_KEYS.some((base) => a[base] !== b[base]);
+}
+
+/**
+ * Merges two versions of the account key by key, newest wins per key. This
+ * is the whole point of tracking a time per key rather than one per row:
+ * editing your weight on one phone and a meal on another no longer means one
+ * of those edits is thrown away, which is what replacing the entire row did.
+ *
+ * A key with a recorded time but no value is a deletion, and beats an older
+ * value — otherwise anything removed on one device would be resurrected by
+ * the next push from the other. A key with no recorded time on either side
+ * is one neither device has touched since times existed; keep whatever value
+ * is there rather than treating absence as intent.
+ */
+function mergeByKey(
+  local: Record<string, string>,
+  localTimes: Record<string, string>,
+  remote: Record<string, string>,
+  remoteTimes: Record<string, string>
+): { values: Record<string, string>; times: Record<string, string> } {
+  const values: Record<string, string> = {};
+  const times: Record<string, string> = {};
+
+  for (const base of SYNCED_BASE_KEYS) {
+    const lt = localTimes[base];
+    const rt = remoteTimes[base];
+
+    let value: string | undefined;
+    let time: string | undefined;
+
+    // ISO-8601 UTC strings, so lexicographic order is chronological order.
+    if (lt !== undefined && (rt === undefined || lt > rt)) {
+      value = local[base];
+      time = lt;
+    } else if (rt !== undefined) {
+      value = remote[base];
+      time = rt;
+    } else {
+      value = local[base] ?? remote[base];
+    }
+
+    if (value !== undefined) values[base] = value;
+    if (time !== undefined) times[base] = time;
+  }
+
+  return { values, times };
+}
+
+async function writeRemote(
+  username: string,
+  values: Record<string, string>,
+  times: Record<string, string>
+): Promise<void> {
   if (!supabase || !cachedAuthUserId) return;
 
-  const snapshot = readLocalSnapshot(username);
   const updatedAt = new Date().toISOString();
 
   try {
     const { error } = await supabase.from("user_data").upsert({
       user_id: cachedAuthUserId,
-      data: snapshot,
+      data: { ...values, [META_KEY]: { v: SNAPSHOT_VERSION, updatedAt: times } },
       updated_at: updatedAt,
     });
 
@@ -90,13 +248,54 @@ async function pushToServer(username: string): Promise<void> {
 }
 
 /**
- * Pulls the account's remote data down over local, unless local is already at
- * least as new (guards against clobbering edits made while offline). If no
- * remote row exists yet, this is the account's first-ever sync — bootstrap
- * the server from whatever's already stored locally instead.
+ * Sends this device's values along with the times it believes they carry,
+ * without reading the server first — the cheap path, for the moment the app
+ * is being closed and there may not be time for two round trips.
+ *
+ * Safe despite overwriting the row wholesale, because the times go with it.
+ * If this clobbers a key another device changed more recently, that device
+ * still holds its own newer time for it, sees the row is behind on its next
+ * reconcile, and puts it back. The overwrite corrects itself.
  */
-async function pullFromServer(username: string): Promise<void> {
-  if (!supabase || !cachedAuthUserId) return;
+async function pushToServer(username: string): Promise<void> {
+  await writeRemote(username, readLocalSnapshot(username), readKeyTimes(username));
+}
+
+/**
+ * Pulls the account's remote data down over local. If no remote row exists
+ * yet, this is the account's first-ever sync — bootstrap the server from
+ * whatever's already stored locally instead.
+ *
+ * Whether local is safe to overwrite is decided by whether this device has
+ * anything unpushed, NOT by comparing timestamps. `updated_at` is written by
+ * whichever device pushed, from its own clock, so a phone running even a few
+ * minutes fast would stamp the row into the future and then refuse every
+ * later pull — `lastSyncedAt >= updated_at` would hold forever, and that
+ * device would silently stop receiving the other's changes for good. With
+ * nothing pending, local is by definition what this device last pushed, so
+ * any difference in content means some other device has written since, which
+ * is exactly the question worth asking.
+ *
+ * Returns whether anything on this device actually changed, so a caller that
+ * pulls into an already-rendered app knows whether the screen it's looking at
+ * has gone stale.
+ */
+async function pullFromServer(username: string): Promise<boolean> {
+  if (!supabase || !cachedAuthUserId) return false;
+
+  // Local edits that haven't reached the server outrank anything here —
+  // send them first, or the pull below would overwrite writes that were
+  // never even offered. If that push fails we're offline; leave local alone.
+  if (hasUnpushedChanges(username)) {
+    if (pushTimer) {
+      clearTimeout(pushTimer);
+      pushTimer = null;
+    }
+
+    await pushToServer(username);
+
+    if (hasUnpushedChanges(username)) return false;
+  }
 
   const { data, error } = await supabase
     .from("user_data")
@@ -104,37 +303,131 @@ async function pullFromServer(username: string): Promise<void> {
     .eq("user_id", cachedAuthUserId)
     .maybeSingle();
 
-  if (error) return;
+  if (error) return false;
 
   if (!data) {
     await pushToServer(username);
-    return;
+    return false;
   }
 
-  const lastSyncedAt = localStorage.getItem(lastSyncedKey(username));
+  const local = readLocalSnapshot(username);
+  const localTimes = readKeyTimes(username);
+  const remote = readRemote(
+    data.data as Record<string, unknown>,
+    data.updated_at
+  );
 
-  if (lastSyncedAt && new Date(lastSyncedAt) >= new Date(data.updated_at)) {
-    return;
+  const merged = mergeByKey(local, localTimes, remote.values, remote.times);
+
+  const localChanged = snapshotsDiffer(local, merged.values);
+
+  if (localChanged) {
+    suppressing = true;
+
+    try {
+      writeLocalSnapshot(username, merged.values);
+    } finally {
+      suppressing = false;
+    }
   }
 
-  suppressing = true;
+  writeKeyTimes(username, merged.times);
 
-  try {
-    writeLocalSnapshot(username, data.data as Record<string, string>);
-  } finally {
-    suppressing = false;
+  // Push back whenever the server isn't already holding the merged result —
+  // including when it holds the same values but no times yet, since that row
+  // is the old format and nothing else will upgrade it.
+  if (
+    snapshotsDiffer(remote.values, merged.values) ||
+    (data.data as Record<string, unknown>)[META_KEY] === undefined
+  ) {
+    await writeRemote(username, merged.values, merged.times);
+  } else {
+    originalSetItem(lastSyncedKey(username), data.updated_at);
   }
 
-  originalSetItem(lastSyncedKey(username), data.updated_at);
+  return localChanged;
+}
+
+/**
+ * Pulls when the app comes back to the foreground, so an edit made on another
+ * device shows up without closing and reopening the app. Previously the only
+ * pulls were at boot and just after login, which meant a second device kept
+ * showing whatever it had loaded with.
+ *
+ * Unpushed local edits are sent before anything is taken — pullFromServer
+ * owns that rule, since every entry point into it needs the same thing.
+ *
+ * The guard that belongs here:
+ *
+ * - A pull that actually changed something reloads the page. Nothing in this
+ *   app subscribes to localStorage (every screen reads it during render), so
+ *   an already-mounted screen would otherwise go on showing the values it
+ *   read at mount while storage underneath it says something else. Reloading
+ *   on return to the app is the least disruptive moment there is for it.
+ */
+function pullOnForeground() {
+  if (document.visibilityState !== "visible") return;
+  if (!supabase || !cachedAuthUserId) return;
+
+  const username = getCurrentUsername();
+  if (!username) return;
+
+  const now = Date.now();
+
+  if (now - lastForegroundPullAt < FOREGROUND_PULL_MIN_INTERVAL_MS) return;
+
+  lastForegroundPullAt = now;
+
+  void pullFromServer(username).then((changed) => {
+    if (changed) window.location.reload();
+  });
+}
+
+function hasUnpushedChanges(username: string): boolean {
+  return pushTimer !== null || localStorage.getItem(pendingKey(username)) === "1";
 }
 
 function schedulePush(username: string) {
+  // Marked before the push is even attempted, not just when one fails. A
+  // phone frozen or killed during the debounce below never runs the timer
+  // and never reaches pushToServer's catch, so a flag set only on failure
+  // would leave the edit looking synced when it had never been sent. Set
+  // here, the next launch finds it and retries.
+  originalSetItem(pendingKey(username), "1");
+
   if (pushTimer) clearTimeout(pushTimer);
 
   pushTimer = setTimeout(() => {
     pushTimer = null;
     void pushToServer(username);
   }, PUSH_DEBOUNCE_MS);
+}
+
+/**
+ * Pushes immediately when the app goes away, instead of leaving an edit
+ * sitting in the debounce above. Backgrounding an installed PWA freezes its
+ * JS context — a pending setTimeout simply never fires — so an edit made in
+ * a popup that closes without navigating (height, gender, birth date, a
+ * weigh-in, a logged meal) could stay on the device indefinitely. The paths
+ * that already called flushPendingSync before navigating were the only ones
+ * reliably reaching the server.
+ *
+ * pagehide and visibilitychange both, because neither alone covers every
+ * way a phone puts an app away, and a redundant push is harmless.
+ */
+function flushOnHide() {
+  if (!supabase || !cachedAuthUserId) return;
+
+  const username = getCurrentUsername();
+  if (!username) return;
+  if (!hasUnpushedChanges(username)) return;
+
+  if (pushTimer) {
+    clearTimeout(pushTimer);
+    pushTimer = null;
+  }
+
+  void pushToServer(username);
 }
 
 function onLocalWrite(key: string) {
@@ -148,6 +441,10 @@ function onLocalWrite(key: string) {
   );
 
   if (isSyncedKey) {
+    // Stamped before the push is even scheduled: this is what lets the merge
+    // tell "I changed this" from "I happen to hold this", and it has to
+    // survive the app being killed before the push goes out.
+    recordLocalChange(username, key.slice(0, key.length - username.length - 1));
     schedulePush(username);
   }
 }
@@ -192,6 +489,21 @@ export function initSync() {
   window.addEventListener("online", retryPendingIfAny);
   setInterval(retryPendingIfAny, RETRY_INTERVAL_MS);
 
+  // Whatever last session left unsent — a phone frozen mid-debounce, a push
+  // that failed offline — goes out now, before the pull below can consider
+  // overwriting it.
+  retryPendingIfAny();
+
+  // visibilitychange rather than window focus: it's the one that fires when
+  // an installed PWA is switched back to on a phone, which is where a second
+  // device showing stale data actually bites.
+  document.addEventListener("visibilitychange", pullOnForeground);
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") flushOnHide();
+  });
+  window.addEventListener("pagehide", flushOnHide);
+
   supabase.auth.getSession().then(({ data }) => {
     cachedAuthUserId = data.session?.user.id ?? null;
 
@@ -220,9 +532,40 @@ export async function syncAfterLogin(username: string): Promise<void> {
   }
 }
 
+/**
+ * Removes every synced key for `username` from this device.
+ *
+ * The engines' own reset*() calls are the real wipe — each owns its keys and
+ * knows what "empty" means for them. This is the backstop underneath, so
+ * that "a reset leaves nothing synced behind" holds by construction instead
+ * of by everyone remembering to wire their new key into resetApplication().
+ * The list it walks is the same one that defines what syncing even means, so
+ * the two can't drift apart. A key that was already reset is simply removed
+ * twice.
+ *
+ * Uses the unpatched removeItem: the caller pushes (or deletes the account)
+ * straight after, and there's no point queueing one debounced push per key.
+ */
+export function clearSyncedKeys(username: string) {
+  for (const base of SYNCED_BASE_KEYS) {
+    originalRemoveItem(`${base}:${username}`);
+  }
+}
+
 export function resetSyncMarkers(username: string) {
+  // A push queued by the writes that led here would otherwise fire a second
+  // later, against an account that may no longer exist.
+  if (pushTimer) {
+    clearTimeout(pushTimer);
+    pushTimer = null;
+  }
+
   originalRemoveItem(pendingKey(username));
   originalRemoveItem(lastSyncedKey(username));
+  // Left behind, these would make a freshly created account reusing this
+  // username look like it had already edited every key, so the merge would
+  // prefer its empty values over whatever the server holds.
+  originalRemoveItem(keyTimesKey(username));
 }
 
 /**

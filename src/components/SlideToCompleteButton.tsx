@@ -6,27 +6,37 @@ import {
   useReducedMotion,
   useTransform,
 } from "framer-motion";
-import { Check, ChevronRight } from "lucide-react";
+import { ArrowRight, Check } from "lucide-react";
 
 interface SlideToCompleteButtonProps {
   label: string;
-  onComplete: () => void;
+  // Fires once the handle is dragged all the way to the end (not a
+  // partial-drag threshold — releasing anywhere short of the very end
+  // snaps back to the start instead). The button locks at the end,
+  // showing a checkmark, until the caller either acts on it or resets it
+  // (e.g. by changing this component's `key` to remount it) if whatever
+  // confirmation the caller shows gets cancelled.
+  onReachEnd: () => void;
 }
 
-// Releasing past this fraction of the track snaps forward to complete
-// instead of snapping back to the start.
-const COMPLETE_THRESHOLD = 0.75;
+// Matches the bottom navigation's own pill height (h-17) exactly. At rest
+// the capsule is a circle of this diameter; dragging stretches it — the
+// capsule itself grows, nothing detaches and slides.
+const HANDLE_SIZE = 68;
 
-// How far (in px) into the drag the yellow fill takes to fade fully in —
-// it's fully hidden at rest and eases in as soon as the drag starts.
-const FILL_FADE_IN_DISTANCE = 28;
-
-const HANDLE_SIZE = 84;
-const TRACK_INSET = 4;
+// The capsule's own glass treatment. Not .glass-panel: that class forces
+// position: relative (breaking the absolute placement here) and carries a
+// press-scale :active transform that would fire mid-drag. Same hairline
+// recipe, minus the bottom drop shadow the track already provides.
+const CAPSULE_SHADOW = [
+  "1.25px 0px 1px -0.75px rgb(219 219 219 / 35%)",
+  "-1.25px 0px 1px -0.75px rgb(219 219 219 / 35%)",
+  "0px 0px 0.5px 0.5px rgb(219 219 219 / 30%)",
+].join(", ");
 
 export default function SlideToCompleteButton({
   label,
-  onComplete,
+  onReachEnd,
 }: SlideToCompleteButtonProps) {
   const trackRef = useRef<HTMLDivElement>(null);
   const [maxDrag, setMaxDrag] = useState(0);
@@ -34,14 +44,13 @@ export default function SlideToCompleteButton({
   const prefersReducedMotion = useReducedMotion();
 
   const x = useMotionValue(0);
-  const fillWidth = useTransform(x, (value) => `${TRACK_INSET + HANDLE_SIZE + value}px`);
-  const fillOpacity = useTransform(x, [0, FILL_FADE_IN_DISTANCE], [0, 1]);
+  const capsuleWidth = useTransform(x, (value) => `${HANDLE_SIZE + value}px`);
   const labelOpacity = useTransform(x, [0, Math.max(maxDrag * 0.5, 1)], [1, 0]);
 
   useLayoutEffect(() => {
     function measure() {
       const width = trackRef.current?.getBoundingClientRect().width ?? 0;
-      setMaxDrag(Math.max(width - HANDLE_SIZE - TRACK_INSET * 2, 0));
+      setMaxDrag(Math.max(width - HANDLE_SIZE, 0));
     }
 
     measure();
@@ -55,18 +64,21 @@ export default function SlideToCompleteButton({
   function handleDragEnd() {
     if (completed) return;
 
-    const progress = maxDrag > 0 ? x.get() / maxDrag : 0;
+    // A tiny tolerance for sub-pixel drag-constraint rounding — anything
+    // short of the actual end still snaps all the way back, per the "only
+    // 100% counts" requirement (no partial-drag threshold like before).
+    const reachedEnd = maxDrag > 0 && x.get() >= maxDrag - 1;
     const snapTransition = prefersReducedMotion
       ? { duration: 0 }
       : { type: "spring" as const, stiffness: 420, damping: 38 };
 
-    if (progress >= COMPLETE_THRESHOLD) {
+    if (reachedEnd) {
       setCompleted(true);
 
       animate(x, maxDrag, {
         ...snapTransition,
         onComplete: () => {
-          window.setTimeout(onComplete, 250);
+          window.setTimeout(onReachEnd, 250);
         },
       });
     } else {
@@ -75,52 +87,53 @@ export default function SlideToCompleteButton({
   }
 
   return (
+    // Same pill shape and glass treatment as the bottom navigation bar, so
+    // the two read as one family rather than two different button styles.
     <div
       ref={trackRef}
       role="button"
       aria-label={label}
-      className="glass-panel relative mt-6 h-16 w-full overflow-hidden rounded-2xl"
+      className="glass-panel glass-static relative mt-6 h-17 w-full overflow-hidden rounded-full"
     >
+      {/* The stretching capsule: a circle at rest that elongates with the
+          drag, blurring whatever the page shows underneath it. rounded-full
+          on the element itself keeps the backdrop blur clipped inside the
+          capsule shape (not spilling past its curved leading edge).
+          Deliberately carries no mask-image — WebKit can drop
+          backdrop-filter entirely when it's combined with a mask, and this
+          app has already hit iOS backdrop-filter bugs (see ModalOverlay), so
+          translateZ(0)/will-change is the same GPU-layer promotion
+          ModalOverlay needs to make backdrop-filter paint reliably on iOS. */}
       <motion.div
-        className="pointer-events-none absolute inset-y-0 left-0 bg-avocado-yellow"
+        className="pointer-events-none absolute inset-y-0 left-0 rounded-full bg-white/10 backdrop-blur-[30px]"
         style={{
-          width: fillWidth,
-          opacity: completed ? 1 : fillOpacity,
-          maskImage: "linear-gradient(to right, black 82%, transparent 100%)",
-          WebkitMaskImage: "linear-gradient(to right, black 82%, transparent 100%)",
+          width: capsuleWidth,
+          boxShadow: CAPSULE_SHADOW,
+          transform: "translateZ(0)",
+          willChange: "backdrop-filter",
         }}
       />
 
       <motion.span
-        className="pointer-events-none absolute inset-0 flex items-center justify-center px-16 text-center text-sm font-bold text-white"
+        className="pointer-events-none absolute inset-0 flex items-center justify-center px-20 text-center text-sm font-bold text-white"
         style={{ opacity: completed ? 0 : labelOpacity }}
       >
         {label}
       </motion.span>
 
+      {/* Invisible drag surface riding the capsule's leading edge — it only
+          carries the icon, so the arrow stays centered on the round end of
+          the capsule while the capsule itself does the visual moving. */}
       <motion.div
-        className="absolute top-0 left-1 flex h-16 items-center justify-center"
-        style={{ x, width: HANDLE_SIZE }}
+        className="absolute top-0 left-0 flex items-center justify-center text-white"
+        style={{ x, width: HANDLE_SIZE, height: HANDLE_SIZE }}
         drag={completed ? false : "x"}
         dragConstraints={{ left: 0, right: maxDrag }}
         dragElastic={0.02}
         dragMomentum={false}
         onDragEnd={handleDragEnd}
       >
-        {completed ? (
-          // The fill is solid yellow behind this by the time it shows —
-          // black reads correctly there, matching the app's solid-yellow-CTA
-          // convention (yellow background, black icon/text).
-          <Check size={28} className="text-black" />
-        ) : (
-          // Forced ltr: this row's left-to-right brightest-to-faintest
-          // order must hold regardless of the page's global RTL direction.
-          <div dir="ltr" className="flex items-center">
-            <ChevronRight size={36} className="-mr-4 text-avocado-yellow opacity-100" />
-            <ChevronRight size={36} className="-mr-4 text-avocado-yellow opacity-60" />
-            <ChevronRight size={36} className="text-avocado-yellow opacity-30" />
-          </div>
-        )}
+        {completed ? <Check size={26} /> : <ArrowRight size={26} />}
       </motion.div>
     </div>
   );

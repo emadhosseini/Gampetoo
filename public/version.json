@@ -1,6 +1,923 @@
 {
-  "current": "2.0.1",
+  "current": "1.0.2",
   "history": [
+    {
+      "version": "1.0.2",
+      "date": "2026-08-05",
+      "description": "Two devices used in the same stretch no longer overwrite each other. Until now the whole account was stored and replaced as a single record, so whichever device saved last won outright and everything the other had changed since was thrown away. Each value now carries the moment it last changed, and the two versions are combined value by value, newest of each winning — change your weight on one phone and log a meal on the other and both survive. A value that was deleted stays deleted rather than being restored by the other device. Deliberately built so a phone still running the previous version reads the new records exactly as before: the values sit where they always did and the timestamps ride alongside under a name older versions never look at, because those versions delete any value they don't find, and a nested layout would have made one erase itself.",
+      "highlights": [
+        "🔀 تغییرات هم‌زمان روی دو گوشی دیگه همدیگه رو پاک نمی‌کنن — هر مقدار جداگانه ادغام می‌شه"
+      ]
+    },
+    {
+      "version": "1.0.1",
+      "date": "2026-08-05",
+      "description": "Fixes two ways an edit could fail to reach a second device. An edit made in a popup that closes without navigating — height, gender, birth date, a weigh-in, a logged meal — waited a second before being sent, and backgrounding an installed PWA freezes its JavaScript, so on a phone that timer often never fired and the edit stayed on the device. Edits are now sent the moment the app goes away, and a device marks itself as having unsent changes the instant one is made rather than only after a send fails, so anything caught mid-flight is retried at the next launch. Separately, whether to accept the server's copy was decided by comparing timestamps that each device wrote from its own clock: a phone running even a few minutes fast would stamp the record into the future and then refuse every later update for good. That decision now rests on whether this device has anything unsent, and on whether the content actually differs.",
+      "highlights": [
+        "🔄 تغییرات پروفایل، وزن و وعده‌ها دیگه موقع بستن برنامه از دست نمی‌رن",
+        "⏱️ اختلاف ساعت بین دو گوشی دیگه جلوی همگام‌سازی رو نمی‌گیره"
+      ]
+    },
+    {
+      "version": "1.0.0",
+      "date": "2026-08-05",
+      "description": "First public release. The beta-v3 line becomes the app everyone gets, and the version number resets to 1.0.0 to mark it — note this is a lower number than the 2.0.1 it replaces, which is fine: nothing in the app orders versions, it only asks whether the running one differs from the deployed one. Every piece of account data is stored on the server and follows the account between devices; the only things that stay on a device are the ones that describe the device rather than the account — which account is signed in here, whether this browser has dismissed the install hint, and which changelog it has already shown. A device picks changes up whenever the app returns to the foreground, not only at a cold start — but never while it still has edits of its own the server hasn't accepted, since taking an older snapshot then would lose a write outright.",
+      "highlights": [
+        "🎉 اولین نسخه‌ی رسمی گمپتو",
+        "☁️ همه‌ی اطلاعات حساب روی سرور ذخیره می‌شن و بین دستگاه‌ها همگام می‌مونن",
+        "🔄 تغییرات دستگاه دیگه با برگشتن به برنامه نمایش داده می‌شن، بدون نیاز به بستن و باز کردن"
+      ]
+    },
+    {
+      "version": "2.1.97",
+      "date": "2026-08-05",
+      "description": "The sign-in screen is now a landing page: the brand at the top, a swipeable tour of three app screenshots filling the middle with a caption on each, and ورود / ثبت نام side by side along the bottom edge where a thumb already is. It advances on its own until the first swipe or dot tap, after which it stays where it was put. The login and signup forms keep their centred layout, since a keyboard is about to cover the lower half of the screen there. Upper-body illustrations landed, so that workout day now draws like the others rather than falling back to its emoji, and the side-menu profile row shows the account's avatar — the neutral portrait until a gender is chosen, then that gender's, matching the profile page.",
+      "highlights": [
+        "🚪 صفحه ورود و ثبت‌نام بازطراحی شد با اسلایدر معرفی سه‌تایی",
+        "🏋️ آیکون تمرین Upper Body اضافه شد",
+        "👤 آیکون پروفایل توی منوی کناری اضافه شد — پیش‌فرض تا وقتی جنسیت انتخاب نشده"
+      ]
+    },
+    {
+      "version": "2.1.96",
+      "date": "2026-08-05",
+      "description": "Today's program card and the account avatar now show drawn illustrations instead of emoji, in a male or female version following the account's gender — male until a gender is chosen, and every one of them switches the moment female is picked, because they all resolve through a single lookup with nothing cached per icon. Covers push, pull, legs, lower body, full body and the rest-day walk; an upper-body illustration was not among the supplied files, so that one day still shows its emoji. The fourteen 500px PNGs were re-encoded to 384px WebP — 384 being exactly 128 display pixels at 3x — which took them from 707KB to 293KB, and they are precached with the rest of the app so they are on screen instantly and work offline.",
+      "highlights": [
+        "🏋️ کادر برنامه امروز به‌جای ایموجی، تصویر تمرین همون روز رو نشون می‌ده",
+        "🚻 تصویرها با جنسیت حساب کاربری عوض می‌شن — تا وقتی انتخاب نشده، مرد",
+        "👤 آواتار حساب کاربری هم تصویر شد",
+        "📦 حجم تصویرها از ۷۰۷ به ۲۹۳ کیلوبایت رسید و توی کش آفلاین ذخیره می‌شن"
+      ]
+    },
+    {
+      "version": "2.1.95",
+      "date": "2026-08-05",
+      "description": "The profile page gained a date-of-birth field below weight and height, picked as a Gregorian date on three wheels. It stores the date rather than an age, so the age it feeds the rest of the app is derived on read and can never be a year stale — which a typed age silently becomes on the next birthday. The calorie-goal calculator no longer asks for age and height at all; it reads both from the profile, shows them read-only so the calculation stays inspectable, and says which one is missing when the profile has yet to record it instead of passing its own fallback off as the user's figure. It also stopped writing age and height back, which previously let the calculator's copy quietly overwrite the profile's.",
+      "highlights": [
+        "🎂 تاریخ تولد میلادی توی حساب کاربری اضافه شد و سن خودکار ازش حساب می‌شه",
+        "🧮 توی محاسبه هدف کالری دیگه سن و قد پرسیده نمی‌شه — از پروفایل خونده می‌شه",
+        "👁️ سن و قد استفاده‌شده توی همون صفحه نمایش داده می‌شن تا معلوم باشه محاسبه با چه عددی انجام شده"
+      ]
+    },
+    {
+      "version": "2.1.94",
+      "date": "2026-08-05",
+      "description": "Reworked the headline above every chart on the progress pages. Weight, daily calories and daily activity now open on the week rather than the month, and each range names what it is reporting — today's own figure on the day range, a per-day figure across week and month, a per-month average across 6 months and a year — instead of the generic مجموع/میانگین. Naming them also fixed what they reported: week and month were summing their days, so a week of calories read as one enormous number where the label now promises a daily one. Weight and calorie detail rows were flipped so the numbers align down the left with the labels on the right, each led by its colour dot. The calorie goal now states in parentheses whether it was calculated or entered by hand, which nothing distinguished before. The activity page gained a two-colour split bar showing how the day divided between the workout program and other activity, and was renamed فعالیت روزانه; the water page is now میزان آب دریافتی. The BMI figure and its category are centred in their card.",
+      "highlights": [
+        "📊 وزن، کالری و فعالیت به‌صورت پیش‌فرض روی نمای هفته باز می‌شن",
+        "🏷️ عنوان بالای هر نمودار دقیقاً می‌گه چه عددیه — روزانه یا میانگین ماهیانه",
+        "🔢 توی کادرهای وزن و کالری، عددها سمت چپ و عنوان‌ها سمت راست شدن",
+        "🎯 جلوی هدف کالری روزانه مشخص شده محاسبه‌شده‌ست یا دستی",
+        "🔥 نوار دورنگ توی صفحه فعالیت، سهم برنامه تمرینی و سایر فعالیت‌ها رو نشون می‌ده",
+        "✏️ «فعالیت» شد «فعالیت روزانه» و «آب» شد «میزان آب دریافتی»"
+      ]
+    },
+    {
+      "version": "2.1.93",
+      "date": "2026-08-05",
+      "description": "Burned calories from a workout are no longer written to the day's activity total the instant an exercise is ticked off. Ticking now only marks the exercise; the estimate accumulates untracked and is presented once, when the workout is completed, under the exercise/set summary in the confirmation popup — with a toggle deciding whether it counts toward the day, and a note that the figure is an estimate from the standard MET formula, the logged bodyweight and an assumed per-set duration rather than a measurement. The estimate is now derived from the checklist on demand instead of being accumulated tick by tick, so unchecking an exercise no longer has to reverse a previously written number out, and committing it sets the day's total rather than adding to it, so completing the same workout twice cannot double it.",
+      "highlights": [
+        "🏋️ تیک زدن حرکت‌ها دیگه بلافاصله کالری روز رو تغییر نمی‌ده",
+        "🔥 عدد کالری موقع اتمام تمرین، زیر کادر حرکت و ست نشون داده می‌شه",
+        "🎚️ با یک تاگل خودت تصمیم می‌گیری به کالری سوخته‌شده‌ی اون روز اضافه بشه یا نه",
+        "ℹ️ توضیح داده می‌شه که این عدد تخمینیه و بر اساس فرمول استاندارد MET حساب شده"
+      ]
+    },
+    {
+      "version": "2.1.92",
+      "date": "2026-08-05",
+      "description": "Reworked how a meal is inspected and corrected on the daily log. The \"+\" on a meal card now asks how you want to log the food — manually or with the AI — instead of jumping straight into the manual search, which is what made the AI route effectively invisible from this screen. Tapping anywhere else on the card expands it in place rather than opening a summary popup, and the foods logged for that meal are now listed under the protein/carb/fat/fiber totals they add up to. Tapping any of them opens an editor for its amount, which rescales that entry's calories and macros. Editing works off the amount recorded when the food was added and never off the previous edit's result, so adjusting a portion back and forth returns the exact original numbers instead of drifting a gram at a time.",
+      "highlights": [
+        "➕ دکمه + حالا اول می‌پرسه تکی اضافه کنی یا با هوش مصنوعی",
+        "📖 با لمس کادر وعده، لیست غذاهای ثبت‌شده زیر مقدار پروتئین و کربوهیدرات باز می‌شه",
+        "✏️ با لمس هر غذا می‌تونی مقدارش رو عوض کنی و کالری و درشت‌مغذی‌هاش خودکار حساب می‌شه"
+      ]
+    },
+    {
+      "version": "2.1.91",
+      "date": "2026-08-05",
+      "description": "Swapped in the new background image. Encoded at WebP quality 95 with smart chroma subsampling rather than the ~6KB a lower quality would produce: the image is one large smooth gradient, and the failure mode of over-compressing a gradient is banding — flat plateaus with a visible step between them, worst across the dark lower two thirds on an OLED panel. Measured every candidate encoding against the source pixel by pixel; at q95 the whole frame stays within 5/255 even after the browser upscales it to cover the viewport, so it is 25KB instead of 6KB. That is a one-time fetch since the file is precached, which is the right side of the trade.",
+      "highlights": [
+        "🖼️ پس‌زمینه‌ی جدید جایگزین شد",
+        "✨ با کیفیت بالا فشرده شده تا گرادیان پله‌پله و پیکسلی نشه، مخصوصاً توی قسمت‌های تیره",
+        "📦 ۲۵ کیلوبایت — چون توی کش آفلاین ذخیره می‌شه، فقط یک بار دانلود می‌شه"
+      ]
+    },
+    {
+      "version": "2.1.90",
+      "date": "2026-08-05",
+      "description": "The app-wide background is now the reference image itself rather than a CSS gradient approximating it. The source PNG was 1.1MB, which is far too heavy for something that paints under every screen — re-encoded as WebP it is 9.1KB, a 99% reduction, because a smooth gradient is exactly the kind of image WebP compresses almost to nothing while a PNG stores it pixel by pixel. Also added webp to the service worker's precache patterns, which only covered png/svg/ico before: without it the background would have been the one asset missing from the offline cache, fetched over the network on every cold start.",
+      "highlights": [
+        "🖼️ پس‌زمینه‌ی اپ دقیقاً همون تصویریه که فرستادی، نه یک گرادیان شبیه‌سازی‌شده",
+        "📦 حجمش از ۱.۱ مگابایت به ۹ کیلوبایت رسید (WebP) — بدون افت کیفیت",
+        "📶 توی کش آفلاین هم ذخیره می‌شه، پس از اولین لود به بعد اصلاً دانلود نمی‌شه"
+      ]
+    },
+    {
+      "version": "2.1.89",
+      "date": "2026-08-04",
+      "description": "Matched the quick-add drawer's bottom corners to the bottom nav's own curvature. The drawer used a uniform rounded-3xl (24px) on all four corners, while the pill it overlaps has fully rounded ends (34px, half its height) — so where the two shapes met, the drawer's tighter corner sat visibly inside the bar's wider one instead of following it. The bottom-left and bottom-right corners now use that same radius, so the drawer's edge and the bar's edge are literally the same curve rather than two different ones stacked together.",
+      "highlights": [
+        "🧩 لبه‌های پایین کادر افزودن سریع دقیقاً روی انحنای منوی پایین می‌شینه"
+      ]
+    },
+    {
+      "version": "2.1.88",
+      "date": "2026-08-04",
+      "description": "Reverted the previous version's activity-tile change — 'فعالیت' is back under the flame badge. Also removed the 'پیشرفت' heading from the top of the progress page; the bottom nav already names the page, so the tiles now start right under the safe-area padding.",
+      "highlights": [
+        "🔥 نوشته «فعالیت» به کارت فعالیت برگشت",
+        "🗑️ عنوان «پیشرفت» از بالای صفحه پیشرفت حذف شد"
+      ]
+    },
+    {
+      "version": "2.1.87",
+      "date": "2026-08-04",
+      "description": "Two small layout fixes. Dropped the 'فعالیت' label under the progress page's activity tile — the flame badge and calorie count already say what it is, so the word underneath was redundant with the other three tiles' more informative labels ('مناسب', 'طبیعی', a glass count). Centered the 'کتابخانه تمرین‌ها' heading on the workout-library page, which had been left-aligned by default.",
+      "highlights": [
+        "🔥 نوشته «فعالیت» از زیر کارت فعالیت صفحه پیشرفت حذف شد",
+        "📚 عنوان «کتابخانه تمرین‌ها» وسط‌چین شد"
+      ]
+    },
+    {
+      "version": "2.1.86",
+      "date": "2026-08-04",
+      "description": "Reworked the app-wide background glow to match a reference screenshot: the bright yellow-green glow now anchors at the top-right corner and fades through the mid-tone green into near-black by the bottom, via a radial gradient instead of the previous top-left-to-bottom-right diagonal. Also removed the faint grain texture (NoiseLayer, a 5%-opacity fractal-noise overlay) that sat on top of it everywhere it was used, so the surface is a flat gradient with no added noise, per request.",
+      "highlights": [
+        "🎨 هاله‌ی پس‌زمینه حالا از گوشه‌ی بالا-راست می‌تابه و به سیاه ختم می‌شه، دقیقاً مثل تصویر مرجع",
+        "🧹 لایه‌ی نویز ریز روی پس‌زمینه حذف شد"
+      ]
+    },
+    {
+      "version": "2.1.85",
+      "date": "2026-08-04",
+      "description": "Replaced the AI meal-parsing loading text ('در حال محاسبه...') with a proper waiting indicator: 'منتظر باش' with three dots that build up one at a time and reset, looping while the request is out. Extracted as a shared WaitingDots component so any future screen that waits on an AI response can reuse the same indicator instead of a static string.",
+      "highlights": [
+        "⏳ نشانگر انتظار «منتظر باش ...» جایگزین متن ثابت «در حال محاسبه» شد"
+      ]
+    },
+    {
+      "version": "2.1.84",
+      "date": "2026-08-04",
+      "description": "Fixed account deletion, which was deleting neither the account nor all of its data. It never removed the auth user at all — only signed out — so the username stayed registered forever and could not be used to create a new account. Deleting one now goes through a new delete-account edge function, which is the only place that can do it: removing an auth user requires the service-role key, which must never reach the browser. The function identifies the account from the caller's own token, deletes its data row and then the user itself, and the username is free again. On the data side, three keys survived a delete and came back at the next login: the archived per-day calorie history and the daily calorie target (resetDailyLog only cleared today's meals — this is the leftover calories that were visible after recreating an account), the learned-foods cache (never cleared by anything), and the profile fields, which were cleared only after the emptied snapshot had already been pushed, so the server kept its copy. Underneath all of them, the reset now also sweeps every key the sync layer declares as synced, so a key added later can't quietly survive a reset by being forgotten. Deletion also reports failure instead of pretending: if the server can't be reached the account is left exactly as it was and the reason is shown, rather than wiping the device and leaving the real account behind. The error screen's recovery button is unchanged — it still wipes the data and keeps the account.",
+      "highlights": [
+        "🗑️ پاک کردن حساب حالا واقعاً حساب رو حذف می‌کنه و نام کاربری آزاد می‌شه",
+        "🍽️ تاریخچه‌ی کالری، هدف کالری و غذاهای ذخیره‌شده دیگه بعد از حذف حساب برنمی‌گردن",
+        "☁️ اطلاعات پروفایل (اسم، قد، سن، جنسیت) دیگه روی سرور باقی نمی‌مونه",
+        "⚠️ اگه ارتباط با سرور برقرار نشه، حساب دست‌نخورده می‌مونه و خطا نشون داده می‌شه"
+      ]
+    },
+    {
+      "version": "2.1.83",
+      "date": "2026-08-04",
+      "description": "Turned the calories and activity charts into bar charts. Both are daily totals — an amount belonging to one particular day rather than a value passing through it — so a column per day says what they are, where a line implied a smooth journey between days that never happened. The day, week and month ranges draw one bar per day at that day's own figure, with no averaging anywhere; only the 6-month and year ranges aggregate, one bar per month holding that month's daily average, which is the point of those ranges. The headline number follows the same rule instead of always reading میانگین: the per-day ranges now show مجموع, the sum of the bars on screen, and only the two monthly ranges show an average. Bars need a zero baseline, so those two charts get their own axis that always starts at zero and picks a step fine enough to keep the grid readable — a centred axis would have cut the columns off at the bottom and made a 1900-vs-2000 day look twice as tall. The weight chart is untouched: it's a measurement, not a total, so it keeps its line, its gaps and its average.",
+      "highlights": [
+        "📊 نمودار کالری و فعالیت ستونی شد",
+        "📅 در حالت روز، هفته و ماه هر ستون مقدار همان روز است — بدون میانگین‌گیری",
+        "🗓️ در حالت ۶ ماه و سال هر ستون میانگین روزانه‌ی همان ماه را نشان می‌دهد",
+        "➕ عدد بالای نمودار در بازه‌های روزانه «مجموع» شد و فقط در ۶ ماه و سال «میانگین» می‌ماند"
+      ]
+    },
+    {
+      "version": "2.1.82",
+      "date": "2026-08-04",
+      "description": "Redrew the weight chart as a hand-written SVG instead of chart.js, following Apple Health's visual rules. The Y axis now picks its own step from the spread of the readings in view — under 5kg apart gets 1kg lines, 5 to 10kg gets 2kg, and anything wider gets 5kg — so a week where the weight barely moved is no longer a flat line squashed against the middle of an oversized scale. A far-away goal escalates the step further rather than stacking a dozen gridlines. A day with no weigh-in stays genuinely missing: it gets no dot, and the line runs straight from the last real reading to the next one rather than dipping toward zero, and a range holding a single reading draws that one hollow ring with no line at all. Styling follows Apple: neon purple at 2.5px, hollow rings for the readings, solid faint horizontal gridlines against dashed vertical ones, and the numbers on the right edge. The other charts (calories, activity) still use chart.js — only the weight page swaps in the new component.",
+      "highlights": [
+        "📈 نمودار وزن از نو با SVG اختصاصی و به سبک Apple Health کشیده شد",
+        "📏 فاصله‌ی خطوط محور عمودی هوشمند شد — ۱، ۲ یا ۵ کیلو، بسته به اختلاف وزن‌های همان بازه",
+        "⭕️ روزهای بدون وزن‌کشی دیگر نقطه نمی‌گیرند و خط به سمت صفر سقوط نمی‌کند",
+        "🎨 نقاط توخالی بنفش، خطوط افقی یکدست و خطوط عمودی نقطه‌چین"
+      ]
+    },
+    {
+      "version": "2.1.81",
+      "date": "2026-08-04",
+      "description": "Added a calorie-goal calculator to the daily-calories page. A new block sits directly under the chart: before a target exists it's a single 'محاسبه هدف کالری من' button, and afterwards it shows the number with its goal type and a pencil to edit. The popup collects gender, age, height, weight, activity level and goal, pre-filled from whatever the profile already knows so most people only pick the last two, and previews the resulting number live as the choices change. The logic lives in a new src/utils/calorieEngine.ts: Mifflin-St Jeor BMR, TDEE via the activity multiplier (1.2 / 1.375 / 1.55 / 1.725) and the goal adjustment (-500 / 0 / +300), each exported as a pure function with the persistence kept separate. That engine deliberately does not write emad-daily-calorie-target itself — it hands the result to dailyLogEngine, which already owns that key, so the key keeps exactly one owner and the chart's dashed target line picks the new number up with no extra wiring. The profile inputs likewise go back to the engines that own them, so filling this form in also records today's weight and fills the height the BMI card needs. Age, activity level and goal are new synced keys and are cleared by a factory reset. The manual target stepper stays as an override.",
+      "highlights": [
+        "🧮 محاسبه‌گر هدف کالری اضافه شد — با سن، قد، وزن، جنسیت، سطح فعالیت و هدفت عدد روزانه‌ات رو حساب می‌کنه",
+        "📉 فرمول استاندارد Mifflin-St Jeor برای سوخت‌وساز پایه، ضریب سطح فعالیت برای نیاز روزانه، و کسر/اضافه‌ی هدف",
+        "📊 خط هدف روی نمودار کالری خودکار با همین عدد به‌روز می‌شه",
+        "✍️ اطلاعاتی که وارد می‌کنی وزن امروز و قدت رو هم ثبت می‌کنه، پس کارت BMI هم کامل می‌شه"
+      ]
+    },
+    {
+      "version": "2.1.80",
+      "date": "2026-08-04",
+      "description": "Enabled the month/6-month/year ranges on the activity chart — they showed a 'coming soon' note before — and applied the range fixes to the calories chart properly. Both are daily totals rather than point-in-time measurements, so they now say so: a day with nothing logged counts as zero instead of a hole, which keeps their lines continuous, and a monthly figure divides by the days of that month that have actually elapsed instead of only the days that happened to get logged (a month with three logged days no longer reports itself as if every day had looked like those three). The headline average follows the same rule, so it can no longer disagree with the line drawn right under it. Weight is unchanged: a skipped weigh-in is genuinely missing data, not a zero, so it keeps its gaps and averages only real measurements. A month with nothing logged at all still shows no point rather than a zero, so months from before you started using the app don't draw a flat line.",
+      "highlights": [
+        "📈 بازه‌های ماه، ۶ ماه و سال برای نمودار فعالیت فعال شدن",
+        "🍽️ نمودار کالری هم اصلاح شد — روزهای ثبت‌نشده صفر حساب می‌شن، پس خط نمودار پیوسته‌ست و میانگین ماه واقعاً میانگین روزانه‌ی همون ماهه",
+        "⚖️ نمودار وزن مثل قبل می‌مونه؛ روزی که وزن نکردی داده‌ی گم‌شده‌ست، نه صفر"
+      ]
+    },
+    {
+      "version": "2.1.79",
+      "date": "2026-08-04",
+      "description": "Reworked the stat charts' axes. The Y-axis used to stretch to a distant target line while keeping the data's own step, so a 101kg current weight with an 85kg goal drew ~19 gridlines 1kg apart — the step is now re-picked as the range grows and that case lands on 85/90/95/100/105. Fixed a real pre-existing bug in the same file while verifying it: snapping the centred axis minimum to a step multiple could push the data high enough to fail the top-headroom test at every step, so the loop escalated without ever converging — an ordinary 98-101kg trend produced a -200..400 axis. The minimum now slides back up (never past the data's own minimum, so containment holds) instead of escalating. The date under the average now describes the selected period itself rather than the first/last day that happens to have an entry: the week tab reads as a 7-day window, month as 30 days, and 6-month/year from the first of their oldest month. The 6-month range stopped plotting raw entries and now shows exactly six ticks — the last six month numbers — each the average of what was logged that month, matching the year range; it therefore joins month/year as an aggregated view, so water and activity show their existing 'coming soon' note there until their own bucketing is designed.",
+      "highlights": [
+        "📊 فاصله‌ی خطوط نمودار وزن هوشمند شد — مثلاً با وزن ۱۰۱ و هدف ۸۵ دقیقاً ۵ کیلو ۵ کیلو می‌شه",
+        "🐛 رفع باگ: نمودار در بعضی بازه‌های وزنی محور کاملاً بی‌ربط (مثل ۲۰۰- تا ۴۰۰) نشون می‌داد",
+        "📅 تاریخ زیر میانگین دقیقاً بازه‌ی انتخاب‌شده رو نشون می‌ده، نه روزهایی که داده داشتن",
+        "📆 حالت ۶ ماه حالا شش ستون با شماره‌ی ماه‌ها داره و میانگین هر ماه رو نشون می‌ده"
+      ]
+    },
+    {
+      "version": "2.1.78",
+      "date": "2026-08-04",
+      "description": "The activity report page (opened from the progress page's فعالیت tile) now has a details card matching the daily-log activity tab's split: today's combined total, then برنامه تمرینی and سایر فعالیت‌ها broken out separately. The chart above it now charts the two sources merged together too, so its own میانگین matches this card's total instead of quietly meaning just the manually-logged half.",
+      "highlights": [
+        "📊 صفحه‌ی گزارش فعالیت حالا یک کادر جزئیات داره — مجموع، برنامه تمرینی، و سایر فعالیت‌ها"
+      ]
+    },
+    {
+      "version": "2.1.77",
+      "date": "2026-08-04",
+      "description": "The فعالیت tab in ثبت روزانه — previously a 'coming soon' placeholder — now has two cards: 'کالری سوخته‌شده برنامه تمرینی روزانه', a pure report of today's MET-calculated workout calories (from checking exercises off — see last release), and 'سایر فعالیت‌ها' for everything else, logged manually the same way it already could be from the quick-add drawer. Workout and manual calories are now tracked as two separate daily totals rather than one blended number; the progress page's فعالیت tile still shows their combined sum so nothing there changed.",
+      "highlights": [
+        "🔥 تب «فعالیت» توی ثبت روزانه حالا کالری برنامه تمرینی و سایر فعالیت‌ها رو جدا نشون می‌ده"
+      ]
+    },
+    {
+      "version": "2.1.76",
+      "date": "2026-08-04",
+      "description": "Checking an exercise off during today's workout now estimates and logs the calories it burned, using the standard MET formula (Calories = MET × 3.5 × weightKg / 200 × durationMinutes) against your latest logged weight — added to today's total right alongside manually-logged activity, and reversed automatically if you uncheck it. Every exercise now carries its own metValue (approximate, per the Compendium of Physical Activities' general categories). The formula itself lives in a pure domain function (domain/services/calorieCalculator.ts) with zero UI-layer math, matching this project's existing plain-function engine pattern rather than introducing a new state-management dependency.",
+      "highlights": [
+        "🔥 تیک زدن یک تمرین، کالری سوخته‌شده‌اش رو خودکار به کالری امروز اضافه می‌کنه"
+      ]
+    },
+    {
+      "version": "2.1.75",
+      "date": "2026-08-04",
+      "description": "Added a 'روز شروع برنامه' button to the workout-program settings page, right before 'ذخیره تغییرات'. Tapping it opens a popup with امروز (today) and انتخاب تاریخ (pick a date) — امروز sets the cycle's start date to today right away, and انتخاب تاریخ opens the same Jalali calendar the very first setup screen used to show before program-cycle setup was split out of it. Either way you land back on the program page with the date set and ready to save.",
+      "highlights": [
+        "📅 دکمه‌ی «روز شروع برنامه» قبل از «ذخیره تغییرات» اضافه شد — امروز یا یک تاریخ دلخواه رو انتخاب کن"
+      ]
+    },
+    {
+      "version": "2.1.74",
+      "date": "2026-08-04",
+      "description": "Each exercise card in today's workout now has a toggle to check it off as you finish it — checking one dims that card and sinks it to the bottom of the list (checked exercises still ahead of you stay put and keep their relative order), so the list naturally reorganizes into 'still to do' up top and 'done' at the bottom as you work through it. Checked-off state persists across the session and resets at the same daily rollover as the rest of today's workout state.",
+      "highlights": [
+        "✅ هر کارت تمرین یک تاگل داره — تیک بزن، محو می‌شه و می‌ره ته لیست"
+      ]
+    },
+    {
+      "version": "2.1.73",
+      "date": "2026-08-04",
+      "description": "The program day's workout picker now shows every category card up front — 'استراحت / پیاده‌روی' included, as a card in the same grid instead of a separate pill above it — rather than only the ones with real exercises. Categories (and workouts) with nothing in them yet still show, blurred with 'فعلاً تمرینی برای این وجود نداره' instead of being left out, so the full shape of the library is always visible even before every branch is filled in.",
+      "highlights": [
+        "🎴 استراحت / پیاده‌روی حالا یک کارت توی همون گرید انتخاب برنامه‌ست",
+        "🌫️ دسته‌بندی‌ها و تمرین‌های خالی هم دیده می‌شن، با یک لایه بلر و پیام «فعلاً تمرینی وجود نداره»"
+      ]
+    },
+    {
+      "version": "2.1.72",
+      "date": "2026-08-04",
+      "description": "Two cleanups to the workout library taxonomy: Push/Pull/Legs no longer appear as standalone cards alongside the PPL grouping under بدنسازی و هایپرتروفی — they only live inside PPL now. And گرم کردن تخصصی collapsed from a per-workout breakdown (six near-duplicate cards each pointing at the same destination as the matching main workout) down to one card per category. Then the bigger change: picking a program day's workout no longer uses a flat dropdown — tapping a day now opens the exact same category browser the workout library itself uses, drilling down to the actual workout. Categories/workouts with no exercises yet are automatically left out of this picker (same as before), so it only ever offers something that's actually usable.",
+      "highlights": [
+        "🧹 حذف تکرار Push/Pull/Legs از شاخه اصلی بدنسازی — فقط داخل PPL موندن",
+        "🧹 گرم کردن تخصصی از ۶ کارت تکراری به ۱ کارت در هر دسته ساده شد",
+        "📅 انتخاب برنامه تمرینی هر روز حالا از همون کتابخانه‌ی دسته‌بندی‌شده انجام می‌شه"
+      ]
+    },
+    {
+      "version": "2.1.71",
+      "date": "2026-08-04",
+      "description": "Each meal card in ثبت روزانه now has a small chevron at its bottom that expands an 'ارزش‌های غذایی' panel showing that meal's total protein/carbs/fat/fiber (summed across everything logged for it) — the display side of last release's macro-persistence work. It's the same card growing taller, not a second box, so the top edge never shifts whether it's open or closed.",
+      "highlights": [
+        "📊 هر کارت وعده غذایی حالا یک کشوی «ارزش‌های غذایی» داره که با کلیک باز و بسته می‌شه"
+      ]
+    },
+    {
+      "version": "2.1.70",
+      "date": "2026-08-04",
+      "description": "Logging a food now actually saves its full nutrition breakdown — protein, carbs, fat, and fiber — not just calories, whether it's added manually or via 'افزودن با هوش مصنوعی'. The food database itself already had these per-food (129 local foods, all with real values), and the app was already computing per-serving macros on both add screens, but was throwing everything except calories away the moment it saved the entry. Also added fiber to the AI meal-parsing prompt and its whole pipeline, which previously asked Gemini for calories/protein/carbs/fat but not fiber. Display for this data comes in a follow-up — this only makes sure it's captured and stored.",
+      "highlights": [
+        "🥗 ثبت غذا حالا پروتئین، کربوهیدرات، چربی و فیبر رو هم کامل ذخیره می‌کنه، نه فقط کالری",
+        "🤖 پرامپت هوش مصنوعی هم حالا فیبر رو هم می‌پرسه"
+      ]
+    },
+    {
+      "version": "2.1.69",
+      "date": "2026-08-04",
+      "description": "Rebuilt the workout library as a proper category browser instead of a flat list. The library now opens on six square cards (two per row): بدنسازی و هایپرتروفی، چربی‌سوزی و استقامت، ذهن جسم و انعطاف، هسته بدن و اصلاحی، برنامه‌های ویژه، and گرم کردن — each drilling down (some up to three levels) into the requested sub-categories, ending on the actual workouts. Push/Pull/Legs/Upper/Lower/Full Body and the specialized per-workout warmups keep their real exercise content, reachable from multiple places in the tree (e.g. both directly and inside the PPL/Upper-Lower groupings) since they're the same underlying workout either way. The many newer categories (HIIT, Circuit Training, Pilates, Yoga, Mobility, Home Workout, Bro Split, and the rest) are fully browsable now with a 'coming soon' placeholder where they don't have exercises yet, and stay out of the program-builder's day picker until they do.",
+      "highlights": [
+        "🗂️ کتابخانه تمرین‌ها به یک مرورگر دسته‌بندی‌شده با کارت‌های مربعی بازسازی شد",
+        "🏋️‍♂️🔥🧘‍♀️🩺⚡🌡️ شش دسته‌ی اصلی، هرکدوم با زیرشاخه‌های خودشون تا رسیدن به تمرین واقعی"
+      ]
+    },
+    {
+      "version": "2.1.68",
+      "date": "2026-08-04",
+      "description": "The side menu drawer now uses the exact same glass fill as every popup and card in the app (flat rgb(0 0 0 / 10%) tint, no saturate boost, 25px blur matching ModalOverlay) instead of its own separate iOS-Action-Sheet-style recipe that made it read as a visibly more vividly green, different surface. Also added the current app version as small, muted text at the bottom of the drawer.",
+      "highlights": [
+        "🎨 استایل منوی کناری الان دقیقاً هم‌رنگ و هم‌شفافیت بقیه‌ی پاپ‌آپ‌ها و کادرهاست",
+        "🔢 شماره نسخه‌ی فعلی، کوچیک، پایین منوی کناری اضافه شد"
+      ]
+    },
+    {
+      "version": "2.1.67",
+      "date": "2026-08-04",
+      "description": "The 'افزودن غذا' quick-add shortcut no longer jumps straight into the manual food-search screen after resolving a meal (directly in daily mode, or after picking one in per-meal mode) — it now opens the same overview popup the rest of the app already uses (what's logged so far, plus a choice between 'افزودن تکی خوراکی‌ها' and 'افزودن با هوش مصنوعی'), matching the normal in-app flow of tapping a meal card. Picking either option from there opens the matching screen, same as everywhere else.",
+      "highlights": [
+        "🍽️ شورتکات «افزودن غذا» حالا قبل از افزودن تکی، بین افزودن تکی و هوش مصنوعی می‌ذاره انتخاب کنی"
+      ]
+    },
+    {
+      "version": "2.1.66",
+      "date": "2026-08-04",
+      "description": "Reverted the previous release's fix for the add-food popup's food list: the custom scroll indicator it kept turned out to be the broken one (it stayed static instead of tracking the actual scroll position), and the native scrollbar it hid was the one that actually worked — removed the whole custom indicator and its tracking logic, leaving just the native scrollbar. Separately, every popup in the app now locks the page behind it while open: the page could still be scrolled or touched underneath a popup before (a drag over the popup's own scrollable content that ran past its top/bottom edge would chain into scrolling the page behind it, fighting the popup for the gesture), and now it can't — fixed once in the shared ModalOverlay component all popups are built on, so it applies everywhere at once.",
+      "highlights": [
+        "📜 نوار اسکرول لیست غذا به حالت واقعی و درست برگشت",
+        "🔒 وقتی هر پاپ‌آپی باز باشه، صفحه‌ی پشتش دیگه اسکرول یا لمس نمی‌شه"
+      ]
+    },
+    {
+      "version": "2.1.65",
+      "date": "2026-08-04",
+      "description": "Hid the native browser scrollbar on the add-food popup's food list — it has its own custom thumb indicator already, and the native one was showing alongside it while scrolling, reading as two overlapping scrollbars.",
+      "highlights": [
+        "📜 لیست غذاها توی پاپ‌آپ افزودن غذا دیگه دو تا نوار اسکرول هم‌زمان نشون نمی‌ده"
+      ]
+    },
+    {
+      "version": "2.1.64",
+      "date": "2026-08-04",
+      "description": "The quick-add drawer's 'افزودن غذا' shortcut no longer just navigates to the daily-log page — it now opens the add-food popup directly. In daily calorie-tracking mode it opens straight on the single daily slot, same as before. In per-meal mode, where the shortcut has no meal context to work from, the popup now opens on a meal picker (صبحانه/ناهار/شام/...) first, then shows the usual food search once one is picked.",
+      "highlights": [
+        "🍽️ شورتکات «افزودن غذا» حالا مستقیم پاپ‌آپ افزودن غذا رو باز می‌کنه",
+        "📋 توی حالت ثبت وعده‌ای، اول می‌تونی انتخاب کنی برای کدوم وعده ثبت می‌کنی"
+      ]
+    },
+    {
+      "version": "2.1.63",
+      "date": "2026-08-04",
+      "description": "The quick-add drawer no longer floats above the nav bar with a visible gap (and the toggle button's bump peeking through it) — its rounded panel now extends all the way down to 2px past the bar's own bottom edge, tucking behind it for a seamless overlap instead of stopping short at the bump.",
+      "highlights": [
+        "📋 کادر ثبت سریع حالا دقیقاً از پایین منو شروع می‌شه، بدون فاصله‌ی قابل دیدن"
+      ]
+    },
+    {
+      "version": "2.1.62",
+      "date": "2026-08-04",
+      "description": "Replaced the app-wide background glow — two overlapping radial-gradient blobs anchored to the top corners — with a single smooth diagonal gradient (dark green at the top-left, yellow at the bottom-right), matching a reference image the user sent. Same two colors, same performance profile (still just one CSS gradient, no filters or animation), just one continuous wash instead of two distinct blob shapes.",
+      "highlights": [
+        "🎨 پس‌زمینه‌ی کل اپ حالا یک گرادیان مورب صاف و یکدسته، به‌جای دو تا لکه‌ی نور جدا"
+      ]
+    },
+    {
+      "version": "2.1.61",
+      "date": "2026-08-04",
+      "description": "Swapped the quick-add drawer's 'ثبت وزن' icon from the ⚖️ balance-scale emoji (a courtroom/justice scale, not a bodyweight one) to a small flat pictogram of an actual digital bathroom scale — a light rounded-square body with a dark display near the top.",
+      "highlights": [
+        "⚖️➡️🩶 آیکون «ثبت وزن» توی ثبت سریع حالا شبیه یه ترازوی دیجیتال واقعیه"
+      ]
+    },
+    {
+      "version": "2.1.60",
+      "date": "2026-08-04",
+      "description": "Fixed the water page not updating right after logging from the quick-add shortcut while already on that page. It navigates there after logging, but React Router doesn't remount on a navigate() to the same URL — it just pushes a new history entry — so the page's initial-read state never re-ran and kept showing the pre-log count until you left and came back. It now re-reads the count and goal on every navigation to the page (keyed off the router's per-navigation history key, which changes even for a same-path navigate), so the update shows immediately.",
+      "highlights": [
+        "💧 صفحه‌ی آب حالا بلافاصله بعد از ثبت از ثبت سریع آپدیت می‌شه، بدون نیاز به خروج و برگشت"
+      ]
+    },
+    {
+      "version": "2.1.59",
+      "date": "2026-08-04",
+      "description": "The 'ثبت آب' quick-add shortcut no longer logs one glass and jumps straight to the water page — it now opens a popup with a glass showing the count in its middle and a + / - button on either side, so you can log any number of glasses at once (e.g. after drinking 3 glasses back to back). Confirming adds that number to today's total instead of replacing it.",
+      "highlights": [
+        "💧 دکمه‌ی «ثبت آب» توی ثبت سریع حالا یک پاپ‌آپ باز می‌کنه که می‌تونی تعداد لیوان رو انتخاب کنی و به مقدار امروز اضافه بشه"
+      ]
+    },
+    {
+      "version": "2.1.58",
+      "date": "2026-08-04",
+      "description": "Fixed the water glass showing almost no fill at low counts (1-2 out of 8) and only a thin sliver at 3 out of 8, despite the count and full-glass state both being correct. It was drawing the water as a full-height rectangle clipped to the glass's tapered outline via clip-path: url(#...) — WebKit doesn't reliably repaint that kind of clip-path reference as the clipped rectangle's height keeps changing every animation frame, so it stayed clipped to a stale, near-empty shape at every fill level except the two extremes it happened to render correctly at rest. Replaced it with a directly-computed trapezoid path (both jug shapes: the big glass on the water detail page, and the smaller tile on the progress page) that needs no clip-path at all, so there's nothing left to go stale.",
+      "highlights": [
+        "🥤 لیوان آب حالا هر مقداری که ثبت کنی رو درست و متناسب نشون می‌ده، نه فقط توی حالت خالی یا کامل"
+      ]
+    },
+    {
+      "version": "2.1.57",
+      "date": "2026-08-04",
+      "description": "Swapped the account page's gender avatar from the ♂️/♀️ sign emoji to the 👨/👩 person emoji instead.",
+      "highlights": [
+        "👨👩 آیکون جنسیت توی صفحه حساب کاربری از نماد به ایموجی آدم تغییر کرد"
+      ]
+    },
+    {
+      "version": "2.1.56",
+      "date": "2026-08-04",
+      "description": "The side menu's backdrop no longer darkens the page behind it — it dropped the black tint layer entirely and now relies on the existing blur alone, matching how every other popup in the app (ModalOverlay) already separates itself from the page without a dark scrim. The small profile avatar in the side menu's top row is now a 👤 emoji instead of a plain outline person icon, and the large gender avatar on the account page is now the ♂️/♀️ emoji (👤 before a gender is set) instead of the Mars/Venus line icons — both render in Apple's own emoji style on iOS/macOS.",
+      "highlights": [
+        "🌫️ پس‌زمینه‌ی منوی کناری دیگه تیره نمی‌شه — فقط بلر می‌مونه",
+        "👤 آیکون کوچیک پروفایل توی منو حالا ایموجیه",
+        "♂️♀️ آیکون جنسیت توی صفحه حساب کاربری هم حالا ایموجی اپل شد"
+      ]
+    },
+    {
+      "version": "2.1.55",
+      "date": "2026-08-04",
+      "description": "Reworked the slide-to-complete button's drag visual: instead of a detached circle handle sliding along the track over a separate blurred trail, the pill itself now stretches — at rest it's a 68px circle, and dragging elongates it into a capsule whose right end follows the finger, with the arrow riding centered on the capsule's round leading edge. The backdrop blur is now clipped inside the capsule shape itself (rounded-full on the blurring element) instead of spilling past it as a square-edged trail behind the handle. The capsule carries its own glass hairline (inline, not .glass-panel — that class forces position: relative and a press-scale that would fire mid-drag), and the track gained .glass-static so it no longer press-scales while being dragged. Verified via drag simulation: rest state is a circle with arrow, mid-drag shows the stretched capsule, releasing short of the end snaps back to the circle, full drag fills the track and opens the confirmation popup as before.",
+      "highlights": [
+        "💊 اسلایدر تمرین حالا موقع کشیدن به‌صورت کپسولی کش میاد، به‌جای اینکه دایره جدا حرکت کنه",
+        "🌫️ بلر شیشه‌ای حالا داخل خود کپسول محدوده و بیرونش نمی‌زنه",
+        "➡️ فلش روی لبه‌ی گرد جلوی کپسول می‌مونه و همراهش حرکت می‌کنه"
+      ]
+    },
+    {
+      "version": "2.1.54",
+      "date": "2026-08-03",
+      "description": "Fixed the wheel pickers' unreadable digits: they were text-forest-900 (dark green), which was fine back when the pickers sat on a light surface, but every panel holding one is glass now — dark green on a dark translucent panel was effectively invisible. They are white now, with the off-centre rows lifted from 0.35 to 0.45 opacity so you can still see what you are scrolling toward. Weight entry is now a popup identical to the height one: same shell, title, picker, ذخیره/بستن stack and wording, instead of the separate full page it used to be (the two halves of 'record your measurements' looked like different features). Everywhere that previously navigated to /settings/weight — the profile weight card, the weight detail page's + button, and the quick-add drawer's ثبت وزن — now opens that popup in place. The old page and its route were removed rather than left unreachable.",
+      "highlights": [
+        "🔢 اعداد چرخ‌های وزن و قد دیگه محو نیستن و کاملاً خوانان",
+        "⚖️ ثبت وزن حالا دقیقاً مثل قد یه پاپ‌آپه، نه یک صفحه‌ی جدا"
+      ]
+    },
+    {
+      "version": "2.1.53",
+      "date": "2026-08-03",
+      "description": "Swept the whole codebase for anything still painting a solid green or yellow surface after the 2.1.52 glass conversion, and converted the rest. The program builder's day cards lost their vivid forest-to-lime gradient (the largest solid surface left in the app) and became glass panels; the .day-card-gradient class was deleted rather than left as dead CSS. The meal cards' round add button was the last solid coloured button fill (lime with a black icon) and is now .glass-action with a white icon. The yellow tint circles behind icons in the update prompt, workout header, side-menu avatar and the AI 'تخمینی' badge became glass chips — the icons keep their accent colour, the surfaces don't. The account popup's logout button swapped a hardcoded forest outline for the shared .ghost-action, and the wheel picker's selection band swapped dark forest lines for white ones now that it sits inside a glass modal. Verified by scanning every main screen at runtime: the only element still painting a solid theme colour is the app's own page background, which is the intended base canvas. Yellow now exists solely as a text/icon accent (active nav tab, AI sparkle, warnings); the only remaining coloured fill anywhere is the toggle switch's on-state, which needs colour to signal on/off at all.",
+      "highlights": [
+        "🧹 آخرین سطح‌های سبز و زرد توپُر هم شیشه‌ای شدن — کارت‌های روز برنامه، دکمه‌ی افزودن وعده‌ها و حلقه‌های پشت آیکون‌ها",
+        "🔍 تمام صفحات اسکن شدن؛ تنها رنگ توپُر باقی‌مونده خودِ پس‌زمینه‌ی اپه"
+      ]
+    },
+    {
+      "version": "2.1.52",
+      "date": "2026-08-03",
+      "description": "Finished the glass conversion across the whole app. Every popup still using the old solid-green card (account, height, what's-new, update-available, install hint, workout header/complete, free-meal settings, error screen) now uses the same glass panel as the newer ones, so nothing reads as left over from the previous design. Removed every solid yellow button fill — the primary call-to-action is now a new .glass-action (a lighter fill and brighter rim than .glass-chip, so it still carries CTA weight without a colour outside the system) with white text instead of black, and the picked option in a choice group is .glass-selected (brighter still, plus a full ring, since selected/unselected can no longer lean on yellow-vs-green). .selector-pill became glass as well, and the remaining solid-green surfaces inside popups (steppers, number/unit inputs, changelog rows) became glass chips. The toggle switch's on-state moved from yellow to the palette's lime — with every button fill now glass it would have been the last yellow fill in the app, and lime is already the app's affirmative colour while still contrasting against the white thumb. Yellow survives only as an accent (active nav tab, icon tints), never as a button fill. 'پاک کردن حساب کاربری' is now red, since it's the one irreversible action in that popup and read like neutral secondary text next to logout.",
+      "highlights": [
+        "🪟 همه‌ی پاپ‌آپ‌های سبز قدیمی شیشه‌ای شدن — دیگه جایی از طراحی قبلی باقی نمونده",
+        "🎨 هیچ دکمه‌ای زرد نیست؛ دکمه‌ی اصلی و گزینه‌ی انتخاب‌شده هر دو شیشه‌ای‌ان",
+        "🔴 «پاک کردن حساب کاربری» قرمز شد"
+      ]
+    },
+    {
+      "version": "2.1.51",
+      "date": "2026-08-03",
+      "description": "Fixed the intermittent popup/drawer backdrop blur on iOS for good — the maddening 'sometimes blurred at the agreed strength, sometimes not at all'. Root cause: every popup and the quick-add backdrop rendered inside SideMenu's motion.div, and whether framer-motion leaves a transform on that wrapper at any given moment is timing-dependent; on WebKit a transformed ancestor changes what backdrop-filter may sample, so the blur worked or silently didn't depending on which state the wrapper happened to be in. Two structural fixes: (1) ModalOverlay now renders through a portal to document.body — no transformed ancestor, ever — plus an explicit -webkit-backdrop-filter and a mount ramp (insert at blur(0), switch to blur(25px) two frames later) since WebKit also fails to paint a backdrop-filter already present at DOM insertion; the ramp doubles as a fade-in. (2) The quick-add drawer stopped using backdrop-filter entirely: Layout now puts a real CSS filter blur(15px) on <main> while the drawer is open — a plain filter on the content itself always renders, no sampling dependency to break. Verified: drawer open/close toggles the main filter, modal backdrop is portaled to body at computed blur(25px), tap-outside-to-close and all four quick-add shortcuts unchanged.",
+      "highlights": [
+        "🌫️ بلر پشت پاپ‌آپ‌ها و کشوی افزودن دیگه شانسی نیست — همیشه و با همون شدت توافق‌شده رندر می‌شه",
+        "📖 محتوای پشت کشوی افزودن حالا واقعاً محو می‌شه و نوشته‌ها توی هم نمی‌رن"
+      ]
+    },
+    {
+      "version": "2.1.50",
+      "date": "2026-08-03",
+      "description": "The quick-add circle no longer reads as a disc floating over the bottom navigation — it's now part of the bar's actual shape. The cause was structural: the bar and the circle were two overlapping .glass-panel elements, and each drew its own hairline rim, so the bar's rim ran straight through the circle while the circle's rim closed underneath it. Both are now a single SVG silhouette — a pill unioned with a semicircle centred on its top edge — carrying one continuous fill, one continuous hairline (matching .glass-panel's own values) and a drop-shadow that follows the whole outline, so there are no interior seams left to give it away. The button keeps only the icon and its hit area, with the plus nudged into the bump's exposed half. The path is measured in real pixels via ResizeObserver so the bump stays a true circle at any width. Quick-add drawer behaviour is unchanged (all four shortcuts and tap-outside-to-close re-verified).",
+      "highlights": [
+        "➕ دکمه‌ی گرد افزودن حالا واقعاً بخشی از منوی پایینه، نه یه دایره‌ی جدا روی اون"
+      ]
+    },
+    {
+      "version": "2.1.49",
+      "date": "2026-08-03",
+      "description": "The slide-to-complete button's handle now exactly fills the track's height (68px, no inset gap) instead of sitting slightly smaller with a small border around it. Completing now requires dragging all the way to the literal end — the previous 75%-and-release threshold is gone, so releasing anywhere short of 100% always snaps back to the start. Reaching the end no longer completes the workout immediately: it locks the handle in place and opens a confirmation popup showing today's workout title and exercise/set summary, with its own 'تایید' button — confirming logs the workout and goes home, cancelling snaps the slider back to the start so it can be tried again. The walk/rest-day version still completes immediately on reaching the end (nothing to summarize there). The 'تمرین امروز رو انجام دادی' completed-state box (all three places it can show) is now the same glass pill treatment as the bottom nav and the slider itself, instead of a plain solid-yellow rounded box.",
+      "highlights": [
+        "🎯 اسلایدر تمرین حالا فقط با رسیدن دقیق به ۱۰۰٪ تایید می‌شه، نه یک آستانه‌ی جزئی",
+        "📋 بعد از رسیدن به انتها، پاپ‌آپ خلاصه‌ی تمرین با دکمه تایید باز می‌شه — با انصراف، دوباره میره اول",
+        "⚪ دایره‌ی اسلایدر حالا دقیقاً هم‌قطر نوار زیرشه، بدون فاصله",
+        "✅ کادر «تمرین امروز رو انجام دادی» هم‌شکل نوار پایین شد"
+      ]
+    },
+    {
+      "version": "2.1.48",
+      "date": "2026-08-03",
+      "description": "Restyled the slide-to-complete button to match the bottom navigation bar: same pill shape and glass treatment, with the three yellow chevrons replaced by a single round glass handle holding an arrow, sized and styled like the nav's own round button. Dragging now pulls a 30px blurred trail across the track instead of a yellow fill — it fades in over the first 28px so there's no blurred patch sitting under the handle at rest. The trail deliberately carries no mask-image: WebKit can drop backdrop-filter entirely when combined with a mask (this app has already hit iOS backdrop-filter bugs), so the leading edge is capped by the handle circle instead, and the same GPU-layer promotion ModalOverlay relies on is applied so the blur paints reliably on iOS. Verified drag, release-below-threshold snap-back, and full-drag completion all still work.",
+      "highlights": [
+        "🎚️ اسلایدر «تمرین امروز رو انجام دادم» هم‌شکل منوی پایین شد — دایره‌ای با فلش در سمت چپ",
+        "💫 موقع کشیدن، به‌جای رنگ زرد یک بلر شیشه‌ای تا انتها کشیده می‌شه"
+      ]
+    },
+    {
+      "version": "2.1.47",
+      "date": "2026-08-03",
+      "description": "Water and activity became square tiles too, so the progress page is now a clean 2x2 grid of equally-sized tiles. Built the water feature out properly: the tile draws a glass that literally fills to today's share of the goal, and the water page dropped its chart entirely (a glass count is a small number you top up through the day — 'how full am I now' is the useful view, not a trend line) in favour of a big jug that fills as you log, plus a tappable grid of glasses: tap the glass you're up to and it fills to there, tap the one you're already at to take it back, with +/- buttons for going past the goal. Added a settable daily glass goal (default 8, range 4-16) since a fillable glass grid needs a target to fill toward; it syncs across devices like every other setting. Activity's tile deliberately has no progress ring — unlike calories there's no activity goal, and a ring at some arbitrary fraction would be inventing one. Also fixed a real pre-existing bug: factory reset never cleared the water or activity logs (both were missing from resetApplication). Removed the now-unused StatCard component.",
+      "highlights": [
+        "💧 صفحه‌ی آب کامل بازطراحی شد — لیوان‌ها رو مستقیم لمس کن تا پر بشن، بدون نمودار اضافه",
+        "🎯 هدف روزانه‌ی آب اضافه شد (پیش‌فرض ۸ لیوان) که خودت می‌تونی تغییرش بدی",
+        "📐 حالا هر چهار کارت پیشرفت مربعی و هم‌اندازه‌ان، دو‌تا در هر ردیف",
+        "🐛 رفع باگ: ریست کارخانه‌ای، اطلاعات آب و فعالیت رو پاک نمی‌کرد"
+      ]
+    },
+    {
+      "version": "2.1.46",
+      "date": "2026-08-03",
+      "description": "Compacted the progress page's weight and calories cards into two square tiles sharing one row (weight on the right per RTL order), instead of two full-width stacked cards. Weight lost its 'وزن' title and date line, keeping the BMI dial, the value with its unit, and the colored category. Calories lost its 'کالری روزانه' title and the three-segment percentage bar with its 50%/100% labels and pointer — the intake status now shows as just its colored label under the ring, mirroring the weight tile's layout exactly. The calorie-target subtitle went too, so both tiles read the same way (visual, value, status); the full breakdown still lives one tap away on each detail page. Water and activity stay full-width rows below. Verified both tiles render identically sized (167x188) across logged, partial, and empty states.",
+      "highlights": [
+        "📐 کارت‌های وزن و کالری کوچک و مربعی شدن و کنار هم توی یک ردیف قرار گرفتن",
+        "🧹 عنوان و تاریخ و نوار درصد حذف شدن — فقط نمودار، عدد و وضعیت رنگی موند"
+      ]
+    },
+    {
+      "version": "2.1.45",
+      "date": "2026-08-03",
+      "description": "Rebuilt the BMI readout as a full card matching the user's reference screenshot: the BMI value and its colored category heading, a short explanation of what that category means, and a four-segment color bar (blue/green/amber/red) with the 18.5/25.0/30.0 boundary values printed at the seams, the zone names underneath (active one colored), and a ring marker at the exact BMI position. Segments are equal quarters with piecewise-linear positioning inside each, exactly like the reference — BMI 27.5 lands dead-centre in the اضافه‌وزن segment. Laid out right-to-left per the app's RTL flow (lowest zone at the right edge). Extracted as a shared BmiCard component: it replaces the old one-line BMI box on the profile page and is now also shown on the weight detail page under the target/current-weight panel. Keeps honest fallbacks — names exactly which of weight/height is still missing rather than showing an empty bar.",
+      "highlights": [
+        "📊 کارت BMI بازطراحی شد — نوار رنگی چهاربخشی با نشانگر، مرزهای ۱۸.۵/۲۵/۳۰ و توضیح وضعیتت",
+        "⚖️ همین کارت حالا توی صفحه‌ی وزن هم نمایش داده می‌شه، نه فقط حساب کاربری"
+      ]
+    },
+    {
+      "version": "2.1.44",
+      "date": "2026-08-03",
+      "description": "Performance: eliminated the app's single biggest constant GPU load — the background glow (MeshGradientBackground, present under every screen including login and the error page) was two huge divs with filter: blur(110px) running infinite framer-motion x/y/scale/opacity loops (12s/15s, forever). On iOS WebKit a 110px blur keeps two multi-megapixel intermediate buffers alive and the never-ending animation re-composited them at 60fps, permanently pegging the phone's GPU — hot device even at idle, and seconds of tap latency because every real interaction had to fight the background for GPU time (this, not just the 2.1.43 viewport loop, was the remaining cause of the reported browser hang/heat). Replaced with static radial gradients — a radial gradient IS a soft glow: painted once, no filter, no animation, visually near-identical (verified by screenshot comparison), zero ongoing cost. This was the only infinite animation in the app (verified by grep). Benefits both browser and installed PWA — cooler device and better battery everywhere.",
+      "highlights": [
+        "🔋 هاله‌ی پس‌زمینه دیگه انیمیشن دائمی و بلور سنگین نداره — گوشی خنک می‌مونه و دکمه‌ها فوری جواب می‌دن",
+        "🎨 ظاهر پس‌زمینه تقریباً همون قبلیه، فقط بی‌حرکت"
+      ]
+    },
+    {
+      "version": "2.1.43",
+      "date": "2026-08-03",
+      "description": "Critical fix: opening the app in an iPhone BROWSER tab (Safari/Chrome, not the installed PWA) could peg the CPU — frozen UI, phone heating up. Root cause was a side effect of 2.1.39's viewport-height fix: documentElement.clientHeight was included in the height measurement in every mode, but in an iOS browser tab the layout viewport is routinely taller than the visible area while the URL bar is showing (the classic 100vh quirk). Sizing the app off it made the document scrollable, scrolling collapsed/expanded the toolbar, that fired the (also newly-added) visualViewport resize listener, the measured height flipped between the two values, and the whole app re-laid-out every frame — a genuine feedback loop. The installed PWA was unaffected (no toolbar, all candidates equal), which is why it only showed in the browser. Browser tabs now measure exactly as they did before 2.1.39 (window.innerHeight only); the extra clientHeight/screen.height candidates apply only in iOS standalone mode where the webview always covers the whole screen and they're guaranteed correct. Verified all three prior scenarios still pass (standalone stale clamps to 844, browser tab tracks 800, settled standalone unchanged).",
+      "highlights": [
+        "🔥 رفع باگ مهم: باز کردن اپ توی مرورگر آیفون دیگه باعث هنگ کردن و داغ شدن گوشی نمی‌شه",
+        "✅ اصلاح نسخه ۲.۱.۳۹ برای نسخه نصب‌شده (نوار سیاه پایین) دست‌نخورده سر جاشه"
+      ]
+    },
+    {
+      "version": "2.1.42",
+      "date": "2026-08-03",
+      "description": "Redesigned the progress page's daily-calories card to match the user's second reference screenshot: a circular progress ring (today's total in the hollow, arc and position dot colored by status, dot resting at 12 o'clock when nothing's logged — like the reference) beside a status line ('وضعیت مصرف' + colored کمتر از نیاز/مناسب/بیشتر از هدف) and a three-segment bar with a pointer marking today's intake as a percentage of the calorie target (segments span 0–50–100–150%, labels at the ۵۰٪/۱۰۰٪ boundaries, filling right-to-left per RTL). The ring caps at one lap; the bar's third segment is where over-target overflow shows. Without a calorie target there's no honest percentage, so the ring stays neutral and the bar is replaced by a hint to set one from the calories detail page. New CalorieRingCard component; water/activity cards unchanged.",
+      "highlights": [
+        "🍽️ کارت کالری روزانه هم مثل کارت وزن بازطراحی شد — حلقه پیشرفت دور عدد، وضعیت رنگی و نوار سه‌قسمتی با نشانگر نسبت به کالری هدف"
+      ]
+    },
+    {
+      "version": "2.1.41",
+      "date": "2026-08-03",
+      "description": "Redesigned the progress page's weight card as a Health-style semicircular gauge (per the user's reference screenshot): a segmented BMI dial (four WHO zones — same thresholds as the profile page's BMI card) with the active zone colored (blue/green/amber/red), a white arrow pointing at the exact BMI position computed from the profile's height, the current weight and unit in the dial's hollow, the last-logged date under the title, and the zone name (کم‌وزن/طبیعی/اضافه‌وزن/چاق) colored to match below. Falls back honestly: no height set → value shown with a 'ثبت قد' hint and a neutral dial (no fabricated status); no weight logged → neutral dial with a dash. Tapping still opens the weight detail page. New WeightGaugeCard component; the other three stat cards are unchanged.",
+      "highlights": [
+        "⚖️ کارت وزن صفحه پیشرفت حالا یه گیج نیم‌دایره‌ای شبیه اپ Health داره — عقربه روی وضعیت BMI، رنگ ناحیه و برچسب کم‌وزن/طبیعی/اضافه‌وزن/چاق"
+      ]
+    },
+    {
+      "version": "2.1.40",
+      "date": "2026-08-03",
+      "description": "Fixed the stat detail pages' chart rendering at a stale, too-narrow width in the installed PWA — pushed against the right edge (RTL start-alignment of a canvas narrower than its wrapper) and clipped at the screen edge. Same root cause as the 2.1.39 viewport bug: iOS standalone cold launch lays the page out against a stale viewport and WebKit's late correction doesn't reliably reach chart.js's own ResizeObserver, freezing the canvas at the stale size. StatChartPage now mirrors MobileContainer's exact settle-signal set (staggered timers, resize, orientationchange, pageshow, visualViewport resize) and imperatively calls chart.resize() on each — a no-op when the size is already right. The chart wrapper also gained overflow-hidden so a transiently mis-sized canvas clips inside the panel instead of painting past the screen edge. Verified: baseline canvas exactly spans its wrapper; a forced stale-narrow canvas (270px vs 350px) snaps back to full width on the first settle signal.",
+      "highlights": [
+        "📊 رفع مشکل عرض نمودار صفحات وزن/کالری/آب/فعالیت در نسخه نصب‌شده — دیگه نمودار جمع‌شده و بیرون‌زده از لبه صفحه نمایش داده نمی‌شه"
+      ]
+    },
+    {
+      "version": "2.1.39",
+      "date": "2026-08-03",
+      "description": "Fixed the installed (home-screen) PWA intermittently not filling the full screen — a dead black strip would sometimes appear under the app, because window.innerHeight reports a stale, too-short value on cold launch and after the keyboard closes, and WebKit doesn't reliably fire any event when it later corrects itself. The JS-measured height now (1) also listens to visualViewport resize (keyboard dismissal often only announces itself there, not on window.resize) with an extra late settle timer, and (2) in iOS standalone mode (navigator.standalone, which covers home-screen installs from both Safari and Chrome since both are WebKit) clamps up to screen.height in portrait — a standalone app with viewport-fit=cover always covers the entire screen, so screen.height is correct even while innerHeight is still stale, without waiting on WebKit to catch up. Regular browser-tab behavior is unchanged (verified: container tracks innerHeight exactly there). Verified via simulated standalone (stale innerHeight 800 vs screen 844 → container renders 844).",
+      "highlights": [
+        "📱 رفع مشکل پر نشدن کامل صفحه در نسخه نصب‌شده (PWA) — اون نوار خالی که گاهی پایین اپ می‌موند دیگه پیش نمیاد"
+      ]
+    },
+    {
+      "version": "2.1.38",
+      "date": "2026-08-03",
+      "description": "Added a quick-add drawer to the bottom navigation: a circular '+' button sits centered on the nav pill's top edge and, on tap, a panel rises up from behind it (built by animating height with the panel's bottom edge pinned to the button, so it reads as growing out from behind rather than sliding in) showing four shortcuts — افزودن غذا, ثبت وزن, ثبت آب, ثبت فعالیت — matching the same four domains and icons as the progress page's stat cards. The '+' rotates 45 degrees into an '×' while the drawer is open. A blurred backdrop (same treatment as every other popup in the app) sits behind it for legibility and closes the drawer on tap. Water logs a glass immediately; the rest hand off to their existing add flow (weight page, activity modal, or the daily-log meal tab).",
+      "highlights": [
+        "➕ دکمه‌ی جدید روی نوار پایین برای ثبت سریع — غذا، وزن، آب و فعالیت با یک ضربه",
+        "🔄 دکمه‌ی + هنگام باز شدن کادر، ۴۵ درجه می‌چرخه و به × تبدیل می‌شه"
+      ]
+    },
+    {
+      "version": "2.1.37",
+      "date": "2026-08-03",
+      "description": "Removed workout-day/program selection from the first-run setup screen — it's now login/signup only, and a successful signup or login always lands on the home page instead of being blocked behind program setup. The home page shows a single 'برنامه روزانه تمرینی رو انتخاب کنید' card (in the same visual format as the usual today/tomorrow/status cards) whenever no workout program has been built yet, tapping through to the existing workout-program page. That page now also handles the very first save (defaulting the start date to today and resetting today's session state) alongside its existing day-editing role, so completing it there returns the home page to its normal three-card view immediately.",
+      "highlights": [
+        "🏠 بعد از ثبت‌نام/ورود مستقیم می‌ری صفحه خانه، بدون نیاز به انتخاب برنامه اول",
+        "📋 اگه هنوز برنامه‌ای نساختی، یه کارت «برنامه روزانه تمرینی رو انتخاب کنید» جای کارت‌های همیشگی میاد",
+        "✅ ساخت برنامه از همون صفحه‌ی «برنامه تمرینی» همیشگی انجام می‌شه — بعد از ذخیره، صفحه خانه به حالت عادی برمی‌گرده"
+      ]
+    },
+    {
+      "version": "2.1.36",
+      "date": "2026-08-03",
+      "description": "Added a daily calorie target, mirroring the weight page's target feature exactly: a settable goal (TargetCaloriesModal, 100-calorie steps), a dashed target reference line on the calories chart, a target/current-calories row block, and the goal now shown on the progress overview's calorie card the same way the weight card already does. Water and activity's month/year chart ranges (the 'compressed' bucket-aggregation views) now show an honest 'به زودی این قابلیت اضافه می‌شه' placeholder instead of a chart that hasn't been designed for those units yet — day/week/6-month still work normally. Added a weight-history view: a 'مشاهده و ویرایش تاریخچه وزن' button on the weight detail page opens a list of every logged entry (newest first) with a per-entry delete button, so a mistaken or unwanted weight entry can be removed directly instead of only ever being able to add new ones.",
+      "highlights": [
+        "🎯 کالری روزانه هم مثل وزن، هدف قابل تنظیم و خط هدف روی نمودار داره",
+        "🗑️ صفحه وزن حالا یه تاریخچه کامل داره — هر ثبت رو جدا می‌شه حذف کرد",
+        "🚧 آب و فعالیت توی بازه‌های ماه/سال فعلاً «به زودی اضافه می‌شه» نشون می‌دن به‌جای نمودار نصفه‌کاره"
+      ]
+    },
+    {
+      "version": "2.1.35",
+      "date": "2026-08-03",
+      "description": "Grew the stat detail pages' chart panel further (46% to 58% of the screen). Fixed the Y-axis so a distant target-weight line no longer drags the whole chart's resolution down around it — the axis is now sized from the real data alone (keeping fluctuation visible) and only extended afterward, in fixed steps, just far enough to fit the target in too. Added a hard rule that the highest data point can never sit above two-thirds of the chart height, so the latest/current value always has visible headroom above it instead of pinning to the ceiling. Simplified the day/week/month/6-month x-axis labels to just the day number (dropping the repeated month name on every tick) and the year view's month labels to just the month's 1-12 number instead of its full name.",
+      "highlights": [
+        "📈 کادر و نمودار صفحات جزئیات باز هم بزرگ‌تر شد",
+        "🎯 وزن فعلی دیگه به سقف نمودار نمی‌چسبه، همیشه فضای خالی بالاش می‌مونه",
+        "🏷️ برچسب‌های محور پایین نمودار خلاصه‌تر شدن — فقط عدد روز، و برای سال فقط شماره ماه"
+      ]
+    },
+    {
+      "version": "2.1.34",
+      "date": "2026-08-03",
+      "description": "Removed the old zoomable weight chart from the weight-entry page (/settings/weight) — the weight chart now only lives on the progress detail page. Fixed the progress overview's weight card goal label to say 'وزن هدف: ...' instead of just the bare number. Rebuilt the stat detail pages' Y-axis to always center the data within exactly 4 gridlines instead of floor/ceil-ing outward (which pushed a narrow value range toward the bottom edge), added x-axis offset so a single point renders centered instead of pinned to the plot edge, and gave week/month fixed-width calendar-day buckets (real gaps for days with nothing logged, instead of the chart shrinking to only the days with data) while year now aggregates into 12 monthly-average points. The weight chart also gained a dashed target-weight reference line (the Y-axis now stretches to include the target too, so the gap to goal is visible at a glance), and its panel grew from ~33% to ~46% of the screen since the header/range-selector/average text left almost no room for the chart itself at the old size. Removed the glass-panel press-scale animation's stray hairline along the very top edge of the flush-to-top panel (it's pinned to the screen edge, so a border there read as an unwanted seam) and gave pages built around that panel (all 4 progress detail pages) a way to bleed their background under the safe-area/status-bar strip instead of showing a plain gap above them in the installed PWA.",
+      "highlights": [
+        "📏 نمودارهای صفحه جزئیات همیشه ۴ ردیف نشون می‌دن و نقطه‌ها وسط‌چین می‌شن، نه چسبیده به گوشه",
+        "🎯 نمودار وزن حالا خط نقطه‌چین وزن هدف داره و کادرش بزرگ‌تر شد",
+        "📅 هفته/ماه به بازه‌ی تقویمی ثابت تبدیل شدن (با گپ واقعی برای روزهای ثبت‌نشده)، سال هم ماهانه تجمیع می‌شه",
+        "🐛 رفع گپ/مرز بالای کادر در PWA و حذف نمودار قدیمی از صفحه ثبت وزن"
+      ]
+    },
+    {
+      "version": "2.1.33",
+      "date": "2026-08-03",
+      "description": "Removed the accidental press-scale animation on the progress detail pages' top glass panel and the weight page's target/current-weight box — tapping a nested button (back, +, range pill, target-weight row) was also visibly scaling the whole outer container due to CSS :active bubbling to ancestors. Replaced the progress page's weight card (which embedded its own mini chart, target/current-weight rows, and add-weight button) with a plain stat card matching the calorie/water/activity cards exactly — tap it to open the weight detail page instead. Fixed a real filtering bug in the new stat detail pages' day/week/month/6-month/year range selector: the day range was actually filtering the last 7 days, week was showing 30 days, and month was showing 90 days (each one off by a slot) — day now correctly shows just today, week the last 7 days, and month the last 30.",
+      "highlights": [
+        "🐛 رفع باگ فیلتر بازه‌ی روز/هفته/ماه در نمودارهای صفحه پیشرفت — قبلاً هرکدوم بازه‌ی اشتباهی رو نشون می‌دادن",
+        "🎨 حذف انیمیشن فشرده‌شدن کادر بالای صفحات جزئیات هنگام لمس دکمه‌های داخلش",
+        "⚖️ کارت وزن در صفحه پیشرفت حالا دقیقاً مثل کارت‌های کالری/آب/فعالیت است (بدون نمودار داخلش)"
+      ]
+    },
+    {
+      "version": "2.1.32",
+      "date": "2026-08-03",
+      "description": "Added a real detail page for each of the progress page's four stats (weight, daily calories, water, activity), styled after an iOS Health-app chart: a glass panel flush to the top of the screen (~1/3 of it), a day/week/month/6-month/year range selector, an average value with its date range, and a line chart whose Y-axis never shows more than 3 gridlines or a step finer than the stat's own minimum (1kg for weight). Water and activity had no tracking at all before this — both now have their own history store and a quick-add affordance (water logs a glass in one tap; activity opens a small calorie stepper). Daily calories previously discarded the whole day's log the moment the date rolled over — its final total is now archived into a real history instead, so it can be charted too.",
+      "highlights": [
+        "📈 صفحه‌ی جزئیات برای وزن، کالری روزانه، آب و فعالیت — نمودار به‌سبک اپ Health با انتخاب بازه‌ی زمانی",
+        "💧 ردیابی واقعی آب و فعالیت که قبلاً اصلاً ثبت نمی‌شدن",
+        "🍽️ تاریخچه‌ی واقعی کالری روزانه (قبلاً هر روز پاک می‌شد)"
+      ]
+    },
+    {
+      "version": "2.1.31",
+      "date": "2026-08-02",
+      "description": "Added a third, last-resort fallback to AI meal logging: when a food matches neither the local/learned database nor the external API, Gemini's own nutrition estimate (now requested directly in the parse-meal prompt, alongside name/quantity/unit) is used instead of leaving the item unmatched — clearly labeled 'تخمینی' (estimated) in the results list so it's never confused with a real database value, and still saved to the learned-foods store for next time.",
+      "highlights": [
+        "🤖 وقتی هیچ‌جا پیدا نشه، جمنای خودش تخمین می‌زنه — با برچسب واضح «تخمینی»"
+      ]
+    },
+    {
+      "version": "2.1.30",
+      "date": "2026-08-02",
+      "description": "Fixed the AI meal-parsing edge function's CORS allowlist to also accept dev.gampetoo.com (it was only allowing the production domain and localhost:5173, so requests from the dev domain were silently rejected by the browser). Grew the Iranian food database from 28 to 66 items (missing staples like زیره پلو and drinks/fruit/vegetables like نوشابه, سیب, خیار). The AI matching path now falls back to a live external lookup (the same Open Food Facts API the manual search already uses) when a food isn't in the local database, and permanently saves whatever it finds into the account's own learned-foods list (synced across devices) so future lookups — AI or manual — never repeat the network round-trip. A food that still isn't found anywhere is skipped with a warning instead of blocking the rest of the meal from being logged. Also fixed serving-unit matching ('قاشق' now matches 'قاشق غذاخوری' instead of silently falling back to the wrong default unit).",
+      "highlights": [
+        "🌐 رفع باگ CORS که باعث می‌شد «افزودن با هوش مصنوعی» روی dev.gampetoo.com کار نکنه",
+        "🍽️ دیتابیس غذاهای ایرانی از ۲۸ به ۶۶ مورد رسید (نوشابه، میوه‌ها، سبزیجات و چند غذای اصلی که جا افتاده بودن)",
+        "🌍 وقتی غذایی توی دیتابیس نیست، خودکار آنلاین پیدا و برای همیشه به دیتابیس شخصی‌ات اضافه می‌شه",
+        "⚠️ اگه یکی از غذاها هیچ‌جا پیدا نشه، فقط همون رد می‌شه، نه کل وعده"
+      ]
+    },
+    {
+      "version": "2.1.29",
+      "date": "2026-08-02",
+      "description": "Fixed the AI meal-parsing edge function, which was failing end-to-end: switched from gemini-1.5-flash (doesn't exist for the configured API key) to gemini-flash-lite-latest, the one model that both exists and has working free-tier quota for that key. Verified with a real request through the deployed function. Also committed the Supabase CLI's project scaffolding (config.toml, .gitignore) so the setup is reproducible.",
+      "highlights": [
+        "🤖 «افزودن با هوش مصنوعی» رفع شد — قبلاً مدل جمنای اشتباه بود و همیشه خطا می‌داد"
+      ]
+    },
+    {
+      "version": "2.1.28",
+      "date": "2026-08-02",
+      "description": "Implemented the real logic behind 'افزودن با هوش مصنوعی': the free-text meal description is now sent to a Supabase Edge Function (supabase/functions/parse-meal) that proxies to the Gemini API server-side, keeping the API key off the client bundle entirely (the client never talks to Gemini directly, and the key is never a VITE_* env var). The extracted (name, quantity, unit) items are matched against the app's real local food database (aiFoodMatching.ts, reusing foodSearch.ts's caloriesForServing) and shown as a confirmable itemized list with per-item calories and a total before anything is actually logged; unmatched items are called out separately instead of being silently dropped. Requires the user to deploy the edge function and set the GEMINI_API_KEY secret in their Supabase project — instructions provided separately, since this sandbox has no live Supabase project to deploy to or test the round-trip against.",
+      "highlights": [
+        "🤖 «افزودن با هوش مصنوعی» حالا واقعاً کار می‌کنه — توضیح متنی‌ات رو با Gemini تحلیل می‌کنه و قبل از ثبت، خلاصه‌ی کالری رو نشونت می‌ده",
+        "🔒 کلید API جمنای فقط سمت سرور (Supabase) نگهداری می‌شه، هیچ‌وقت توی اپ فرستاده نمی‌شه"
+      ]
+    },
+    {
+      "version": "2.1.27",
+      "date": "2026-08-01",
+      "description": "Disabled swiping between pages — every bottom-nav tab is its own React Router route, and WKWebView's native edge-swipe-to-navigate-history gesture lives on the same right edge as SideMenu's own open-drawer gesture in this RTL app, so dragging from the edge could pop back to the previous route (visible as two pages caught mid-transition) instead of, or as well as, opening the menu. Added overscroll-behavior-x: none to html, the standard fix for this in Safari/WebKit — SideMenu's own drag-to-open isn't affected since it runs on pointer events it captures directly, not this browser-level gesture. Verified no regression: the side menu still opens via the same edge-drag.",
+      "highlights": [
+        "🚫 سوایپ برای جابه‌جایی بین صفحات غیرفعال شد — فقط منوی کناری این قابلیت رو داره"
+      ]
+    },
+    {
+      "version": "2.1.26",
+      "date": "2026-08-01",
+      "description": "Disabled pinch-zoom and double-tap-zoom app-wide. Two layers, since some browsers ignore the viewport meta's user-scalable=no for accessibility reasons: index.html's viewport meta gained maximum-scale=1.0 and user-scalable=no, and html got touch-action: manipulation in index.css (the more reliable modern approach) — manipulation still permits panning/scrolling, so it doesn't affect the app's scrollable containers or the wheel-pickers' own touch-action: pan-y. Verified no scroll regression on the main page and the wheel-picker.",
+      "highlights": [
+        "🔒 امکان زوم کردن با دو انگشت یا دابل‌تپ از کل نرم‌افزار حذف شد"
+      ]
+    },
+    {
+      "version": "2.1.25",
+      "date": "2026-08-01",
+      "description": "The meal-overview popup's single 'افزودن' button is now two: 'افزودن تکی خوراکی‌ها' (unchanged — opens the existing manual food-search screen) and 'افزودن با هوش مصنوعی', a new free-text entry point (AiMealEntryModal.tsx) with a textarea to describe what was eaten and a 'محاسبه' button. The actual AI calorie calculation isn't built yet, so calculating shows an honest 'این قابلیت به‌زودی تکمیل می‌شه' note instead of fabricating a result — same pattern the app already uses for the not-yet-built فعالیت tab. Both add screens close all the way back to the meal list.",
+      "highlights": [
+        "🤖 یه راه جدید برای ثبت غذا اضافه شد: توضیح متنی + دکمه محاسبه (هوش مصنوعیش به‌زودی تکمیل می‌شه)",
+        "🍽️ دکمه‌ی افزودن قبلی هم موند، فقط اسمش شد «افزودن تکی خوراکی‌ها» تا از حالت جدید مشخص بشه"
+      ]
+    },
+    {
+      "version": "2.1.24",
+      "date": "2026-08-01",
+      "description": "Fixed the calorie-tracking mode switch (side menu) not being reflected immediately on the ثبت روزانه page — the meal tab only read the saved mode once on mount with no shared reactive store, so switching elsewhere left it stale until a manual reload. CalorieModePickerModal now reloads the page after an actual mode change, matching how the rest of the app already handles this (e.g. ProgramBuilderPage). Also: switching modes now warns first if there's anything logged today (window.confirm, same pattern as logout/delete-account) since a per-meal breakdown and a single daily total can't be reconciled into one view — confirming clears today's log (dailyLogEngine's new hasTodaysLoggedEntries/resetDailyLog), canceling leaves the mode and data untouched. No warning when there's nothing to lose.",
+      "highlights": [
+        "🔄 تغییر روش ثبت کالری از منوی کناری حالا بلافاصله توی صفحه‌ی ثبت روزانه اعمال می‌شه",
+        "⚠️ اگه امروز غذایی ثبت کرده باشی، قبل از تغییر روش بهت هشدار می‌ده و در صورت تأیید پاکش می‌کنه"
+      ]
+    },
+    {
+      "version": "2.1.23",
+      "date": "2026-08-01",
+      "description": "Added a selectable calorie-tracking mode: per-meal (existing 9-slot cards) or daily (one unified list, no meal categorization). Both modes write into the exact same dailyLogEngine storage, just under different slot keys — nothing is migrated or deleted when switching, so it's non-destructive by construction. The Progress page's daily-calorie total now sums every logged entry regardless of which mode wrote it (new getTodaysTotalCalories in dailyLogEngine.ts), so it stays correct across a mode switch. A new row in the side menu (SideMenu.tsx) opens a picker to change the mode any time; if it hasn't been chosen yet, the ثبت روزانه page's وعده غذایی tab shows an inline choice prompt first. Verified end to end: logged 381 calories in daily mode, confirmed it appears on the Progress page, switched to per-meal mode via the side menu, confirmed the 9 meal cards render empty (data preserved under its own key, not lost) while the Progress total still correctly shows 381.",
+      "highlights": [
+        "🍽️ حالا می‌تونی روش ثبت کالری رو انتخاب کنی: وعده‌ای (مثل قبل) یا روزانه (یک لیست یکپارچه بدون تقسیم‌بندی وعده)",
+        "⚙️ از منوی کناری هر وقت خواستی روش رو عوض کن — کالری روزانه و آمار پیشرفت با جابه‌جایی بین حالت‌ها بهم نمی‌ریزه"
+      ]
+    },
+    {
+      "version": "2.1.22",
+      "date": "2026-08-01",
+      "description": "Fixed every popup in the app (all of them share ModalOverlay) rendering with no blur behind them on a real iOS device — a screenshot showed the height picker's card sitting directly on top of fully sharp, unblurred page content. Verified the CSS/positioning itself was correct (Chromium renders it fine, backdrop-filter computes to blur(25px) and covers the full viewport) — this is a well-known WebKit bug where backdrop-filter on a position:fixed element intermittently fails to render at all. Forced the blurred backdrop onto its own GPU compositing layer (transform:translateZ(0) + will-change:backdrop-filter), the standard mitigation for this exact bug.",
+      "highlights": [
+        "🐛 رفع باگ نبود بلر پشت پاپ‌اپ‌ها روی آیفون — الان زیر همه‌ی پاپ‌اپ‌های نرم‌افزار درست بلر می‌شه"
+      ]
+    },
+    {
+      "version": "2.1.21",
+      "date": "2026-08-01",
+      "description": "Replaced every plain HTML checkbox in the app with a new shared iOS-style Toggle component (src/components/Toggle.tsx): the specialized-warmup group toggle and per-exercise enable toggle on the workout detail page, and the per-food add toggle plus the per-meal enable toggle on the nutrition plan detail page. The toggle's thumb is anchored at the RTL start (right) edge and slides left when on, matching how iOS actually mirrors switches in RTL locales; widened the meal-row grid's first column (24px to 44px) to fit it.",
+      "highlights": [
+        "🔘 چک‌باکس‌های نرم‌افزار (تمرین‌ها، گرم کردن تخصصی، مواد غذایی، وعده‌های غذایی) به کلید روشن/خاموش شبیه iOS تبدیل شدن"
+      ]
+    },
+    {
+      "version": "2.1.20",
+      "date": "2026-08-01",
+      "description": "Wired up the height card on the account page (previously a static 'not set yet' placeholder): tapping it opens a wheel-picker popup (matching the target-weight picker's iOS-style scroll/snap feel, extracted the shared wheel-column logic into WheelColumn.tsx so both pickers reuse it) and saves the value per-account, synced like every other profile field. Added a BMI card below it, same size/style as the weight and height cards, computed live from the latest logged weight and the saved height, with a WHO-standard category label (کم‌وزن/طبیعی/اضافه‌وزن/چاق) next to the number — shows a prompt to fill in both values first if either is missing.",
+      "highlights": [
+        "📏 دکمه‌ی قد توی صفحه‌ی حساب کاربری فعال شد — با ضربه زدن روش قدت رو ثبت کن",
+        "⚖️ کارت BMI زیر وزن و قد اضافه شد — خودکار از روی وزن و قد محاسبه می‌شه و وضعیتش (طبیعی/اضافه‌وزن و...) رو هم نشون می‌ده"
+      ]
+    },
+    {
+      "version": "2.1.19",
+      "date": "2026-08-01",
+      "description": "The 2.1.18 fix (height:100% cascade) made the standalone-PWA gap worse: it removed the only mechanism (a native dvh recalculation, incidentally triggered whenever the user scrolled) that let the layout self-correct, so the too-short initial height became permanent instead of fixable by scrolling. Replaced it with a JS-measured height: MobileContainer now sizes itself from window.innerHeight in a small hook that re-measures a few times shortly after mount (plus on resize/orientationchange/pageshow), since iOS reports a stale too-short value on a standalone cold launch that only settles after a later layout pass. This reproduces what scrolling used to accidentally trigger, automatically, without the user having to scroll.",
+      "highlights": [
+        "🐛 رفع (این‌بار درست) مشکل فاصله‌ی خالی زیر صفحه در حالت نصب‌شده روی آیفون — بدون نیاز به اسکرول کردن"
+      ]
+    },
+    {
+      "version": "2.1.18",
+      "date": "2026-08-01",
+      "description": "Fixed a black gap below the home indicator (and the bottom nav floating above it, not flush with the screen edge) when the app is opened as an installed home-screen PWA on iOS. Root cause: MobileContainer sized itself with height:100dvh, and WebKit has a long-standing bug where dvh under-reports the true viewport height in standalone display mode. Switched to a height:100% cascade (html/body/#root all explicit height:100%, MobileContainer using h-full instead of h-dvh), which resolves against the WKWebView's actual content bounds instead of the buggy viewport-unit calculation.",
+      "highlights": [
+        "🐛 رفع باگ فاصله‌ی خالی زیر صفحه و ناهم‌راستایی منوی پایین وقتی اپ از روی صفحه‌ی اصلی گوشی (نصب‌شده) باز می‌شه"
+      ]
+    },
+    {
+      "version": "2.1.17",
+      "date": "2026-08-01",
+      "description": "Sped up the mesh-gradient background animation (already active on every page via MobileContainer, plus the setup and error-fallback screens) so the glow movement is more noticeable — both glow blobs' animation cycle roughly halved from 24s/29s to 12s/15s.",
+      "highlights": [
+        "✨ سرعت حرکت افکت پس‌زمینه‌ی میگ گرادینت (فیگما مش) بیشتر شد تا بهتر حس بشه"
+      ]
+    },
+    {
+      "version": "2.1.16",
+      "date": "2026-08-01",
+      "description": "Popup blur set to 25px. Fixed the background behind an open popup still being scrollable by dragging a finger over the empty space around the card — the backdrop now blocks touch panning entirely. Since blocking touch on an ancestor also silently blocks it on any scrollable child nested inside (a real CSS footgun), every popup's backdrop and card were restructured as siblings via a new shared ModalOverlay component, instead of nesting the card inside the backdrop. The add-food popup's food list is now capped to about 4 rows with its own scrollbar and a visible scroll-position indicator next to it.",
+      "highlights": [
+        "🔍 بلر پاپ‌اپ‌ها به ۲۵ پیکسل تنظیم شد",
+        "🚫 دیگه نمی‌شه با کشیدن روی پس‌زمینه، پشت پاپ‌اپ رو اسکرول کرد",
+        "📋 لیست غذاها به ۴ ردیف محدود شد، با اسکرول و نشانگر کنارش"
+      ]
+    },
+    {
+      "version": "2.1.15",
+      "date": "2026-08-01",
+      "description": "Popup blur reduced from 50px to 30px. Removed the press-scale effect from popup card backgrounds (TargetWeightModal, MealOverviewModal, AddMealEntryModal) so they no longer visually react like a button when tapped anywhere on them — only actual buttons inside them still do. Also fixed the add-food popup: its food list wasn't scrollable because only that small inner list had overflow while the surrounding card (and buttons below the list) had none — the whole card now scrolls as one unit so the list and the افزودن/بستن buttons are always reachable.",
+      "highlights": [
+        "🔍 بلر پاپ‌اپ‌ها به ۳۰ پیکسل تنظیم شد",
+        "🚫 حذف واکنش فشرده‌شدن کادر پاپ‌اپ‌ها هنگام لمس",
+        "📜 لیست غذاها توی پاپ‌اپ افزودن به وعده حالا درست اسکرول می‌شه"
+      ]
+    },
+    {
+      "version": "2.1.14",
+      "date": "2026-08-01",
+      "description": "Increased every popup's backdrop blur from 18px to 50px for much clearer separation from the page behind it — still no darkening or color tint.",
+      "highlights": [
+        "🔍 بلر پس‌زمینه‌ی پاپ‌اپ‌ها به ۵۰ پیکسل افزایش پیدا کرد برای خوانایی بهتر"
+      ]
+    },
+    {
+      "version": "2.1.13",
+      "date": "2026-08-01",
+      "description": "Audited every piece of per-account data against the cross-device sync list and found three recently-added features missing from it — target weight, gender, and daily meal/activity log entries were saved locally but would never have reached the server, so they'd be lost on a new device or if local storage were ever cleared. All three are now included in the synced data set alongside everything else (program, workouts, nutrition plan, free-meal tracking, weight log, display name).",
+      "highlights": [
+        "☁️ وزن هدف، جنسیت، و ثبت روزانه حالا مثل بقیه اطلاعات حساب همگام‌سازی می‌شن"
+      ]
+    },
+    {
+      "version": "2.1.12",
+      "date": "2026-07-31",
+      "description": "Built out the progress page: a weight card (mini chart, target-weight and current-weight rows, target set via a picker popup) plus stat cards for daily calories (real total from today's logged meals), water, and activity — all styled with the app's own glass-panel system. Also fixed a real bug found while building this: a popup nested inside a pressable glass-panel card could stop responding to taps after the page scrolled, because CSS :active bubbles up and can turn that ancestor card into a containing block for the popup's fixed positioning — popups now always render as siblings of any card that opens them, and the side menu's own blur filter (which had the same footgun even at zero blur) is now only applied while the drawer is actually animating.",
+      "highlights": [
+        "⚖️ کارت وزن با نمودار، وزن هدف (قابل تنظیم) و وزن فعلی",
+        "🍽️ کارت کالری روزانه با مجموع واقعی از ثبت روزانه، به‌علاوه کارت‌های آب و فعالیت",
+        "🐛 رفع یک باگ واقعی: پاپ‌اپ‌های تودرتوی داخل کارت‌ها بعد از اسکرول قابل لمس نبودن"
+      ]
+    },
+    {
+      "version": "2.1.11",
+      "date": "2026-07-31",
+      "description": "Increased every popup's backdrop blur by another 50% (12px to 18px) for clearer separation from the page behind it, still with no darkening or color tint.",
+      "highlights": [
+        "🔍 بلر پس‌زمینه‌ی پاپ‌اپ‌ها ۵۰٪ بیشتر شد برای خوانایی بهتر"
+      ]
+    },
+    {
+      "version": "2.1.10",
+      "date": "2026-07-31",
+      "description": "Removed the dark bg-black/70 tint behind every popup in the app (account edit, meal overview/add-food, update available, what's new, install hint, forgot-to-log, free-meal settings) — the page behind now only blurs (bumped from a subtle 4px to a clearer 12px), never darkens or takes on any color.",
+      "highlights": [
+        "🩶 پس‌زمینه‌ی همه‌ی پاپ‌اپ‌های اپ فقط بلر می‌شه، دیگه تیره یا رنگی نمی‌شه"
+      ]
+    },
+    {
+      "version": "2.1.9",
+      "date": "2026-07-31",
+      "description": "The daily-log add-food screen's \"بستن\" now closes all the way back to the meal list instead of stopping one level back at the overview screen. Both the add-food and overview popups are now styled with the same glass-panel treatment as the bottom nav (translucent tint, hairline border, soft shadow) instead of the previous solid opaque card.",
+      "highlights": [
+        "🔙 دکمه «بستن» توی افزودن غذا حالا مستقیم برمی‌گرده به لیست وعده‌ها",
+        "✨ ظاهر پاپ‌اپ‌های ثبت روزانه دقیقاً هماهنگ با استایل شیشه‌ای منوی پایین"
+      ]
+    },
+    {
+      "version": "2.1.8",
+      "date": "2026-07-31",
+      "description": "Removed the \"ثبت روزانه\" page title. The hamburger menu button is now only shown on the home page — every other page still opens it via the existing edge-swipe gesture. Each meal card's \"+\" now jumps straight to the food-search add screen, while tapping the rest of the card still opens the logged-items overview first.",
+      "highlights": [
+        "☰ دکمه منوی کناری فقط توی صفحه خانه نمایش داده می‌شه (بقیه صفحات با کشیدن از کنار باز می‌شه)",
+        "➕ دکمه + هر وعده مستقیم می‌ره به افزودن غذا، بقیه کارت لیست ثبت‌شده‌ها رو نشون می‌ده"
+      ]
+    },
+    {
+      "version": "2.1.7",
+      "date": "2026-07-31",
+      "description": "Split the daily-log meal-entry popup into two steps: tapping a whole meal card now opens an overview of what's already logged for it (with a remove button per item and a total), and only its own \"افزودن\" button drills one level deeper into the food-search screen. The card itself is a single button now (the plus icon is decorative), replacing the previous separate add/nutrition-summary buttons.",
+      "highlights": [
+        "📋 کارت هر وعده حالا کامل قابل کلیکه و اول لیست خورده‌شده‌ها رو نشون می‌ده",
+        "🔍 صفحه‌ی جست‌وجوی غذا یک قدم جداگانه‌ست، فقط از دکمه «افزودن» باز می‌شه"
+      ]
+    },
+    {
+      "version": "2.1.6",
+      "date": "2026-07-31",
+      "description": "The daily-log meal-entry popup no longer takes free-typed food names/calories — it now searches the same Iranian/international/gym foods database used by the nutrition plan builder (with the same per-meal suggested foods when the search box is empty), and calories are computed automatically from the selected food's real per-100g values times the chosen serving unit and quantity, instead of being manually typed in.",
+      "highlights": [
+        "🔎 فرم افزودن غذا به «ثبت روزانه» حالا از بانک غذایی واقعی جست‌وجو می‌کنه",
+        "🔢 کالری و واحد شمارش خودکار از روی غذای انتخاب‌شده محاسبه می‌شه"
+      ]
+    },
+    {
+      "version": "2.1.5",
+      "date": "2026-07-31",
+      "description": "Made the side menu's whole profile row a single tappable button (instead of just its chevron icon) and hardened the drawer's drag handling so a plain tap can never be swallowed by the drag-to-close gesture. Added an account-edit popup from the profile page (name, gender, logout, delete account) with a gender-based avatar icon. Merged the separate workout and nutrition pages into one tabbed \"Daily Program\" page, and retired the settings hub (all its shortcuts now live in the side menu/profile) in favor of a new \"Daily Log\" page for meal/activity logging — its meal tab is a fully free-form food diary (log anything, any meal slot, at any time) independent of the prescribed nutrition plan.",
+      "highlights": [
+        "👆 کل ردیف پروفایل توی منو کناری حالا قابل کلیکه",
+        "🙍 پاپ‌اپ ویرایش حساب (اسم، جنسیت، خروج، حذف حساب) با آواتار بر اساس جنسیت",
+        "📅 صفحه‌ی «برنامه روزانه» با تب تمرین/تغذیه به‌جای دو صفحه‌ی جدا",
+        "📝 صفحه‌ی جدید «ثبت روزانه»: دفترچه‌ی آزاد کالری‌شماری، مستقل از برنامه غذایی"
+      ]
+    },
+    {
+      "version": "2.1.4",
+      "date": "2026-07-31",
+      "description": "Added a new Profile page (/profile), opened from the side menu's account row: a header card (avatar, name, a photo placeholder) plus a weight card (shows the latest logged weight, taps through to the existing weight-log/chart page) and a height card (display-only for now — no height storage exists yet).",
+      "highlights": [
+        "🧑 صفحه‌ی پروفایل جدید با کارت وزن (لینک به ثبت وزن) و کارت قد"
+      ]
+    },
+    {
+      "version": "2.1.3",
+      "date": "2026-07-31",
+      "description": "Filled the side menu's placeholder with real content: the account row (avatar, name, a settings shortcut) and three menu rows (workout library, workout program, nutrition program) — all navigable, ported from Figma's own layout and sizing, styled like the rest of the app's cards with 24px corners.",
+      "highlights": [
+        "👤 محتوای واقعی منوی کناری: ردیف پروفایل و لینک‌های کتابخانه تمرین، برنامه تمرینی و برنامه غذایی"
+      ]
+    },
+    {
+      "version": "2.1.2",
+      "date": "2026-07-31",
+      "description": "Restyled the bottom nav as an iOS-style tab bar (Figma's \"Tab Bar - iPhone\" component, node 38:906): the active tab now gets a light selection pill behind it that glides between tabs on switch (a shared framer-motion layoutId animation) instead of just the icon/text changing color. Also added the glass bar's light top-highlight inner shadow from Figma's real Effects panel, alongside the dark top/bottom vignette already in use.",
+      "highlights": [
+        "📱 نوار پایین حالا دقیقاً مثل تب‌بار iOS — هایلایت تب فعال بین تب‌ها سر می‌خوره"
+      ]
+    },
+    {
+      "version": "2.1.1",
+      "date": "2026-07-31",
+      "description": "Added a subtle press-down touch response to the bottom nav's tabs (they previously had zero visual feedback on tap), and suppressed the browser's default tap-highlight flash in favor of it.",
+      "highlights": [
+        "👆 حس لمسی ملایم روی دکمه‌های نوار پایین هنگام تاچ"
+      ]
+    },
+    {
+      "version": "2.1.0",
+      "date": "2026-07-31",
+      "description": "A right-side hamburger menu (currently just a shell, opened by dragging from the right edge or the top-right button) that overlays the page with a blur/dim instead of pushing it aside. Redesigned the bottom nav into a floating glass pill inset from the screen edges instead of a flush-to-edge bar. Ported a glass surface recipe from Figma (flat dark tint, soft hairline, drop shadow, no backdrop blur) onto the bottom nav, the side menu, and every card in the app via .glass-panel/.glass-chip, replacing the old translucent-white 24px-blur treatment app-wide.",
+      "highlights": [
+        "☰ منوی همبرگری جدید از سمت راست (روی صفحه با بلر/تیرگی، بدون هل دادن محتوا)",
+        "💊 نوار پایین حالا یک پیل شیشه‌ای شناوره، نه یک نوار چسبیده به لبه",
+        "✨ ظاهر شیشه‌ای جدید (بر اساس فیگما) روی تمام کارت‌های اپ"
+      ]
+    },
     {
       "version": "2.0.1",
       "date": "2026-07-23",

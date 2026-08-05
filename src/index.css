@@ -10,11 +10,14 @@
   --color-forest-600: #327b3e;
   --color-forest-500: #3b9149;
 
-  /* The mascot icon's yellow (its avocado flesh) — the app's primary button color. */
+  /* The mascot icon's yellow (its avocado flesh). Buttons no longer use it
+     as a fill — every button surface is glass now — so it survives purely
+     as a text/icon accent (the active nav tab, the AI sparkle, warnings). */
   --color-avocado-yellow: #faea5c;
 
-  /* A brighter lime-green, used only as the light end of the day-card
-     gradient (day-card-gradient below). */
+  /* A brighter lime-green. Only the Toggle's on-state still uses it: a
+     switch has to signal on/off with colour, which glass can't do, and
+     lime already reads as "affirmative" in this app. */
   --color-avocado-lime: #9dc730;
 }
 
@@ -41,6 +44,22 @@
 
 html {
   direction: rtl;
+  /* Blocks pinch-zoom and double-tap-zoom everywhere. The viewport meta's
+     user-scalable=no (index.html) covers most browsers, but some ignore it
+     for accessibility reasons — this is the more reliable, modern way to
+     get the same result. "manipulation" (not "none") still permits
+     panning/scrolling, so it doesn't affect any of the app's scrollable
+     containers or the wheel-pickers' own touch-action: pan-y. */
+  touch-action: manipulation;
+  /* Suppresses WKWebView's native edge-swipe-to-navigate-browser-history
+     gesture. Every bottom-nav tab is its own React Router route (pushed to
+     history), and in this RTL app that swipe lives on the same right edge
+     as SideMenu's own open-drawer gesture — without this, dragging from
+     the edge could pop back to the previous route (visible as two pages
+     mid-transition) instead of, or as well as, opening the menu. SideMenu
+     itself isn't affected: its drag handlers already run on pointer events
+     it captures directly, not on this browser-level gesture. */
+  overscroll-behavior-x: none;
 }
 
 body {
@@ -75,30 +94,50 @@ textarea {
   background: var(--color-forest-800);
 }
 
-/* iOS-style frosted glass blocks. .glass-panel is a full translucent card
-   (its own blur, tinted border, soft depth shadow); .glass-chip is the same
-   tint without its own blur, for rows nested inside a .glass-panel that
-   already blurs the background. .glass-tap adds only the press response, for
-   blocks that keep a custom tint (e.g. the amber free-meal card). */
+/* iOS-style glass blocks, ported from the Figma Action Sheet component
+   (same recipe as BottomNavigation.tsx/SideMenu.tsx): a flat dark tint
+   (not a blur — fully transparent, page shows through crisply) plus a
+   soft low-alpha hairline and a drop shadow underneath. .glass-panel is
+   the full card; .glass-chip is a lighter version for rows nested inside
+   one. .glass-tap adds only the press response, for blocks that keep a
+   custom tint (e.g. the amber free-meal card). */
 .glass-panel {
   position: relative;
-  background-color: rgb(255 255 255 / 6%);
-  background-image: linear-gradient(
-    180deg,
-    rgb(255 255 255 / 7%),
-    rgb(255 255 255 / 0%) 65%
-  );
-  backdrop-filter: blur(24px) saturate(160%);
-  -webkit-backdrop-filter: blur(24px) saturate(160%);
-  border: 1px solid rgb(255 255 255 / 10%);
+  background-color: rgb(0 0 0 / 10%);
   box-shadow:
-    inset 0 1px 0 0 rgb(255 255 255 / 10%),
+    1.25px 0px 1px -0.75px rgb(219 219 219 / 35%),
+    -1.25px 0px 1px -0.75px rgb(219 219 219 / 35%),
+    0px 0px 0.5px 0.5px rgb(219 219 219 / 30%),
     0 10px 30px -14px rgb(0 0 0 / 55%);
 }
 
 .glass-chip {
-  background-color: rgb(255 255 255 / 5%);
-  border: 1px solid rgb(255 255 255 / 8%);
+  background-color: rgb(0 0 0 / 8%);
+  box-shadow: 0px 0px 0.5px 0.5px rgb(219 219 219 / 20%);
+}
+
+/* .glass-panel's all-around hairline (the 3rd shadow layer above) draws a
+   thin line across every edge, including the top — wrong for a panel
+   that's flush against the actual top of the screen with nothing above it
+   to seam against (StatChartPage's header panel). Keeps the side hairlines
+   and bottom shadow, drops just the all-around rim. Combine with
+   .glass-panel, applied after it so this box-shadow wins. */
+.glass-panel-flush-top {
+  box-shadow:
+    1.25px 0px 1px -0.75px rgb(219 219 219 / 35%),
+    -1.25px 0px 1px -0.75px rgb(219 219 219 / 35%),
+    0 10px 30px -14px rgb(0 0 0 / 55%);
+}
+
+/* Pulls an element up out of an ancestor's `pt-safe` reservation so its own
+   background can extend flush to the actual top of the screen instead of
+   showing the ancestor's plain background in that strip — compensates its
+   own height by the same amount so its bottom edge doesn't recede. Used by
+   MobileContainer's content wrapper (bleedTop prop) for pages built around
+   a full-bleed top panel. */
+.bleed-top-safe {
+  margin-top: calc(-1 * env(safe-area-inset-top));
+  height: calc(100% + env(safe-area-inset-top));
 }
 
 .glass-panel,
@@ -116,13 +155,50 @@ textarea {
 .glass-tap:active {
   transform: scale(0.965);
   box-shadow:
-    inset 0 1px 0 0 rgb(255 255 255 / 14%),
+    1.25px 0px 1px -0.75px rgb(219 219 219 / 35%),
+    -1.25px 0px 1px -0.75px rgb(219 219 219 / 35%),
+    0px 0px 0.5px 0.5px rgb(219 219 219 / 30%),
     0 4px 14px -10px rgb(0 0 0 / 55%);
 }
 
 .glass-chip:active {
   transform: scale(0.955);
-  background-color: rgb(255 255 255 / 10%);
+  background-color: rgb(0 0 0 / 18%);
+}
+
+/* The primary call-to-action. Used to be a solid avocado-yellow fill with
+   black text; it's now glass like everything else, and earns its "this is
+   the main action" weight from a lighter fill and a brighter rim than
+   .glass-chip rather than from a colour that sits outside the system. */
+.glass-action {
+  background-color: rgb(255 255 255 / 14%);
+  box-shadow:
+    0px 0px 0.5px 0.5px rgb(219 219 219 / 45%),
+    0 8px 20px -12px rgb(0 0 0 / 55%);
+}
+
+.glass-action:active {
+  transform: scale(0.965);
+  background-color: rgb(255 255 255 / 22%);
+}
+
+/* The picked option in a choice group (gender, calorie-tracking mode).
+   Brighter than .glass-action plus a full ring, so "selected" still reads
+   instantly now that the selected/unselected pair can't lean on
+   yellow-vs-green to tell them apart. */
+.glass-selected {
+  background-color: rgb(255 255 255 / 22%);
+  box-shadow: 0 0 0 1.5px rgb(255 255 255 / 55%);
+}
+
+.glass-action,
+.glass-selected {
+  transition:
+    transform 260ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 220ms ease,
+    background-color 220ms ease;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 /* Cancel the press-motion for glass blocks that directly wrap a native form
@@ -133,42 +209,31 @@ textarea {
   transform: none;
 }
 
-@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .glass-panel {
-    background-color: var(--color-forest-700);
-    background-image: none;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .glass-panel,
   .glass-chip,
-  .glass-tap {
+  .glass-tap,
+  .glass-action,
+  .glass-selected {
     transition: none;
   }
 }
 
 /* Interactive-element system, by function:
-   - .day-card-gradient: the editable "day" container (holds a select and a
-     delete action) — a vivid solid gradient, not glass, since it's the
-     thing being directly worked on rather than a passive info card. No
-     press-transform: it wraps smaller controls, and scaling it would shift
-     them out from under the finger mid-tap (see .glass-static above).
-   - .selector-pill: a choice control (native <select>, a toggle in a
-     choice group) — solid, flat, one level lighter than the gradient's
-     dark end so it still reads as "nested inside" the day card.
+   - .selector-pill: a choice control (native <select>, a stepper row, a
+     toggle in a choice group) — glass like the rest of the app, one step
+     lighter than .glass-chip so it still reads as "nested inside"
+     whatever card holds it.
    - .ghost-action: a secondary/optional action (add, cancel) — outline
-     only, no fill, so it never competes with the primary yellow CTA. */
-.day-card-gradient {
-  background: linear-gradient(
-    120deg,
-    var(--color-forest-500) 0%,
-    var(--color-avocado-lime) 100%
-  );
-}
+     only, no fill, so it never competes with the primary CTA.
 
+   (.day-card-gradient lived here too — a vivid forest-to-lime fill for the
+   program builder's day cards. It was the last large solid surface in the
+   app once everything else went glass, so the day cards became .glass-panel
+   and the class was dropped rather than left as dead CSS.) */
 .selector-pill {
-  background-color: var(--color-forest-600);
+  background-color: rgb(255 255 255 / 10%);
+  box-shadow: 0px 0px 0.5px 0.5px rgb(219 219 219 / 25%);
 }
 
 .ghost-action {

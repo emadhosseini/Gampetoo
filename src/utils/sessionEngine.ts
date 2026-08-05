@@ -1,7 +1,17 @@
+import { calculateBurnedCalories } from "@/domain/services/calorieCalculator";
 import { getCurrentProgramDay } from "./programEngine";
+import { getLatestWeight } from "./weightEngine";
 import { scopedKey } from "./userEngine";
 
 const STORAGE_KEY = "emad-session";
+
+// Stand-ins for the two calculateBurnedCalories inputs nothing else in the
+// app tracks yet: a reasonable average adult weight for when the user
+// hasn't logged their own (so the estimate still means something instead
+// of silently doing nothing), and a rough per-set duration (lifting +
+// rest) since no workout timer exists to measure this for real.
+const DEFAULT_WEIGHT_KG = 70;
+const ASSUMED_MINUTES_PER_SET = 2.5;
 
 function storageKey() {
   return scopedKey(STORAGE_KEY);
@@ -12,6 +22,10 @@ export type ActivityType = "workout" | "walk";
 export interface SessionState {
   completed: boolean;
   lastDate: string;
+  // Exercise ids checked off so far in today's workout — resets alongside
+  // `completed` on the same day-rollover check, since a stale checklist
+  // from a previous day's (possibly different) workout would be meaningless.
+  checkedExercises: string[];
 }
 
 function today() {
@@ -22,6 +36,7 @@ function createSession(): SessionState {
   return {
     completed: false,
     lastDate: today(),
+    checkedExercises: [],
   };
 }
 
@@ -51,9 +66,15 @@ export function getSession() {
 
   const session: SessionState = saved;
 
+  // Backfills a session saved before checkedExercises existed.
+  if (!session.checkedExercises) {
+    session.checkedExercises = [];
+  }
+
   if (session.lastDate !== today()) {
     session.completed = false;
     session.lastDate = today();
+    session.checkedExercises = [];
 
     saveSession(session);
   }
@@ -63,6 +84,61 @@ export function getSession() {
     workoutIndex: 0,
     activity: getCurrentProgramDay().activity,
   };
+}
+
+// Toggles one exercise's checked-off-for-today state, keyed by its id
+// (unique within the workout it's shown from). Deliberately touches nothing
+// but the checklist: the burned-calorie estimate is derived from this list
+// on demand (estimateCheckedWorkoutCalories below) and only reaches the
+// day's activity total if the user opts in when completing the workout.
+export function toggleExerciseChecked(exerciseId: string) {
+  const session = parseSession(localStorage.getItem(storageKey())) ?? createSession();
+
+  if (!session.checkedExercises) {
+    session.checkedExercises = [];
+  }
+
+  const wasChecked = session.checkedExercises.includes(exerciseId);
+
+  session.checkedExercises = wasChecked
+    ? session.checkedExercises.filter((id) => id !== exerciseId)
+    : [...session.checkedExercises, exerciseId];
+
+  saveSession(session);
+}
+
+export interface CalorieEstimateInput {
+  id: string;
+  metValue: number;
+  sets: number;
+}
+
+// What the exercises checked off so far are estimated to have burned, via
+// the standard MET formula (domain/services/calorieCalculator.ts).
+//
+// Recomputed from the checklist every time rather than kept as a running
+// total, so it can't drift out of step with it — unchecking an exercise, or
+// editing its set count in the library mid-workout, is reflected simply by
+// the next call returning a different number, with nothing to reverse.
+export function estimateCheckedWorkoutCalories(
+  exercises: CalorieEstimateInput[],
+  checkedExerciseIds: string[],
+): number {
+  const checked = new Set(checkedExerciseIds);
+  const weightKg = getLatestWeight() ?? DEFAULT_WEIGHT_KG;
+
+  return exercises
+    .filter((exercise) => checked.has(exercise.id))
+    .reduce(
+      (sum, exercise) =>
+        sum +
+        calculateBurnedCalories(
+          exercise.metValue,
+          weightKg,
+          exercise.sets * ASSUMED_MINUTES_PER_SET,
+        ),
+      0,
+    );
 }
 
 export function saveSession(session: SessionState) {

@@ -2,6 +2,7 @@ import { ChevronDown, Minus, Plus } from "lucide-react";
 import { useState } from "react";
 import { useParams } from "react-router-dom";
 
+import Toggle from "@/components/Toggle";
 import { getWorkout, saveWorkoutExercises } from "@/store/workoutLibraryStore";
 import {
   getSpecializedWarmup,
@@ -117,11 +118,9 @@ export default function WorkoutDetailPage() {
                     className="glass-chip glass-static rounded-xl p-4"
                   >
                     <div className="flex items-center gap-3">
-                      <input
-                        type="checkbox"
+                      <Toggle
                         checked={group.enabled}
                         onChange={() => toggleWarmupGroup(group.id)}
-                        className="h-5 w-5 shrink-0"
                       />
 
                       <span className="flex-1 font-medium">
@@ -145,6 +144,14 @@ export default function WorkoutDetailPage() {
                 ))}
               </div>
             )}
+          </div>
+        )}
+
+        {groups.length === 0 && (
+          <div className="glass-panel rounded-2xl p-6 text-center">
+            <p className="text-white">
+              حرکتی برای این تمرین هنوز اضافه نشده — به‌زودی اضافه می‌شه.
+            </p>
           </div>
         )}
 
@@ -185,15 +192,13 @@ export default function WorkoutDetailPage() {
                           workout.id === "warmup" ? "" : "mb-4"
                         }`}
                       >
-                        <input
-                          type="checkbox"
+                        <Toggle
                           checked={exercise.enabled}
                           onChange={() =>
                             updateExercise(group.id, exercise.id, {
                               enabled: !exercise.enabled,
                             })
                           }
-                          className="h-5 w-5 shrink-0"
                         />
 
                         <span className="flex-1 font-medium">
@@ -277,12 +282,14 @@ export default function WorkoutDetailPage() {
         })}
       </div>
 
-      <button
-        onClick={handleSave}
-        className="glass-tap w-full rounded-2xl bg-avocado-yellow py-4 text-lg font-bold text-black"
-      >
-        {saved ? "ذخیره شد ✅" : "ذخیره"}
-      </button>
+      {(groups.length > 0 || specializedWarmup) && (
+        <button
+          onClick={handleSave}
+          className="w-full glass-action rounded-2xl py-4 text-lg font-bold text-white"
+        >
+          {saved ? "ذخیره شد ✅" : "ذخیره"}
+        </button>
+      )}
     </div>
   );
 }

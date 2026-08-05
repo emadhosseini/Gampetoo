@@ -1,6 +1,7 @@
 import { scopedKey } from "./userEngine";
 
 const STORAGE_KEY = "emad-weight-log";
+const TARGET_KEY = "emad-weight-target";
 
 export interface WeightEntry {
   id: string;
@@ -64,6 +65,26 @@ export function logWeight(weight: number, date: string = today()): WeightEntry[]
   return entries;
 }
 
+export function deleteWeightEntry(id: string): WeightEntry[] {
+  const entries = getWeightLog().filter((entry) => entry.id !== id);
+
+  saveWeightLog(entries);
+
+  return entries;
+}
+
+export function getTargetWeight(): number | null {
+  const saved = localStorage.getItem(scopedKey(TARGET_KEY));
+  const parsed = saved ? Number(saved) : NaN;
+
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+export function setTargetWeight(weight: number) {
+  localStorage.setItem(scopedKey(TARGET_KEY), String(round2(weight)));
+}
+
 export function resetWeightLog() {
   localStorage.removeItem(storageKey());
+  localStorage.removeItem(scopedKey(TARGET_KEY));
 }

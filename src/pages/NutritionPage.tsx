@@ -42,7 +42,7 @@ export default function NutritionPage() {
 
           <button
             onClick={() => navigate("/settings/nutrition")}
-            className="mt-4 rounded-xl bg-avocado-yellow px-5 py-3 text-sm font-semibold text-black"
+            className="mt-4 rounded-xl glass-action px-5 py-3 text-sm font-semibold text-white"
           >
             رفتن به تنظیمات برنامه غذایی
           </button>
