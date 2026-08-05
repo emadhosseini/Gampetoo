@@ -12,18 +12,22 @@ import WhatsNewNotifier from "@/components/WhatsNewNotifier";
 import DomainMigrationNotice from "@/components/DomainMigrationNotice";
 
 import HomePage from "@/pages/HomePage";
-import WorkoutPage from "@/pages/WorkoutPage";
-import NutritionPage from "@/pages/NutritionPage";
-import SettingsPage from "@/pages/SettingsPage";
+import DailyProgramPage from "@/pages/DailyProgramPage";
+import ProgressPage from "@/pages/ProgressPage";
+import DailyLogPage from "@/pages/DailyLogPage";
 import SetupProgramPage from "@/pages/SetupProgramPage";
 import WorkoutLibraryPage from "@/pages/WorkoutLibraryPage";
+import WorkoutCategoryPage from "@/pages/WorkoutCategoryPage";
 import WorkoutDetailPage from "@/pages/WorkoutDetailPage";
 import ProgramBuilderPage from "@/pages/ProgramBuilderPage";
 import NutritionPlanLibraryPage from "@/pages/NutritionPlanLibraryPage";
 import NutritionPlanDetailPage from "@/pages/NutritionPlanDetailPage";
-import WeightTrackerPage from "@/pages/WeightTrackerPage";
+import ProfilePage from "@/pages/ProfilePage";
+import WeightDetailPage from "@/pages/WeightDetailPage";
+import CaloriesDetailPage from "@/pages/CaloriesDetailPage";
+import WaterDetailPage from "@/pages/WaterDetailPage";
+import ActivityDetailPage from "@/pages/ActivityDetailPage";
 
-import { hasStartDate } from "@/utils/programEngine";
 import { hasCurrentUsername } from "@/utils/userEngine";
 import { initSync } from "@/sync/remoteSync";
 
@@ -43,7 +47,7 @@ export default function App() {
 function AppRoutes() {
   useLocation();
 
-  const initialized = hasCurrentUsername() && hasStartDate();
+  const initialized = hasCurrentUsername();
 
   if (!initialized) {
     return (
@@ -70,23 +74,28 @@ function AppRoutes() {
         />
 
         <Route
-          path="/workout"
-          element={<WorkoutPage />}
+          path="/daily-program"
+          element={<DailyProgramPage />}
         />
 
         <Route
-          path="/nutrition"
-          element={<NutritionPage />}
+          path="/progress"
+          element={<ProgressPage />}
         />
 
         <Route
-          path="/settings"
-          element={<SettingsPage />}
+          path="/daily-log"
+          element={<DailyLogPage />}
         />
 
         <Route
           path="/settings/workouts"
           element={<WorkoutLibraryPage />}
+        />
+
+        <Route
+          path="/settings/workouts/browse/*"
+          element={<WorkoutCategoryPage />}
         />
 
         <Route
@@ -110,8 +119,28 @@ function AppRoutes() {
         />
 
         <Route
-          path="/settings/weight"
-          element={<WeightTrackerPage />}
+          path="/profile"
+          element={<ProfilePage />}
+        />
+
+        <Route
+          path="/progress/weight"
+          element={<WeightDetailPage />}
+        />
+
+        <Route
+          path="/progress/calories"
+          element={<CaloriesDetailPage />}
+        />
+
+        <Route
+          path="/progress/water"
+          element={<WaterDetailPage />}
+        />
+
+        <Route
+          path="/progress/activity"
+          element={<ActivityDetailPage />}
         />
       </Route>
 

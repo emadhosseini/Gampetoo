@@ -1,11 +1,19 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { getWorkoutOptions } from "@/store/workoutLibraryStore";
+import WorkoutPickerModal from "@/components/WorkoutPickerModal";
+import StartDateModal from "@/components/StartDateModal";
+import { getWorkout } from "@/store/workoutLibraryStore";
 import { getActiveProgram, updateProgram } from "@/utils/programEngine";
+import { resetSession } from "@/utils/sessionEngine";
 import { generateId } from "@/utils/id";
 import type { WorkoutDay, WorkoutType } from "@/types/program";
 import { toFaDigits } from "@/utils/numberFormat";
+import { formatJalaliFull } from "@/utils/dateFormat";
+
+function today(): string {
+  return new Date().toISOString().split("T")[0];
+}
 
 const persianDays = [
   "اول",
@@ -23,12 +31,23 @@ const persianDays = [
 function ProgramBuilderPage() {
   const navigate = useNavigate();
 
-  const workouts = getWorkoutOptions();
   const program = getActiveProgram();
+  // No startDate yet means this is the very first time a program is being
+  // built (the home page's "select a program" card led here) rather than
+  // an existing program being edited later.
+  const isFirstTime = !program.startDate;
 
   const [days, setDays] = useState<WorkoutDay[]>(() =>
     program.workout.days.map((day) => ({ ...day }))
   );
+  // Which day's WorkoutPickerModal is open — index into `days`, or null
+  // when closed.
+  const [pickerDayIndex, setPickerDayIndex] = useState<number | null>(null);
+  // Empty until explicitly chosen via StartDateModal — handleSave falls
+  // back to program.startDate (an existing cycle's own date, untouched) or
+  // today (brand new cycle, never asked) when this is still empty.
+  const [startDate, setStartDate] = useState("");
+  const [startDateModalOpen, setStartDateModalOpen] = useState(false);
 
   function updateDayWorkout(
     index: number,
@@ -39,7 +58,7 @@ function ProgramBuilderPage() {
         if (i !== index) return day;
 
         const workoutTitle = workoutId
-          ? workouts.find((w) => w.id === workoutId)?.title ?? ""
+          ? (getWorkout(workoutId)?.title ?? "")
           : "استراحت";
 
         return {
@@ -71,27 +90,39 @@ function ProgramBuilderPage() {
   function handleSave() {
     updateProgram({
       ...program,
+      // Explicitly picked via the "روز شروع برنامه" button takes priority;
+      // otherwise an existing cycle's own startDate is left untouched (so
+      // editing days later doesn't shift it), falling back to today only
+      // for a brand new cycle that was never asked.
+      startDate: startDate || program.startDate || today(),
       workout: {
         ...program.workout,
         days,
       },
     });
 
-    navigate("/settings");
+    // Only on the very first save — resetting session state (today's
+    // completed flag) on a later edit would wipe a workout the user
+    // already did today just because they tweaked a day's exercise.
+    if (isFirstTime) {
+      resetSession();
+    }
+
+    navigate("/");
   }
 
   return (
     <div className="space-y-6 px-5 pb-5 pt-10">
       <div className="mb-6 mt-4 text-center">
         <h1 className="text-3xl font-bold">
-          تغییر برنامه تمرینی
+          {isFirstTime ? "برنامه تمرینی روزانه رو بساز" : "تغییر برنامه تمرینی"}
         </h1>
       </div>
 
       {days.map((day, index) => (
         <div
           key={day.id}
-          className="day-card-gradient rounded-2xl p-4"
+          className="glass-panel glass-static rounded-2xl p-4"
         >
           <div className="flex items-center justify-between">
             <div className="text-lg font-bold text-white">
@@ -107,29 +138,12 @@ function ProgramBuilderPage() {
             </button>
           </div>
 
-          <select
-            className="selector-pill mt-3 w-full rounded-xl p-3 font-bold text-white"
-            value={day.workoutId ?? ""}
-            onChange={(e) => {
-              updateDayWorkout(
-                index,
-                e.target.value === ""
-                  ? null
-                  : (e.target.value as WorkoutType)
-              );
-            }}
+          <button
+            onClick={() => setPickerDayIndex(index)}
+            className="selector-pill mt-3 w-full rounded-xl p-3 text-right font-bold text-white"
           >
-            <option value="">استراحت / پیاده‌روی</option>
-
-            {workouts.map((workout) => (
-              <option
-                key={workout.id}
-                value={workout.id}
-              >
-                {workout.title}
-              </option>
-            ))}
-          </select>
+            {day.workoutId ? day.title : "استراحت / پیاده‌روی"}
+          </button>
         </div>
       ))}
 
@@ -141,11 +155,37 @@ function ProgramBuilderPage() {
       </button>
 
       <button
-        onClick={handleSave}
-        className="w-full rounded-2xl bg-avocado-yellow py-4 text-lg font-bold text-black"
+        onClick={() => setStartDateModalOpen(true)}
+        className="selector-pill w-full rounded-2xl py-4 text-center font-bold text-white"
       >
-        ذخیره تغییرات
+        {startDate
+          ? `شروع از ${formatJalaliFull(startDate)}`
+          : "روز شروع برنامه"}
       </button>
+
+      <button
+        onClick={handleSave}
+        disabled={days.length === 0}
+        className="w-full rounded-2xl glass-action py-4 text-lg font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
+      >
+        {isFirstTime ? "شروع برنامه" : "ذخیره تغییرات"}
+      </button>
+
+      <WorkoutPickerModal
+        open={pickerDayIndex !== null}
+        onClose={() => setPickerDayIndex(null)}
+        onPick={(workoutId) => {
+          if (pickerDayIndex !== null) {
+            updateDayWorkout(pickerDayIndex, workoutId as WorkoutType | null);
+          }
+        }}
+      />
+
+      <StartDateModal
+        open={startDateModalOpen}
+        onClose={() => setStartDateModalOpen(false)}
+        onPick={setStartDate}
+      />
     </div>
   );
 }

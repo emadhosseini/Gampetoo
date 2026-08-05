@@ -132,3 +132,34 @@ export async function signUp(username: string, pin: string): Promise<AuthResult>
 export async function signOutRemote(): Promise<void> {
   await supabase?.auth.signOut();
 }
+
+/**
+ * Deletes the signed-in account from the server for good — its synced data
+ * and its auth user, so the username is free to register again. Signing out
+ * or clearing local storage does neither: without this the username stayed
+ * taken forever, and logging back in restored whatever the server still held.
+ *
+ * The work happens in the delete-account edge function, because deleting an
+ * auth user needs the service-role key. Call it while still signed in — the
+ * function identifies the account from the session's JWT.
+ */
+export async function deleteAccountRemote(): Promise<AuthResult> {
+  // Sync isn't configured, so there's no server-side account to delete and
+  // the local wipe is the whole job.
+  if (!supabase) return { ok: true };
+
+  const { data, error } = await supabase.functions.invoke<{ error?: string }>(
+    "delete-account",
+    { method: "POST" },
+  );
+
+  if (error) {
+    return { ok: false, error: "ارتباط با سرور برقرار نشد. اتصالت رو بررسی کن." };
+  }
+
+  if (data?.error) {
+    return { ok: false, error: data.error };
+  }
+
+  return { ok: true };
+}

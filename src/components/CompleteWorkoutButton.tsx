@@ -12,13 +12,13 @@ export default function CompleteWorkoutButton({
   variant = "primary",
 }: CompleteWorkoutButtonProps) {
   if (variant === "accent") {
-    return <SlideToCompleteButton label={label} onComplete={onClick} />;
+    return <SlideToCompleteButton label={label} onReachEnd={onClick} />;
   }
 
   return (
     <button
       onClick={onClick}
-      className="mt-6 w-full rounded-2xl bg-forest-900 py-4 text-lg font-semibold text-white"
+      className="mt-6 glass-action w-full rounded-2xl py-4 text-lg font-semibold text-white"
     >
       {label}
     </button>

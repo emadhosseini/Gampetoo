@@ -1,66 +1,34 @@
-import { motion, useReducedMotion } from "framer-motion";
-
-import NoiseLayer from "@/components/background/NoiseLayer";
-
 interface MeshGradientBackgroundProps {
-  /** Hex color for the top-left glow (e.g. home team). */
-  colorA: string;
-  /** Hex color for the top-right glow (e.g. away team). */
-  colorB: string;
   className?: string;
 }
 
-const glowTransition = (duration: number) => ({
-  duration,
-  repeat: Infinity,
-  ease: "easeInOut" as const,
-});
-
+// The background image itself, not a CSS approximation of it. Served as a
+// 25KB WebP at the source's full 853x1844, precached by the service worker
+// like every other static asset, so it's on screen from the first paint
+// offline too.
+//
+// The encoding is deliberately quality 95 with smartSubsample rather than the
+// ~6KB a lower quality would give: this is one big smooth gradient, and the
+// failure mode of over-compressing a gradient is banding — flat plateaus with
+// a visible step between them, worst on a dark OLED panel, which is most of
+// this image. At q95 the whole frame stays within 5/255 of the source even
+// after the browser upscales it to cover the viewport. Don't trade those
+// bytes away; it's a one-time precached fetch.
+//
+// It stays a plain background-image on a static div for the same reason the
+// gradient before it did: this component sits under the whole app shell,
+// the login page and the error screen, so anything expensive here is
+// expensive everywhere. An earlier version animated two blur(110px) layers
+// forever and pegged the phone's GPU at idle. Do not reintroduce blur()
+// layers, infinite animations, or a noise overlay here.
 export default function MeshGradientBackground({
-  colorA,
-  colorB,
   className = "",
 }: MeshGradientBackgroundProps) {
-  const prefersReducedMotion = useReducedMotion();
-
   return (
     <div
-      className={`pointer-events-none absolute inset-0 overflow-hidden ${className}`}
+      className={`pointer-events-none absolute inset-0 overflow-hidden bg-cover bg-center ${className}`}
       aria-hidden="true"
-    >
-      <motion.div
-        className="absolute -left-1/4 -top-1/4 h-[110%] w-[85%] rounded-full blur-[110px]"
-        style={{ backgroundColor: colorA, willChange: "transform, opacity" }}
-        animate={
-          prefersReducedMotion
-            ? { opacity: 0.65 }
-            : {
-                x: [0, 24, -8, 0],
-                y: [0, 16, 6, 0],
-                scale: [1, 1.15, 1.05, 1],
-                opacity: [0.55, 0.8, 0.65, 0.55],
-              }
-        }
-        transition={prefersReducedMotion ? undefined : glowTransition(24)}
-      />
-
-      <motion.div
-        className="absolute -right-1/4 -top-1/4 h-[110%] w-[85%] rounded-full blur-[110px]"
-        style={{ backgroundColor: colorB, willChange: "transform, opacity" }}
-        animate={
-          prefersReducedMotion
-            ? { opacity: 0.7 }
-            : {
-                x: [0, -24, 10, 0],
-                y: [0, 20, -6, 0],
-                scale: [1, 1.2, 1.08, 1],
-                opacity: [0.55, 0.85, 0.6, 0.55],
-              }
-        }
-        transition={prefersReducedMotion ? undefined : glowTransition(29)}
-      />
-
-      <NoiseLayer />
-    </div>
+      style={{ backgroundImage: "url(/BG.webp)" }}
+    />
   );
 }

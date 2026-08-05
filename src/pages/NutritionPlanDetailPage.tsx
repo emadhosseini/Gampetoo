@@ -2,9 +2,13 @@ import { ChevronDown, Search } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 
+import Toggle from "@/components/Toggle";
 import { getActiveProgram, updateProgram } from "@/utils/programEngine";
 import { getMealSlots } from "@/data/nutrition/foodCatalog";
 import {
+  AUTO_SEARCH_MIN_LENGTH,
+  SEARCH_DEBOUNCE_MS,
+  caloriesForServing,
   localFoods,
   searchFood,
   searchSupplements,
@@ -23,16 +27,6 @@ const typeTitles: Record<MealPlanType, string> = {
   rest: "برنامه غذایی روزهای استراحت",
 };
 
-// Live-search only kicks in past this many characters — short queries (1-3
-// chars) match too many/ambiguous entries in a small catalog, so below this
-// length a search only applies once explicitly submitted via the button.
-const AUTO_SEARCH_MIN_LENGTH = 3;
-
-// How long to wait after the last keystroke before actually running a live
-// search — avoids firing a network request (the external API fallback) on
-// every single character while the user is still typing.
-const SEARCH_DEBOUNCE_MS = 300;
-
 const AMOUNT_PATTERN = /^(\d+(?:\.\d+)?)\s+(.+)$/;
 
 // A persisted amount string is always "<quantity> <unit label>" — split it
@@ -42,10 +36,6 @@ function parseAmount(amount: string): { quantity: number; unitLabel: string } {
   return match
     ? { quantity: Number(match[1]), unitLabel: match[2] }
     : { quantity: 1, unitLabel: amount };
-}
-
-function caloriesFor(entry: FoodEntry, unit: ServingUnit, quantity: number): number {
-  return Math.round((entry.caloriesPer100g * unit.grams * quantity) / 100);
 }
 
 function mealCalories(meal: MealSection): number {
@@ -98,7 +88,7 @@ function MealFoodList({
         <button
           onClick={onSubmitSearch}
           aria-label="جستجو"
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-avocado-yellow text-black"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg glass-action text-white"
         >
           <Search size={16} />
         </button>
@@ -127,12 +117,7 @@ function MealFoodList({
               key={entry.id}
               className="glass-chip glass-static flex flex-wrap items-center gap-3 rounded-xl p-3"
             >
-              <input
-                type="checkbox"
-                checked={!!selected}
-                onChange={() => onToggleFood(entry)}
-                className="h-5 w-5 shrink-0"
-              />
+              <Toggle checked={!!selected} onChange={() => onToggleFood(entry)} />
 
               <span className="flex-1 text-sm font-semibold text-white">
                 {entry.nameFa}
@@ -153,7 +138,7 @@ function MealFoodList({
                     onChange={(e) =>
                       onUpdateQuantity(entry, Number(e.target.value), selectedUnit)
                     }
-                    className="w-14 rounded-lg border border-forest-500 bg-forest-600 px-2 py-1 text-center text-sm text-white"
+                    className="w-14 glass-chip rounded-lg px-2 py-1 text-center text-sm text-white"
                   />
 
                   <select
@@ -164,7 +149,7 @@ function MealFoodList({
                         entry.servingUnits[0];
                       onUpdateQuantity(entry, quantity, unit);
                     }}
-                    className="glass-static rounded-lg border border-forest-500 bg-forest-600 px-2 py-1 text-sm text-white"
+                    className="glass-static glass-chip rounded-lg px-2 py-1 text-sm text-white"
                   >
                     {entry.servingUnits.map((unit) => (
                       <option key={unit.label} value={unit.label}>
@@ -346,7 +331,7 @@ export default function NutritionPlanDetailPage() {
                   id: entry.id,
                   name: entry.nameFa,
                   amount: `1 ${defaultUnit.label}`,
-                  calories: caloriesFor(entry, defaultUnit, 1),
+                  calories: caloriesForServing(entry, defaultUnit, 1),
                 },
               ];
 
@@ -387,7 +372,7 @@ export default function NutritionPlanDetailPage() {
               return {
                 ...food,
                 amount: `${quantity} ${unit.label}`,
-                calories: caloriesFor(entry, unit, quantity),
+                calories: caloriesForServing(entry, unit, quantity),
               };
             }),
           };
@@ -429,13 +414,8 @@ export default function NutritionPlanDetailPage() {
               key={meal.id}
               className="glass-panel glass-static rounded-2xl p-4"
             >
-              <div className="grid grid-cols-[24px_1fr_auto_24px] items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={enabled}
-                  onChange={() => toggleMealEnabled(meal.id)}
-                  className="h-5 w-5"
-                />
+              <div className="grid grid-cols-[44px_1fr_auto_24px] items-center gap-2">
+                <Toggle checked={enabled} onChange={() => toggleMealEnabled(meal.id)} />
 
                 <button
                   onClick={() =>
@@ -512,7 +492,7 @@ export default function NutritionPlanDetailPage() {
 
       <button
         onClick={handleSave}
-        className="glass-tap w-full rounded-2xl bg-avocado-yellow py-4 text-lg font-bold text-black"
+        className="w-full glass-action rounded-2xl py-4 text-lg font-bold text-white"
       >
         {saved ? "ذخیره شد ✅" : "ذخیره"}
       </button>

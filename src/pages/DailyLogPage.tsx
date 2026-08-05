@@ -1,0 +1,255 @@
+import { useState } from "react";
+import { Activity, Flame, Plus, UtensilsCrossed } from "lucide-react";
+
+import PillTabBar, { type PillTabBarItem } from "@/components/PillTabBar";
+import MealLogCard from "@/components/nutrition/MealLogCard";
+import MealAddChoiceModal from "@/components/nutrition/MealAddChoiceModal";
+import AddMealEntryModal from "@/components/nutrition/AddMealEntryModal";
+import AiMealEntryModal from "@/components/nutrition/AiMealEntryModal";
+import EditMealEntryModal from "@/components/nutrition/EditMealEntryModal";
+import ActivityLogModal from "@/components/progress/ActivityLogModal";
+import {
+  DAILY_MODE_SLOT,
+  getMealSlots,
+  type MealSlot,
+} from "@/data/nutrition/foodCatalog";
+import {
+  getCalorieTrackingMode,
+  setCalorieTrackingMode,
+  type CalorieTrackingMode,
+} from "@/utils/calorieModeEngine";
+import {
+  removeLoggedEntry,
+  updateLoggedEntryQuantity,
+  type LoggedFoodEntry,
+} from "@/utils/dailyLogEngine";
+import { getTodayActivityCalories, logActivityCalories } from "@/utils/activityLogEngine";
+import { getTodayWorkoutCalories } from "@/utils/workoutCalorieEngine";
+import { toFaDigits } from "@/utils/numberFormat";
+
+type Tab = "meal" | "activity";
+
+const tabs: PillTabBarItem<Tab>[] = [
+  { id: "meal", label: "وعده غذایی", icon: UtensilsCrossed },
+  { id: "activity", label: "فعالیت", icon: Activity },
+];
+
+// Where calories eaten and exercise/activity done get logged. This page
+// replaces the old settings hub (its nav shortcuts all now live in
+// SideMenu/ProfilePage).
+export default function DailyLogPage() {
+  const [tab, setTab] = useState<Tab>("meal");
+
+  return (
+    <div>
+      <PillTabBar
+        items={tabs}
+        active={tab}
+        onChange={setTab}
+        layoutId="daily-log-tab-selection"
+      />
+
+      {tab === "meal" ? <MealTabRoot /> : <ActivityTabRoot />}
+    </div>
+  );
+}
+
+// Two numbers, kept as separate cards because they come from separate
+// sources: the first is a pure report (no add button — see
+// sessionEngine.ts's toggleExerciseChecked, which is the only thing that
+// ever changes it), the second is manually logged the same way it already
+// was before workout-derived calories existed (ActivityLogModal, also
+// reachable from the quick-add drawer).
+function ActivityTabRoot() {
+  const [activityModalOpen, setActivityModalOpen] = useState(false);
+  const [, setVersion] = useState(0);
+
+  const workoutCalories = getTodayWorkoutCalories();
+  const manualCalories = getTodayActivityCalories();
+
+  return (
+    <div className="space-y-4 px-5 pb-5 pt-6">
+      <div className="glass-panel rounded-3xl p-5 text-center">
+        <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white">
+          <Flame size={20} />
+        </div>
+
+        <p className="mt-3 font-semibold text-white">
+          کالری سوخته‌شده برنامه تمرینی روزانه
+        </p>
+
+        <p className="mt-1 text-3xl font-bold text-white">
+          {toFaDigits(workoutCalories)}
+        </p>
+
+        <p className="text-sm text-white/60">کالری</p>
+      </div>
+
+      <div className="glass-panel flex items-center justify-between gap-3 rounded-3xl p-5">
+        <div className="flex-1 text-right">
+          <p className="font-semibold text-white">سایر فعالیت‌ها</p>
+
+          <p className="mt-1 text-sm text-white/70">
+            {manualCalories > 0
+              ? `${toFaDigits(manualCalories)} کالری ثبت‌شده`
+              : "چیزی ثبت نشده"}
+          </p>
+        </div>
+
+        <button
+          onClick={() => setActivityModalOpen(true)}
+          aria-label="افزودن فعالیت"
+          className="glass-action flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white"
+        >
+          <Plus size={20} />
+        </button>
+      </div>
+
+      <ActivityLogModal
+        open={activityModalOpen}
+        onClose={() => setActivityModalOpen(false)}
+        onLog={(calories) => {
+          logActivityCalories(calories);
+          setVersion((v) => v + 1);
+        }}
+      />
+    </div>
+  );
+}
+
+// Reads the saved calorie-tracking mode and either prompts the user to pick
+// one (first visit) or renders MealLogTab with the slot list that mode
+// implies. Both modes share the exact same storage/components — the mode
+// only decides which slot ids MealLogTab loops over.
+function MealTabRoot() {
+  const [mode, setMode] = useState(() => getCalorieTrackingMode());
+
+  if (mode === null) {
+    return <CalorieModeChoicePrompt onChoose={setMode} />;
+  }
+
+  return (
+    <MealLogTab slots={mode === "daily" ? [DAILY_MODE_SLOT] : getMealSlots()} />
+  );
+}
+
+function CalorieModeChoicePrompt({
+  onChoose,
+}: {
+  onChoose: (mode: CalorieTrackingMode) => void;
+}) {
+  function choose(mode: CalorieTrackingMode) {
+    setCalorieTrackingMode(mode);
+    onChoose(mode);
+  }
+
+  return (
+    <div className="space-y-4 px-5 pb-5 pt-6 text-center">
+      <p className="text-white">
+        اول انتخاب کن که می‌خوای کالری رو چه‌طوری ثبت کنی — هر وقت خواستی
+        از منوی کناری می‌تونی عوضش کنی.
+      </p>
+
+      <div className="flex gap-3">
+        <button
+          onClick={() => choose("perMeal")}
+          className="glass-tap selector-pill flex-1 rounded-xl py-4 font-bold text-white"
+        >
+          وعده‌ای
+        </button>
+
+        <button
+          onClick={() => choose("daily")}
+          className="glass-tap selector-pill flex-1 rounded-xl py-4 font-bold text-white"
+        >
+          روزانه
+        </button>
+      </div>
+    </div>
+  );
+}
+
+type ModalScreen =
+  | { meal: MealSlot; screen: "choice" | "add" | "ai" }
+  | { meal: MealSlot; screen: "edit"; entry: LoggedFoodEntry }
+  | null;
+
+// Fully independent of the prescribed nutrition plan (program.nutrition) —
+// this logs whatever the user actually ate against a fixed catalog of
+// meal-time slots (صبحانه، ناهار، ...), or a single unified slot for
+// "daily" mode.
+//
+// Nothing here opens a read-only summary any more: what's logged for a meal
+// is shown by expanding the card itself, and the only modals left are the
+// ones that actually do something. "+" opens the choice of how to add
+// (MealAddChoiceModal), which drills one level deeper into either the manual
+// food-search screen (AddMealEntryModal) or the AI free-text screen
+// (AiMealEntryModal); tapping a food inside an expanded card opens its
+// amount editor. "بستن" on either add screen closes everything straight back
+// to this list, not one level back to the choice — closing there means
+// "I'm done", not "go back".
+function MealLogTab({ slots }: { slots: MealSlot[] }) {
+  const [modal, setModal] = useState<ModalScreen>(null);
+  // Bumped after every add/edit/remove so the cards — which read straight
+  // from localStorage, with no reactive store in between — look again.
+  const [version, setVersion] = useState(0);
+
+  function refresh() {
+    setVersion((v) => v + 1);
+  }
+
+  const editing = modal?.screen === "edit" ? modal : null;
+
+  return (
+    <div className="space-y-4 px-5 pb-5 pt-6">
+      {slots.map((meal) => (
+        <MealLogCard
+          key={meal.id}
+          meal={meal}
+          version={version}
+          onAdd={(meal) => setModal({ meal, screen: "choice" })}
+          onEditEntry={(meal, entry) =>
+            setModal({ meal, screen: "edit", entry })
+          }
+        />
+      ))}
+
+      <MealAddChoiceModal
+        meal={modal?.screen === "choice" ? modal.meal : null}
+        onClose={() => setModal(null)}
+        onAdd={() => setModal(modal && { meal: modal.meal, screen: "add" })}
+        onAddAi={() => setModal(modal && { meal: modal.meal, screen: "ai" })}
+      />
+
+      <AddMealEntryModal
+        meal={modal?.screen === "add" ? modal.meal : null}
+        onClose={() => setModal(null)}
+        onChange={refresh}
+      />
+
+      <AiMealEntryModal
+        meal={modal?.screen === "ai" ? modal.meal : null}
+        onClose={() => setModal(null)}
+        onChange={refresh}
+      />
+
+      <EditMealEntryModal
+        meal={editing?.meal ?? null}
+        entry={editing?.entry ?? null}
+        onClose={() => setModal(null)}
+        onSave={(quantity) => {
+          if (!editing) return;
+          updateLoggedEntryQuantity(editing.meal.id, editing.entry.id, quantity);
+          refresh();
+          setModal(null);
+        }}
+        onRemove={() => {
+          if (!editing) return;
+          removeLoggedEntry(editing.meal.id, editing.entry.id);
+          refresh();
+          setModal(null);
+        }}
+      />
+    </div>
+  );
+}

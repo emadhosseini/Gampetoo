@@ -32,6 +32,16 @@ export function getMealSlots(): MealSlot[] {
   return mealSlots;
 }
 
+// The single pseudo meal-slot logged entries use in "daily" calorie-tracking
+// mode (one unified list instead of per-meal cards) — flows through
+// dailyLogEngine.ts unchanged, since its functions are already generic over
+// slot id. "daily-total" doesn't collide with any real meal id above.
+export const DAILY_MODE_SLOT: MealSlot = {
+  id: "daily-total",
+  title: "کالری روزانه",
+  icon: "🍽️",
+};
+
 export function createEmptyMealPlan(type: MealPlanType): MealPlan {
   const plan = mealPlans[type];
 

@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import WorkoutHeader from "@/components/WorkoutHeader";
 import WorkoutSummary from "@/components/WorkoutSummary";
+import WorkoutCompleteModal from "@/components/WorkoutCompleteModal";
 import ExerciseCard from "@/components/ExerciseCard";
 import CompleteWorkoutButton from "@/components/CompleteWorkoutButton";
 import WarmupBlock from "@/components/WarmupBlock";
@@ -15,12 +17,16 @@ import {
 
 import { getWorkout } from "@/store/workoutLibraryStore";
 import { getSpecializedWarmup } from "@/store/warmupLibraryStore";
+import type { Exercise } from "@/data/workoutLibrary";
 
 import {
   getSession,
   completeWorkout,
   completeWalk,
+  toggleExerciseChecked,
+  estimateCheckedWorkoutCalories,
 } from "@/utils/sessionEngine";
+import { setTodayWorkoutCalories } from "@/utils/workoutCalorieEngine";
 import { getCurrentUsername } from "@/utils/userEngine";
 import { flushPendingSync } from "@/sync/remoteSync";
 
@@ -40,7 +46,29 @@ async function goHomeAfterCompleting() {
 function WorkoutPage() {
   const navigate = useNavigate();
 
+  // resetKey is bumped to remount SlideToCompleteButton (snapping its
+  // handle back to the start) when the confirm popup is cancelled — the
+  // button itself has no "go back to start" API, so a fresh mount is the
+  // simplest way to force it.
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [resetKey, setResetKey] = useState(0);
+  // Whether the confirm popup's burned-calorie estimate should land in the
+  // day's activity total. Defaults on — that's what the app did before the
+  // choice existed — and deliberately isn't reset when the popup is
+  // cancelled and reopened, so a user who turned it off doesn't have to
+  // turn it off again.
+  const [addCaloriesToActivity, setAddCaloriesToActivity] = useState(true);
+  // getSession() reads straight from localStorage on every call rather than
+  // being held in React state — bumping this after each checkbox tap is
+  // what actually triggers the re-render that picks the fresh value up.
+  const [, forceRerender] = useState(0);
+
   const session = getSession();
+
+  function handleToggleExercise(exercise: Exercise) {
+    toggleExerciseChecked(exercise.id);
+    forceRerender((n) => n + 1);
+  }
 
   const day = getCurrentProgramDay();
 
@@ -107,7 +135,7 @@ const workout = workoutType
         )}
 
         {session.completed && (
-          <div className="mt-6 rounded-2xl bg-avocado-yellow py-4 text-center text-lg font-semibold text-black">
+          <div className="glass-panel mt-6 rounded-full py-4 text-center text-lg font-semibold text-white">
             تمرین امروز رو انجام دادی☺️
           </div>
         )}
@@ -148,7 +176,7 @@ const workout = workoutType
         )}
 
         {session.completed && (
-          <div className="mt-6 rounded-2xl bg-avocado-yellow py-4 text-center text-lg font-semibold text-black">
+          <div className="glass-panel mt-6 rounded-full py-4 text-center text-lg font-semibold text-white">
             تمرین امروز رو انجام دادی ☺️
           </div>
         )}
@@ -160,6 +188,24 @@ const workout = workoutType
   (sum, exercise) => sum + exercise.sets,
   0
 );
+
+  // Derived from the checklist on every render rather than accumulated as
+  // exercises are ticked, so it always matches what's actually checked off
+  // right now. Nothing has been written anywhere yet at this point — that
+  // only happens if the user confirms with the toggle on.
+  const checkedCalories = estimateCheckedWorkoutCalories(
+    exercises,
+    session.checkedExercises,
+  );
+
+  const checkedExerciseIds = new Set(session.checkedExercises);
+  // A stable sort just sinks checked-off exercises to the bottom, keeping
+  // both groups in their original relative order — no re-shuffling within
+  // "still to do" or "already done" as you check more of them off.
+  const sortedExercises = [...exercises].sort(
+    (a, b) =>
+      Number(checkedExerciseIds.has(a.id)) - Number(checkedExerciseIds.has(b.id)),
+  );
 
   return (
     <div className="space-y-6 px-5 pb-5 pt-10">
@@ -184,30 +230,55 @@ const workout = workoutType
 />
 
       <div className="space-y-4">
-        {exercises.map((exercise) =>  (
+        {sortedExercises.map((exercise) => (
           <ExerciseCard
             key={exercise.id}
             exercise={exercise}
+            checked={checkedExerciseIds.has(exercise.id)}
+            onToggleChecked={() => handleToggleExercise(exercise)}
           />
         ))}
       </div>
 
       {!session.completed && (
         <CompleteWorkoutButton
+          key={resetKey}
           variant="accent"
           label="تمرین امروز رو انجام دادم 💪🏻"
-          onClick={() => {
-            completeWorkout();
-            void goHomeAfterCompleting();
-          }}
+          onClick={() => setConfirmOpen(true)}
         />
       )}
 
       {session.completed && (
-        <div className="mt-6 rounded-2xl bg-avocado-yellow py-4 text-center text-lg font-semibold text-black">
+        <div className="glass-panel mt-6 rounded-full py-4 text-center text-lg font-semibold text-white">
           تمرین امروز رو انجام دادی☺️
         </div>
       )}
+
+      <WorkoutCompleteModal
+        open={confirmOpen}
+        workoutTitle={workout.title}
+        exercises={exercises.length}
+        sets={totalSets}
+        calories={checkedCalories}
+        addToActivity={addCaloriesToActivity}
+        onToggleAddToActivity={() => setAddCaloriesToActivity((on) => !on)}
+        onCancel={() => {
+          setConfirmOpen(false);
+          setResetKey((key) => key + 1);
+        }}
+        onConfirm={() => {
+          setConfirmOpen(false);
+          // The only path that ever writes the day's workout-calorie total.
+          // Written unconditionally so turning the toggle off is an explicit
+          // zero rather than leaving whatever happened to be there — and it
+          // sets rather than adds, so confirming twice in a day can't double
+          // it (see workoutCalorieEngine).
+          setTodayWorkoutCalories(addCaloriesToActivity ? checkedCalories : 0);
+          completeWorkout();
+          void goHomeAfterCompleting();
+        }}
+      />
     </div>
   );
 }
