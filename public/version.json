@@ -1,6 +1,14 @@
 {
-  "current": "1.0.1",
+  "current": "1.0.2",
   "history": [
+    {
+      "version": "1.0.2",
+      "date": "2026-08-05",
+      "description": "Two devices used in the same stretch no longer overwrite each other. Until now the whole account was stored and replaced as a single record, so whichever device saved last won outright and everything the other had changed since was thrown away. Each value now carries the moment it last changed, and the two versions are combined value by value, newest of each winning — change your weight on one phone and log a meal on the other and both survive. A value that was deleted stays deleted rather than being restored by the other device. Deliberately built so a phone still running the previous version reads the new records exactly as before: the values sit where they always did and the timestamps ride alongside under a name older versions never look at, because those versions delete any value they don't find, and a nested layout would have made one erase itself.",
+      "highlights": [
+        "🔀 تغییرات هم‌زمان روی دو گوشی دیگه همدیگه رو پاک نمی‌کنن — هر مقدار جداگانه ادغام می‌شه"
+      ]
+    },
     {
       "version": "1.0.1",
       "date": "2026-08-05",

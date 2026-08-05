@@ -57,6 +57,87 @@ function lastSyncedKey(username: string) {
   return `gampetoo-last-synced-at:${username}`;
 }
 
+/**
+ * When each synced key last changed, as this device understands it — the
+ * time it was edited here, or the time it carried when it arrived from the
+ * server. Device-local bookkeeping about the account's data, never synced
+ * itself.
+ */
+function keyTimesKey(username: string) {
+  return `gampetoo-key-updated-at:${username}`;
+}
+
+// Rides along inside the server payload under a name that is not a synced
+// base key, which is precisely what makes this change safe to deploy: older
+// clients loop over SYNCED_BASE_KEYS and never look at it, so they keep
+// reading the same flat key/value pairs they always did. Nesting the values
+// instead would have made an un-updated device find no keys at all — and
+// writeLocalSnapshot deletes every key it doesn't find, so that device would
+// have wiped its own data on the first pull.
+const META_KEY = "__meta";
+const SNAPSHOT_VERSION = 2;
+
+interface SyncMeta {
+  v: number;
+  updatedAt: Record<string, string>;
+}
+
+function readKeyTimes(username: string): Record<string, string> {
+  try {
+    const raw = localStorage.getItem(keyTimesKey(username));
+
+    return raw ? (JSON.parse(raw) as Record<string, string>) : {};
+  } catch {
+    return {};
+  }
+}
+
+function writeKeyTimes(username: string, times: Record<string, string>) {
+  originalSetItem(keyTimesKey(username), JSON.stringify(times));
+}
+
+function recordLocalChange(username: string, base: string) {
+  const times = readKeyTimes(username);
+
+  times[base] = new Date().toISOString();
+
+  writeKeyTimes(username, times);
+}
+
+/**
+ * Splits a stored payload into its values and its per-key times. A row
+ * written before this existed has no times at all — every key it holds is
+ * stamped with the row's own timestamp, which is exactly what was true of
+ * it: the whole thing was written at once.
+ */
+function readRemote(
+  payload: Record<string, unknown>,
+  rowUpdatedAt: string
+): { values: Record<string, string>; times: Record<string, string> } {
+  const meta = payload[META_KEY] as SyncMeta | undefined;
+  const values: Record<string, string> = {};
+
+  for (const base of SYNCED_BASE_KEYS) {
+    const value = payload[base];
+
+    if (typeof value === "string") {
+      values[base] = value;
+    }
+  }
+
+  if (meta?.updatedAt) {
+    return { values, times: meta.updatedAt };
+  }
+
+  const times: Record<string, string> = {};
+
+  for (const base of Object.keys(values)) {
+    times[base] = rowUpdatedAt;
+  }
+
+  return { values, times };
+}
+
 function readLocalSnapshot(username: string): Record<string, string> {
   const snapshot: Record<string, string> = {};
 
@@ -94,16 +175,65 @@ function snapshotsDiffer(
   return SYNCED_BASE_KEYS.some((base) => a[base] !== b[base]);
 }
 
-async function pushToServer(username: string): Promise<void> {
+/**
+ * Merges two versions of the account key by key, newest wins per key. This
+ * is the whole point of tracking a time per key rather than one per row:
+ * editing your weight on one phone and a meal on another no longer means one
+ * of those edits is thrown away, which is what replacing the entire row did.
+ *
+ * A key with a recorded time but no value is a deletion, and beats an older
+ * value — otherwise anything removed on one device would be resurrected by
+ * the next push from the other. A key with no recorded time on either side
+ * is one neither device has touched since times existed; keep whatever value
+ * is there rather than treating absence as intent.
+ */
+function mergeByKey(
+  local: Record<string, string>,
+  localTimes: Record<string, string>,
+  remote: Record<string, string>,
+  remoteTimes: Record<string, string>
+): { values: Record<string, string>; times: Record<string, string> } {
+  const values: Record<string, string> = {};
+  const times: Record<string, string> = {};
+
+  for (const base of SYNCED_BASE_KEYS) {
+    const lt = localTimes[base];
+    const rt = remoteTimes[base];
+
+    let value: string | undefined;
+    let time: string | undefined;
+
+    // ISO-8601 UTC strings, so lexicographic order is chronological order.
+    if (lt !== undefined && (rt === undefined || lt > rt)) {
+      value = local[base];
+      time = lt;
+    } else if (rt !== undefined) {
+      value = remote[base];
+      time = rt;
+    } else {
+      value = local[base] ?? remote[base];
+    }
+
+    if (value !== undefined) values[base] = value;
+    if (time !== undefined) times[base] = time;
+  }
+
+  return { values, times };
+}
+
+async function writeRemote(
+  username: string,
+  values: Record<string, string>,
+  times: Record<string, string>
+): Promise<void> {
   if (!supabase || !cachedAuthUserId) return;
 
-  const snapshot = readLocalSnapshot(username);
   const updatedAt = new Date().toISOString();
 
   try {
     const { error } = await supabase.from("user_data").upsert({
       user_id: cachedAuthUserId,
-      data: snapshot,
+      data: { ...values, [META_KEY]: { v: SNAPSHOT_VERSION, updatedAt: times } },
       updated_at: updatedAt,
     });
 
@@ -115,6 +245,20 @@ async function pushToServer(username: string): Promise<void> {
     // Offline or transient failure — flag it so the next reconnect retries.
     originalSetItem(pendingKey(username), "1");
   }
+}
+
+/**
+ * Sends this device's values along with the times it believes they carry,
+ * without reading the server first — the cheap path, for the moment the app
+ * is being closed and there may not be time for two round trips.
+ *
+ * Safe despite overwriting the row wholesale, because the times go with it.
+ * If this clobbers a key another device changed more recently, that device
+ * still holds its own newer time for it, sees the row is behind on its next
+ * reconcile, and puts it back. The overwrite corrects itself.
+ */
+async function pushToServer(username: string): Promise<void> {
+  await writeRemote(username, readLocalSnapshot(username), readKeyTimes(username));
 }
 
 /**
@@ -166,20 +310,42 @@ async function pullFromServer(username: string): Promise<boolean> {
     return false;
   }
 
-  const incoming = data.data as Record<string, string>;
-  const changed = snapshotsDiffer(readLocalSnapshot(username), incoming);
+  const local = readLocalSnapshot(username);
+  const localTimes = readKeyTimes(username);
+  const remote = readRemote(
+    data.data as Record<string, unknown>,
+    data.updated_at
+  );
 
-  suppressing = true;
+  const merged = mergeByKey(local, localTimes, remote.values, remote.times);
 
-  try {
-    writeLocalSnapshot(username, incoming);
-  } finally {
-    suppressing = false;
+  const localChanged = snapshotsDiffer(local, merged.values);
+
+  if (localChanged) {
+    suppressing = true;
+
+    try {
+      writeLocalSnapshot(username, merged.values);
+    } finally {
+      suppressing = false;
+    }
   }
 
-  originalSetItem(lastSyncedKey(username), data.updated_at);
+  writeKeyTimes(username, merged.times);
 
-  return changed;
+  // Push back whenever the server isn't already holding the merged result —
+  // including when it holds the same values but no times yet, since that row
+  // is the old format and nothing else will upgrade it.
+  if (
+    snapshotsDiffer(remote.values, merged.values) ||
+    (data.data as Record<string, unknown>)[META_KEY] === undefined
+  ) {
+    await writeRemote(username, merged.values, merged.times);
+  } else {
+    originalSetItem(lastSyncedKey(username), data.updated_at);
+  }
+
+  return localChanged;
 }
 
 /**
@@ -275,6 +441,10 @@ function onLocalWrite(key: string) {
   );
 
   if (isSyncedKey) {
+    // Stamped before the push is even scheduled: this is what lets the merge
+    // tell "I changed this" from "I happen to hold this", and it has to
+    // survive the app being killed before the push goes out.
+    recordLocalChange(username, key.slice(0, key.length - username.length - 1));
     schedulePush(username);
   }
 }
@@ -392,6 +562,10 @@ export function resetSyncMarkers(username: string) {
 
   originalRemoveItem(pendingKey(username));
   originalRemoveItem(lastSyncedKey(username));
+  // Left behind, these would make a freshly created account reusing this
+  // username look like it had already edited every key, so the merge would
+  // prefer its empty values over whatever the server holds.
+  originalRemoveItem(keyTimesKey(username));
 }
 
 /**
