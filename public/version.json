@@ -4,10 +4,11 @@
     {
       "version": "1.0.0",
       "date": "2026-08-05",
-      "description": "First public release. The beta-v3 line becomes the app everyone gets, and the version number resets to 1.0.0 to mark it — note this is a lower number than the 2.0.1 it replaces, which is fine: nothing in the app orders versions, it only asks whether the running one differs from the deployed one. Every piece of account data is stored on the server and follows the account between devices; the only things that stay on a device are the ones that describe the device rather than the account — which account is signed in here, whether this browser has dismissed the install hint, and which changelog it has already shown.",
+      "description": "First public release. The beta-v3 line becomes the app everyone gets, and the version number resets to 1.0.0 to mark it — note this is a lower number than the 2.0.1 it replaces, which is fine: nothing in the app orders versions, it only asks whether the running one differs from the deployed one. Every piece of account data is stored on the server and follows the account between devices; the only things that stay on a device are the ones that describe the device rather than the account — which account is signed in here, whether this browser has dismissed the install hint, and which changelog it has already shown. A device picks changes up whenever the app returns to the foreground, not only at a cold start — but never while it still has edits of its own the server hasn't accepted, since taking an older snapshot then would lose a write outright.",
       "highlights": [
         "🎉 اولین نسخه‌ی رسمی گمپتو",
-        "☁️ همه‌ی اطلاعات حساب روی سرور ذخیره می‌شن و بین دستگاه‌ها همگام می‌مونن"
+        "☁️ همه‌ی اطلاعات حساب روی سرور ذخیره می‌شن و بین دستگاه‌ها همگام می‌مونن",
+        "🔄 تغییرات دستگاه دیگه با برگشتن به برنامه نمایش داده می‌شن، بدون نیاز به بستن و باز کردن"
       ]
     },
     {

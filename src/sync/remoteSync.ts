@@ -34,6 +34,10 @@ const SYNCED_BASE_KEYS = [
 
 const PUSH_DEBOUNCE_MS = 1000;
 const RETRY_INTERVAL_MS = 5 * 60 * 1000;
+// Returning to the app is a cheap, frequent signal — on a phone, switching
+// away and back fires it constantly. This is the floor between two pulls it
+// can actually trigger.
+const FOREGROUND_PULL_MIN_INTERVAL_MS = 10 * 1000;
 
 const originalSetItem = localStorage.setItem.bind(localStorage);
 const originalRemoveItem = localStorage.removeItem.bind(localStorage);
@@ -43,6 +47,7 @@ let initialized = false;
 let suppressing = false;
 let cachedAuthUserId: string | null = null;
 let pushTimer: ReturnType<typeof setTimeout> | null = null;
+let lastForegroundPullAt = 0;
 
 function pendingKey(username: string) {
   return `gampetoo-sync-pending:${username}`;
@@ -82,6 +87,13 @@ function writeLocalSnapshot(
   }
 }
 
+function snapshotsDiffer(
+  a: Record<string, string>,
+  b: Record<string, string>
+): boolean {
+  return SYNCED_BASE_KEYS.some((base) => a[base] !== b[base]);
+}
+
 async function pushToServer(username: string): Promise<void> {
   if (!supabase || !cachedAuthUserId) return;
 
@@ -110,9 +122,13 @@ async function pushToServer(username: string): Promise<void> {
  * least as new (guards against clobbering edits made while offline). If no
  * remote row exists yet, this is the account's first-ever sync — bootstrap
  * the server from whatever's already stored locally instead.
+ *
+ * Returns whether anything on this device actually changed, so a caller that
+ * pulls into an already-rendered app knows whether the screen it's looking at
+ * has gone stale.
  */
-async function pullFromServer(username: string): Promise<void> {
-  if (!supabase || !cachedAuthUserId) return;
+async function pullFromServer(username: string): Promise<boolean> {
+  if (!supabase || !cachedAuthUserId) return false;
 
   const { data, error } = await supabase
     .from("user_data")
@@ -120,28 +136,81 @@ async function pullFromServer(username: string): Promise<void> {
     .eq("user_id", cachedAuthUserId)
     .maybeSingle();
 
-  if (error) return;
+  if (error) return false;
 
   if (!data) {
     await pushToServer(username);
-    return;
+    return false;
   }
 
   const lastSyncedAt = localStorage.getItem(lastSyncedKey(username));
 
   if (lastSyncedAt && new Date(lastSyncedAt) >= new Date(data.updated_at)) {
-    return;
+    return false;
   }
+
+  const incoming = data.data as Record<string, string>;
+  // Compared before writing, not after: a newer `updated_at` only means some
+  // device pushed, which it does for its own edits too. Pushing from phone A
+  // and then opening phone A again shouldn't count as a change.
+  const changed = snapshotsDiffer(readLocalSnapshot(username), incoming);
 
   suppressing = true;
 
   try {
-    writeLocalSnapshot(username, data.data as Record<string, string>);
+    writeLocalSnapshot(username, incoming);
   } finally {
     suppressing = false;
   }
 
   originalSetItem(lastSyncedKey(username), data.updated_at);
+
+  return changed;
+}
+
+/**
+ * Pulls when the app comes back to the foreground, so an edit made on another
+ * device shows up without closing and reopening the app. Previously the only
+ * pulls were at boot and just after login, which meant a second device kept
+ * showing whatever it had loaded with.
+ *
+ * Two guards make this safe rather than merely convenient:
+ *
+ * - It doesn't run while this device has a push outstanding. Those are edits
+ *   the server hasn't got yet, and pulling over them would lose a write that
+ *   was never even offered — the one case the usual last-write-wins doesn't
+ *   cover, because there was no competing write, just a slow one.
+ * - A pull that actually changed something reloads the page. Nothing in this
+ *   app subscribes to localStorage (every screen reads it during render), so
+ *   an already-mounted screen would otherwise go on showing the values it
+ *   read at mount while storage underneath it says something else. Reloading
+ *   on return to the app is the least disruptive moment there is for it.
+ */
+function pullOnForeground() {
+  if (document.visibilityState !== "visible") return;
+  if (!supabase || !cachedAuthUserId) return;
+
+  const username = getCurrentUsername();
+  if (!username) return;
+
+  // A queued debounced push, or one that failed and is waiting to retry —
+  // either way this device is ahead of the server, so send rather than take.
+  if (pushTimer !== null) return;
+
+  if (localStorage.getItem(pendingKey(username)) === "1") {
+    void pushToServer(username);
+    return;
+  }
+
+  const now = Date.now();
+
+  if (now - lastForegroundPullAt < FOREGROUND_PULL_MIN_INTERVAL_MS) return;
+
+  lastForegroundPullAt = now;
+
+  void pullFromServer(username).then((changed) => {
+    if (changed) window.location.reload();
+  });
 }
 
 function schedulePush(username: string) {
@@ -207,6 +276,11 @@ export function initSync() {
 
   window.addEventListener("online", retryPendingIfAny);
   setInterval(retryPendingIfAny, RETRY_INTERVAL_MS);
+
+  // visibilitychange rather than window focus: it's the one that fires when
+  // an installed PWA is switched back to on a phone, which is where a second
+  // device showing stale data actually bites.
+  document.addEventListener("visibilitychange", pullOnForeground);
 
   supabase.auth.getSession().then(({ data }) => {
     cachedAuthUserId = data.session?.user.id ?? null;
