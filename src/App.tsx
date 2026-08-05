@@ -1,6 +1,12 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
-import appScreenshot from "@/imports/app-screenshot.webp";
 import gampetooLogo from "@/imports/gampetoo-logo.png";
+import screenHome from "@/imports/screens/home.webp";
+import screenProgress from "@/imports/screens/progress.webp";
+import screenLog from "@/imports/screens/log.webp";
+import screenLibrary from "@/imports/screens/library.webp";
+import screenProgram from "@/imports/screens/program.webp";
+import screenCalories from "@/imports/screens/calories.webp";
+import screenAddMeal from "@/imports/screens/add-meal.webp";
 
 // ─── Responsive hook ──────────────────────────────────────────────────────────
 // A single shared width store instead of each component keeping its own
@@ -140,38 +146,44 @@ function Nav() {
 
 // ─── Phone Mockup ─────────────────────────────────────────────────────────────
 
-const SCREEN_IDX = { home: 0, workout: 1, progress: 2 };
+const SCREENS = {
+  home: screenHome,
+  progress: screenProgress,
+  log: screenLog,
+  library: screenLibrary,
+  program: screenProgram,
+  calories: screenCalories,
+  addMeal: screenAddMeal,
+} as const;
 
-function PhoneMockup({ screen, width = 200 }: { screen: "home" | "workout" | "progress"; width?: number }) {
-  const idx = SCREEN_IDX[screen];
-  const height = Math.round(width * 2);
+export type ScreenName = keyof typeof SCREENS;
 
+// The screenshots arrive already framed — bezel, notch, buttons and all — so
+// this draws no phone of its own. It used to: a CSS body plus a notch div,
+// with one wide sprite cropped into it. Keeping that around a shot that has
+// its own frame would have put a phone inside a phone.
+//
+// The shadow is a filter rather than a box-shadow for the same reason. These
+// are transparent PNG silhouettes with rounded corners, and box-shadow traces
+// the element's rectangle, so it would have cast a hard-edged rectangle
+// behind a rounded phone. drop-shadow follows the alpha channel instead.
+function PhoneMockup({ screen, width = 200 }: { screen: ScreenName; width?: number }) {
   return (
-    <div style={{
-      position: "relative", width, height,
-      borderRadius: Math.round(width * 0.16),
-      background: "linear-gradient(145deg, #1a1a1a, #111)",
-      border: "1.5px solid rgba(255,255,255,0.12)",
-      overflow: "hidden",
-      boxShadow: "0 0 0 1px rgba(255,255,255,0.04), 0 40px 80px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.1)",
-      flexShrink: 0,
-    }}>
-      {/* Notch */}
-      <div style={{
-        position: "absolute", top: Math.round(width * 0.045), left: "50%", transform: "translateX(-50%)",
-        width: Math.round(width * 0.36), height: Math.round(width * 0.1),
-        background: "#0a0a0a", borderRadius: Math.round(width * 0.05),
-        zIndex: 10, boxShadow: "0 0 0 1.5px rgba(255,255,255,0.08)",
-      }}/>
-      {/* Screenshot crop */}
-      <div style={{
-        position: "absolute", inset: 0,
-        backgroundImage: `url(${appScreenshot})`,
-        backgroundSize: "300% auto",
-        backgroundPosition: `${idx * 50}% top`,
-        backgroundRepeat: "no-repeat",
-      }}/>
-    </div>
+    <img
+      src={SCREENS[screen]}
+      alt=""
+      aria-hidden="true"
+      loading="lazy"
+      decoding="async"
+      width={width}
+      style={{
+        width,
+        height: "auto",
+        display: "block",
+        flexShrink: 0,
+        filter: "drop-shadow(0 40px 80px rgba(0,0,0,0.6))",
+      }}
+    />
   );
 }
 
@@ -221,7 +233,7 @@ function Hero() {
             {/* Single centered phone */}
             <div style={{ display: "flex", justifyContent: "center", position: "relative" }}>
               <div className="animate-float" style={{ position: "relative", zIndex: 2 }}>
-                <PhoneMockup screen="workout" width={phoneW}/>
+                <PhoneMockup screen="home" width={phoneW}/>
               </div>
               {/* Glow */}
               <div style={{ position: "absolute", bottom: -20, left: "50%", transform: "translateX(-50%)", width: 200, height: 60, background: "radial-gradient(ellipse, rgba(250,234,92,0.22) 0%, transparent 70%)", filter: "blur(16px)" }}/>
@@ -259,13 +271,13 @@ function Hero() {
             {/* Phones — 3 floating */}
             <div style={{ position: "relative", height: isTablet ? 420 : 520, display: "flex", alignItems: "center", justifyContent: "center" }}>
               <div className="animate-float-2" style={{ position: "absolute", right: isTablet ? 0 : 10, top: 20, zIndex: 1, opacity: 0.75 }}>
-                <PhoneMockup screen="home" width={phoneW}/>
+                <PhoneMockup screen="progress" width={phoneW}/>
               </div>
               <div className="animate-float" style={{ position: "absolute", left: "50%", transform: "translateX(-50%)", zIndex: 3 }}>
-                <PhoneMockup screen="workout" width={phoneW}/>
+                <PhoneMockup screen="home" width={phoneW}/>
               </div>
               <div className="animate-float-3" style={{ position: "absolute", left: isTablet ? 0 : 10, bottom: 20, zIndex: 1, opacity: 0.75 }}>
-                <PhoneMockup screen="progress" width={phoneW}/>
+                <PhoneMockup screen="calories" width={phoneW}/>
               </div>
               <div style={{ position: "absolute", bottom: 0, left: "50%", transform: "translateX(-50%)", width: 300, height: 60, background: "radial-gradient(ellipse, rgba(250,234,92,0.18) 0%, transparent 70%)", filter: "blur(20px)" }}/>
             </div>
@@ -358,25 +370,29 @@ function AppScreens() {
         <SectionHeader badge="پیش‌نمایش اپ" title={<>تجربه‌ای <span className="gradient-text">متفاوت</span> از تناسب اندام</>}/>
 
         <div style={{ display: "flex", gap: isMobile ? 16 : 28, justifyContent: "center", alignItems: "flex-end", flexWrap: "nowrap", overflowX: isMobile ? "auto" : "visible", paddingBottom: isMobile ? 12 : 0 }}>
+          {/* Deliberately not the screens the hero already showed — this
+              section exists to show more of the app, so repeating home and
+              progress here would have made it decoration. */}
           {!isMobile && (
             <div className="animate-float-2" style={{ opacity: 0.65, transform: `scale(0.88) rotate(-4deg)` }}>
-              <PhoneMockup screen="home" width={phoneW}/>
+              <PhoneMockup screen="library" width={phoneW}/>
             </div>
           )}
           <div className="animate-float">
-            <PhoneMockup screen="workout" width={isMobile ? phoneW + 20 : phoneW}/>
+            <PhoneMockup screen="log" width={isMobile ? phoneW + 20 : phoneW}/>
           </div>
           {!isMobile && (
             <div className="animate-float-3" style={{ opacity: 0.65, transform: `scale(0.88) rotate(4deg)` }}>
-              <PhoneMockup screen="progress" width={phoneW}/>
+              <PhoneMockup screen="program" width={phoneW}/>
             </div>
           )}
         </div>
 
         {isMobile && (
-          /* show all 3 as a scrollable row on very small screens */
-          <div style={{ display: "flex", gap: 14, overflowX: "auto", paddingBottom: 8, marginTop: 20, justifyContent: "center" }}>
-            {(["home", "progress"] as const).map(s => (
+          /* The ones there's no room for beside the main phone, as a
+             scrollable row. */
+          <div style={{ display: "flex", gap: 14, overflowX: "auto", paddingBottom: 8, marginTop: 20 }}>
+            {(["library", "program", "addMeal"] as const).map(s => (
               <div key={s} style={{ flexShrink: 0 }}>
                 <PhoneMockup screen={s} width={120}/>
               </div>
