@@ -16,11 +16,16 @@ import { signOutRemote } from "@/auth/authEngine";
 export interface AccountEditModalProps {
   open: boolean;
   onClose: () => void;
+  // Called after the name/gender are written. The page behind this reads
+  // them straight from localStorage, so without this its avatar would keep
+  // showing the old gender until something else happened to re-render it.
+  onSaved?: () => void;
 }
 
 export default function AccountEditModal({
   open,
   onClose,
+  onSaved,
 }: AccountEditModalProps) {
   const navigate = useNavigate();
   const [name, setName] = useState(() => getCurrentUserName() ?? "");
@@ -45,6 +50,7 @@ export default function AccountEditModal({
       setCurrentUserGender(gender);
     }
 
+    onSaved?.();
     onClose();
   }
 

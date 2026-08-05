@@ -14,6 +14,7 @@ import {
   getCurrentUserName,
 } from "@/utils/userEngine";
 import { getLatestWeight } from "@/utils/weightEngine";
+import { avatarCharacterIcon } from "@/data/characterIcons";
 import { formatGregorianFull } from "@/utils/dateFormat";
 import { toFaDigits } from "@/utils/numberFormat";
 
@@ -31,8 +32,6 @@ export default function ProfilePage() {
   const birthDate = getCurrentUserBirthDate();
   const age = getCurrentUserAge();
 
-  const genderEmoji = gender === "male" ? "👨" : gender === "female" ? "👩" : "👤";
-
   return (
     <div className="space-y-4 px-5 pb-5 pt-10">
       <h1 className="text-center text-2xl font-bold text-white">
@@ -44,10 +43,19 @@ export default function ProfilePage() {
         className="glass-panel flex w-full items-center justify-between rounded-3xl p-5"
       >
         <div className="flex items-center gap-4">
-          {/* Gender-based avatar emoji, chosen once the user picks a gender
-              in the account-edit popup — a generic person emoji until then. */}
-          <div className="flex aspect-square w-24 shrink-0 items-center justify-center rounded-3xl bg-white/10 text-4xl">
-            {genderEmoji}
+          {/* Gender-based avatar, following the same male-unless-female rule
+              as the home card's illustrations (see characterIcons) — so an
+              account that hasn't picked one still gets a drawn avatar rather
+              than a placeholder. */}
+          <div className="flex aspect-square w-24 shrink-0 items-center justify-center overflow-hidden rounded-3xl bg-white/10">
+            <img
+              src={avatarCharacterIcon(gender)}
+              alt=""
+              aria-hidden="true"
+              width={96}
+              height={96}
+              className="h-full w-full object-contain"
+            />
           </div>
 
           <span className="font-semibold text-white">{userName}</span>
@@ -64,6 +72,7 @@ export default function ProfilePage() {
       <AccountEditModal
         open={accountModalOpen}
         onClose={() => setAccountModalOpen(false)}
+        onSaved={() => setVersion((v) => v + 1)}
       />
 
       <div className="flex gap-4">

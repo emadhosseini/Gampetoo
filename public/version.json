@@ -1,6 +1,17 @@
 {
-  "current": "2.1.95",
+  "current": "2.1.96",
   "history": [
+    {
+      "version": "2.1.96",
+      "date": "2026-08-05",
+      "description": "Today's program card and the account avatar now show drawn illustrations instead of emoji, in a male or female version following the account's gender — male until a gender is chosen, and every one of them switches the moment female is picked, because they all resolve through a single lookup with nothing cached per icon. Covers push, pull, legs, lower body, full body and the rest-day walk; an upper-body illustration was not among the supplied files, so that one day still shows its emoji. The fourteen 500px PNGs were re-encoded to 384px WebP — 384 being exactly 128 display pixels at 3x — which took them from 707KB to 293KB, and they are precached with the rest of the app so they are on screen instantly and work offline.",
+      "highlights": [
+        "🏋️ کادر برنامه امروز به‌جای ایموجی، تصویر تمرین همون روز رو نشون می‌ده",
+        "🚻 تصویرها با جنسیت حساب کاربری عوض می‌شن — تا وقتی انتخاب نشده، مرد",
+        "👤 آواتار حساب کاربری هم تصویر شد",
+        "📦 حجم تصویرها از ۷۰۷ به ۲۹۳ کیلوبایت رسید و توی کش آفلاین ذخیره می‌شن"
+      ]
+    },
     {
       "version": "2.1.95",
       "date": "2026-08-05",

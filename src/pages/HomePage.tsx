@@ -22,6 +22,11 @@ import {
 } from "@/utils/programEngine";
 
 import { getWorkout } from "@/store/workoutLibraryStore";
+import {
+  walkCharacterIcon,
+  workoutCharacterIcon,
+} from "@/data/characterIcons";
+import { getCurrentUserGender } from "@/utils/userEngine";
 import { toFaDigits } from "@/utils/numberFormat";
 
 function HomePage() {
@@ -77,6 +82,18 @@ const workout = workoutType
 
   const isTomorrowWorkout = tomorrowDay.activity === "workout";
 
+  // Read fresh on every render rather than held anywhere, so changing the
+  // gender in the profile is reflected the moment this page renders again.
+  // Null before the program starts, and for a workout type with no drawn
+  // icon — HeroCard falls back to its emoji in both cases.
+  const gender = getCurrentUserGender();
+
+  const heroIconSrc = !started
+    ? null
+    : isWorkout
+      ? workoutCharacterIcon(workoutType, gender)
+      : walkCharacterIcon(gender);
+
   return (
     <div className="pb-32">
       <Header />
@@ -85,6 +102,7 @@ const workout = workoutType
         <HeroCard
           title="برنامه امروز"
           emoji={!started ? "🗓" : isWorkout ? "🏋️" : "🚶"}
+          iconSrc={heroIconSrc ?? undefined}
           status={
             !started
               ? "امروز برنامه‌ای نداری"
