@@ -1,2 +1,10 @@
 node_modules
 dist
+
+# Local env files — never commit; the app reads these at build time only.
+.env
+*.local
+
+# macOS / tooling noise
+.DS_Store
+supabase/.temp/
