@@ -92,11 +92,11 @@ export default function BmiCard({ className = "" }: BmiCardProps) {
 
   return (
     <div className={`glass-panel rounded-3xl p-5 ${className}`}>
-      <p className="text-lg font-bold text-white">
+      <p className="text-center text-lg font-bold text-white">
         BMI <span className="mr-1">{toFaDigits(bmi.toFixed(1))}</span>
       </p>
 
-      <p className="mt-0.5 font-semibold" style={{ color: zone.color }}>
+      <p className="mt-0.5 text-center font-semibold" style={{ color: zone.color }}>
         {zone.label}
       </p>
 

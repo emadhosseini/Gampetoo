@@ -60,7 +60,19 @@ ChartJS.register(
 
 const CHART_FONT_FAMILY = "Vazirmatn";
 
-type RangeKey = "day" | "week" | "month" | "sixMonth" | "year";
+export type StatRangeKey = "day" | "week" | "month" | "sixMonth" | "year";
+
+type RangeKey = StatRangeKey;
+
+// What the headline above the chart is called, per range — "کالری روزانه",
+// "میانگین ماهیانه" and so on. Week and month share one label because both
+// report a per-day figure, and 6-month/year share one because both report a
+// per-month figure.
+export interface StatSummaryLabels {
+  day: string;
+  daily: string;
+  monthly: string;
+}
 
 const RANGES: { key: RangeKey; label: string; days: number }[] = [
   { key: "day", label: "روز", days: 0 },
@@ -165,6 +177,16 @@ export interface StatChartPageProps {
   // weight page uses it for a hand-drawn SVG chart with its own axis
   // rules; everything else leaves it off and keeps the shared chart.
   renderChart?: (points: StatBucket[]) => ReactNode;
+  // Which range is selected on arrival. Defaults to the month.
+  defaultRange?: StatRangeKey;
+  // Naming the headline per range also decides what it reports. Every label
+  // callers pass describes a single bucket ("کالری روزانه", "میانگین
+  // ماهیانه"), so a named headline is always a representative per-bucket
+  // figure: that day's own value, the per-day average across week/month, the
+  // per-month average across 6-month/year. Left off, the headline keeps the
+  // older behaviour where a daily total sums its week/month instead of
+  // averaging them, and is labelled مجموع/میانگین accordingly.
+  summaryLabels?: StatSummaryLabels;
   // Extra content below the chart panel, in the page's normal scroll flow
   // (e.g. the weight page's target/current-weight rows).
   children?: ReactNode;
@@ -184,10 +206,12 @@ export default function StatChartPage({
   missingDays = "gap",
   chartType = "line",
   renderChart,
+  defaultRange = "month",
+  summaryLabels,
   children,
 }: StatChartPageProps) {
   const navigate = useNavigate();
-  const [range, setRange] = useState<RangeKey>("month");
+  const [range, setRange] = useState<RangeKey>(defaultRange);
   const { lineRef, barRef } = useChartResizeOnViewportSettle();
 
   const activeRange = RANGES.find((r) => r.key === range)!;
@@ -227,32 +251,55 @@ export default function StatChartPage({
   const isDailyTotal = missingDays === "zero";
   const usesMonthlyBuckets = range === "sixMonth" || range === "year";
 
-  // A daily total's day/week/month ranges draw one bar per day, each the
-  // day's own amount — so the headline reports what those bars add up to
-  // rather than flattening them into an average nobody asked for. Only the
-  // 6-month/year ranges average, because their buckets already are
-  // per-month averages and summing averages would mean nothing. A
-  // point-in-time metric (weight) still averages its real measurements,
-  // where a skipped day genuinely shouldn't count.
-  const summaryLabel = isDailyTotal && !usesMonthlyBuckets ? "مجموع" : "میانگین";
+  // Without explicit labels: a daily total's day/week/month ranges draw one
+  // bar per day, so the headline reports what those bars add up to; only
+  // 6-month/year average, because their buckets already are per-month
+  // averages and summing averages would mean nothing. A point-in-time
+  // metric (weight) averages its real measurements, where a skipped day
+  // genuinely shouldn't count.
+  const summaryLabel = summaryLabels
+    ? range === "day"
+      ? summaryLabels.day
+      : usesMonthlyBuckets
+        ? summaryLabels.monthly
+        : summaryLabels.daily
+    : isDailyTotal && !usesMonthlyBuckets
+      ? "مجموع"
+      : "میانگین";
 
   const summaryValue = useMemo(() => {
-    if (isDailyTotal) {
-      const values = chartPoints
-        .map((point) => point.value)
-        .filter((value): value is number => value !== null);
+    const mean = (values: number[]) =>
+      values.length === 0
+        ? null
+        : values.reduce((sum, value) => sum + value, 0) / values.length;
 
-      if (values.length === 0) return null;
+    const bucketValues = chartPoints
+      .map((point) => point.value)
+      .filter((value): value is number => value !== null);
 
-      const total = values.reduce((sum, value) => sum + value, 0);
+    const entryValues = entries.map((entry) => entry.value);
 
-      return usesMonthlyBuckets ? total / values.length : total;
+    if (summaryLabels) {
+      // 6-month/year read the monthly buckets, since their label promises a
+      // monthly average. Below that, a daily total reads its daily buckets
+      // so a day with nothing logged counts as the zero it is, while a
+      // point-in-time metric reads only real measurements, where a day
+      // that was never weighed shouldn't drag the number toward nothing.
+      if (usesMonthlyBuckets) return mean(bucketValues);
+
+      return mean(isDailyTotal ? bucketValues : entryValues);
     }
 
-    if (entries.length === 0) return null;
+    if (isDailyTotal) {
+      if (bucketValues.length === 0) return null;
 
-    return entries.reduce((sum, entry) => sum + entry.value, 0) / entries.length;
-  }, [isDailyTotal, usesMonthlyBuckets, chartPoints, entries]);
+      const total = bucketValues.reduce((sum, value) => sum + value, 0);
+
+      return usesMonthlyBuckets ? total / bucketValues.length : total;
+    }
+
+    return mean(entryValues);
+  }, [summaryLabels, isDailyTotal, usesMonthlyBuckets, chartPoints, entries]);
 
   // Describes the selected period itself — the same window the chart's
   // x-axis spans — not the first/last day that happens to have an entry.

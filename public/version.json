@@ -1,6 +1,19 @@
 {
-  "current": "2.1.93",
+  "current": "2.1.94",
   "history": [
+    {
+      "version": "2.1.94",
+      "date": "2026-08-05",
+      "description": "Reworked the headline above every chart on the progress pages. Weight, daily calories and daily activity now open on the week rather than the month, and each range names what it is reporting — today's own figure on the day range, a per-day figure across week and month, a per-month average across 6 months and a year — instead of the generic مجموع/میانگین. Naming them also fixed what they reported: week and month were summing their days, so a week of calories read as one enormous number where the label now promises a daily one. Weight and calorie detail rows were flipped so the numbers align down the left with the labels on the right, each led by its colour dot. The calorie goal now states in parentheses whether it was calculated or entered by hand, which nothing distinguished before. The activity page gained a two-colour split bar showing how the day divided between the workout program and other activity, and was renamed فعالیت روزانه; the water page is now میزان آب دریافتی. The BMI figure and its category are centred in their card.",
+      "highlights": [
+        "📊 وزن، کالری و فعالیت به‌صورت پیش‌فرض روی نمای هفته باز می‌شن",
+        "🏷️ عنوان بالای هر نمودار دقیقاً می‌گه چه عددیه — روزانه یا میانگین ماهیانه",
+        "🔢 توی کادرهای وزن و کالری، عددها سمت چپ و عنوان‌ها سمت راست شدن",
+        "🎯 جلوی هدف کالری روزانه مشخص شده محاسبه‌شده‌ست یا دستی",
+        "🔥 نوار دورنگ توی صفحه فعالیت، سهم برنامه تمرینی و سایر فعالیت‌ها رو نشون می‌ده",
+        "✏️ «فعالیت» شد «فعالیت روزانه» و «آب» شد «میزان آب دریافتی»"
+      ]
+    },
     {
       "version": "2.1.93",
       "date": "2026-08-05",

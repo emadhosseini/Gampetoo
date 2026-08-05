@@ -41,7 +41,15 @@ export default function CalorieGoalCard({ onSaved }: CalorieGoalCardProps) {
       ) : (
         <div className="glass-panel glass-static flex items-center justify-between rounded-3xl p-5">
           <div className="text-right">
-            <p className="text-xs text-white/60">هدف کالری روزانه</p>
+            {/* Where the number came from, stated on the label itself: a
+                hand-typed target and a calculated one look identical
+                otherwise, and only one of them moves when the profile
+                changes. getCalorieGoal() is null exactly when the target was
+                set by hand from the row below — there's a number but no goal
+                type behind it. */}
+            <p className="text-xs text-white/60">
+              هدف کالری روزانه ({goal !== null ? "محاسبه‌شده" : "دستی"})
+            </p>
 
             <p className="mt-0.5 text-2xl font-bold text-white">
               {toFaDigits(target)}{" "}

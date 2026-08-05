@@ -43,7 +43,7 @@ export default function ActivityTileCard({ onClick }: ActivityTileCardProps) {
       </div>
 
       <p className="mt-2 text-center text-sm font-semibold" style={{ color: FLAME_COLOR }}>
-        فعالیت
+        فعالیت روزانه
       </p>
     </button>
   );

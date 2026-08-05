@@ -92,7 +92,7 @@ export default function WaterDetailPage() {
             <ChevronRight size={18} />
           </button>
 
-          <h1 className="text-lg font-bold text-white">آب</h1>
+          <h1 className="text-lg font-bold text-white">میزان آب دریافتی</h1>
         </div>
 
         <div className="mx-auto mt-4 h-36 w-36">
