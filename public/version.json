@@ -1,6 +1,14 @@
 {
-  "current": "1.0.0",
+  "current": "1.0.1",
   "history": [
+    {
+      "version": "1.0.1",
+      "date": "2026-08-05",
+      "description": "A second device now picks up changes when the app is brought back to the foreground, instead of only at a cold start. Before this the only pulls were at boot and just after login, so a phone left open kept showing whatever it had loaded with. Two guards keep it safe: it never pulls while this device still has a push outstanding, since those are edits the server has not accepted yet and taking a snapshot that predates them would lose a write outright; and it only reloads when the incoming data actually differs from what is already here, compared by content rather than by timestamp, so a device seeing its own push come back does not reload for nothing. Also removed a dead storage module that had been orphaned since the session engine replaced it.",
+      "highlights": [
+        "🔄 تغییرات دستگاه دیگه با برگشتن به برنامه نمایش داده می‌شن، بدون نیاز به بستن و باز کردن"
+      ]
+    },
     {
       "version": "1.0.0",
       "date": "2026-08-05",
