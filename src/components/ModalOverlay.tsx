@@ -15,8 +15,20 @@ function lockBackgroundScroll() {
   if (openOverlayCount > 1) return;
 
   document.body.style.overflow = "hidden";
-  document.body.style.touchAction = "none";
 
+  // Deliberately NOT touch-action: none on <body>. Popups are portaled into
+  // it, so body is an ancestor of every field the app has — and browsers
+  // intersect touch-action across the whole ancestor chain for a touch
+  // region, not per element. Setting it here therefore reached inside the
+  // popups too and killed the long-press that raises iOS's own
+  // select/paste menu: there was no way to paste into any input in this
+  // app, the AI meal description worst of all, since dictating a meal into
+  // notes and pasting it is exactly how you'd use that field.
+  //
+  // Nothing is lost by dropping it. The scroll root below is the element
+  // that actually scrolls, and it keeps both properties; the backdrop
+  // covers the viewport with its own touch-none; and overflow: hidden here
+  // still pins the page.
   const scrollRoot = document.getElementById("app-scroll-root");
   if (scrollRoot) {
     scrollRoot.style.overflow = "hidden";
@@ -29,6 +41,8 @@ function unlockBackgroundScroll() {
   if (openOverlayCount > 0) return;
 
   document.body.style.removeProperty("overflow");
+  // Still cleared even though locking no longer sets it, so a device that
+  // has one left over from a previous version isn't stuck with it.
   document.body.style.removeProperty("touch-action");
 
   const scrollRoot = document.getElementById("app-scroll-root");

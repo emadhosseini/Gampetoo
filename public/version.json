@@ -1,6 +1,14 @@
 {
-  "current": "1.0.4",
+  "current": "1.0.5",
   "history": [
+    {
+      "version": "1.0.5",
+      "date": "2026-08-05",
+      "description": "Pasting works again in the app's text fields, the AI meal description above all. While any popup was open the page was told to ignore touch gestures, and because popups are rendered into the page body, that instruction reached inside them too — browsers apply it to a whole branch of the page rather than one element. The long press that raises the phone's own select and paste menu counts as one of those gestures, so it never appeared. The instruction was redundant anyway: the element that actually scrolls still carries it, and the dimmed backdrop already covers the screen.",
+      "highlights": [
+        "📋 حالا می‌تونی توی کادر توضیح هوش مصنوعی (و بقیه‌ی فیلدها) متن پیست کنی"
+      ]
+    },
     {
       "version": "1.0.4",
       "date": "2026-08-05",
