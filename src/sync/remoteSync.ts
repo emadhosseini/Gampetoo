@@ -96,6 +96,78 @@ function writeKeyTimes(username: string, times: Record<string, string>) {
   originalSetItem(keyTimesKey(username), JSON.stringify(times));
 }
 
+/**
+ * A fingerprint per key of what this device last successfully sent. The
+ * safety net underneath the timestamps: if a key's current value doesn't
+ * match what we last got onto the server, this device is holding a change
+ * the server has not accepted, and no pull may overwrite it — whatever the
+ * timestamps say.
+ *
+ * Timestamps alone were not enough, because every way of producing them can
+ * be wrong. A device whose clock is fast stamps the future. A client too old
+ * to know about them strips them and makes its own stale values look freshly
+ * written. A write that slips through unstamped has no time at all. Each of
+ * those ends the same way: your edit silently replaced by an older value.
+ * Comparing against what was actually sent doesn't depend on any of it.
+ */
+function lastPushedKey(username: string) {
+  return `gampetoo-last-pushed:${username}`;
+}
+
+// FNV-1a. Not for security — just to avoid keeping a second copy of every
+// synced blob on the device purely to compare against.
+function fingerprint(value: string): string {
+  let hash = 0x811c9dc5;
+
+  for (let i = 0; i < value.length; i++) {
+    hash ^= value.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193);
+  }
+
+  return `${value.length}:${(hash >>> 0).toString(36)}`;
+}
+
+function readLastPushed(username: string): Record<string, string> {
+  try {
+    const raw = localStorage.getItem(lastPushedKey(username));
+
+    return raw ? (JSON.parse(raw) as Record<string, string>) : {};
+  } catch {
+    return {};
+  }
+}
+
+function writeLastPushed(username: string, values: Record<string, string>) {
+  const prints: Record<string, string> = {};
+
+  for (const base of SYNCED_BASE_KEYS) {
+    if (values[base] !== undefined) prints[base] = fingerprint(values[base]);
+  }
+
+  originalSetItem(lastPushedKey(username), JSON.stringify(prints));
+}
+
+/**
+ * Keys whose current local value isn't what this device last got onto the
+ * server. Includes a key deleted locally that the server still has.
+ */
+function unconfirmedKeys(username: string): Set<string> {
+  const local = readLocalSnapshot(username);
+  const pushed = readLastPushed(username);
+  const unconfirmed = new Set<string>();
+
+  for (const base of SYNCED_BASE_KEYS) {
+    const value = local[base];
+    const print = pushed[base];
+
+    if (value === undefined ? print !== undefined : fingerprint(value) !== print) {
+      unconfirmed.add(base);
+    }
+  }
+
+  return unconfirmed;
+}
+
 function recordLocalChange(username: string, base: string) {
   const times = readKeyTimes(username);
 
@@ -191,7 +263,8 @@ function mergeByKey(
   local: Record<string, string>,
   localTimes: Record<string, string>,
   remote: Record<string, string>,
-  remoteTimes: Record<string, string>
+  remoteTimes: Record<string, string>,
+  unconfirmed: Set<string>
 ): { values: Record<string, string>; times: Record<string, string> } {
   const values: Record<string, string> = {};
   const times: Record<string, string> = {};
@@ -203,8 +276,16 @@ function mergeByKey(
     let value: string | undefined;
     let time: string | undefined;
 
-    // ISO-8601 UTC strings, so lexicographic order is chronological order.
-    if (lt !== undefined && (rt === undefined || lt > rt)) {
+    if (unconfirmed.has(base)) {
+      // Holding a change the server hasn't taken. Nothing coming back from
+      // it can be newer than something it has never seen, so this wins
+      // outright — no timestamp is consulted, because every source of
+      // timestamps has a way of being wrong and this doesn't.
+      value = local[base];
+      // Stamped now if it somehow never was, so it also wins on the way out.
+      time = lt ?? new Date().toISOString();
+    } else if (lt !== undefined && (rt === undefined || lt > rt)) {
+      // ISO-8601 UTC strings, so lexicographic order is chronological order.
       value = local[base];
       time = lt;
     } else if (rt !== undefined) {
@@ -241,6 +322,9 @@ async function writeRemote(
 
     originalSetItem(lastSyncedKey(username), updatedAt);
     originalRemoveItem(pendingKey(username));
+    // Only after the server confirmed it. Anything that differs from this
+    // from now on is a change it hasn't seen — see unconfirmedKeys.
+    writeLastPushed(username, values);
   } catch {
     // Offline or transient failure — flag it so the next reconnect retries.
     originalSetItem(pendingKey(username), "1");
@@ -317,7 +401,13 @@ async function pullFromServer(username: string): Promise<boolean> {
     data.updated_at
   );
 
-  const merged = mergeByKey(local, localTimes, remote.values, remote.times);
+  const merged = mergeByKey(
+    local,
+    localTimes,
+    remote.values,
+    remote.times,
+    unconfirmedKeys(username)
+  );
 
   const localChanged = snapshotsDiffer(local, merged.values);
 
@@ -340,9 +430,17 @@ async function pullFromServer(username: string): Promise<boolean> {
     snapshotsDiffer(remote.values, merged.values) ||
     (data.data as Record<string, unknown>)[META_KEY] === undefined
   ) {
+    // writeRemote records the confirmed baseline itself, and only if the
+    // server actually took it.
     await writeRemote(username, merged.values, merged.times);
   } else {
     originalSetItem(lastSyncedKey(username), data.updated_at);
+    // The server already holds exactly this, so it is confirmed. Without
+    // recording it, everything that arrived by pull would look like an
+    // unsent local change forever — which, among other things, made a
+    // deletion from another device come straight back, since this device
+    // would keep "defending" the value it had just been given.
+    writeLastPushed(username, merged.values);
   }
 
   return localChanged;
@@ -580,6 +678,7 @@ export function resetSyncMarkers(username: string) {
   // username look like it had already edited every key, so the merge would
   // prefer its empty values over whatever the server holds.
   originalRemoveItem(keyTimesKey(username));
+  originalRemoveItem(lastPushedKey(username));
 }
 
 /**
