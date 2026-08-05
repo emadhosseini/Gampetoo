@@ -1,6 +1,14 @@
 {
-  "current": "1.0.6",
+  "current": "1.0.7",
   "history": [
+    {
+      "version": "1.0.7",
+      "date": "2026-08-05",
+      "description": "Fixed a leftover green dashed border on every secondary/cancel button in the app (.ghost-action — 'بستن', 'بازگشت', and the like across 27 files), missed in the earlier pass that converted the rest of the UI off green and yellow. It only ever showed up where one of these buttons sat directly over the background gradient rather than inside a card, which is likely why it slipped through. Now a plain translucent white, matching every other rim in the glass system.",
+      "highlights": [
+        "⬜ حاشیه‌ی نقطه‌چین سبزِ باقی‌مانده روی دکمه‌های ثانویه (مثل «بستن» و «بازگشت») سفید شفاف شد"
+      ]
+    },
     {
       "version": "1.0.6",
       "date": "2026-08-05",
