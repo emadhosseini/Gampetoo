@@ -154,7 +154,7 @@ export default function SetupProgramPage() {
 
   return (
     <div className="app-gradient-bg pt-safe relative flex min-h-screen flex-col items-center justify-center px-6 py-10">
-      <MeshGradientBackground colorA="#3b9149" colorB="#faea5c" />
+      <MeshGradientBackground />
 
       <div className="relative z-10 mx-auto flex w-full max-w-xl flex-col space-y-8">
         <InstallHint />

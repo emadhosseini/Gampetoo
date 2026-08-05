@@ -101,7 +101,7 @@ function MobileContainer({ children, bleedTop = false }: MobileContainerProps) {
       className="app-gradient-bg pt-safe relative mx-auto max-w-md overflow-hidden shadow-2xl"
       style={{ height: viewportHeight }}
     >
-      <MeshGradientBackground colorA="#3b9149" colorB="#faea5c" />
+      <MeshGradientBackground />
       <div className={`relative z-10 h-full ${bleedTop ? "bleed-top-safe" : ""}`}>
         {children}
       </div>

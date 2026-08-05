@@ -1,6 +1,16 @@
 {
-  "current": "2.1.89",
+  "current": "2.1.90",
   "history": [
+    {
+      "version": "2.1.90",
+      "date": "2026-08-05",
+      "description": "The app-wide background is now the reference image itself rather than a CSS gradient approximating it. The source PNG was 1.1MB, which is far too heavy for something that paints under every screen — re-encoded as WebP it is 9.1KB, a 99% reduction, because a smooth gradient is exactly the kind of image WebP compresses almost to nothing while a PNG stores it pixel by pixel. Also added webp to the service worker's precache patterns, which only covered png/svg/ico before: without it the background would have been the one asset missing from the offline cache, fetched over the network on every cold start.",
+      "highlights": [
+        "🖼️ پس‌زمینه‌ی اپ دقیقاً همون تصویریه که فرستادی، نه یک گرادیان شبیه‌سازی‌شده",
+        "📦 حجمش از ۱.۱ مگابایت به ۹ کیلوبایت رسید (WebP) — بدون افت کیفیت",
+        "📶 توی کش آفلاین هم ذخیره می‌شه، پس از اولین لود به بعد اصلاً دانلود نمی‌شه"
+      ]
+    },
     {
       "version": "2.1.89",
       "date": "2026-08-04",

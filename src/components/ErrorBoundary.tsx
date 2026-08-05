@@ -51,7 +51,7 @@ export default class ErrorBoundary extends Component<Props, State> {
 
     return (
       <div className="app-gradient-bg pt-safe relative flex min-h-screen flex-col items-center justify-center px-6">
-        <MeshGradientBackground colorA="#3b9149" colorB="#faea5c" />
+        <MeshGradientBackground />
 
         <div className="relative z-10 w-full max-w-sm glass-panel glass-static rounded-3xl p-6 text-center">
           <h1 className="text-lg font-bold text-white">
