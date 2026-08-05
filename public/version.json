@@ -1,6 +1,14 @@
 {
-  "current": "1.0.3",
+  "current": "1.0.4",
   "history": [
+    {
+      "version": "1.0.4",
+      "date": "2026-08-05",
+      "description": "Adds a guarantee underneath the sync rather than another fix on top of it: a value this device has changed but not yet got onto the server can no longer be replaced by anything coming back from it, full stop. Deciding that by timestamp was never sound — a phone whose clock runs fast stamps the future, a version too old to know about the timestamps strips them and makes its own stale values look freshly written, and a write that slips through unstamped has no time at all. Each of those ends with your edit quietly replaced by an older one. The app now remembers what it last actually sent, so it can tell a value the server has from one it has never seen, and no clock is consulted for that.",
+      "highlights": [
+        "🛡️ چیزی که ثبت کردی و هنوز به سرور نرسیده، دیگه تحت هیچ شرایطی با نسخه‌ی قدیمی‌تر جایگزین نمی‌شه"
+      ]
+    },
     {
       "version": "1.0.3",
       "date": "2026-08-05",
