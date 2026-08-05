@@ -25,6 +25,12 @@ import { toFaDigits } from "@/utils/numberFormat";
 const ACTIVITY_LEVELS: ActivityLevel[] = ["sedentary", "light", "moderate", "active"];
 const GOALS: CalorieGoal[] = ["lose", "maintain", "gain"];
 
+// Stand-ins for a profile that hasn't recorded them yet, so the preview
+// still produces a number instead of nothing. The user is told when one of
+// these is in play — see `missing` below.
+const FALLBACK_AGE = 25;
+const FALLBACK_HEIGHT_CM = 170;
+
 export interface CalorieGoalModalProps {
   open: boolean;
   onClose: () => void;
@@ -107,14 +113,13 @@ function ChoiceButton({
   );
 }
 
-// Collects everything Mifflin-St Jeor needs, pre-filled from whatever the
-// profile already knows so most people only have to pick an activity level
-// and a goal. Shows the resulting number live, so the choices visibly move
-// it rather than being a black box you only see the result of after saving.
+// Collects what Mifflin-St Jeor needs that isn't already known. Age and
+// height aren't asked for: the profile owns them (age derived from the
+// birth date there), and having a second place to type them meant the two
+// could disagree, with this one silently winning. They're shown read-only
+// below instead, so the calculation stays inspectable.
 export default function CalorieGoalModal({ open, onClose, onSaved }: CalorieGoalModalProps) {
   const [gender, setGender] = useState<Gender>(() => getCurrentUserGender() ?? "male");
-  const [age, setAge] = useState(() => getCurrentUserAge() ?? 25);
-  const [heightCm, setHeightCm] = useState(() => getCurrentUserHeight() ?? 170);
   const [weightKg, setWeightKg] = useState(() => Math.round(getLatestWeight() ?? 70));
   const [activityLevel, setActivityLevel] = useState<ActivityLevel>(
     () => getActivityLevel() ?? "light",
@@ -124,6 +129,20 @@ export default function CalorieGoalModal({ open, onClose, onSaved }: CalorieGoal
   if (!open) {
     return null;
   }
+
+  // Straight from the profile. The fallbacks only stand in so the preview
+  // still shows a number when the profile is incomplete — the notice below
+  // says which one is a guess rather than letting it pass as the user's.
+  const profileAge = getCurrentUserAge();
+  const profileHeight = getCurrentUserHeight();
+
+  const age = profileAge ?? FALLBACK_AGE;
+  const heightCm = profileHeight ?? FALLBACK_HEIGHT_CM;
+
+  const missing = [
+    profileAge === null ? "تاریخ تولد" : null,
+    profileHeight === null ? "قد" : null,
+  ].filter((label): label is string => label !== null);
 
   const preview = calculateCalorieTarget({
     gender,
@@ -162,25 +181,37 @@ export default function CalorieGoalModal({ open, onClose, onSaved }: CalorieGoal
           </div>
         </div>
 
-        <StepperRow
-          label="سن"
-          value={age}
-          unit="سال"
-          step={1}
-          min={10}
-          max={100}
-          onChange={setAge}
-        />
+        {/* Read-only, from the profile. Shown rather than hidden because
+            they move the result as much as anything the user can change
+            here, and a number you can't see is a number you can't tell is
+            wrong. */}
+        <div className="glass-chip flex items-center justify-between rounded-xl p-3">
+          <div>
+            <p className="text-xs text-white/60">سن</p>
+            <p className="mt-0.5 font-bold text-white">
+              {toFaDigits(age)}{" "}
+              <span className="text-sm font-normal text-white/60">سال</span>
+            </p>
+          </div>
 
-        <StepperRow
-          label="قد"
-          value={heightCm}
-          unit="سانتی‌متر"
-          step={1}
-          min={100}
-          max={230}
-          onChange={setHeightCm}
-        />
+          <div className="text-left">
+            <p className="text-xs text-white/60">قد</p>
+            <p className="mt-0.5 font-bold text-white">
+              {toFaDigits(heightCm)}{" "}
+              <span className="text-sm font-normal text-white/60">
+                سانتی‌متر
+              </span>
+            </p>
+          </div>
+        </div>
+
+        {missing.length > 0 && (
+          <p className="text-xs leading-relaxed text-white/60">
+            {missing.join(" و ")} توی حساب کاربری ثبت نشده، پس فعلاً یک عدد
+            پیش‌فرض برای محاسبه استفاده شده. برای نتیجه‌ی دقیق‌تر از صفحه‌ی
+            حساب کاربری ثبتش کن.
+          </p>
+        )}
 
         <StepperRow
           label="وزن"

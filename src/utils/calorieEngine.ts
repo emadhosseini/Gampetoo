@@ -1,13 +1,14 @@
 import { setCalorieTarget } from "./dailyLogEngine";
-import { scopedKey, setCurrentUserAge, setCurrentUserGender, setCurrentUserHeight, type Gender } from "./userEngine";
+import { scopedKey, setCurrentUserGender, type Gender } from "./userEngine";
 import { logWeight } from "./weightEngine";
 
 // Only the two inputs this feature owns live here. The daily calorie
 // target itself stays owned by dailyLogEngine (emad-daily-calorie-target)
 // — this module computes the number and hands it over rather than writing
-// that key directly, so it still has exactly one owner. Weight, height,
-// gender and age likewise go back to their own engines, which is what
-// lets one form here also fix an empty BMI card or a missing weigh-in.
+// that key directly, so it still has exactly one owner. Weight and gender
+// likewise go back to their own engines, which is what lets one form here
+// also fix a missing weigh-in. Age and height are read-only inputs owned
+// by the profile — see saveCalorieProfile.
 const ACTIVITY_LEVEL_KEY = "emad-user-activity-level";
 const CALORIE_GOAL_KEY = "emad-user-calorie-goal";
 
@@ -118,16 +119,19 @@ export function getCalorieGoal(): CalorieGoal | null {
 
 /**
  * Runs the calculation and persists everything it touches: the target goes
- * to dailyLogEngine, and each profile input goes back to the engine that
- * owns it — so filling this form in also records today's weight and fills
- * the height the BMI card needs.
+ * to dailyLogEngine, and each input the form actually collects goes back to
+ * the engine that owns it — so filling this form in also records today's
+ * weight and the gender the avatar uses.
+ *
+ * Age and height are deliberately not written back. The form reads them
+ * from the profile rather than asking, so writing them here would only ever
+ * echo the profile's own value back at it — or, when the profile has none,
+ * persist this module's stand-in default as if the user had stated it.
  */
 export function saveCalorieProfile(profile: CalorieProfile): CalorieCalculation {
   const calculation = calculateCalorieTarget(profile);
 
   setCurrentUserGender(profile.gender);
-  setCurrentUserAge(profile.age);
-  setCurrentUserHeight(profile.heightCm);
   logWeight(profile.weightKg);
 
   localStorage.setItem(scopedKey(ACTIVITY_LEVEL_KEY), profile.activityLevel);

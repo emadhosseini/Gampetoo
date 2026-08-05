@@ -5,24 +5,31 @@ import AccountEditModal from "@/components/AccountEditModal";
 import BmiCard from "@/components/BmiCard";
 import WeightModal from "@/components/WeightModal";
 import HeightModal from "@/components/HeightModal";
+import BirthDateModal from "@/components/BirthDateModal";
 import {
+  getCurrentUserAge,
+  getCurrentUserBirthDate,
   getCurrentUserGender,
   getCurrentUserHeight,
   getCurrentUserName,
 } from "@/utils/userEngine";
 import { getLatestWeight } from "@/utils/weightEngine";
+import { formatGregorianFull } from "@/utils/dateFormat";
 import { toFaDigits } from "@/utils/numberFormat";
 
 export default function ProfilePage() {
   const [accountModalOpen, setAccountModalOpen] = useState(false);
   const [heightModalOpen, setHeightModalOpen] = useState(false);
   const [weightModalOpen, setWeightModalOpen] = useState(false);
+  const [birthDateModalOpen, setBirthDateModalOpen] = useState(false);
   const [, setVersion] = useState(0);
 
   const userName = getCurrentUserName() ?? "";
   const gender = getCurrentUserGender();
   const weight = getLatestWeight();
   const height = getCurrentUserHeight();
+  const birthDate = getCurrentUserBirthDate();
+  const age = getCurrentUserAge();
 
   const genderEmoji = gender === "male" ? "👨" : gender === "female" ? "👩" : "👤";
 
@@ -81,6 +88,22 @@ export default function ProfilePage() {
         </button>
       </div>
 
+      {/* Full width rather than half: the same card shape and height as قد
+          beside it, but nothing to pair it with on its own row. Stores the
+          date, not the age — every age in the app is derived from it (see
+          getCurrentUserAge), so it can't go stale on a birthday. */}
+      <button
+        onClick={() => setBirthDateModalOpen(true)}
+        className="glass-panel w-full rounded-3xl p-4 text-center"
+      >
+        <p className="text-lg font-bold text-white">تاریخ تولد</p>
+        <p className="mt-1 text-sm text-white">
+          {birthDate !== null
+            ? `${formatGregorianFull(birthDate)}${age !== null ? ` · ${toFaDigits(age)} سال` : ""}`
+            : "ثبت نشده"}
+        </p>
+      </button>
+
       <BmiCard />
 
       <WeightModal
@@ -92,6 +115,12 @@ export default function ProfilePage() {
       <HeightModal
         open={heightModalOpen}
         onClose={() => setHeightModalOpen(false)}
+        onSaved={() => setVersion((v) => v + 1)}
+      />
+
+      <BirthDateModal
+        open={birthDateModalOpen}
+        onClose={() => setBirthDateModalOpen(false)}
         onSaved={() => setVersion((v) => v + 1)}
       />
     </div>

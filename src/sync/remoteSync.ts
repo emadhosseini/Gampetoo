@@ -16,6 +16,7 @@ const SYNCED_BASE_KEYS = [
   "emad-user-gender",
   "emad-user-height",
   "emad-user-age",
+  "emad-user-birth-date",
   "emad-user-activity-level",
   "emad-user-calorie-goal",
   "emad-weight-log",

@@ -1,6 +1,16 @@
 {
-  "current": "2.1.94",
+  "current": "2.1.95",
   "history": [
+    {
+      "version": "2.1.95",
+      "date": "2026-08-05",
+      "description": "The profile page gained a date-of-birth field below weight and height, picked as a Gregorian date on three wheels. It stores the date rather than an age, so the age it feeds the rest of the app is derived on read and can never be a year stale — which a typed age silently becomes on the next birthday. The calorie-goal calculator no longer asks for age and height at all; it reads both from the profile, shows them read-only so the calculation stays inspectable, and says which one is missing when the profile has yet to record it instead of passing its own fallback off as the user's figure. It also stopped writing age and height back, which previously let the calculator's copy quietly overwrite the profile's.",
+      "highlights": [
+        "🎂 تاریخ تولد میلادی توی حساب کاربری اضافه شد و سن خودکار ازش حساب می‌شه",
+        "🧮 توی محاسبه هدف کالری دیگه سن و قد پرسیده نمی‌شه — از پروفایل خونده می‌شه",
+        "👁️ سن و قد استفاده‌شده توی همون صفحه نمایش داده می‌شن تا معلوم باشه محاسبه با چه عددی انجام شده"
+      ]
+    },
     {
       "version": "2.1.94",
       "date": "2026-08-05",

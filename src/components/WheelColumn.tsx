@@ -20,13 +20,14 @@ interface WheelItemProps {
   scrollY: MotionValue<number>;
   index: number;
   label: string;
+  textClass: string;
 }
 
 // Reads its distance from the wheel's center off a shared scroll-position
 // motion value and derives scale/opacity from it — driven entirely through
 // transform/opacity (GPU-composited, no layout/reflow), so this stays smooth
 // even while the container is mid-scroll on lower-end phones.
-function WheelItem({ scrollY, index, label }: WheelItemProps) {
+function WheelItem({ scrollY, index, label, textClass }: WheelItemProps) {
   const distance = useTransform(scrollY, (y) => {
     const itemCenter = EDGE_PADDING + index * ITEM_HEIGHT + ITEM_HEIGHT / 2;
     const viewCenter = y + CONTAINER_HEIGHT / 2;
@@ -56,7 +57,7 @@ function WheelItem({ scrollY, index, label }: WheelItemProps) {
           dark translucent panel was effectively invisible. */}
       <motion.div
         style={{ scale, opacity }}
-        className="flex h-full items-center justify-center text-2xl font-bold tabular-nums text-white"
+        className={`flex h-full items-center justify-center font-bold tabular-nums text-white ${textClass}`}
       >
         {label}
       </motion.div>
@@ -70,6 +71,10 @@ export interface WheelColumnProps {
   onSettle: (value: number) => void;
   format?: (value: number) => string;
   className?: string;
+  // Type scale for the wheel's labels. Numbers fit the default at any
+  // column width; a column of words (month names) needs to come down a
+  // size or the longest of them overflows its column.
+  textClass?: string;
 }
 
 export function WheelColumn({
@@ -78,6 +83,7 @@ export function WheelColumn({
   onSettle,
   format = toFaDigits,
   className = "",
+  textClass = "text-2xl",
 }: WheelColumnProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const { scrollY } = useScroll({ container: containerRef });
@@ -134,6 +140,7 @@ export function WheelColumn({
             scrollY={scrollY}
             index={index}
             label={format(value)}
+            textClass={textClass}
           />
         ))}
       </div>

@@ -11,10 +11,18 @@ const GENDER_KEY = "emad-user-gender";
 // Per-account height in cm (scoped by username), used for the BMI card.
 const HEIGHT_KEY = "emad-user-height";
 
-// Per-account age in years (scoped by username). Only the calorie-goal
-// calculator needs it (Mifflin-St Jeor takes age as an input), which is
-// why it's collected there rather than during signup.
+// Per-account age in years (scoped by username). Superseded by the birth
+// date below and no longer written by anything — kept only so an account
+// that entered an age in the calorie calculator before birth dates existed
+// doesn't lose it. See getCurrentUserAge.
 const AGE_KEY = "emad-user-age";
+
+// Per-account date of birth (scoped by username), stored as a Gregorian ISO
+// date (YYYY-MM-DD) like every other date in the app. This is the source of
+// truth for the user's age: a stored age is correct on the day it's typed
+// and quietly wrong from the next birthday onward, whereas a birth date
+// never goes stale.
+const BIRTH_DATE_KEY = "emad-user-birth-date";
 
 export type Gender = "male" | "female";
 
@@ -88,14 +96,62 @@ export function setCurrentUserHeight(heightCm: number) {
   localStorage.setItem(scopedKey(HEIGHT_KEY), String(heightCm));
 }
 
+export function getCurrentUserBirthDate(): string | null {
+  const value = localStorage.getItem(scopedKey(BIRTH_DATE_KEY));
+
+  return value !== null && /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : null;
+}
+
+export function setCurrentUserBirthDate(isoDate: string) {
+  localStorage.setItem(scopedKey(BIRTH_DATE_KEY), isoDate);
+}
+
+/**
+ * Whole years between a Gregorian ISO birth date and `on` (today by
+ * default). The birthday itself counts, so someone turns N on the day
+ * rather than the day after. Null for an unparseable or future date.
+ *
+ * Takes `on` as a parameter rather than reading the clock itself so the
+ * boundary cases (the day before a birthday, the birthday, a Feb 29 birth
+ * date in a non-leap year) are checkable.
+ */
+export function ageFromBirthDate(
+  birthIso: string,
+  on: Date = new Date(),
+): number | null {
+  const [year, month, day] = birthIso.split("-").map(Number);
+
+  if (![year, month, day].every((part) => Number.isFinite(part))) {
+    return null;
+  }
+
+  const hadBirthdayThisYear =
+    on.getMonth() + 1 > month ||
+    (on.getMonth() + 1 === month && on.getDate() >= day);
+
+  const age = on.getFullYear() - year - (hadBirthdayThisYear ? 0 : 1);
+
+  return age >= 0 ? age : null;
+}
+
+/**
+ * The user's age in whole years — derived from their birth date, so it
+ * stays right without anyone re-entering it.
+ */
 export function getCurrentUserAge(): number | null {
+  const birthDate = getCurrentUserBirthDate();
+
+  if (birthDate !== null) {
+    return ageFromBirthDate(birthDate);
+  }
+
+  // Accounts that typed a plain age into the calorie calculator before
+  // birth dates existed. Nothing writes this key any more — it's read only
+  // so those accounts keep a working calorie goal until they set a birth
+  // date, after which the branch above takes over for good.
   const value = Number(localStorage.getItem(scopedKey(AGE_KEY)));
 
   return Number.isFinite(value) && value > 0 ? value : null;
-}
-
-export function setCurrentUserAge(years: number) {
-  localStorage.setItem(scopedKey(AGE_KEY), String(Math.round(years)));
 }
 
 export function hasCurrentUser(): boolean {
@@ -172,6 +228,7 @@ export function resetUserProfile() {
   localStorage.removeItem(scopedKey(GENDER_KEY));
   localStorage.removeItem(scopedKey(HEIGHT_KEY));
   localStorage.removeItem(scopedKey(AGE_KEY));
+  localStorage.removeItem(scopedKey(BIRTH_DATE_KEY));
 }
 
 /**

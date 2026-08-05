@@ -21,7 +21,7 @@ export function formatJalaliFull(iso: string): string {
   }).format("D MMMM YYYY");
 }
 
-const gregorianMonthNamesFa = [
+export const GREGORIAN_MONTH_NAMES_FA = [
   "ژانویه",
   "فوریه",
   "مارس",
@@ -39,9 +39,19 @@ const gregorianMonthNamesFa = [
 /** e.g. "۲۲ جولای" — Persian digits/script, Gregorian calendar. */
 export function formatGregorianShort(date: Date): string {
   const day = date.getDate().toLocaleString("fa-IR");
-  const month = gregorianMonthNamesFa[date.getMonth()];
+  const month = GREGORIAN_MONTH_NAMES_FA[date.getMonth()];
 
   return `${day} ${month}`;
+}
+
+/**
+ * e.g. "۱۲ مارس ۱۹۹۵" — the short form plus the year, for dates where the
+ * year is the point (a birth date) rather than noise (a chart axis).
+ */
+export function formatGregorianFull(iso: string): string {
+  const date = isoToLocalDate(iso);
+
+  return `${formatGregorianShort(date)} ${date.getFullYear().toLocaleString("fa-IR", { useGrouping: false })}`;
 }
 
 /** e.g. "۲۲" — just the day-of-month, Persian digits, for dense chart x-axes. */
