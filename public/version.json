@@ -1,6 +1,16 @@
 {
-  "current": "2.1.91",
+  "current": "2.1.92",
   "history": [
+    {
+      "version": "2.1.92",
+      "date": "2026-08-05",
+      "description": "Reworked how a meal is inspected and corrected on the daily log. The \"+\" on a meal card now asks how you want to log the food — manually or with the AI — instead of jumping straight into the manual search, which is what made the AI route effectively invisible from this screen. Tapping anywhere else on the card expands it in place rather than opening a summary popup, and the foods logged for that meal are now listed under the protein/carb/fat/fiber totals they add up to. Tapping any of them opens an editor for its amount, which rescales that entry's calories and macros. Editing works off the amount recorded when the food was added and never off the previous edit's result, so adjusting a portion back and forth returns the exact original numbers instead of drifting a gram at a time.",
+      "highlights": [
+        "➕ دکمه + حالا اول می‌پرسه تکی اضافه کنی یا با هوش مصنوعی",
+        "📖 با لمس کادر وعده، لیست غذاهای ثبت‌شده زیر مقدار پروتئین و کربوهیدرات باز می‌شه",
+        "✏️ با لمس هر غذا می‌تونی مقدارش رو عوض کنی و کالری و درشت‌مغذی‌هاش خودکار حساب می‌شه"
+      ]
+    },
     {
       "version": "2.1.91",
       "date": "2026-08-05",

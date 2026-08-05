@@ -78,14 +78,24 @@ export default function AiMealEntryModal({ meal, onClose, onChange }: AiMealEntr
     if (screen.step !== "results") return;
 
     for (const item of screen.matched) {
-      addLoggedEntry(meal!.id, {
-        name: item.food.nameFa,
-        amount: `${toFaDigits(item.quantity)} ${item.unit.label}`,
+      const macros = {
         calories: item.calories,
         protein: item.protein,
         carbs: item.carbs,
         fat: item.fat,
         fiber: item.fiber,
+      };
+
+      addLoggedEntry(meal!.id, {
+        name: item.food.nameFa,
+        amount: `${toFaDigits(item.quantity)} ${item.unit.label}`,
+        // Same editable-amount basis the manual flow records — the AI's
+        // guess at how much you ate is exactly the one most worth
+        // correcting afterwards.
+        quantity: item.quantity,
+        unitLabel: item.unit.label,
+        base: { quantity: item.quantity, ...macros },
+        ...macros,
       });
     }
 

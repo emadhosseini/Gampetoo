@@ -1,4 +1,5 @@
 import { generateId } from "./id";
+import { toFaDigits } from "./numberFormat";
 import { scopedKey } from "./userEngine";
 import { createDailyMetricLog, type DailyMetricEntry } from "./dailyMetricLog";
 
@@ -25,15 +26,43 @@ function sumCalories(meals: DailyLogState["meals"]): number {
     .reduce((sum, entry) => sum + (entry.calories ?? 0), 0);
 }
 
-export interface LoggedFoodEntry {
-  id: string;
-  name: string;
-  amount?: string;
+export interface EntryMacros {
   calories?: number;
   protein?: number;
   carbs?: number;
   fat?: number;
   fiber?: number;
+}
+
+export interface LoggedFoodEntry extends EntryMacros {
+  id: string;
+  name: string;
+  // Display string ("۲ لیوان") — the only amount the UI ever prints.
+  amount?: string;
+  // Written by both add flows (manual search and AI) so the amount stays
+  // editable after the fact. `quantity`/`unitLabel` are the current amount
+  // in machine-readable form; `base` is the add-time quantity together with
+  // the macros that were computed for exactly that quantity, and it is
+  // never rewritten. Every edit rescales from `base`, so editing 2 -> 1 -> 2
+  // lands back on the original numbers instead of drifting the way scaling
+  // the previous edit's already-rounded result would.
+  //
+  // All three are optional because an entry logged before this existed
+  // simply doesn't have them — isEntryEditable() is how the UI asks.
+  quantity?: number;
+  unitLabel?: string;
+  base?: EntryMacros & { quantity: number };
+}
+
+// Whether the amount of an already-logged entry can be changed — false only
+// for entries logged before the fields above were recorded, which carry
+// their macros as a total with nothing to rescale from.
+export function isEntryEditable(entry: LoggedFoodEntry): boolean {
+  return (
+    entry.quantity !== undefined &&
+    entry.base !== undefined &&
+    entry.base.quantity > 0
+  );
 }
 
 interface DailyLogState {
@@ -91,6 +120,48 @@ export function addLoggedEntry(
   const entries = state.meals[mealId] ?? [];
 
   state.meals[mealId] = [...entries, { ...entry, id: generateId() }];
+
+  writeState(state);
+}
+
+function scaled(value: number | undefined, ratio: number) {
+  return value === undefined ? undefined : Math.round(value * ratio);
+}
+
+// Changes how much of an already-logged food was eaten, rescaling every
+// macro (and the printed amount) to match. A no-op for an entry that isn't
+// editable — see isEntryEditable.
+export function updateLoggedEntryQuantity(
+  mealId: string,
+  entryId: string,
+  quantity: number,
+) {
+  const state = readState();
+  const entries = state.meals[mealId] ?? [];
+
+  state.meals[mealId] = entries.map((entry) => {
+    if (entry.id !== entryId || !isEntryEditable(entry)) {
+      return entry;
+    }
+
+    const base = entry.base!;
+    const ratio = quantity / base.quantity;
+
+    return {
+      ...entry,
+      quantity,
+      amount: entry.unitLabel
+        ? `${toFaDigits(quantity)} ${entry.unitLabel}`
+        : entry.amount,
+      calories: scaled(base.calories, ratio),
+      protein: scaled(base.protein, ratio),
+      carbs: scaled(base.carbs, ratio),
+      fat: scaled(base.fat, ratio),
+      // Left undefined when the food has no fiber figure at all, which is
+      // distinct from a food that genuinely has none — see ServingMacros.
+      fiber: scaled(base.fiber, ratio),
+    };
+  });
 
   writeState(state);
 }

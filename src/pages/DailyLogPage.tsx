@@ -3,9 +3,10 @@ import { Activity, Flame, Plus, UtensilsCrossed } from "lucide-react";
 
 import PillTabBar, { type PillTabBarItem } from "@/components/PillTabBar";
 import MealLogCard from "@/components/nutrition/MealLogCard";
-import MealOverviewModal from "@/components/nutrition/MealOverviewModal";
+import MealAddChoiceModal from "@/components/nutrition/MealAddChoiceModal";
 import AddMealEntryModal from "@/components/nutrition/AddMealEntryModal";
 import AiMealEntryModal from "@/components/nutrition/AiMealEntryModal";
+import EditMealEntryModal from "@/components/nutrition/EditMealEntryModal";
 import ActivityLogModal from "@/components/progress/ActivityLogModal";
 import {
   DAILY_MODE_SLOT,
@@ -17,6 +18,11 @@ import {
   setCalorieTrackingMode,
   type CalorieTrackingMode,
 } from "@/utils/calorieModeEngine";
+import {
+  removeLoggedEntry,
+  updateLoggedEntryQuantity,
+  type LoggedFoodEntry,
+} from "@/utils/dailyLogEngine";
 import { getTodayActivityCalories, logActivityCalories } from "@/utils/activityLogEngine";
 import { getTodayWorkoutCalories } from "@/utils/workoutCalorieEngine";
 import { toFaDigits } from "@/utils/numberFormat";
@@ -163,52 +169,86 @@ function CalorieModeChoicePrompt({
   );
 }
 
-type ModalScreen = { meal: MealSlot; screen: "overview" | "add" | "ai" } | null;
+type ModalScreen =
+  | { meal: MealSlot; screen: "choice" | "add" | "ai" }
+  | { meal: MealSlot; screen: "edit"; entry: LoggedFoodEntry }
+  | null;
 
 // Fully independent of the prescribed nutrition plan (program.nutrition) —
 // this logs whatever the user actually ate against a fixed catalog of
 // meal-time slots (صبحانه، ناهار، ...), or a single unified slot for
-// "daily" mode. Tapping a whole card opens an overview of what's already
-// logged for it; the overview's two "افزودن" buttons each drill one level
-// deeper — either the manual food-search screen (AddMealEntryModal) or the
-// AI free-text screen (AiMealEntryModal). "بستن" on either add screen
-// closes everything straight back to this list, not just one level back to
-// the overview — closing there means "I'm done", not "go back".
+// "daily" mode.
+//
+// Nothing here opens a read-only summary any more: what's logged for a meal
+// is shown by expanding the card itself, and the only modals left are the
+// ones that actually do something. "+" opens the choice of how to add
+// (MealAddChoiceModal), which drills one level deeper into either the manual
+// food-search screen (AddMealEntryModal) or the AI free-text screen
+// (AiMealEntryModal); tapping a food inside an expanded card opens its
+// amount editor. "بستن" on either add screen closes everything straight back
+// to this list, not one level back to the choice — closing there means
+// "I'm done", not "go back".
 function MealLogTab({ slots }: { slots: MealSlot[] }) {
   const [modal, setModal] = useState<ModalScreen>(null);
-  // Bumped after every add/remove so the cards (whose own state was read
-  // before the modal opened) show fresh totals once everything closes.
+  // Bumped after every add/edit/remove so the cards — which read straight
+  // from localStorage, with no reactive store in between — look again.
   const [version, setVersion] = useState(0);
+
+  function refresh() {
+    setVersion((v) => v + 1);
+  }
+
+  const editing = modal?.screen === "edit" ? modal : null;
 
   return (
     <div className="space-y-4 px-5 pb-5 pt-6">
       {slots.map((meal) => (
         <MealLogCard
-          key={`${meal.id}-${version}`}
+          key={meal.id}
           meal={meal}
-          onOpen={(meal) => setModal({ meal, screen: "overview" })}
-          onAdd={(meal) => setModal({ meal, screen: "add" })}
+          version={version}
+          onAdd={(meal) => setModal({ meal, screen: "choice" })}
+          onEditEntry={(meal, entry) =>
+            setModal({ meal, screen: "edit", entry })
+          }
         />
       ))}
 
-      <MealOverviewModal
-        meal={modal?.screen === "overview" ? modal.meal : null}
+      <MealAddChoiceModal
+        meal={modal?.screen === "choice" ? modal.meal : null}
         onClose={() => setModal(null)}
         onAdd={() => setModal(modal && { meal: modal.meal, screen: "add" })}
         onAddAi={() => setModal(modal && { meal: modal.meal, screen: "ai" })}
-        onChange={() => setVersion((v) => v + 1)}
       />
 
       <AddMealEntryModal
         meal={modal?.screen === "add" ? modal.meal : null}
         onClose={() => setModal(null)}
-        onChange={() => setVersion((v) => v + 1)}
+        onChange={refresh}
       />
 
       <AiMealEntryModal
         meal={modal?.screen === "ai" ? modal.meal : null}
         onClose={() => setModal(null)}
-        onChange={() => setVersion((v) => v + 1)}
+        onChange={refresh}
+      />
+
+      <EditMealEntryModal
+        meal={editing?.meal ?? null}
+        entry={editing?.entry ?? null}
+        onClose={() => setModal(null)}
+        onSave={(quantity) => {
+          if (!editing) return;
+          updateLoggedEntryQuantity(editing.meal.id, editing.entry.id, quantity);
+          refresh();
+          setModal(null);
+        }}
+        onRemove={() => {
+          if (!editing) return;
+          removeLoggedEntry(editing.meal.id, editing.entry.id);
+          refresh();
+          setModal(null);
+        }}
       />
     </div>
   );

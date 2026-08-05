@@ -133,10 +133,17 @@ export default function AddMealEntryModal({
   function handleAdd() {
     if (!selected || !unit) return;
 
+    const macros = macrosForServing(selected, unit, quantity);
+
     addLoggedEntry(meal!.id, {
       name: selected.nameFa,
       amount: `${toFaDigits(quantity)} ${unit.label}`,
-      ...macrosForServing(selected, unit, quantity),
+      // Kept alongside the totals so the amount stays editable from the
+      // meal card afterwards — see LoggedFoodEntry.
+      quantity,
+      unitLabel: unit.label,
+      base: { quantity, ...macros },
+      ...macros,
     });
 
     setSelected(null);
