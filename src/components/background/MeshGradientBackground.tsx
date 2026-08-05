@@ -3,9 +3,17 @@ interface MeshGradientBackgroundProps {
 }
 
 // The background image itself, not a CSS approximation of it. Served as a
-// 9KB WebP (the source PNG was 1.1MB — a smooth gradient re-encodes almost
-// to nothing in WebP), precached by the service worker like every other
-// static asset, so it's on screen from the first paint offline too.
+// 25KB WebP at the source's full 853x1844, precached by the service worker
+// like every other static asset, so it's on screen from the first paint
+// offline too.
+//
+// The encoding is deliberately quality 95 with smartSubsample rather than the
+// ~6KB a lower quality would give: this is one big smooth gradient, and the
+// failure mode of over-compressing a gradient is banding — flat plateaus with
+// a visible step between them, worst on a dark OLED panel, which is most of
+// this image. At q95 the whole frame stays within 5/255 of the source even
+// after the browser upscales it to cover the viewport. Don't trade those
+// bytes away; it's a one-time precached fetch.
 //
 // It stays a plain background-image on a static div for the same reason the
 // gradient before it did: this component sits under the whole app shell,

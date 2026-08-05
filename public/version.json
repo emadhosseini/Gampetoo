@@ -1,6 +1,16 @@
 {
-  "current": "2.1.90",
+  "current": "2.1.91",
   "history": [
+    {
+      "version": "2.1.91",
+      "date": "2026-08-05",
+      "description": "Swapped in the new background image. Encoded at WebP quality 95 with smart chroma subsampling rather than the ~6KB a lower quality would produce: the image is one large smooth gradient, and the failure mode of over-compressing a gradient is banding — flat plateaus with a visible step between them, worst across the dark lower two thirds on an OLED panel. Measured every candidate encoding against the source pixel by pixel; at q95 the whole frame stays within 5/255 even after the browser upscales it to cover the viewport, so it is 25KB instead of 6KB. That is a one-time fetch since the file is precached, which is the right side of the trade.",
+      "highlights": [
+        "🖼️ پس‌زمینه‌ی جدید جایگزین شد",
+        "✨ با کیفیت بالا فشرده شده تا گرادیان پله‌پله و پیکسلی نشه، مخصوصاً توی قسمت‌های تیره",
+        "📦 ۲۵ کیلوبایت — چون توی کش آفلاین ذخیره می‌شه، فقط یک بار دانلود می‌شه"
+      ]
+    },
     {
       "version": "2.1.90",
       "date": "2026-08-05",
