@@ -1,6 +1,14 @@
 {
-  "current": "1.0.2",
+  "current": "1.0.3",
   "history": [
+    {
+      "version": "1.0.3",
+      "date": "2026-08-05",
+      "description": "Fixes water, calories and anything else logged shortly after opening the app reverting to an older value once the app was closed and reopened. Recording that something changed was gated on the account session having finished loading, which takes a few hundred milliseconds after every start. Anything logged in that window was neither marked as changed nor queued to send, so nothing downstream knew it had happened, and the next time the app checked the server it replaced the value with the older one held there. Whether a server is reachable has no bearing on whether something changed on the device, so it no longer waits for it — the send itself already handled being unable to run yet.",
+      "highlights": [
+        "💧 ثبت آب و کالری بلافاصله بعد از باز کردن اپ دیگه با بستن و باز کردن برنمی‌گرده"
+      ]
+    },
     {
       "version": "1.0.2",
       "date": "2026-08-05",

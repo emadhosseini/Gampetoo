@@ -430,8 +430,22 @@ function flushOnHide() {
   void pushToServer(username);
 }
 
+/**
+ * Deliberately does NOT require an auth session. Recording that something
+ * changed is bookkeeping about local data; it has nothing to do with whether
+ * a server is reachable, and the push it schedules already copes with not
+ * being able to run yet.
+ *
+ * Requiring one here silently dropped every edit made in the first few
+ * hundred milliseconds after the app opened — the window where
+ * supabase.auth.getSession() has not resolved and cachedAuthUserId is still
+ * null. An edit in that window was neither stamped nor queued, so nothing
+ * downstream knew it had happened, and the boot pull moments later
+ * overwrote it with the server's older value. Logging a glass of water on a
+ * cold start and watching it revert is exactly that window.
+ */
 function onLocalWrite(key: string) {
-  if (suppressing || !supabase || !cachedAuthUserId) return;
+  if (suppressing || !supabase) return;
 
   const username = getCurrentUsername();
   if (!username) return;
