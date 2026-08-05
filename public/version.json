@@ -1,6 +1,17 @@
 {
-  "current": "2.1.92",
+  "current": "2.1.93",
   "history": [
+    {
+      "version": "2.1.93",
+      "date": "2026-08-05",
+      "description": "Burned calories from a workout are no longer written to the day's activity total the instant an exercise is ticked off. Ticking now only marks the exercise; the estimate accumulates untracked and is presented once, when the workout is completed, under the exercise/set summary in the confirmation popup — with a toggle deciding whether it counts toward the day, and a note that the figure is an estimate from the standard MET formula, the logged bodyweight and an assumed per-set duration rather than a measurement. The estimate is now derived from the checklist on demand instead of being accumulated tick by tick, so unchecking an exercise no longer has to reverse a previously written number out, and committing it sets the day's total rather than adding to it, so completing the same workout twice cannot double it.",
+      "highlights": [
+        "🏋️ تیک زدن حرکت‌ها دیگه بلافاصله کالری روز رو تغییر نمی‌ده",
+        "🔥 عدد کالری موقع اتمام تمرین، زیر کادر حرکت و ست نشون داده می‌شه",
+        "🎚️ با یک تاگل خودت تصمیم می‌گیری به کالری سوخته‌شده‌ی اون روز اضافه بشه یا نه",
+        "ℹ️ توضیح داده می‌شه که این عدد تخمینیه و بر اساس فرمول استاندارد MET حساب شده"
+      ]
+    },
     {
       "version": "2.1.92",
       "date": "2026-08-05",

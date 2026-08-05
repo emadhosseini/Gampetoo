@@ -59,11 +59,20 @@ export function createDailyMetricLog(storageKey: string) {
     return getHistory();
   }
 
+  // Replaces today's total outright rather than adding to it — for a metric
+  // that's written once as a finished figure (the workout's calorie estimate,
+  // committed when the workout is completed) instead of accumulated event by
+  // event. Being idempotent is the point: doing it twice can't double it.
+  function setToday(value: number): DailyMetricEntry[] {
+    setEntry(today(), value);
+    return getHistory();
+  }
+
   function reset() {
     localStorage.removeItem(key());
   }
 
-  return { getHistory, getToday, setEntry, addToday, reset };
+  return { getHistory, getToday, setEntry, setToday, addToday, reset };
 }
 
 // Combines two independent daily-metric histories (e.g. workout-derived and

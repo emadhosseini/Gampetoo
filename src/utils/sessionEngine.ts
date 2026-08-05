@@ -1,7 +1,6 @@
 import { calculateBurnedCalories } from "@/domain/services/calorieCalculator";
 import { getCurrentProgramDay } from "./programEngine";
 import { getLatestWeight } from "./weightEngine";
-import { logWorkoutCalories } from "./workoutCalorieEngine";
 import { scopedKey } from "./userEngine";
 
 const STORAGE_KEY = "emad-session";
@@ -88,17 +87,11 @@ export function getSession() {
 }
 
 // Toggles one exercise's checked-off-for-today state, keyed by its id
-// (unique within the workout it's shown from). Also logs — or reverses,
-// on an uncheck — that exercise's estimated burned calories
-// (calculateBurnedCalories, the standard MET formula) against today's
-// workout-calorie total (workoutCalorieEngine.ts), kept separate from
-// activityLogEngine.ts's manually-logged activity so the two can be
-// reported as distinct numbers (see DailyLogPage's activity tab).
-export function toggleExerciseChecked(
-  exerciseId: string,
-  metValue: number,
-  sets: number,
-) {
+// (unique within the workout it's shown from). Deliberately touches nothing
+// but the checklist: the burned-calorie estimate is derived from this list
+// on demand (estimateCheckedWorkoutCalories below) and only reaches the
+// day's activity total if the user opts in when completing the workout.
+export function toggleExerciseChecked(exerciseId: string) {
   const session = parseSession(localStorage.getItem(storageKey())) ?? createSession();
 
   if (!session.checkedExercises) {
@@ -112,12 +105,40 @@ export function toggleExerciseChecked(
     : [...session.checkedExercises, exerciseId];
 
   saveSession(session);
+}
 
+export interface CalorieEstimateInput {
+  id: string;
+  metValue: number;
+  sets: number;
+}
+
+// What the exercises checked off so far are estimated to have burned, via
+// the standard MET formula (domain/services/calorieCalculator.ts).
+//
+// Recomputed from the checklist every time rather than kept as a running
+// total, so it can't drift out of step with it — unchecking an exercise, or
+// editing its set count in the library mid-workout, is reflected simply by
+// the next call returning a different number, with nothing to reverse.
+export function estimateCheckedWorkoutCalories(
+  exercises: CalorieEstimateInput[],
+  checkedExerciseIds: string[],
+): number {
+  const checked = new Set(checkedExerciseIds);
   const weightKg = getLatestWeight() ?? DEFAULT_WEIGHT_KG;
-  const durationMinutes = sets * ASSUMED_MINUTES_PER_SET;
-  const calories = calculateBurnedCalories(metValue, weightKg, durationMinutes);
 
-  logWorkoutCalories(wasChecked ? -calories : calories);
+  return exercises
+    .filter((exercise) => checked.has(exercise.id))
+    .reduce(
+      (sum, exercise) =>
+        sum +
+        calculateBurnedCalories(
+          exercise.metValue,
+          weightKg,
+          exercise.sets * ASSUMED_MINUTES_PER_SET,
+        ),
+      0,
+    );
 }
 
 export function saveSession(session: SessionState) {

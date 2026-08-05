@@ -24,7 +24,9 @@ import {
   completeWorkout,
   completeWalk,
   toggleExerciseChecked,
+  estimateCheckedWorkoutCalories,
 } from "@/utils/sessionEngine";
+import { setTodayWorkoutCalories } from "@/utils/workoutCalorieEngine";
 import { getCurrentUsername } from "@/utils/userEngine";
 import { flushPendingSync } from "@/sync/remoteSync";
 
@@ -50,6 +52,12 @@ function WorkoutPage() {
   // simplest way to force it.
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [resetKey, setResetKey] = useState(0);
+  // Whether the confirm popup's burned-calorie estimate should land in the
+  // day's activity total. Defaults on — that's what the app did before the
+  // choice existed — and deliberately isn't reset when the popup is
+  // cancelled and reopened, so a user who turned it off doesn't have to
+  // turn it off again.
+  const [addCaloriesToActivity, setAddCaloriesToActivity] = useState(true);
   // getSession() reads straight from localStorage on every call rather than
   // being held in React state — bumping this after each checkbox tap is
   // what actually triggers the re-render that picks the fresh value up.
@@ -58,7 +66,7 @@ function WorkoutPage() {
   const session = getSession();
 
   function handleToggleExercise(exercise: Exercise) {
-    toggleExerciseChecked(exercise.id, exercise.metValue, exercise.sets);
+    toggleExerciseChecked(exercise.id);
     forceRerender((n) => n + 1);
   }
 
@@ -181,6 +189,15 @@ const workout = workoutType
   0
 );
 
+  // Derived from the checklist on every render rather than accumulated as
+  // exercises are ticked, so it always matches what's actually checked off
+  // right now. Nothing has been written anywhere yet at this point — that
+  // only happens if the user confirms with the toggle on.
+  const checkedCalories = estimateCheckedWorkoutCalories(
+    exercises,
+    session.checkedExercises,
+  );
+
   const checkedExerciseIds = new Set(session.checkedExercises);
   // A stable sort just sinks checked-off exercises to the bottom, keeping
   // both groups in their original relative order — no re-shuffling within
@@ -243,12 +260,21 @@ const workout = workoutType
         workoutTitle={workout.title}
         exercises={exercises.length}
         sets={totalSets}
+        calories={checkedCalories}
+        addToActivity={addCaloriesToActivity}
+        onToggleAddToActivity={() => setAddCaloriesToActivity((on) => !on)}
         onCancel={() => {
           setConfirmOpen(false);
           setResetKey((key) => key + 1);
         }}
         onConfirm={() => {
           setConfirmOpen(false);
+          // The only path that ever writes the day's workout-calorie total.
+          // Written unconditionally so turning the toggle off is an explicit
+          // zero rather than leaving whatever happened to be there — and it
+          // sets rather than adds, so confirming twice in a day can't double
+          // it (see workoutCalorieEngine).
+          setTodayWorkoutCalories(addCaloriesToActivity ? checkedCalories : 0);
           completeWorkout();
           void goHomeAfterCompleting();
         }}
