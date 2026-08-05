@@ -1,6 +1,15 @@
 {
-  "current": "1.0.0",
+  "current": "1.0.1",
   "history": [
+    {
+      "version": "1.0.1",
+      "date": "2026-08-05",
+      "description": "Fixes two ways an edit could fail to reach a second device. An edit made in a popup that closes without navigating — height, gender, birth date, a weigh-in, a logged meal — waited a second before being sent, and backgrounding an installed PWA freezes its JavaScript, so on a phone that timer often never fired and the edit stayed on the device. Edits are now sent the moment the app goes away, and a device marks itself as having unsent changes the instant one is made rather than only after a send fails, so anything caught mid-flight is retried at the next launch. Separately, whether to accept the server's copy was decided by comparing timestamps that each device wrote from its own clock: a phone running even a few minutes fast would stamp the record into the future and then refuse every later update for good. That decision now rests on whether this device has anything unsent, and on whether the content actually differs.",
+      "highlights": [
+        "🔄 تغییرات پروفایل، وزن و وعده‌ها دیگه موقع بستن برنامه از دست نمی‌رن",
+        "⏱️ اختلاف ساعت بین دو گوشی دیگه جلوی همگام‌سازی رو نمی‌گیره"
+      ]
+    },
     {
       "version": "1.0.0",
       "date": "2026-08-05",

@@ -118,10 +118,19 @@ async function pushToServer(username: string): Promise<void> {
 }
 
 /**
- * Pulls the account's remote data down over local, unless local is already at
- * least as new (guards against clobbering edits made while offline). If no
- * remote row exists yet, this is the account's first-ever sync — bootstrap
- * the server from whatever's already stored locally instead.
+ * Pulls the account's remote data down over local. If no remote row exists
+ * yet, this is the account's first-ever sync — bootstrap the server from
+ * whatever's already stored locally instead.
+ *
+ * Whether local is safe to overwrite is decided by whether this device has
+ * anything unpushed, NOT by comparing timestamps. `updated_at` is written by
+ * whichever device pushed, from its own clock, so a phone running even a few
+ * minutes fast would stamp the row into the future and then refuse every
+ * later pull — `lastSyncedAt >= updated_at` would hold forever, and that
+ * device would silently stop receiving the other's changes for good. With
+ * nothing pending, local is by definition what this device last pushed, so
+ * any difference in content means some other device has written since, which
+ * is exactly the question worth asking.
  *
  * Returns whether anything on this device actually changed, so a caller that
  * pulls into an already-rendered app knows whether the screen it's looking at
@@ -129,6 +138,20 @@ async function pushToServer(username: string): Promise<void> {
  */
 async function pullFromServer(username: string): Promise<boolean> {
   if (!supabase || !cachedAuthUserId) return false;
+
+  // Local edits that haven't reached the server outrank anything here —
+  // send them first, or the pull below would overwrite writes that were
+  // never even offered. If that push fails we're offline; leave local alone.
+  if (hasUnpushedChanges(username)) {
+    if (pushTimer) {
+      clearTimeout(pushTimer);
+      pushTimer = null;
+    }
+
+    await pushToServer(username);
+
+    if (hasUnpushedChanges(username)) return false;
+  }
 
   const { data, error } = await supabase
     .from("user_data")
@@ -143,16 +166,7 @@ async function pullFromServer(username: string): Promise<boolean> {
     return false;
   }
 
-  const lastSyncedAt = localStorage.getItem(lastSyncedKey(username));
-
-  if (lastSyncedAt && new Date(lastSyncedAt) >= new Date(data.updated_at)) {
-    return false;
-  }
-
   const incoming = data.data as Record<string, string>;
-  // Compared before writing, not after: a newer `updated_at` only means some
-  // device pushed, which it does for its own edits too. Pushing from phone A
-  // and then opening phone A again shouldn't count as a change.
   const changed = snapshotsDiffer(readLocalSnapshot(username), incoming);
 
   suppressing = true;
@@ -174,12 +188,11 @@ async function pullFromServer(username: string): Promise<boolean> {
  * pulls were at boot and just after login, which meant a second device kept
  * showing whatever it had loaded with.
  *
- * Two guards make this safe rather than merely convenient:
+ * Unpushed local edits are sent before anything is taken — pullFromServer
+ * owns that rule, since every entry point into it needs the same thing.
  *
- * - It doesn't run while this device has a push outstanding. Those are edits
- *   the server hasn't got yet, and pulling over them would lose a write that
- *   was never even offered — the one case the usual last-write-wins doesn't
- *   cover, because there was no competing write, just a slow one.
+ * The guard that belongs here:
+ *
  * - A pull that actually changed something reloads the page. Nothing in this
  *   app subscribes to localStorage (every screen reads it during render), so
  *   an already-mounted screen would otherwise go on showing the values it
@@ -193,15 +206,6 @@ function pullOnForeground() {
   const username = getCurrentUsername();
   if (!username) return;
 
-  // A queued debounced push, or one that failed and is waiting to retry —
-  // either way this device is ahead of the server, so send rather than take.
-  if (pushTimer !== null) return;
-
-  if (localStorage.getItem(pendingKey(username)) === "1") {
-    void pushToServer(username);
-    return;
-  }
-
   const now = Date.now();
 
   if (now - lastForegroundPullAt < FOREGROUND_PULL_MIN_INTERVAL_MS) return;
@@ -213,13 +217,51 @@ function pullOnForeground() {
   });
 }
 
+function hasUnpushedChanges(username: string): boolean {
+  return pushTimer !== null || localStorage.getItem(pendingKey(username)) === "1";
+}
+
 function schedulePush(username: string) {
+  // Marked before the push is even attempted, not just when one fails. A
+  // phone frozen or killed during the debounce below never runs the timer
+  // and never reaches pushToServer's catch, so a flag set only on failure
+  // would leave the edit looking synced when it had never been sent. Set
+  // here, the next launch finds it and retries.
+  originalSetItem(pendingKey(username), "1");
+
   if (pushTimer) clearTimeout(pushTimer);
 
   pushTimer = setTimeout(() => {
     pushTimer = null;
     void pushToServer(username);
   }, PUSH_DEBOUNCE_MS);
+}
+
+/**
+ * Pushes immediately when the app goes away, instead of leaving an edit
+ * sitting in the debounce above. Backgrounding an installed PWA freezes its
+ * JS context — a pending setTimeout simply never fires — so an edit made in
+ * a popup that closes without navigating (height, gender, birth date, a
+ * weigh-in, a logged meal) could stay on the device indefinitely. The paths
+ * that already called flushPendingSync before navigating were the only ones
+ * reliably reaching the server.
+ *
+ * pagehide and visibilitychange both, because neither alone covers every
+ * way a phone puts an app away, and a redundant push is harmless.
+ */
+function flushOnHide() {
+  if (!supabase || !cachedAuthUserId) return;
+
+  const username = getCurrentUsername();
+  if (!username) return;
+  if (!hasUnpushedChanges(username)) return;
+
+  if (pushTimer) {
+    clearTimeout(pushTimer);
+    pushTimer = null;
+  }
+
+  void pushToServer(username);
 }
 
 function onLocalWrite(key: string) {
@@ -277,10 +319,20 @@ export function initSync() {
   window.addEventListener("online", retryPendingIfAny);
   setInterval(retryPendingIfAny, RETRY_INTERVAL_MS);
 
+  // Whatever last session left unsent — a phone frozen mid-debounce, a push
+  // that failed offline — goes out now, before the pull below can consider
+  // overwriting it.
+  retryPendingIfAny();
+
   // visibilitychange rather than window focus: it's the one that fires when
   // an installed PWA is switched back to on a phone, which is where a second
   // device showing stale data actually bites.
   document.addEventListener("visibilitychange", pullOnForeground);
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") flushOnHide();
+  });
+  window.addEventListener("pagehide", flushOnHide);
 
   supabase.auth.getSession().then(({ data }) => {
     cachedAuthUserId = data.session?.user.id ?? null;
