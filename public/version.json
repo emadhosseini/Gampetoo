@@ -1,6 +1,17 @@
 {
-  "current": "1.0.6",
+  "current": "1.0.7",
   "history": [
+    {
+      "version": "1.0.7",
+      "date": "2026-08-05",
+      "description": "The calorie goal screen now asks how fast you want to lose rather than assuming. Fat loss offers 250, 500, 750 grams or a kilo a week, and the target moves with it — about 800 calories separate the slowest from the fastest, where before every rate produced the same number. Weight is no longer typed in here either; it comes from your logged weight alongside age and height, so there is one place it lives. A daily protein figure sits under the calorie target, higher while cutting because protein is what keeps the weight coming off from being muscle. On the food screen, per-meal tracking gained a totals card above the meals — the day's calories and macros in one place, which per-meal mode had nowhere before — and the protein figure is ringed red when short of that target, green when on it, amber past the point more is doing anything.",
+      "highlights": [
+        "🎯 انتخاب سرعت کاهش وزن: ۲۵۰، ۵۰۰، ۷۵۰ گرم یا ۱ کیلو در هفته",
+        "🥩 پروتئین روزانه‌ی موردنیاز محاسبه و نمایش داده می‌شه",
+        "📊 توی حالت وعده‌ای، کادر مجموع روزانه بالای وعده‌ها اضافه شد",
+        "🚦 کادر پروتئین بر اساس هدف قرمز، سبز یا زرد می‌شه"
+      ]
+    },
     {
       "version": "1.0.8",
       "date": "2026-08-05",

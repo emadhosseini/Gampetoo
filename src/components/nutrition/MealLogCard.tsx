@@ -3,7 +3,14 @@ import { ChevronDown, Pencil, Plus } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
 import type { MealSlot } from "@/data/nutrition/foodCatalog";
+import {
+  calculateProteinTarget,
+  getCalorieGoal,
+  proteinStanding,
+  type ProteinStanding,
+} from "@/utils/calorieEngine";
 import { getLoggedEntries, type LoggedFoodEntry } from "@/utils/dailyLogEngine";
+import { getLatestWeight } from "@/utils/weightEngine";
 import { toFaDigits } from "@/utils/numberFormat";
 
 export interface MealLogCardProps {
@@ -19,7 +26,19 @@ export interface MealLogCardProps {
   // precisely so an edit doesn't collapse the panel the user is editing
   // from.
   version: number;
+  // Whether this card's protein is the whole day's, and so can be judged
+  // against the daily target. True only in daily tracking mode — see
+  // DailyLogPage. In per-meal mode DailyTotalsCard carries it instead.
+  showProteinTarget?: boolean;
 }
+
+// Matches DailyTotalsCard: red is short, green is there, amber is past the
+// point of it doing anything more.
+const PROTEIN_RING: Record<ProteinStanding, string> = {
+  under: "ring-2 ring-red-400/70",
+  onTarget: "ring-2 ring-green-400/70",
+  over: "ring-2 ring-amber-300/70",
+};
 
 const MACRO_FIELDS = [
   { key: "protein", label: "پروتئین" },
@@ -33,6 +52,7 @@ export default function MealLogCard({
   onAdd,
   onEditEntry,
   version,
+  showProteinTarget = false,
 }: MealLogCardProps) {
   const [expanded, setExpanded] = useState(false);
   const entries = useMemo(
@@ -55,6 +75,16 @@ export default function MealLogCard({
     fat: entries.reduce((sum, entry) => sum + (entry.fat ?? 0), 0),
     fiber: entries.reduce((sum, entry) => sum + (entry.fiber ?? 0), 0),
   };
+
+  const weight = getLatestWeight();
+  const proteinTarget =
+    showProteinTarget && weight !== null
+      ? calculateProteinTarget(weight, getCalorieGoal() ?? "maintain")
+      : null;
+
+  const standing = proteinTarget
+    ? proteinStanding(macroTotals.protein, proteinTarget)
+    : null;
 
   function toggle() {
     setExpanded((prev) => !prev);
@@ -110,7 +140,11 @@ export default function MealLogCard({
               {MACRO_FIELDS.map((field) => (
                 <div
                   key={field.key}
-                  className="glass-chip rounded-xl py-3 text-center"
+                  className={`glass-chip rounded-xl py-3 text-center ${
+                    field.key === "protein" && standing
+                      ? PROTEIN_RING[standing]
+                      : ""
+                  }`}
                 >
                   <p className="text-xs text-white/60">{field.label}</p>
                   <p className="mt-1 text-sm font-bold text-white">
