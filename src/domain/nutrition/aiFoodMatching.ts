@@ -35,20 +35,45 @@ function normalizeFa(value: string): string {
   return value.replace(/ي/g, "ی").replace(/ك/g, "ک").trim().toLowerCase();
 }
 
-// Exact/substring match against the local + learned databases — deliberately
-// NOT foodSearch.ts's searchLocal(), which only matches a word-prefix (built
-// for live search-as-you-type) and would miss a full multi-word dish name
-// like "قرمه سبزی" matched against itself.
+// Whether `shorter`'s words appear as a contiguous run inside `longer`'s —
+// word-boundary-safe, unlike a raw substring check. A single generic word is
+// never allowed to match this way against a longer, different compound: it
+// mechanically WOULD "contain" it (e.g. "سیب" genuinely is the first word of
+// "سیب زمینی"), which is exactly the bug this guards against — Gemini
+// extracting "سیب زمینی" (potato) landed on the local "سیب" (apple) entry,
+// a real but entirely unrelated food that only happens to share a first
+// word. A 1-word name can therefore only match another 1-word name (already
+// covered by the exact check above) or a genuine multi-word compound where
+// every one of its own words is present.
+function isWordRunMatch(a: string[], b: string[]): boolean {
+  const [shorter, longer] = a.length <= b.length ? [a, b] : [b, a];
+
+  if (shorter.length === 0 || shorter.length > longer.length) return false;
+  if (shorter.length === 1 && longer.length > 1) return false;
+
+  const longerText = ` ${longer.join(" ")} `;
+  const shorterText = ` ${shorter.join(" ")} `;
+
+  return longerText.includes(shorterText);
+}
+
+// Exact match first, then a word-safe fuzzy match against the local +
+// learned databases — deliberately not foodSearch.ts's searchLocal(),
+// which is built for live search-as-you-type (its last word is only ever a
+// prefix, for a query still being typed) rather than matching a complete
+// extracted name that may carry extra words on either side, e.g. Gemini
+// saying "قرمه سبزی با گوشت گوسفندی" for a food logged as plain "قرمه سبزی".
 function findLocalMatch(name: string): FoodItem | null {
   const normalized = normalizeFa(name);
+  const normalizedWords = normalized.split(/\s+/).filter(Boolean);
   const pool = [...localFoods, ...getLearnedFoods()];
 
   const exact = pool.find((food) => normalizeFa(food.nameFa) === normalized);
   if (exact) return exact;
 
   const partial = pool.find((food) => {
-    const foodName = normalizeFa(food.nameFa);
-    return foodName.includes(normalized) || normalized.includes(foodName);
+    const foodWords = normalizeFa(food.nameFa).split(/\s+/).filter(Boolean);
+    return isWordRunMatch(foodWords, normalizedWords);
   });
 
   return partial ?? null;

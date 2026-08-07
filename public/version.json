@@ -1,6 +1,33 @@
 {
-  "current": "1.0.5",
+  "current": "1.0.6",
   "history": [
+    {
+      "version": "1.0.8",
+      "date": "2026-08-05",
+      "description": "Added 13 exercises to the full-body workout library that weren't in it yet: leg press machine, front lat pulldown, machine chest press (two variants), seated dumbbell shoulder press, leg press, seated cable row, pec deck fly, hip thrust, top lat pulldown, hip abductor machine, standing dumbbell lateral raise, and lower-back extension machine. Three requested exercises (crunch, plank, shoulder press) were already there and were left as-is rather than duplicated.",
+      "highlights": [
+        "🏋️ ۱۳ حرکت جدید به کتابخانه‌ی تمرین «تمام بدن» اضافه شد"
+      ]
+    },
+    {
+      "version": "1.0.7",
+      "date": "2026-08-05",
+      "description": "Fixed a leftover green dashed border on every secondary/cancel button in the app (.ghost-action — 'بستن', 'بازگشت', and the like across 27 files), missed in the earlier pass that converted the rest of the UI off green and yellow. It only ever showed up where one of these buttons sat directly over the background gradient rather than inside a card, which is likely why it slipped through. Now a plain translucent white, matching every other rim in the glass system.",
+      "highlights": [
+        "⬜ حاشیه‌ی نقطه‌چین سبزِ باقی‌مانده روی دکمه‌های ثانویه (مثل «بستن» و «بازگشت») سفید شفاف شد"
+      ]
+    },
+    {
+      "version": "1.0.6",
+      "date": "2026-08-05",
+      "description": "Fixed the AI meal-logger and the manual food search both resolving 'سیب زمینی' (potato) to 'سیب' (apple) instead. Two separate bugs, one on each path. The AI side matched by raw character substring, and 'سیب' genuinely is a substring of 'سیب زمینی' — an unrelated food that just happens to share the compound's first word, so it kept winning whenever no better match existed (and none did: there was no potato entry of any kind). The manual side's live-search word-matcher never supported a multi-word query at all — searching the exact full name of any two-word dish, 'قرمه سبزی' included, returned nothing, which is what pushed it toward that same wrong fallback. Both matchers are rewritten to compare whole words instead of raw characters, and a single generic word can no longer count as a match for a longer, different compound. Also added the 3 missing potato dishes (fried, oven-roasted, boiled), 5 salads (only Caesar existed before), 4 more chicken breast preparations, 5 chicken thigh preparations, and 3 joojeh kabab variants — 20 foods in total. Separately, found and removed 7 foods that existed twice under the exact same name in two different databases (apple, banana, orange, pizza, falafel, chocolate, boiled egg) — some even shared the same internal id, which was why they could show up twice in the same list.",
+      "highlights": [
+        "🥔 «سیب زمینی» دیگه با «سیب» اشتباه گرفته نمی‌شه — نه با هوش مصنوعی، نه با ثبت دستی",
+        "🔍 جست‌وجوی دستی برای اسم‌های چندکلمه‌ای (جوجه کباب، قرمه سبزی، سینه مرغ، ...) درست شد",
+        "🥗 ۲۰ غذای جدید اضافه شد: سیب‌زمینی، سالادهای مختلف، سینه/ران مرغ به چند روش، جوجه کباب زعفرانی/استخوانی/ماستی",
+        "🍎 ۷ غذای تکراری (مثل موز و تخم‌مرغ آب‌پز) که دوبار توی لیست ظاهر می‌شدن حذف شدن"
+      ]
+    },
     {
       "version": "1.0.5",
       "date": "2026-08-05",

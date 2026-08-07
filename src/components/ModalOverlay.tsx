@@ -1,6 +1,21 @@
 import { useEffect, useState, type MouseEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 
+// Computed once at module load, not per-render — this doesn't change during
+// a session. True on every browser this app has actually been tested
+// against (iOS Safari, Chrome). False is the signal for the bug this file
+// works around: an Android in-app/embedded browser that reported this
+// exact popup with zero blur AND zero dimming, its own background text
+// landing directly on the popup's — .glass-panel's card is only 10% black
+// on its own and leans entirely on this backdrop to obscure what's behind
+// it, so a browser that no-ops backdrop-filter entirely needs the backdrop
+// to fall back to a plain, unmissable dark tint instead.
+const SUPPORTS_BACKDROP_FILTER =
+  typeof CSS !== "undefined" &&
+  typeof CSS.supports === "function" &&
+  (CSS.supports("backdrop-filter", "blur(1px)") ||
+    CSS.supports("-webkit-backdrop-filter", "blur(1px)"));
+
 // Module-level, not component state: more than one ModalOverlay can be
 // mounted at the same moment in edge cases (one closing while another
 // opens), and only the last one to unmount should actually restore
@@ -127,6 +142,15 @@ export default function ModalOverlay({
   }
 
   const blur = blurOn ? "blur(25px)" : "blur(0px)";
+  // A light dim on top of a working blur (the blur itself is what destroys
+  // the background's legibility); a near-opaque one standing in for the
+  // blur entirely on a browser that doesn't render it. Has to go this high
+  // in the fallback case specifically because the popup card sitting on
+  // top is itself only 10% black (.glass-panel) — it compounds with
+  // whatever base opacity is here, and anything under about 95% still let
+  // bold white background text (e.g. the setup page's own logo) show
+  // through as a faint but legible ghost.
+  const backdropTint = SUPPORTS_BACKDROP_FILTER ? "35%" : "97%";
 
   return createPortal(
     <>
@@ -137,13 +161,19 @@ export default function ModalOverlay({
         // rendering backdrop-filter on position:fixed elements at all. The
         // -webkit- prefixed property is set explicitly since not every
         // WebKit version honors the unprefixed one.
+        //
+        // background-color is the fallback for browsers that silently don't
+        // support backdrop-filter at all (see SUPPORTS_BACKDROP_FILTER
+        // above) — a plain color has no support gaps, so it holds even when
+        // the blur itself doesn't render.
         style={{
           transform: "translateZ(0)",
           willChange: "backdrop-filter",
+          backgroundColor: blurOn ? `rgb(0 0 0 / ${backdropTint})` : "rgb(0 0 0 / 0%)",
           backdropFilter: blur,
           WebkitBackdropFilter: blur,
           transition:
-            "backdrop-filter 250ms ease, -webkit-backdrop-filter 250ms ease",
+            "background-color 250ms ease, backdrop-filter 250ms ease, -webkit-backdrop-filter 250ms ease",
         }}
         onClick={onClose}
       />
