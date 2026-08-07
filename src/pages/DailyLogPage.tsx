@@ -3,6 +3,7 @@ import { Activity, Flame, Plus, UtensilsCrossed } from "lucide-react";
 
 import PillTabBar, { type PillTabBarItem } from "@/components/PillTabBar";
 import MealLogCard from "@/components/nutrition/MealLogCard";
+import DailyTotalsCard from "@/components/nutrition/DailyTotalsCard";
 import MealAddChoiceModal from "@/components/nutrition/MealAddChoiceModal";
 import AddMealEntryModal from "@/components/nutrition/AddMealEntryModal";
 import AiMealEntryModal from "@/components/nutrition/AiMealEntryModal";
@@ -129,7 +130,10 @@ function MealTabRoot() {
   }
 
   return (
-    <MealLogTab slots={mode === "daily" ? [DAILY_MODE_SLOT] : getMealSlots()} />
+    <MealLogTab
+      slots={mode === "daily" ? [DAILY_MODE_SLOT] : getMealSlots()}
+      mode={mode}
+    />
   );
 }
 
@@ -188,7 +192,13 @@ type ModalScreen =
 // amount editor. "بستن" on either add screen closes everything straight back
 // to this list, not one level back to the choice — closing there means
 // "I'm done", not "go back".
-function MealLogTab({ slots }: { slots: MealSlot[] }) {
+function MealLogTab({
+  slots,
+  mode,
+}: {
+  slots: MealSlot[];
+  mode: CalorieTrackingMode;
+}) {
   const [modal, setModal] = useState<ModalScreen>(null);
   // Bumped after every add/edit/remove so the cards — which read straight
   // from localStorage, with no reactive store in between — look again.
@@ -202,11 +212,20 @@ function MealLogTab({ slots }: { slots: MealSlot[] }) {
 
   return (
     <div className="space-y-4 px-5 pb-5 pt-6">
+      {/* Only for per-meal tracking. In daily mode the single card below is
+          already the day's total, so this would be the same numbers twice. */}
+      {mode === "perMeal" && <DailyTotalsCard slots={slots} version={version} />}
+
       {slots.map((meal) => (
         <MealLogCard
           key={meal.id}
           meal={meal}
           version={version}
+          // Daily mode has one card and its macros *are* the day's, so the
+          // protein target applies to it directly. In per-meal mode a single
+          // meal's protein says nothing about a daily target — the card
+          // above carries that instead.
+          showProteinTarget={mode === "daily"}
           onAdd={(meal) => setModal({ meal, screen: "choice" })}
           onEditEntry={(meal, entry) =>
             setModal({ meal, screen: "edit", entry })

@@ -33,7 +33,10 @@ export default function ExerciseCard({
 
         <div className="mt-2 flex justify-between text-sm text-white">
           <span>{toFaDigits(exercise.sets)} ست</span>
-          <span>{toFaDigits(exercise.reps)} تکرار</span>
+          <span>
+            {toFaDigits(exercise.reps)}{" "}
+            {exercise.unit === "seconds" ? "ثانیه" : "تکرار"}
+          </span>
         </div>
       </div>
 

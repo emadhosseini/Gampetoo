@@ -1,14 +1,16 @@
 import { useState } from "react";
-import { Minus, Plus } from "lucide-react";
 
 import ModalOverlay from "@/components/ModalOverlay";
 import {
   ACTIVITY_LEVEL_HINTS,
   ACTIVITY_LEVEL_LABELS,
   CALORIE_GOAL_LABELS,
+  WEEKLY_LOSS_RATES,
   calculateCalorieTarget,
+  calculateProteinTarget,
   getActivityLevel,
   getCalorieGoal,
+  getWeeklyLossGrams,
   saveCalorieProfile,
   type ActivityLevel,
   type CalorieGoal,
@@ -30,63 +32,12 @@ const GOALS: CalorieGoal[] = ["lose", "maintain", "gain"];
 // these is in play — see `missing` below.
 const FALLBACK_AGE = 25;
 const FALLBACK_HEIGHT_CM = 170;
+const FALLBACK_WEIGHT_KG = 70;
 
 export interface CalorieGoalModalProps {
   open: boolean;
   onClose: () => void;
   onSaved: () => void;
-}
-
-// A compact +/- row, used for the three numeric inputs. Deliberately not
-// the app's wheel picker: with six fields in one popup, three wheels would
-// make it far taller than the screen.
-function StepperRow({
-  label,
-  value,
-  unit,
-  step,
-  min,
-  max,
-  onChange,
-}: {
-  label: string;
-  value: number;
-  unit: string;
-  step: number;
-  min: number;
-  max: number;
-  onChange: (value: number) => void;
-}) {
-  return (
-    <div>
-      <p className="mb-2 text-sm text-white/60">{label}</p>
-
-      <div className="selector-pill flex items-center justify-between rounded-xl p-3">
-        <button
-          onClick={() => onChange(Math.max(min, value - step))}
-          disabled={value <= min}
-          aria-label={`کم کردن ${label}`}
-          className="text-white disabled:opacity-30"
-        >
-          <Minus size={20} />
-        </button>
-
-        <span className="text-lg font-bold text-white">
-          {toFaDigits(value)}{" "}
-          <span className="text-sm font-normal text-white/60">{unit}</span>
-        </span>
-
-        <button
-          onClick={() => onChange(Math.min(max, value + step))}
-          disabled={value >= max}
-          aria-label={`زیاد کردن ${label}`}
-          className="text-white disabled:opacity-30"
-        >
-          <Plus size={20} />
-        </button>
-      </div>
-    </div>
-  );
 }
 
 function ChoiceButton({
@@ -120,7 +71,9 @@ function ChoiceButton({
 // below instead, so the calculation stays inspectable.
 export default function CalorieGoalModal({ open, onClose, onSaved }: CalorieGoalModalProps) {
   const [gender, setGender] = useState<Gender>(() => getCurrentUserGender() ?? "male");
-  const [weightKg, setWeightKg] = useState(() => Math.round(getLatestWeight() ?? 70));
+  const [weeklyLossGrams, setWeeklyLossGrams] = useState<number>(
+    () => getWeeklyLossGrams(),
+  );
   const [activityLevel, setActivityLevel] = useState<ActivityLevel>(
     () => getActivityLevel() ?? "light",
   );
@@ -135,13 +88,16 @@ export default function CalorieGoalModal({ open, onClose, onSaved }: CalorieGoal
   // says which one is a guess rather than letting it pass as the user's.
   const profileAge = getCurrentUserAge();
   const profileHeight = getCurrentUserHeight();
+  const profileWeight = getLatestWeight();
 
   const age = profileAge ?? FALLBACK_AGE;
   const heightCm = profileHeight ?? FALLBACK_HEIGHT_CM;
+  const weightKg = Math.round(profileWeight ?? FALLBACK_WEIGHT_KG);
 
   const missing = [
     profileAge === null ? "تاریخ تولد" : null,
     profileHeight === null ? "قد" : null,
+    profileWeight === null ? "وزن" : null,
   ].filter((label): label is string => label !== null);
 
   const preview = calculateCalorieTarget({
@@ -151,10 +107,21 @@ export default function CalorieGoalModal({ open, onClose, onSaved }: CalorieGoal
     weightKg,
     activityLevel,
     goal,
+    weeklyLossGrams,
   });
 
+  const protein = calculateProteinTarget(weightKg, goal);
+
   function handleSave() {
-    saveCalorieProfile({ gender, age, heightCm, weightKg, activityLevel, goal });
+    saveCalorieProfile({
+      gender,
+      age,
+      heightCm,
+      weightKg,
+      activityLevel,
+      goal,
+      weeklyLossGrams,
+    });
     onSaved();
     onClose();
   }
@@ -162,7 +129,7 @@ export default function CalorieGoalModal({ open, onClose, onSaved }: CalorieGoal
   return (
     <ModalOverlay onClose={onClose}>
       <div className="glass-panel glass-static max-h-[85vh] space-y-4 overflow-y-auto rounded-3xl p-6">
-        <h2 className="text-center text-lg font-bold text-white">محاسبه هدف کالری</h2>
+        <h2 className="text-center text-lg font-bold text-white">محاسبه کالری هدف</h2>
 
         <div>
           <p className="mb-2 text-sm text-white/60">جنسیت</p>
@@ -185,22 +152,28 @@ export default function CalorieGoalModal({ open, onClose, onSaved }: CalorieGoal
             they move the result as much as anything the user can change
             here, and a number you can't see is a number you can't tell is
             wrong. */}
-        <div className="glass-chip flex items-center justify-between rounded-xl p-3">
+        <div className="glass-chip grid grid-cols-3 gap-2 rounded-xl p-3 text-center">
           <div>
             <p className="text-xs text-white/60">سن</p>
             <p className="mt-0.5 font-bold text-white">
               {toFaDigits(age)}{" "}
-              <span className="text-sm font-normal text-white/60">سال</span>
+              <span className="text-xs font-normal text-white/60">سال</span>
             </p>
           </div>
 
-          <div className="text-left">
+          <div>
             <p className="text-xs text-white/60">قد</p>
             <p className="mt-0.5 font-bold text-white">
               {toFaDigits(heightCm)}{" "}
-              <span className="text-sm font-normal text-white/60">
-                سانتی‌متر
-              </span>
+              <span className="text-xs font-normal text-white/60">سانتی‌متر</span>
+            </p>
+          </div>
+
+          <div>
+            <p className="text-xs text-white/60">وزن</p>
+            <p className="mt-0.5 font-bold text-white">
+              {toFaDigits(weightKg)}{" "}
+              <span className="text-xs font-normal text-white/60">کیلوگرم</span>
             </p>
           </div>
         </div>
@@ -212,16 +185,6 @@ export default function CalorieGoalModal({ open, onClose, onSaved }: CalorieGoal
             حساب کاربری ثبتش کن.
           </p>
         )}
-
-        <StepperRow
-          label="وزن"
-          value={weightKg}
-          unit="کیلوگرم"
-          step={1}
-          min={30}
-          max={250}
-          onChange={setWeightKg}
-        />
 
         <div>
           <p className="mb-2 text-sm text-white/60">سطح فعالیت</p>
@@ -252,6 +215,31 @@ export default function CalorieGoalModal({ open, onClose, onSaved }: CalorieGoal
               />
             ))}
           </div>
+
+          {/* Only while cutting: a rate is what a deficit *is*, and the other
+              two goals have nothing to apply it to. Each button is a real
+              difference in the target below — 250g a week and 1kg a week are
+              about 800 calories apart. */}
+          {goal === "lose" && (
+            <div className="mt-3">
+              <p className="mb-2 text-sm text-white/60">کاهش وزن در هفته</p>
+
+              <div className="grid grid-cols-4 gap-2">
+                {WEEKLY_LOSS_RATES.map((grams) => (
+                  <ChoiceButton
+                    key={grams}
+                    active={weeklyLossGrams === grams}
+                    onClick={() => setWeeklyLossGrams(grams)}
+                    title={
+                      grams === 1000
+                        ? "۱ کیلو"
+                        : `${toFaDigits(grams)} گرم`
+                    }
+                  />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="glass-chip rounded-2xl p-4 text-center">
@@ -265,6 +253,19 @@ export default function CalorieGoalModal({ open, onClose, onSaved }: CalorieGoal
             سوخت‌وساز پایه {toFaDigits(preview.bmr)} · نیاز روزانه{" "}
             {toFaDigits(preview.tdee)}
           </p>
+        </div>
+
+        {/* Half the calorie box's height, because it's the supporting number
+            rather than the answer — but it belongs on this screen: the
+            protein a target implies changes with the goal, and eating to a
+            deficit without it is how the weight lost turns out to be
+            muscle. */}
+        <div className="glass-chip flex items-center justify-center gap-2 rounded-2xl p-3 text-center">
+          <span className="text-xs text-white/60">پروتئین روزانه</span>
+          <span className="text-lg font-bold text-white">
+            {toFaDigits(protein.grams)}
+          </span>
+          <span className="text-xs text-white/60">گرم</span>
         </div>
 
         <button
