@@ -63,3 +63,26 @@ export function formatDayNumber(date: Date): string {
 export function formatMonthNumber(date: Date): string {
   return (date.getMonth() + 1).toLocaleString("fa-IR");
 }
+
+/**
+ * e.g. "چهارشنبه، ۵ آگوست (۱۴ مردادماه)" — today's weekday plus the
+ * Gregorian and Jalali dates together. Moved here from Header.tsx: the date
+ * now sits inside the home page's top card rather than under the greeting,
+ * so HomePage needed it too, and this is where every other date formatter
+ * already lives.
+ */
+export function formatTodayFull(): string {
+  const now = new Date();
+
+  const jalali = new DateObject({
+    date: now,
+    calendar: persianCalendar,
+    locale: persian_fa,
+  });
+
+  const weekday = jalali.format("dddd");
+  const jalaliDay = jalali.format("D");
+  const jalaliMonth = jalali.format("MMMM");
+
+  return `${weekday}، ${formatGregorianShort(now)} (${jalaliDay} ${jalaliMonth}ماه)`;
+}

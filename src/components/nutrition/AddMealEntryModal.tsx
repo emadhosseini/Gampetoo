@@ -198,10 +198,12 @@ export default function AddMealEntryModal({
               <button
                 key={entry.id}
                 onClick={() => selectFood(entry)}
+                // Not ring-2 ring-avocado-yellow: .glass-chip's own
+                // box-shadow replaces it outright, so the highlight never
+                // painted and picking a food looked like nothing had
+                // happened. See index.css's .glass-chip-selected.
                 className={`glass-chip glass-static flex w-full items-center justify-between rounded-xl p-3 text-sm font-medium text-white ${
-                  selected?.id === entry.id
-                    ? "ring-2 ring-avocado-yellow"
-                    : ""
+                  selected?.id === entry.id ? "glass-chip-selected" : ""
                 }`}
               >
                 {entry.nameFa}

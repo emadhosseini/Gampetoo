@@ -12,18 +12,9 @@ import {
 import ActivityLogModal from "@/components/progress/ActivityLogModal";
 import WeightModal from "@/components/WeightModal";
 import WaterLogModal from "@/components/WaterLogModal";
-import MealPickerModal from "@/components/nutrition/MealPickerModal";
-import MealOverviewModal from "@/components/nutrition/MealOverviewModal";
-import AddMealEntryModal from "@/components/nutrition/AddMealEntryModal";
-import AiMealEntryModal from "@/components/nutrition/AiMealEntryModal";
+import { useQuickAddMealFlow } from "@/hooks/useQuickAddMealFlow";
 import { logGlasses } from "@/utils/waterEngine";
 import { logActivityCalories } from "@/utils/activityLogEngine";
-import { getCalorieTrackingMode } from "@/utils/calorieModeEngine";
-import {
-  DAILY_MODE_SLOT,
-  getMealSlots,
-  type MealSlot,
-} from "@/data/nutrition/foodCatalog";
 
 // Bar height (h-17 = 68px) and the radius of the quick-add bump that rises
 // out of its top edge. Both feed the single silhouette path below, so they
@@ -112,17 +103,10 @@ export default function BottomNavigation({
   const [activityModalOpen, setActivityModalOpen] = useState(false);
   const [weightModalOpen, setWeightModalOpen] = useState(false);
   const [waterModalOpen, setWaterModalOpen] = useState(false);
-  // The quick-add shortcut's own food-logging flow — mirrors DailyLogPage's
-  // MealLogTab step-by-step (pick a meal if needed → overview, with its
-  // AI-vs-manual choice → the picked screen), just entered from a
-  // different starting point instead of a meal card tap.
-  const [foodStep, setFoodStep] = useState<
-    | { step: "pickMeal" }
-    | { step: "overview"; meal: MealSlot }
-    | { step: "add"; meal: MealSlot }
-    | { step: "ai"; meal: MealSlot }
-    | null
-  >(null);
+  // The quick-add shortcut's own food-logging flow — shared with the "+" on
+  // the calories detail page, so the two behave identically by construction
+  // rather than by two copies happening to agree.
+  const { openFoodFlow, foodFlowModals } = useQuickAddMealFlow();
 
   function setDrawerOpen(open: boolean | ((prev: boolean) => boolean)) {
     setDrawerOpenState((prev) => {
@@ -161,21 +145,7 @@ export default function BottomNavigation({
       label: "افزودن غذا",
       icon: "🍽️",
       onSelect: () => {
-        const mode = getCalorieTrackingMode();
-
-        // No mode chosen yet — there's no sensible single/per-meal slot to
-        // open the popup on, so fall back to the full page, which prompts
-        // for a mode before anything else.
-        if (mode === null) {
-          navigate("/daily-log");
-          return;
-        }
-
-        setFoodStep(
-          mode === "daily"
-            ? { step: "overview", meal: DAILY_MODE_SLOT }
-            : { step: "pickMeal" },
-        );
+        openFoodFlow();
       },
     },
     {
@@ -410,44 +380,7 @@ export default function BottomNavigation({
         }}
       />
 
-      <MealPickerModal
-        open={foodStep?.step === "pickMeal"}
-        options={getMealSlots()}
-        onClose={() => setFoodStep(null)}
-        onPick={(meal) => setFoodStep({ step: "overview", meal })}
-      />
-
-      <MealOverviewModal
-        meal={foodStep?.step === "overview" ? foodStep.meal : null}
-        onClose={() => setFoodStep(null)}
-        onAdd={() =>
-          setFoodStep(
-            foodStep?.step === "overview"
-              ? { step: "add", meal: foodStep.meal }
-              : foodStep,
-          )
-        }
-        onAddAi={() =>
-          setFoodStep(
-            foodStep?.step === "overview"
-              ? { step: "ai", meal: foodStep.meal }
-              : foodStep,
-          )
-        }
-        onChange={() => {}}
-      />
-
-      <AddMealEntryModal
-        meal={foodStep?.step === "add" ? foodStep.meal : null}
-        onClose={() => setFoodStep(null)}
-        onChange={() => {}}
-      />
-
-      <AiMealEntryModal
-        meal={foodStep?.step === "ai" ? foodStep.meal : null}
-        onClose={() => setFoodStep(null)}
-        onChange={() => {}}
-      />
+      {foodFlowModals}
     </>
   );
 }
