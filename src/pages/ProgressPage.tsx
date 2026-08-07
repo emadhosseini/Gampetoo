@@ -4,6 +4,7 @@ import WeightGaugeCard from "@/components/progress/WeightGaugeCard";
 import CalorieRingCard from "@/components/progress/CalorieRingCard";
 import WaterTileCard from "@/components/progress/WaterTileCard";
 import ActivityTileCard from "@/components/progress/ActivityTileCard";
+import TodayDashboardCard from "@/components/progress/TodayDashboardCard";
 
 export default function ProgressPage() {
   const navigate = useNavigate();
@@ -20,6 +21,8 @@ export default function ProgressPage() {
 
         <ActivityTileCard onClick={() => navigate("/progress/activity")} />
       </div>
+
+      <TodayDashboardCard />
     </div>
   );
 }

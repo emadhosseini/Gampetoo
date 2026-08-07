@@ -1,6 +1,19 @@
 {
-  "current": "1.0.9",
+  "current": "1.0.10",
   "history": [
+    {
+      "version": "1.0.10",
+      "date": "2026-08-07",
+      "description": "A dashboard now sits below the four stat tiles on the progress page: a two-color calorie circle (remaining/eaten in green and yellow, exercise-reclaimed calories carved out in red, all three matched by number and color beside it) over a daily-protein bar. The calorie-target screen no longer asks for gender — it reads that from the profile like age and height already did — and now opens with a choice between typing a target in by hand or calculating one, instead of jumping straight to calculation; the calorie-detail page's own target row is display-only now that the goal card above it is the one place that edits it. The weight gauge's colored zones no longer visibly overlap where they meet — the gap between them didn't account for the rounded stroke caps, which were wider than the gap itself. On the workout page, completing a workout or a rest-day walk stays on the page instead of returning home, a rest day's popup offers logging burned calories with a manual amount in the same popup rather than a second screen, and each exercise's rep/second count sits under its own toggle instead of beside the set count. Redundant \"today\"/\"daily nutrition\" captions were removed from several headers, and the home page's top card shows today's date where that caption used to be. The \"+\" on the calories page now opens the exact same add-meal flow as the bottom-nav shortcut, through one shared implementation instead of two that could drift apart. Each workout's detail page (Push, Pull, Legs, ...) gained a search box above its exercise groups, so a move can be found and its sets/reps edited without knowing which collapsed group it's filed under.",
+      "highlights": [
+        "📊 داشبورد امروز به صفحه‌ی پیشرفت اضافه شد: دایره‌ی کالری و نوار پروتئین روزانه",
+        "🎯 صفحه‌ی کالری هدف حالا اول می‌پرسه دستی وارد کنی یا محاسبه بشه، و دیگه جنسیت نمی‌پرسه",
+        "⚖️ همپوشانی لبه‌های نمودار وزن رفع شد",
+        "🏋️ بعد از اتمام تمرین یا پیاده‌روی، توی همون صفحه می‌مونی",
+        "🔍 توی صفحه‌ی هر تمرین (پوش، پول، پا و...) امکان جستجوی حرکت و ویرایش مستقیم ست/تکرارش اضافه شد",
+        "➕ دکمه‌ی + صفحه‌ی کالری روزانه حالا دقیقاً مثل کادر شورتکات عمل می‌کنه"
+      ]
+    },
     {
       "version": "1.0.9",
       "date": "2026-08-07",

@@ -1,19 +1,26 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 
 import CalorieGoalCard from "@/components/progress/CalorieGoalCard";
 import StatChartPage from "@/components/progress/StatChartPage";
-import TargetCaloriesModal from "@/components/progress/TargetCaloriesModal";
+import { useQuickAddMealFlow } from "@/hooks/useQuickAddMealFlow";
 import { getCalorieHistory, getCalorieTarget, getTodaysTotalCalories } from "@/utils/dailyLogEngine";
 import { toFaDigits } from "@/utils/numberFormat";
 
 export default function CaloriesDetailPage() {
-  const navigate = useNavigate();
-  const [targetModalOpen, setTargetModalOpen] = useState(false);
   // Only the setter is needed — forces a re-render so the plain
   // getCalorieTarget() read below picks up the change; it's not memoized,
   // so any re-render already refreshes it.
   const [, setVersion] = useState(0);
+
+  // The exact same "افزودن غذا" flow the bottom-nav shortcut drawer opens —
+  // mode-aware meal picking, add-vs-AI choice, all of it — rather than a
+  // second implementation of the same idea. Bumping the version here (which
+  // the shortcut drawer has no reason to do, since it has no numbers of its
+  // own on screen) is what makes کالری فعلی and the chart follow a meal
+  // added from here without a reload.
+  const { openFoodFlow, foodFlowModals } = useQuickAddMealFlow(() =>
+    setVersion((v) => v + 1),
+  );
 
   const todaysCalories = getTodaysTotalCalories();
   const calorieTarget = getCalorieTarget();
@@ -27,7 +34,7 @@ export default function CaloriesDetailPage() {
         minYStep={50}
         valuePrecision={0}
         history={getCalorieHistory()}
-        onAdd={() => navigate("/daily-log")}
+        onAdd={openFoodFlow}
         addLabel="ثبت غذا"
         targetValue={calorieTarget ?? undefined}
         targetLabel="کالری هدف"
@@ -53,10 +60,12 @@ export default function CaloriesDetailPage() {
             its label as a chart legend rather than trailing it, which after
             the swap would have stranded it mid-row. */}
         <div className="glass-panel glass-static space-y-3 rounded-3xl p-5">
-          <button
-            onClick={() => setTargetModalOpen(true)}
-            className="flex w-full items-center justify-between"
-          >
+          {/* Display-only: CalorieGoalCard right above is the one place on
+              this page that edits the target now, via its choice of manual
+              entry or calculation. A second, direct tap-to-edit entry point
+              here just meant the same number could be changed two
+              different ways from the same screen. */}
+          <div className="flex w-full items-center justify-between">
             <span className="flex items-center gap-2 text-white">
               <span className="h-3.5 w-3.5 rounded-full border-2 border-red-400" />
               کالری هدف
@@ -65,7 +74,7 @@ export default function CaloriesDetailPage() {
             <span className="text-white">
               {calorieTarget !== null ? `${toFaDigits(calorieTarget)} کالری` : "بدون هدف"}
             </span>
-          </button>
+          </div>
 
           <div className="flex w-full items-center justify-between border-t border-white/10 pt-3">
             <span className="flex items-center gap-2 text-white">
@@ -78,11 +87,7 @@ export default function CaloriesDetailPage() {
         </div>
       </StatChartPage>
 
-      <TargetCaloriesModal
-        open={targetModalOpen}
-        onClose={() => setTargetModalOpen(false)}
-        onSaved={() => setVersion((v) => v + 1)}
-      />
+      {foodFlowModals}
     </>
   );
 }

@@ -19,7 +19,6 @@ import {
   getCurrentUserAge,
   getCurrentUserGender,
   getCurrentUserHeight,
-  type Gender,
 } from "@/utils/userEngine";
 import { getLatestWeight } from "@/utils/weightEngine";
 import { toFaDigits } from "@/utils/numberFormat";
@@ -64,13 +63,14 @@ function ChoiceButton({
   );
 }
 
-// Collects what Mifflin-St Jeor needs that isn't already known. Age and
-// height aren't asked for: the profile owns them (age derived from the
-// birth date there), and having a second place to type them meant the two
-// could disagree, with this one silently winning. They're shown read-only
-// below instead, so the calculation stays inspectable.
+// Collects what Mifflin-St Jeor needs that isn't already known. Age,
+// height and gender aren't asked for: the profile owns them (age derived
+// from the birth date there), and having a second place to state them
+// meant the two could disagree, with this one silently winning. Age and
+// height are shown read-only below so the calculation stays inspectable;
+// gender doesn't get a display row at all — nothing on this screen needs
+// to show it, it's just read straight into the formula.
 export default function CalorieGoalModal({ open, onClose, onSaved }: CalorieGoalModalProps) {
-  const [gender, setGender] = useState<Gender>(() => getCurrentUserGender() ?? "male");
   const [weeklyLossGrams, setWeeklyLossGrams] = useState<number>(
     () => getWeeklyLossGrams(),
   );
@@ -86,6 +86,10 @@ export default function CalorieGoalModal({ open, onClose, onSaved }: CalorieGoal
   // Straight from the profile. The fallbacks only stand in so the preview
   // still shows a number when the profile is incomplete — the notice below
   // says which one is a guess rather than letting it pass as the user's.
+  // Gender has no fallback to report as missing: calculateBmr just needs
+  // some value, and "male" is as arbitrary a default as any — the profile
+  // page is where this actually gets corrected.
+  const gender = getCurrentUserGender() ?? "male";
   const profileAge = getCurrentUserAge();
   const profileHeight = getCurrentUserHeight();
   const profileWeight = getLatestWeight();
@@ -130,23 +134,6 @@ export default function CalorieGoalModal({ open, onClose, onSaved }: CalorieGoal
     <ModalOverlay onClose={onClose}>
       <div className="glass-panel glass-static max-h-[85vh] space-y-4 overflow-y-auto rounded-3xl p-6">
         <h2 className="text-center text-lg font-bold text-white">محاسبه کالری هدف</h2>
-
-        <div>
-          <p className="mb-2 text-sm text-white/60">جنسیت</p>
-
-          <div className="flex gap-3">
-            <ChoiceButton
-              active={gender === "male"}
-              onClick={() => setGender("male")}
-              title="مرد"
-            />
-            <ChoiceButton
-              active={gender === "female"}
-              onClick={() => setGender("female")}
-              title="زن"
-            />
-          </div>
-        </div>
 
         {/* Read-only, from the profile. Shown rather than hidden because
             they move the result as much as anything the user can change
@@ -261,7 +248,7 @@ export default function CalorieGoalModal({ open, onClose, onSaved }: CalorieGoal
             deficit without it is how the weight lost turns out to be
             muscle. */}
         <div className="glass-chip flex items-center justify-center gap-2 rounded-2xl p-3 text-center">
-          <span className="text-xs text-white/60">پروتئین روزانه</span>
+          <span className="text-xs text-white/60">پروتئین مورد نیاز روزانه</span>
           <span className="text-lg font-bold text-white">
             {toFaDigits(protein.grams)}
           </span>

@@ -1,10 +1,18 @@
 import { useState } from "react";
-import { Calculator, Pencil } from "lucide-react";
+import { Pencil, Sliders } from "lucide-react";
 
+import CalorieGoalChoiceModal from "@/components/progress/CalorieGoalChoiceModal";
 import CalorieGoalModal from "@/components/progress/CalorieGoalModal";
+import TargetCaloriesModal from "@/components/progress/TargetCaloriesModal";
 import { CALORIE_GOAL_LABELS, getCalorieGoal } from "@/utils/calorieEngine";
 import { getCalorieTarget } from "@/utils/dailyLogEngine";
 import { toFaDigits } from "@/utils/numberFormat";
+
+// null = nothing open. "choice" is always the entry point — both the
+// no-target CTA and the pencil-edit button land there first, so the
+// manual-vs-calculate decision is made the same way whether this is the
+// first time or the hundredth.
+type Screen = "choice" | "manual" | "calculate" | null;
 
 export interface CalorieGoalCardProps {
   // Bumped after the goal is recalculated so the page around this card —
@@ -23,7 +31,7 @@ export interface CalorieGoalCardProps {
 // puts the numbers on the right where reading starts and the action on
 // the left — the same order as the profile card and the rows below.
 export default function CalorieGoalCard({ onSaved }: CalorieGoalCardProps) {
-  const [modalOpen, setModalOpen] = useState(false);
+  const [screen, setScreen] = useState<Screen>(null);
 
   const target = getCalorieTarget();
   const goal = getCalorieGoal();
@@ -32,11 +40,11 @@ export default function CalorieGoalCard({ onSaved }: CalorieGoalCardProps) {
     <>
       {target === null ? (
         <button
-          onClick={() => setModalOpen(true)}
+          onClick={() => setScreen("choice")}
           className="glass-action flex w-full items-center justify-center gap-2 rounded-3xl py-4 font-bold text-white"
         >
-          <Calculator size={20} />
-          محاسبه هدف کالری من
+          <Sliders size={20} />
+          تنظیم کالری هدف من
         </button>
       ) : (
         <div className="glass-panel glass-static flex items-center justify-between rounded-3xl p-5">
@@ -65,7 +73,7 @@ export default function CalorieGoalCard({ onSaved }: CalorieGoalCardProps) {
           </div>
 
           <button
-            onClick={() => setModalOpen(true)}
+            onClick={() => setScreen("choice")}
             aria-label="ویرایش هدف کالری"
             className="glass-chip flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white"
           >
@@ -74,9 +82,26 @@ export default function CalorieGoalCard({ onSaved }: CalorieGoalCardProps) {
         </div>
       )}
 
+      <CalorieGoalChoiceModal
+        open={screen === "choice"}
+        onClose={() => setScreen(null)}
+        onManual={() => setScreen("manual")}
+        onCalculate={() => setScreen("calculate")}
+      />
+
+      {/* Reuses the exact same manual-entry form TargetCaloriesModal always
+          was, rather than building a second one — "کالری هدف روزانه"'s
+          stepper is the one true manual-entry UI regardless of which
+          screen opened it. */}
+      <TargetCaloriesModal
+        open={screen === "manual"}
+        onClose={() => setScreen(null)}
+        onSaved={onSaved}
+      />
+
       <CalorieGoalModal
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
+        open={screen === "calculate"}
+        onClose={() => setScreen(null)}
         onSaved={onSaved}
       />
     </>

@@ -24,7 +24,18 @@ const RADIUS = 84;
 const STROKE = 13;
 // Degrees shaved off each side of every zone arc, so the segments read as
 // separate pills (like the reference design) instead of one joined band.
-const SEGMENT_GAP_DEG = 3;
+//
+// Has to clear more than just the raw path endpoints: strokeLinecap="round"
+// below adds a semicircular cap extending STROKE/2 (6.5 units) past each
+// segment's literal endpoint, and that's what actually has to stay clear of
+// the neighboring segment's own cap, not the endpoints themselves. At the
+// gauge's RADIUS (84), the two facing gaps (one from each of the pair of
+// adjacent segments) need 2×GAP° of combined arc length to exceed 2×6.5=13
+// units before any real gap shows — which needs GAP > ~4.43°. The previous
+// value (3°) fell short by design accident (nothing here accounted for the
+// caps at all), so adjacent pills visibly overlapped at every seam instead
+// of showing the gap they were supposed to. 6° clears it with margin.
+const SEGMENT_GAP_DEG = 6;
 
 function bmiToAngle(bmi: number): number {
   const clamped = Math.min(BMI_MAX, Math.max(BMI_MIN, bmi));

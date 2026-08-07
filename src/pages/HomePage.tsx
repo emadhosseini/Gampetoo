@@ -27,6 +27,7 @@ import {
   workoutCharacterIcon,
 } from "@/data/characterIcons";
 import { getCurrentUserGender } from "@/utils/userEngine";
+import { formatTodayFull } from "@/utils/dateFormat";
 import { toFaDigits } from "@/utils/numberFormat";
 
 function HomePage() {
@@ -94,13 +95,38 @@ const workout = workoutType
       ? workoutCharacterIcon(workoutType, gender)
       : walkCharacterIcon(gender);
 
+  const tomorrowCard = (
+    <InfoCard
+      icon={
+        !tomorrowStarted ? (
+          <Footprints />
+        ) : isTomorrowWorkout ? (
+          <Dumbbell />
+        ) : (
+          <Footprints />
+        )
+      }
+      title="برنامه فردا"
+      value={
+        !tomorrowStarted
+          ? "فردا برنامه‌ای نداری\nاستراحت و پیاده روی کن"
+          : isTomorrowWorkout
+            ? tomorrowWorkout?.title ?? tomorrowDay.title
+            : "استراحت و پیاده‌روی سبک"
+      }
+    />
+  );
+
   return (
     <div className="pb-32">
       <Header />
 
       <section className="space-y-4 px-6">
         <HeroCard
-          title="برنامه امروز"
+          // Where "برنامه امروز" used to sit — today's date instead, since
+          // that's the thing actually worth saying here that the rest of
+          // the card doesn't already say some other way.
+          title={formatTodayFull()}
           emoji={!started ? "🗓" : isWorkout ? "🏋️" : "🚶"}
           iconSrc={heroIconSrc ?? undefined}
           status={
@@ -115,42 +141,26 @@ const workout = workoutType
               ? daysUntilStart === 1
                 ? "اولین برنامه فردا شروع می‌شه"
                 : `اولین برنامه از ${toFaDigits(daysUntilStart)} روز دیگه شروع می‌شه`
-              : isWorkout
-                ? undefined
-                : "استراحت و پیاده روی سبک به مدت ۴۵ تا ۶۰ دقیقه"
+              : undefined
           }
         />
 
-        <InfoCard
-          icon={
-            !tomorrowStarted ? (
-              <Footprints />
-            ) : isTomorrowWorkout ? (
-              <Dumbbell />
-            ) : (
-              <Footprints />
-            )
-          }
-          title="برنامه فردا"
-          value={
-            !tomorrowStarted
-              ? "فردا برنامه‌ای نداری\nاستراحت و پیاده روی کن"
-              : isTomorrowWorkout
-                ? tomorrowWorkout?.title ?? tomorrowDay.title
-                : "استراحت و پیاده روی سبک\nبه مدت ۴۵ تا ۶۰ دقیقه"
-          }
-        />
+        {/* Side by side only once there's a second card to sit beside —
+            وضعیت برنامه امروز has nothing to report before the program has
+            actually started, so برنامه فردا stays full width alone rather
+            than sitting in an empty-looking two-column row. */}
+        {started ? (
+          <div className="grid grid-cols-2 gap-4">
+            {tomorrowCard}
 
-        {started && (
-          <InfoCard
-            icon={<ClipboardList />}
-            title="وضعیت برنامه امروز"
-            value={
-              session.completed
-                ? "انجام شده ✅"
-                : "انجام نشده"
-            }
-          />
+            <InfoCard
+              icon={<ClipboardList />}
+              title="وضعیت برنامه امروز"
+              value={session.completed ? "انجام شده ✅" : "انجام نشده"}
+            />
+          </div>
+        ) : (
+          tomorrowCard
         )}
       </section>
     </div>

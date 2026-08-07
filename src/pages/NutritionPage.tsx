@@ -33,7 +33,7 @@ export default function NutritionPage() {
   if (!hasSelections) {
     return (
       <div className="mx-auto max-w-3xl space-y-6 px-4 py-6">
-        <WorkoutHeader subtitle="🍽 تغذیه امروز" title={title} />
+        <WorkoutHeader title={title} />
 
         <div className="glass-panel rounded-2xl p-6 text-center">
           <p className="text-white">
@@ -53,7 +53,7 @@ export default function NutritionPage() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-6 px-4 py-6">
-      <WorkoutHeader subtitle="🍽 تغذیه امروز" title={title} />
+      <WorkoutHeader title={title} />
 
       {enabledMeals.map((meal) => (
         <MealCard key={meal.id} meal={meal} />

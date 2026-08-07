@@ -20,10 +20,17 @@ function today() {
   return new Date().toISOString().split("T")[0];
 }
 
-function sumCalories(meals: DailyLogState["meals"]): number {
+function sumMacro(
+  meals: DailyLogState["meals"],
+  pick: (entry: LoggedFoodEntry) => number | undefined,
+): number {
   return Object.values(meals)
     .flat()
-    .reduce((sum, entry) => sum + (entry.calories ?? 0), 0);
+    .reduce((sum, entry) => sum + (pick(entry) ?? 0), 0);
+}
+
+function sumCalories(meals: DailyLogState["meals"]): number {
+  return sumMacro(meals, (entry) => entry.calories);
 }
 
 export interface EntryMacros {
@@ -189,6 +196,13 @@ export function resetDailyLog() {
 // calorie-tracking mode (per-meal or daily) logged it under.
 export function getTodaysTotalCalories(): number {
   return sumCalories(readState().meals);
+}
+
+// Same all-slots, both-modes reach as getTodaysTotalCalories, for the
+// progress page's calorie orb — its protein row needs today's actual intake
+// regardless of whether the account tracks per-meal or as one daily total.
+export function getTodaysTotalProtein(): number {
+  return sumMacro(readState().meals, (entry) => entry.protein);
 }
 
 // The chartable history behind the progress page's daily-calories detail

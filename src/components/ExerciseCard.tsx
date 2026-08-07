@@ -31,16 +31,20 @@ export default function ExerciseCard({
           {exercise.name}
         </h2>
 
-        <div className="mt-2 flex justify-between text-sm text-white">
-          <span>{toFaDigits(exercise.sets)} ست</span>
-          <span>
-            {toFaDigits(exercise.reps)}{" "}
-            {exercise.unit === "seconds" ? "ثانیه" : "تکرار"}
-          </span>
-        </div>
+        <p className="mt-2 text-sm text-white">{toFaDigits(exercise.sets)} ست</p>
       </div>
 
-      <Toggle checked={checked} onChange={onToggleChecked} />
+      {/* Reps/seconds sits under the toggle rather than beside the sets
+          count — with the toggle now here, a justify-between row cramming
+          both numbers into the name's own column read as cluttered. This
+          reads as one unit: what you're marking done, and how much of it. */}
+      <div className="flex shrink-0 flex-col items-center gap-1.5">
+        <Toggle checked={checked} onChange={onToggleChecked} />
+        <span className="text-xs text-white/60">
+          {toFaDigits(exercise.reps)}{" "}
+          {exercise.unit === "seconds" ? "ثانیه" : "تکرار"}
+        </span>
+      </div>
     </motion.div>
   );
 }

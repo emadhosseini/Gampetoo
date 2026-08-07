@@ -31,7 +31,7 @@ export const GOAL_ADJUSTMENTS: Record<CalorieGoal, number> = {
   gain: 300,
 };
 
-/** Weekly fat-loss rates offered for the چربی‌سوزی goal, in grams. */
+/** Weekly fat-loss rates offered for the کاهش‌وزن goal, in grams. */
 export const WEEKLY_LOSS_RATES = [250, 500, 750, 1000] as const;
 
 export type WeeklyLossRate = (typeof WEEKLY_LOSS_RATES)[number];
@@ -105,7 +105,7 @@ export const ACTIVITY_LEVEL_HINTS: Record<ActivityLevel, string> = {
 };
 
 export const CALORIE_GOAL_LABELS: Record<CalorieGoal, string> = {
-  lose: "چربی‌سوزی",
+  lose: "کاهش وزن",
   maintain: "تثبیت وزن",
   gain: "عضله‌سازی",
 };

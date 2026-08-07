@@ -1,5 +1,5 @@
-import { ChevronDown, Minus, Plus } from "lucide-react";
-import { useState } from "react";
+import { ChevronDown, Minus, Plus, Search } from "lucide-react";
+import { useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 
 import Toggle from "@/components/Toggle";
@@ -9,9 +9,98 @@ import {
   saveWarmupGroups,
 } from "@/store/warmupLibraryStore";
 
-import type { ExerciseGroup } from "@/data/workoutLibrary";
+import type { Exercise, ExerciseGroup } from "@/data/workoutLibrary";
 import type { WarmupGroup } from "@/data/warmupLibrary";
+import { matchesWordPrefix, normalizeFa } from "@/utils/persianSearch";
 import { toFaDigits } from "@/utils/numberFormat";
+
+// The toggle-plus-steppers block a single exercise is edited with — shared
+// between the normal per-group list and the search results below, so a
+// found exercise is edited with literally the same control it would be
+// edited with inside its own group, not a second copy that could drift
+// from it.
+function ExerciseEditRow({
+  exercise,
+  isWarmupWorkout,
+  onUpdate,
+}: {
+  exercise: Exercise;
+  isWarmupWorkout: boolean;
+  onUpdate: (patch: Partial<Exercise>) => void;
+}) {
+  return (
+    <div className="glass-chip glass-static rounded-xl p-4">
+      <div
+        className={`flex items-center gap-3 ${isWarmupWorkout ? "" : "mb-4"}`}
+      >
+        <Toggle
+          checked={exercise.enabled}
+          onChange={() => onUpdate({ enabled: !exercise.enabled })}
+        />
+
+        <span className="flex-1 font-medium">{exercise.name}</span>
+      </div>
+
+      {!isWarmupWorkout && (
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <div className="mb-2 text-sm font-medium text-white">ست</div>
+
+            <div className="selector-pill flex items-center justify-between rounded-xl p-2">
+              <button
+                onClick={() => {
+                  if (exercise.sets <= 1) return;
+
+                  onUpdate({ sets: exercise.sets - 1 });
+                }}
+              >
+                <Minus size={18} />
+              </button>
+
+              <span className="font-bold text-white">{toFaDigits(exercise.sets)}</span>
+
+              <button onClick={() => onUpdate({ sets: exercise.sets + 1 })}>
+                <Plus size={18} />
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <div className="mb-2 text-sm font-medium text-white">
+              {exercise.unit === "seconds" ? "ثانیه" : "تکرار"}
+            </div>
+
+            <div className="selector-pill flex items-center justify-between rounded-xl p-2">
+              <button
+                onClick={() => {
+                  const step = exercise.unit === "seconds" ? 5 : 1;
+
+                  if (exercise.reps <= step) return;
+
+                  onUpdate({ reps: exercise.reps - step });
+                }}
+              >
+                <Minus size={18} />
+              </button>
+
+              <span className="font-bold text-white">{toFaDigits(exercise.reps)}</span>
+
+              <button
+                onClick={() =>
+                  onUpdate({
+                    reps: exercise.reps + (exercise.unit === "seconds" ? 5 : 1),
+                  })
+                }
+              >
+                <Plus size={18} />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function WorkoutDetailPage() {
   const { id } = useParams();
@@ -32,6 +121,27 @@ export default function WorkoutDetailPage() {
   const [warmupSectionOpen, setWarmupSectionOpen] = useState(false);
 
   const [saved, setSaved] = useState(false);
+
+  const [query, setQuery] = useState("");
+
+  // Flattened across every group rather than searched per-group, since the
+  // whole point is finding a move without knowing (or opening) which group
+  // it's filed under first — that's the actual friction this replaces, on
+  // a page like Push where "سینه"/"شانه"/"پشت بازو" each hide their own
+  // exercises behind a collapsed header.
+  const searchResults = useMemo(() => {
+    const normalizedQuery = normalizeFa(query);
+
+    if (!normalizedQuery) return [];
+
+    return groups.flatMap((group) =>
+      group.exercises
+        .filter((exercise) =>
+          matchesWordPrefix(normalizeFa(exercise.name), normalizedQuery),
+        )
+        .map((exercise) => ({ group, exercise })),
+    );
+  }, [groups, query]);
 
   if (!workout) {
     return (
@@ -86,6 +196,8 @@ export default function WorkoutDetailPage() {
     setSaved(true);
   }
 
+  const isWarmupWorkout = workout.id === "warmup";
+
   return (
     <div className="space-y-6 px-5 pb-5 pt-10">
       <h1 className="text-2xl font-bold">
@@ -93,6 +205,54 @@ export default function WorkoutDetailPage() {
       </h1>
 
       <div className="space-y-3">
+        {/* Above everything else on the page, including گرم کردن تخصصی —
+            finding a move shouldn't depend on knowing which collapsed
+            section it's filed under, or scrolling past the warmup block to
+            get there. Editing a result uses the exact same control as the
+            group list below (ExerciseEditRow), so there's nothing extra to
+            learn once something's found. */}
+        {groups.length > 0 && (
+          <div className="glass-panel glass-static rounded-2xl p-4">
+            <div className="glass-chip flex items-center gap-2 rounded-xl p-2">
+              <Search size={16} className="shrink-0 text-white/60" />
+
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="جستجوی حرکت..."
+                className="w-full bg-transparent px-1 py-2 text-sm text-white placeholder:text-white/50 outline-none"
+              />
+            </div>
+
+            {query.trim() && (
+              <div className="mt-3 max-h-80 space-y-3 overflow-y-auto">
+                {searchResults.length === 0 ? (
+                  <p className="py-2 text-center text-sm text-white/60">
+                    حرکتی پیدا نشد.
+                  </p>
+                ) : (
+                  searchResults.map(({ group, exercise }) => (
+                    <div key={exercise.id}>
+                      <p className="mb-1 px-1 text-xs text-white/50">
+                        {group.title}
+                      </p>
+
+                      <ExerciseEditRow
+                        exercise={exercise}
+                        isWarmupWorkout={isWarmupWorkout}
+                        onUpdate={(patch) =>
+                          updateExercise(group.id, exercise.id, patch)
+                        }
+                      />
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
         {specializedWarmup && (
           <div className="glass-panel glass-static rounded-2xl p-4">
             <button
@@ -183,102 +343,14 @@ export default function WorkoutDetailPage() {
               {isOpen && (
                 <div className="mt-4 space-y-4">
                   {group.exercises.map((exercise) => (
-                    <div
+                    <ExerciseEditRow
                       key={exercise.id}
-                      className="glass-chip glass-static rounded-xl p-4"
-                    >
-                      <div
-                        className={`flex items-center gap-3 ${
-                          workout.id === "warmup" ? "" : "mb-4"
-                        }`}
-                      >
-                        <Toggle
-                          checked={exercise.enabled}
-                          onChange={() =>
-                            updateExercise(group.id, exercise.id, {
-                              enabled: !exercise.enabled,
-                            })
-                          }
-                        />
-
-                        <span className="flex-1 font-medium">
-                          {exercise.name}
-                        </span>
-                      </div>
-
-                      {workout.id !== "warmup" && (
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <div className="mb-2 text-sm font-medium text-white">
-                              ست
-                            </div>
-
-                            <div className="selector-pill flex items-center justify-between rounded-xl p-2">
-                              <button
-                                onClick={() => {
-                                  if (exercise.sets <= 1) return;
-
-                                  updateExercise(group.id, exercise.id, {
-                                    sets: exercise.sets - 1,
-                                  });
-                                }}
-                              >
-                                <Minus size={18} />
-                              </button>
-
-                              <span className="font-bold text-white">{toFaDigits(exercise.sets)}</span>
-
-                              <button
-                                onClick={() =>
-                                  updateExercise(group.id, exercise.id, {
-                                    sets: exercise.sets + 1,
-                                  })
-                                }
-                              >
-                                <Plus size={18} />
-                              </button>
-                            </div>
-                          </div>
-
-                          <div>
-                            <div className="mb-2 text-sm font-medium text-white">
-                              {exercise.unit === "seconds" ? "ثانیه" : "تکرار"}
-                            </div>
-
-                            <div className="selector-pill flex items-center justify-between rounded-xl p-2">
-                              <button
-                                onClick={() => {
-                                  const step =
-                                    exercise.unit === "seconds" ? 5 : 1;
-
-                                  if (exercise.reps <= step) return;
-
-                                  updateExercise(group.id, exercise.id, {
-                                    reps: exercise.reps - step,
-                                  });
-                                }}
-                              >
-                                <Minus size={18} />
-                              </button>
-
-                              <span className="font-bold text-white">{toFaDigits(exercise.reps)}</span>
-
-                              <button
-                                onClick={() =>
-                                  updateExercise(group.id, exercise.id, {
-                                    reps:
-                                      exercise.reps +
-                                      (exercise.unit === "seconds" ? 5 : 1),
-                                  })
-                                }
-                              >
-                                <Plus size={18} />
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                      exercise={exercise}
+                      isWarmupWorkout={isWarmupWorkout}
+                      onUpdate={(patch) =>
+                        updateExercise(group.id, exercise.id, patch)
+                      }
+                    />
                   ))}
                 </div>
               )}

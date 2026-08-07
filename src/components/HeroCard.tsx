@@ -1,5 +1,10 @@
 type HeroCardProps = {
-  title: string;
+  // Optional: the "برنامه امروز" caption this used to always show above the
+  // status was one more label saying what the card already is by being the
+  // first thing on the home page. The "شروع کن" pre-program state still
+  // uses one — that title carries real information ("get started"), not a
+  // repeat of "today".
+  title?: string;
   emoji: string;
   // A drawn illustration to show instead of the emoji. Not every state has
   // one (see characterIcons — `upper` and the rest-less days don't), so the
@@ -25,9 +30,11 @@ function HeroCard({
       disabled={!onClick}
       className="glass-panel w-full rounded-[32px] p-8 text-center disabled:cursor-default"
     >
-      <p className="text-sm text-white">
-        {title}
-      </p>
+      {title && (
+        <p className="text-sm text-white">
+          {title}
+        </p>
+      )}
 
       {iconSrc ? (
         // Fixed square so the card's height doesn't jump between an icon

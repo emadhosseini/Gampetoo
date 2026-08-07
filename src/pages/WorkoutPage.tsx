@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import WorkoutHeader from "@/components/WorkoutHeader";
 import WorkoutSummary from "@/components/WorkoutSummary";
 import WorkoutCompleteModal from "@/components/WorkoutCompleteModal";
+import WalkCompleteModal from "@/components/WalkCompleteModal";
 import ExerciseCard from "@/components/ExerciseCard";
 import CompleteWorkoutButton from "@/components/CompleteWorkoutButton";
 import WarmupBlock from "@/components/WarmupBlock";
@@ -17,6 +18,7 @@ import {
 
 import { getWorkout } from "@/store/workoutLibraryStore";
 import { getSpecializedWarmup } from "@/store/warmupLibraryStore";
+import { walkCharacterIcon } from "@/data/characterIcons";
 import type { Exercise } from "@/data/workoutLibrary";
 
 import {
@@ -27,20 +29,22 @@ import {
   estimateCheckedWorkoutCalories,
 } from "@/utils/sessionEngine";
 import { setTodayWorkoutCalories } from "@/utils/workoutCalorieEngine";
-import { getCurrentUsername } from "@/utils/userEngine";
+import { logActivityCalories } from "@/utils/activityLogEngine";
+import { getCurrentUserGender, getCurrentUsername } from "@/utils/userEngine";
 import { flushPendingSync } from "@/sync/remoteSync";
 
-// A full page navigation tears down the JS context before the sync engine's
-// debounced push would otherwise fire — flush first so today's completed
-// status actually reaches the server instead of only staying local.
-async function goHomeAfterCompleting() {
+// Completing used to navigate home right after this, which is why it was
+// needed in the first place: a full page navigation tears down the JS
+// context before the sync engine's debounced push would otherwise fire.
+// Staying on this page removes that race — the debounce still fires on its
+// own — but the flush is kept anyway so the completed status reaches the
+// server right away rather than waiting out the debounce regardless.
+async function flushAfterCompleting() {
   const username = getCurrentUsername();
 
   if (username) {
     await flushPendingSync(username);
   }
-
-  window.location.href = "/";
 }
 
 function WorkoutPage() {
@@ -63,7 +67,34 @@ function WorkoutPage() {
   // what actually triggers the re-render that picks the fresh value up.
   const [, forceRerender] = useState(0);
 
+  // The rest day's own slide-to-complete confirmation — mirrors
+  // resetKey/confirmOpen above, same remount-to-reset trick for the
+  // slider on cancel.
+  const [walkConfirmOpen, setWalkConfirmOpen] = useState(false);
+  const [walkResetKey, setWalkResetKey] = useState(0);
+
+  function finishWalk(calories: number | null) {
+    setWalkConfirmOpen(false);
+
+    if (calories !== null) {
+      logActivityCalories(calories);
+    }
+
+    completeWalk();
+    void flushAfterCompleting();
+    // getSession() re-reads localStorage on every render but nothing
+    // schedules a render on its own — this is what actually surfaces the
+    // "تمرین امروز رو انجام دادی" state in place, now that finishing
+    // doesn't navigate away to reveal it a different way.
+    forceRerender((n) => n + 1);
+  }
+
   const session = getSession();
+
+  // Read fresh each render rather than held anywhere, matching HomePage's
+  // own hero icon — so a gender change on the profile page shows up here
+  // the next time this renders too, not just on the home screen.
+  const gender = getCurrentUserGender();
 
   function handleToggleExercise(exercise: Exercise) {
     toggleExerciseChecked(exercise.id);
@@ -112,25 +143,30 @@ const workout = workoutType
         <WorkoutHeader title="روز استراحت" showForgotButton />
 
         <div className="glass-panel rounded-3xl p-6 text-center">
-          <div className="text-3xl">🚶</div>
-
-          <h2 className="mt-3 text-xl font-bold text-white">
-            امروز روز استراحت توئه
-          </h2>
+          {/* Same male/female walking illustration HomePage's hero card
+              already uses for a rest day (walkCharacterIcon) — not a
+              generic rest/bed icon, since the day's actual ask is the
+              walk, and this way the two screens draw it identically. */}
+          <img
+            src={walkCharacterIcon(gender)}
+            alt=""
+            aria-hidden="true"
+            width={96}
+            height={96}
+            className="mx-auto h-24 w-24 object-contain"
+          />
 
           <p className="mt-3 text-sm text-white">
-            به مدت ۴۵ تا ۶۰ دقیقه پیاده روی سبک داشته باش
+            استراحت و پیاده روی سبک به مدت ۴۵ تا ۶۰ دقیقه
           </p>
         </div>
 
         {!session.completed && (
           <CompleteWorkoutButton
+            key={walkResetKey}
             variant="accent"
             label="پیاده روی امروز رو انجام دادم 💪🏻"
-            onClick={() => {
-              completeWalk();
-              void goHomeAfterCompleting();
-            }}
+            onClick={() => setWalkConfirmOpen(true)}
           />
         )}
 
@@ -139,6 +175,15 @@ const workout = workoutType
             تمرین امروز رو انجام دادی☺️
           </div>
         )}
+
+        <WalkCompleteModal
+          open={walkConfirmOpen}
+          onCancel={() => {
+            setWalkConfirmOpen(false);
+            setWalkResetKey((key) => key + 1);
+          }}
+          onConfirm={finishWalk}
+        />
       </div>
     );
   }
@@ -220,15 +265,6 @@ const workout = workoutType
         />
       )}
 
-      <p className="text-center text-sm text-white">
-        خلاصه تمرین امروز
-      </p>
-
-      <WorkoutSummary
-  exercises={exercises.length}
-  sets={totalSets}
-/>
-
       <div className="space-y-4">
         {sortedExercises.map((exercise) => (
           <ExerciseCard
@@ -249,9 +285,19 @@ const workout = workoutType
         />
       )}
 
+      {/* The exercise/set counts only show up here now, once the workout is
+          actually done — not while it's still in progress above the list,
+          where they were just noise repeating what the checklist itself
+          already shows. */}
       {session.completed && (
-        <div className="glass-panel mt-6 rounded-full py-4 text-center text-lg font-semibold text-white">
-          تمرین امروز رو انجام دادی☺️
+        <div className="glass-panel mt-6 space-y-3 rounded-3xl p-5 text-center">
+          <p className="text-lg font-semibold text-white">
+            تمرین امروز رو انجام دادی☺️
+          </p>
+
+          <p className="text-sm text-white/70">خلاصه تمرین امروز</p>
+
+          <WorkoutSummary exercises={exercises.length} sets={totalSets} />
         </div>
       )}
 
@@ -276,7 +322,11 @@ const workout = workoutType
           // it (see workoutCalorieEngine).
           setTodayWorkoutCalories(addCaloriesToActivity ? checkedCalories : 0);
           completeWorkout();
-          void goHomeAfterCompleting();
+          void flushAfterCompleting();
+          // Same reason as finishWalk: nothing else schedules a re-render,
+          // and this is what actually shows the "انجام دادی" summary in
+          // place now that confirming stays on this page.
+          forceRerender((n) => n + 1);
         }}
       />
     </div>

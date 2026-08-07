@@ -144,6 +144,16 @@ textarea {
     0 0 0 2px rgb(252 211 77 / 70%);
 }
 
+/* The selected row in a list of .glass-chip options (the food search in
+   AddMealEntryModal). Same conflict and same fix as the three above —
+   ring-2 ring-avocado-yellow was silently painting nothing, so picking a
+   food showed no sign it had been picked at all. */
+.glass-chip-selected {
+  box-shadow:
+    0px 0px 0.5px 0.5px rgb(219 219 219 / 20%),
+    0 0 0 2px rgb(250 234 92 / 80%);
+}
+
 /* .glass-panel's all-around hairline (the 3rd shadow layer above) draws a
    thin line across every edge, including the top — wrong for a panel
    that's flush against the actual top of the screen with nothing above it
