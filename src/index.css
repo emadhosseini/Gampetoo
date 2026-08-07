@@ -116,6 +116,34 @@ textarea {
   box-shadow: 0px 0px 0.5px 0.5px rgb(219 219 219 / 20%);
 }
 
+/* A colored status ring for .glass-chip (the daily-protein macro tile —
+   MealLogCard/DailyTotalsCard). Tailwind's ring-2 ring-{color} utilities
+   look like the obvious way to do this, but they render nothing here:
+   .glass-chip's own box-shadow above is a single literal value, same
+   specificity and later in this file, so it fully replaces the ring's
+   box-shadow instead of the two combining — the ring was computed
+   correctly (visible in --tw-ring-shadow) but never actually painted.
+   These three redeclare box-shadow with .glass-chip's own hairline as the
+   first layer and the ring as the second, applied after .glass-chip so
+   this wins, same fix as .glass-panel-flush-top above. */
+.protein-ring-under {
+  box-shadow:
+    0px 0px 0.5px 0.5px rgb(219 219 219 / 20%),
+    0 0 0 2px rgb(248 113 113 / 70%);
+}
+
+.protein-ring-on-target {
+  box-shadow:
+    0px 0px 0.5px 0.5px rgb(219 219 219 / 20%),
+    0 0 0 2px rgb(74 222 128 / 70%);
+}
+
+.protein-ring-over {
+  box-shadow:
+    0px 0px 0.5px 0.5px rgb(219 219 219 / 20%),
+    0 0 0 2px rgb(252 211 77 / 70%);
+}
+
 /* .glass-panel's all-around hairline (the 3rd shadow layer above) draws a
    thin line across every edge, including the top — wrong for a panel
    that's flush against the actual top of the screen with nothing above it

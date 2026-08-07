@@ -15,10 +15,16 @@ import { toFaDigits } from "@/utils/numberFormat";
 // which it is; yellow as "more than this is doing anything", not as a
 // warning — eating past the target isn't harmful, it just isn't buying
 // anything, so it shouldn't look like the same kind of problem as red.
+//
+// Plain classes, not Tailwind's ring-2 ring-{color} utilities — those
+// silently render nothing on a .glass-chip, since .glass-chip's own
+// box-shadow (index.css) has the same specificity and comes later in the
+// stylesheet, so it fully replaces the ring's box-shadow instead of the
+// two combining. See index.css's .protein-ring-* comment.
 const PROTEIN_RING: Record<ProteinStanding, string> = {
-  under: "ring-2 ring-red-400/70",
-  onTarget: "ring-2 ring-green-400/70",
-  over: "ring-2 ring-amber-300/70",
+  under: "protein-ring-under",
+  onTarget: "protein-ring-on-target",
+  over: "protein-ring-over",
 };
 
 const MACROS = [
