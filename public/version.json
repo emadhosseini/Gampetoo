@@ -1,6 +1,14 @@
 {
-  "current": "1.0.7",
+  "current": "1.0.8",
   "history": [
+    {
+      "version": "1.0.8",
+      "date": "2026-08-05",
+      "description": "Added 13 exercises to the full-body workout library that weren't in it yet: leg press machine, front lat pulldown, machine chest press (two variants), seated dumbbell shoulder press, leg press, seated cable row, pec deck fly, hip thrust, top lat pulldown, hip abductor machine, standing dumbbell lateral raise, and lower-back extension machine. Three requested exercises (crunch, plank, shoulder press) were already there and were left as-is rather than duplicated.",
+      "highlights": [
+        "🏋️ ۱۳ حرکت جدید به کتابخانه‌ی تمرین «تمام بدن» اضافه شد"
+      ]
+    },
     {
       "version": "1.0.7",
       "date": "2026-08-05",
