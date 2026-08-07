@@ -10,6 +10,11 @@ export interface Exercise {
   id: string;
   name: string;
   sets: number;
+  // What `reps` counts. Isometric holds (planks and the like) aren't
+  // repeated, they're endured, so counting them in repetitions was
+  // meaningless — "۳ ست × ۱۰ تکرار پلانک" doesn't describe anything a
+  // person can do. Absent means repetitions, which is almost everything.
+  unit?: "reps" | "seconds";
   reps: number;
   enabled: boolean;
   metValue: number;
@@ -250,6 +255,20 @@ export const workoutLibrary: WorkoutDefinition[] = [
           },
         ],
       },
+      {
+        id: "core",
+        title: "مرکزی",
+        exercises: [
+          {
+            id: "bird-dog",
+            name: "برد داگ",
+            sets: 3,
+            reps: 10,
+            enabled: false,
+            metValue: 5,
+          },
+        ],
+      },
     ],
   },
 
@@ -425,6 +444,20 @@ export const workoutLibrary: WorkoutDefinition[] = [
           },
         ],
       },
+      {
+        id: "core",
+        title: "مرکزی",
+        exercises: [
+          {
+            id: "bird-dog",
+            name: "برد داگ",
+            sets: 3,
+            reps: 10,
+            enabled: false,
+            metValue: 5,
+          },
+        ],
+      },
     ],
   },
 
@@ -590,17 +623,19 @@ export const workoutLibrary: WorkoutDefinition[] = [
             id: "plank",
             name: "پلانک",
             sets: 3,
-            reps: 10,
+            unit: "seconds",
+            reps: 45,
             enabled: false,
-            metValue: 5,
+            metValue: 3.8,
           },
           {
             id: "side-plank",
             name: "پلانک بغل",
             sets: 3,
-            reps: 10,
+            unit: "seconds",
+            reps: 30,
             enabled: false,
-            metValue: 5,
+            metValue: 3.8,
           },
           {
             id: "dead-bug",
@@ -662,9 +697,10 @@ export const workoutLibrary: WorkoutDefinition[] = [
             id: "hollow-hold",
             name: "هالو هولد",
             sets: 3,
-            reps: 10,
+            unit: "seconds",
+            reps: 30,
             enabled: false,
-            metValue: 5,
+            metValue: 3.8,
           },
           {
             id: "bird-dog",
@@ -695,6 +731,14 @@ export const workoutLibrary: WorkoutDefinition[] = [
         id: "moves",
         title: "حرکات",
         exercises: [
+          {
+            id: "bird-dog",
+            name: "برد داگ",
+            sets: 3,
+            reps: 10,
+            enabled: false,
+            metValue: 5,
+          },
           {
             id: "chest-press",
             name: "پرس سینه",
@@ -772,6 +816,14 @@ export const workoutLibrary: WorkoutDefinition[] = [
         id: "moves",
         title: "حرکات",
         exercises: [
+          {
+            id: "bird-dog",
+            name: "برد داگ",
+            sets: 3,
+            reps: 10,
+            enabled: false,
+            metValue: 5,
+          },
           {
             id: "squat",
             name: "اسکوات",
@@ -866,6 +918,14 @@ export const workoutLibrary: WorkoutDefinition[] = [
         title: "حرکات",
         exercises: [
           {
+            id: "bird-dog",
+            name: "برد داگ",
+            sets: 3,
+            reps: 10,
+            enabled: false,
+            metValue: 5,
+          },
+          {
             id: "squat",
             name: "اسکوات",
             sets: 3,
@@ -933,9 +993,10 @@ export const workoutLibrary: WorkoutDefinition[] = [
             id: "plank",
             name: "پلانک",
             sets: 3,
-            reps: 10,
+            unit: "seconds",
+            reps: 45,
             enabled: false,
-            metValue: 5,
+            metValue: 3.8,
           },
           {
             id: "crunch",

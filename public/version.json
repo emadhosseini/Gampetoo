@@ -1,6 +1,18 @@
 {
-  "current": "1.0.7",
+  "current": "1.0.8",
   "history": [
+    {
+      "version": "1.0.8",
+      "date": "2026-08-05",
+      "description": "Twenty-nine foods added — four kinds of lemon, eight coffees, seven rices including plain and oiled dampokht and kateh, eight pastas, and plain and lukewarm water — plus a multivitamin with minerals among the supplements. The food substitution list grew from three groups to nineteen, one for every food the plan actually contains rather than only chicken, rice and yoghurt. Bird dog joins every training day, under a core group of its own on push and pull days rather than being filed under an arm muscle. Holds are now counted in seconds rather than repetitions, which never described anything a person could do: plank is 45 seconds, side plank and hollow hold 30. That also fixed their calorie estimate, which had assumed two and a half minutes per set and a strength-training intensity — a hold states its own duration exactly, so a three-set 45-second plank is 2.25 minutes at a MET of 3.8, about 13 calories for an 85kg person rather than the 56 it claimed.",
+      "highlights": [
+        "🍋 لیموترش، قهوه، برنج (دمپخت و کته)، ماکارونی و پاستا و آب ولرم اضافه شدن",
+        "💊 مولتی ویتامین مینرال به مکمل‌ها اضافه شد",
+        "🔄 جایگزین‌های غذایی از ۳ گروه به ۱۹ گروه رسید",
+        "🧘 برد داگ به همه‌ی روزهای تمرینی اضافه شد",
+        "⏱️ پلانک و حرکات نگه‌داشتنی ثانیه‌ای شدن و کالریشون درست حساب می‌شه"
+      ]
+    },
     {
       "version": "1.0.7",
       "date": "2026-08-05",

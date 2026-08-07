@@ -242,16 +242,19 @@ export default function WorkoutDetailPage() {
 
                           <div>
                             <div className="mb-2 text-sm font-medium text-white">
-                              تکرار
+                              {exercise.unit === "seconds" ? "ثانیه" : "تکرار"}
                             </div>
 
                             <div className="selector-pill flex items-center justify-between rounded-xl p-2">
                               <button
                                 onClick={() => {
-                                  if (exercise.reps <= 1) return;
+                                  const step =
+                                    exercise.unit === "seconds" ? 5 : 1;
+
+                                  if (exercise.reps <= step) return;
 
                                   updateExercise(group.id, exercise.id, {
-                                    reps: exercise.reps - 1,
+                                    reps: exercise.reps - step,
                                   });
                                 }}
                               >
@@ -263,7 +266,9 @@ export default function WorkoutDetailPage() {
                               <button
                                 onClick={() =>
                                   updateExercise(group.id, exercise.id, {
-                                    reps: exercise.reps + 1,
+                                    reps:
+                                      exercise.reps +
+                                      (exercise.unit === "seconds" ? 5 : 1),
                                   })
                                 }
                               >

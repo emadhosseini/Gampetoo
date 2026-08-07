@@ -111,6 +111,29 @@ export interface CalorieEstimateInput {
   id: string;
   metValue: number;
   sets: number;
+  // Present for isometric holds, where `reps` is a duration in seconds
+  // rather than a count — see Exercise in data/workoutLibrary.
+  unit?: "reps" | "seconds";
+  reps: number;
+}
+
+/**
+ * Minutes of activity an exercise represents, which is the one input the MET
+ * formula needs from it.
+ *
+ * A hold states its own duration exactly, so there is nothing to assume: three
+ * sets of a 45-second plank is 2.25 minutes, not the 7.5 the per-set stand-in
+ * would have claimed. Applied to a plank's MET that was the difference between
+ * roughly 13 calories and roughly 56 — the estimate was over four times the
+ * real figure for every hold in the program.
+ *
+ * Repetition work keeps the stand-in, because nothing records how long a set
+ * actually took; the number is lifting plus the rest that belongs to it.
+ */
+function activityMinutes(exercise: CalorieEstimateInput): number {
+  return exercise.unit === "seconds"
+    ? (exercise.sets * exercise.reps) / 60
+    : exercise.sets * ASSUMED_MINUTES_PER_SET;
 }
 
 // What the exercises checked off so far are estimated to have burned, via
@@ -135,7 +158,7 @@ export function estimateCheckedWorkoutCalories(
         calculateBurnedCalories(
           exercise.metValue,
           weightKg,
-          exercise.sets * ASSUMED_MINUTES_PER_SET,
+          activityMinutes(exercise),
         ),
       0,
     );

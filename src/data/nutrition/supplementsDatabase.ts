@@ -52,6 +52,18 @@ export const supplementsDatabase: FoodItem[] = [
     fiberPer100g: 0,
   },
   {
+    id: "multivitamin-mineral",
+    nameFa: "مولتی ویتامین مینرال",
+    nameEn: "Multivitamin & Mineral",
+    category: "supplement",
+    servingUnits: [{ label: "قرص", grams: 1 }],
+    caloriesPer100g: 0,
+    proteinPer100g: 0,
+    carbsPer100g: 0,
+    fatPer100g: 0,
+    fiberPer100g: 0,
+  },
+  {
     id: "omega-3-fish-oil",
     nameFa: "امگا ۳ (روغن ماهی)",
     nameEn: "Omega-3 Fish Oil",
