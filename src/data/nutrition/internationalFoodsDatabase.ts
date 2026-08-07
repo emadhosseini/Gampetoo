@@ -6,21 +6,6 @@ import type { FoodItem } from "@/types/food";
 export const internationalFoodsDatabase: FoodItem[] = [
   // main_dish
   {
-    id: "pizza",
-    nameFa: "پیتزا",
-    nameEn: "Pizza",
-    category: "main_dish",
-    servingUnits: [
-      { label: "برش", grams: 120 },
-      { label: "گرم", grams: 1 },
-    ],
-    caloriesPer100g: 238,
-    proteinPer100g: 10,
-    carbsPer100g: 30,
-    fatPer100g: 8.3,
-    fiberPer100g: 1.7,
-  },
-  {
     id: "hamburger",
     nameFa: "همبرگر",
     nameEn: "Hamburger",
@@ -174,21 +159,6 @@ export const internationalFoodsDatabase: FoodItem[] = [
     fatPer100g: 6.7,
     fiberPer100g: 2.7,
   },
-  {
-    id: "falafel-plate",
-    nameFa: "فلافل",
-    nameEn: "Falafel",
-    category: "main_dish",
-    servingUnits: [
-      { label: "عدد", grams: 30 },
-      { label: "گرم", grams: 1 },
-    ],
-    caloriesPer100g: 275,
-    proteinPer100g: 10.8,
-    carbsPer100g: 26.7,
-    fatPer100g: 15,
-    fiberPer100g: 6.7,
-  },
 
   // bread_grain
   {
@@ -259,21 +229,6 @@ export const internationalFoodsDatabase: FoodItem[] = [
 
   // protein
   {
-    id: "boiled-egg",
-    nameFa: "تخم مرغ آب‌پز",
-    nameEn: "Boiled Egg",
-    category: "protein",
-    servingUnits: [
-      { label: "عدد", grams: 50 },
-      { label: "گرم", grams: 1 },
-    ],
-    caloriesPer100g: 156,
-    proteinPer100g: 12.6,
-    carbsPer100g: 1.2,
-    fatPer100g: 10.6,
-    fiberPer100g: 0,
-  },
-  {
     id: "grilled-salmon",
     nameFa: "ماهی سالمون گریل",
     nameEn: "Grilled Salmon",
@@ -337,22 +292,6 @@ export const internationalFoodsDatabase: FoodItem[] = [
     fiberPer100g: 0.7,
   },
   {
-    id: "chocolate-bar",
-    nameFa: "شکلات",
-    nameEn: "Chocolate Bar",
-    category: "snack",
-    servingUnits: [
-      { label: "عدد", grams: 45 },
-      { label: "مربع", grams: 8 },
-      { label: "گرم", grams: 1 },
-    ],
-    caloriesPer100g: 522,
-    proteinPer100g: 6.7,
-    carbsPer100g: 57.8,
-    fatPer100g: 28.9,
-    fiberPer100g: 4.4,
-  },
-  {
     id: "almonds",
     nameFa: "بادام خام",
     nameEn: "Almonds",
@@ -398,51 +337,6 @@ export const internationalFoodsDatabase: FoodItem[] = [
     carbsPer100g: 75,
     fatPer100g: 3.8,
     fiberPer100g: 15,
-  },
-  {
-    id: "apple",
-    nameFa: "سیب",
-    nameEn: "Apple",
-    category: "snack",
-    servingUnits: [
-      { label: "عدد", grams: 180 },
-      { label: "گرم", grams: 1 },
-    ],
-    caloriesPer100g: 53,
-    proteinPer100g: 0.3,
-    carbsPer100g: 13.9,
-    fatPer100g: 0.2,
-    fiberPer100g: 2.2,
-  },
-  {
-    id: "banana",
-    nameFa: "موز",
-    nameEn: "Banana",
-    category: "snack",
-    servingUnits: [
-      { label: "عدد", grams: 120 },
-      { label: "گرم", grams: 1 },
-    ],
-    caloriesPer100g: 88,
-    proteinPer100g: 1.1,
-    carbsPer100g: 22.5,
-    fatPer100g: 0.3,
-    fiberPer100g: 2.5,
-  },
-  {
-    id: "orange",
-    nameFa: "پرتقال",
-    nameEn: "Orange",
-    category: "snack",
-    servingUnits: [
-      { label: "عدد", grams: 150 },
-      { label: "گرم", grams: 1 },
-    ],
-    caloriesPer100g: 47,
-    proteinPer100g: 0.9,
-    carbsPer100g: 12,
-    fatPer100g: 0.1,
-    fiberPer100g: 2.3,
   },
   {
     id: "avocado",
