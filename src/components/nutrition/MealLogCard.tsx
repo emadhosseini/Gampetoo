@@ -33,11 +33,13 @@ export interface MealLogCardProps {
 }
 
 // Matches DailyTotalsCard: red is short, green is there, amber is past the
-// point of it doing anything more.
+// point of it doing anything more. Plain classes, not Tailwind's ring-2
+// ring-{color} utilities — see index.css's .protein-ring-* comment for why
+// those render nothing on a .glass-chip.
 const PROTEIN_RING: Record<ProteinStanding, string> = {
-  under: "ring-2 ring-red-400/70",
-  onTarget: "ring-2 ring-green-400/70",
-  over: "ring-2 ring-amber-300/70",
+  under: "protein-ring-under",
+  onTarget: "protein-ring-on-target",
+  over: "protein-ring-over",
 };
 
 const MACRO_FIELDS = [
