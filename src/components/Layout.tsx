@@ -6,7 +6,7 @@ import SideMenu from "./SideMenu";
 
 // Pages built around StatChartPage's full-bleed top panel — see the
 // bleedTop prop on MobileContainer.
-const BLEED_TOP_ROUTES = ["/progress/weight", "/progress/calories", "/progress/water", "/progress/activity"];
+const BLEED_TOP_ROUTES = ["/progress/weight", "/progress/calories", "/progress/activity"];
 
 function Layout() {
   const { pathname } = useLocation();

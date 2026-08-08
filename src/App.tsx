@@ -25,7 +25,6 @@ import NutritionPlanDetailPage from "@/pages/NutritionPlanDetailPage";
 import ProfilePage from "@/pages/ProfilePage";
 import WeightDetailPage from "@/pages/WeightDetailPage";
 import CaloriesDetailPage from "@/pages/CaloriesDetailPage";
-import WaterDetailPage from "@/pages/WaterDetailPage";
 import ActivityDetailPage from "@/pages/ActivityDetailPage";
 
 import { hasCurrentUsername } from "@/utils/userEngine";
@@ -131,11 +130,6 @@ function AppRoutes() {
         <Route
           path="/progress/calories"
           element={<CaloriesDetailPage />}
-        />
-
-        <Route
-          path="/progress/water"
-          element={<WaterDetailPage />}
         />
 
         <Route

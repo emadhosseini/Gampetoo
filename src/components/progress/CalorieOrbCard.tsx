@@ -1,4 +1,5 @@
-import { useId } from "react";
+import { useId, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 
 import {
@@ -7,7 +8,18 @@ import {
 } from "@/utils/dailyLogEngine";
 import { getTodayActivityCalories } from "@/utils/activityLogEngine";
 import { getTodayWorkoutCalories } from "@/utils/workoutCalorieEngine";
+import { calculateProteinTarget, getCalorieGoal } from "@/utils/calorieEngine";
+import { getLatestWeight } from "@/utils/weightEngine";
 import { toFaDigits } from "@/utils/numberFormat";
+import CalorieGoalChoiceModal from "@/components/progress/CalorieGoalChoiceModal";
+import CalorieGoalModal from "@/components/progress/CalorieGoalModal";
+import CalorieGoalSummaryModal from "@/components/progress/CalorieGoalSummaryModal";
+import TargetCaloriesModal from "@/components/progress/TargetCaloriesModal";
+
+// null = nothing open. "summary" (target already set) and "choice" (no
+// target yet) are the two possible entry points from tapping the
+// "باقیمانده" card — summary's own "تغییر" button also lands on "choice".
+type GoalScreen = "summary" | "choice" | "manual" | "calculate" | null;
 
 // Fixed meanings, not status zones: green is always "باقیمانده", yellow
 // always "دریافتی", red always "سوزانده‌شده" — these three colors are what
@@ -94,11 +106,33 @@ const BUBBLES = [
 
 export default function CalorieOrbCard() {
   const clipId = useId();
+  const navigate = useNavigate();
+
+  const [goalScreen, setGoalScreen] = useState<GoalScreen>(null);
+  // getCalorieTarget/getCalorieGoal read straight from localStorage —
+  // bumping this after a save is what picks up the fresh number here (the
+  // orb, remaining figure, etc.) without a full page reload.
+  const [, forceRerender] = useState(0);
 
   const target = getCalorieTarget();
   const consumed = getTodaysTotalCalories();
   const burned = getTodayWorkoutCalories() + getTodayActivityCalories();
   const remaining = target !== null ? target - consumed + burned : null;
+
+  const weight = getLatestWeight();
+  const proteinTarget =
+    weight !== null
+      ? calculateProteinTarget(weight, getCalorieGoal() ?? "maintain").grams
+      : null;
+
+  function openGoalFlow() {
+    setGoalScreen(target !== null ? "summary" : "choice");
+  }
+
+  function handleGoalSaved() {
+    setGoalScreen(null);
+    forceRerender((n) => n + 1);
+  }
 
   // Three regions stacked bottom-to-top inside the glass, each the exact
   // color of the number it belongs to:
@@ -130,19 +164,30 @@ export default function CalorieOrbCard() {
   const highlightKeyframes = WAVE_PHASES.map((phase) => waveLine(eatenTopY, phase));
 
   return (
+    <>
     <div className="flex h-full min-h-0 items-center gap-3">
       {/* Every number the circle is made of, on the right where reading
           starts — colored to match the region inside it exactly, and
           باقیمانده set larger since it's the one figure someone opens this
-          card to check first. */}
+          card to check first. Each is its own tappable card now: باقیمانده
+          opens the goal summary/edit flow, دریافتی goes to کالری روزانه's
+          own chart page, سوزانده‌شده goes to فعالیت روزانه's. */}
       <div className="flex min-w-0 flex-1 flex-col justify-center gap-2.5">
         {target === null ? (
-          <p className="text-xs leading-5 text-white/50">
-            کالری هدف رو ثبت کن تا این بخش کار کنه
-          </p>
+          <button
+            onClick={openGoalFlow}
+            className="glass-chip glass-static rounded-2xl p-2.5 text-right"
+          >
+            <p className="text-xs leading-5 text-white/50">
+              کالری هدف رو ثبت کن تا این بخش کار کنه
+            </p>
+          </button>
         ) : (
-          <>
-            <div>
+          <div className="flex flex-col gap-2">
+            <button
+              onClick={openGoalFlow}
+              className="glass-chip glass-static rounded-2xl p-2.5 text-right"
+            >
               <p
                 className="text-sm font-bold leading-snug"
                 style={{ color: REMAINING_COLOR }}
@@ -156,9 +201,12 @@ export default function CalorieOrbCard() {
                 {toFaDigits(remaining!)}{" "}
                 <span className="text-sm font-normal opacity-80">کالری</span>
               </p>
-            </div>
+            </button>
 
-            <div>
+            <button
+              onClick={() => navigate("/progress/calories")}
+              className="glass-chip glass-static rounded-2xl p-2.5 text-right"
+            >
               <p
                 className="text-xs font-semibold"
                 style={{ color: CONSUMED_COLOR }}
@@ -172,9 +220,12 @@ export default function CalorieOrbCard() {
                 {toFaDigits(consumed)}{" "}
                 <span className="text-xs font-normal opacity-80">کالری</span>
               </p>
-            </div>
+            </button>
 
-            <div>
+            <button
+              onClick={() => navigate("/progress/activity")}
+              className="glass-chip glass-static rounded-2xl p-2.5 text-right"
+            >
               <p className="text-xs font-semibold" style={{ color: BURNED_COLOR }}>
                 کالری سوزانده شده امروز:
               </p>
@@ -185,8 +236,8 @@ export default function CalorieOrbCard() {
                 {toFaDigits(burned)}{" "}
                 <span className="text-xs font-normal opacity-80">کالری</span>
               </p>
-            </div>
-          </>
+            </button>
+          </div>
         )}
       </div>
 
@@ -327,5 +378,37 @@ export default function CalorieOrbCard() {
         </div>
       </div>
     </div>
+
+    {/* Siblings of the row above, not nested inside it — ModalOverlay
+        portals to document.body, but React still bubbles a click inside
+        the portal up through this component tree, so nesting these would
+        also fire one of the three buttons above. */}
+    <CalorieGoalSummaryModal
+      open={goalScreen === "summary"}
+      onClose={() => setGoalScreen(null)}
+      onChange={() => setGoalScreen("choice")}
+      calorieTarget={target ?? 0}
+      proteinGrams={proteinTarget}
+    />
+
+    <CalorieGoalChoiceModal
+      open={goalScreen === "choice"}
+      onClose={() => setGoalScreen(null)}
+      onManual={() => setGoalScreen("manual")}
+      onCalculate={() => setGoalScreen("calculate")}
+    />
+
+    <TargetCaloriesModal
+      open={goalScreen === "manual"}
+      onClose={() => setGoalScreen(null)}
+      onSaved={handleGoalSaved}
+    />
+
+    <CalorieGoalModal
+      open={goalScreen === "calculate"}
+      onClose={() => setGoalScreen(null)}
+      onSaved={handleGoalSaved}
+    />
+    </>
   );
 }

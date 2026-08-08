@@ -14,9 +14,8 @@ export interface WaterLogModalProps {
   onLog: (glasses: number) => void;
 }
 
-// Same trapezoid-glass drawing as WaterDetailPage/WaterTileCard, but always
-// shown full here — the count sits over it as the thing being edited, not a
-// live fill level like the other two.
+// A trapezoid glass, always shown full here — the count sits over it as the
+// thing being edited, not a live fill level.
 function GlassIcon({ count }: { count: number }) {
   return (
     <div className="relative mx-auto flex h-28 w-28 items-center justify-center">

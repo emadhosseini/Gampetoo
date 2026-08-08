@@ -7,11 +7,11 @@ import {
   calculateProteinTarget,
   getCalorieGoal,
   proteinStanding,
-  type ProteinStanding,
 } from "@/utils/calorieEngine";
 import { getLoggedEntries, type LoggedFoodEntry } from "@/utils/dailyLogEngine";
 import { getLatestWeight } from "@/utils/weightEngine";
 import { toFaDigits } from "@/utils/numberFormat";
+import MacroTotalsGrid from "@/components/nutrition/MacroTotalsGrid";
 
 export interface MealLogCardProps {
   meal: MealSlot;
@@ -31,23 +31,6 @@ export interface MealLogCardProps {
   // DailyLogPage. In per-meal mode DailyTotalsCard carries it instead.
   showProteinTarget?: boolean;
 }
-
-// Matches DailyTotalsCard: red is short, green is there, amber is past the
-// point of it doing anything more. Plain classes, not Tailwind's ring-2
-// ring-{color} utilities — see index.css's .protein-ring-* comment for why
-// those render nothing on a .glass-chip.
-const PROTEIN_RING: Record<ProteinStanding, string> = {
-  under: "protein-ring-under",
-  onTarget: "protein-ring-on-target",
-  over: "protein-ring-over",
-};
-
-const MACRO_FIELDS = [
-  { key: "protein", label: "پروتئین" },
-  { key: "carbs", label: "کربوهیدرات" },
-  { key: "fat", label: "چربی" },
-  { key: "fiber", label: "فیبر" },
-] as const;
 
 export default function MealLogCard({
   meal,
@@ -138,22 +121,8 @@ export default function MealLogCard({
             transition={{ type: "spring", stiffness: 320, damping: 32 }}
             className="overflow-hidden"
           >
-            <div className="grid grid-cols-4 gap-2 px-5">
-              {MACRO_FIELDS.map((field) => (
-                <div
-                  key={field.key}
-                  className={`glass-chip rounded-xl py-3 text-center ${
-                    field.key === "protein" && standing
-                      ? PROTEIN_RING[standing]
-                      : ""
-                  }`}
-                >
-                  <p className="text-xs text-white/60">{field.label}</p>
-                  <p className="mt-1 text-sm font-bold text-white">
-                    {toFaDigits(macroTotals[field.key])}
-                  </p>
-                </div>
-              ))}
+            <div className="px-5">
+              <MacroTotalsGrid totals={macroTotals} proteinStanding={standing} />
             </div>
 
             {/* What those totals are made of. Each row opens the amount

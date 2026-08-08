@@ -1,6 +1,19 @@
 {
-  "current": "1.0.10",
+  "current": "1.0.11",
   "history": [
+    {
+      "version": "1.0.11",
+      "date": "2026-08-08",
+      "description": "The progress page's dashboard now covers all four daily stats in one card: calorie, protein, water and weight each got their own tappable row. Calorie's three figures (remaining/eaten/burned) are each their own small card and route straight to where they belong — remaining opens the calorie-goal popup (showing the current target and protein requirement with a change option when one's already set), eaten goes to the calories chart, burned goes to the activity chart. Water logging and its daily-glass-goal popup moved in from the old square tile and standalone page, both removed now that this card covers them; changing the water goal no longer wipes today's already-logged glasses. Weight got a compact, fully-colored BMI dial with a classic-scale needle pointing at today's value, replacing its own old square tile and a plain progress bar alike; tapping the card (except the goal pencil) opens the full weight page and chart. Workout day pages gained a manual reorder mode (pencil button, up/down arrows, saved per workout) and the general/specialized warm-up blocks now sit side by side in a compact row instead of stacked full-width. The four separate macro chips (protein/carbs/fat/fiber) under a logged meal or day are now one merged card instead of four separate floating ones.",
+      "highlights": [
+        "📊 داشبورد امروز حالا کالری، پروتئین، آب و وزن رو با هم و هرکدوم با کارت مخصوص خودش نشون می‌ده",
+        "🎯 زدن روی «باقیمانده کالری» پاپ‌آپ هدف کالری/پروتئین رو باز می‌کنه؛ «دریافتی»/«سوزانده‌شده» می‌برن به نمودار مربوطه",
+        "💧 آب حالا داخل داشبورد امروزه؛ تغییر هدف روزانه دیگه لیوان‌های ثبت‌شده امروز رو پاک نمی‌کنه",
+        "⚖️ وزن یک گیج رنگی BMI با عقربه‌ی ترازوی کلاسیک گرفت، به‌جای کادر مربعی قدیمی",
+        "🔀 امکان تغییر ترتیب حرکت‌های هر تمرین روزانه (دکمه مداد) اضافه شد",
+        "🍽 کادرهای پروتئین/کربوهیدرات/چربی/فیبر توی یک کادر واحد ادغام شدن"
+      ]
+    },
     {
       "version": "1.0.10",
       "date": "2026-08-07",
