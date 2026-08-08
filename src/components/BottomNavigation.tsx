@@ -376,7 +376,9 @@ export default function BottomNavigation({
         onClose={() => setWaterModalOpen(false)}
         onLog={(glasses) => {
           logGlasses(glasses);
-          navigate("/progress/water");
+          // No standalone water page anymore — today's count now lives in
+          // the "آب" row on ProgressPage's dashboard card.
+          navigate("/progress");
         }}
       />
 

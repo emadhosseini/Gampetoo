@@ -9,11 +9,15 @@ type WarmupBlockExercise = {
 type WarmupBlockProps = {
   exercises: WarmupBlockExercise[];
   title?: string;
+  // Shrinks padding/title size so this fits next to
+  // SpecializedWarmupBlock in a single row on WorkoutPage.
+  compact?: boolean;
 };
 
 export default function WarmupBlock({
   exercises,
   title = "🔥 گرم کردن عمومی",
+  compact = false,
 }: WarmupBlockProps) {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -22,19 +26,21 @@ export default function WarmupBlock({
   }
 
   return (
-    <div className="glass-panel rounded-3xl p-4">
+    <div className={`glass-panel rounded-3xl ${compact ? "p-3" : "p-4"}`}>
       <button
         onClick={() => setIsOpen((prev) => !prev)}
-        className="flex w-full items-center justify-between"
+        className="flex w-full items-center justify-between gap-2"
       >
-        <span className="text-lg font-bold text-white">
+        <span
+          className={`font-bold text-white ${compact ? "text-sm" : "text-lg"}`}
+        >
           {title}
         </span>
 
         <ChevronDown
-          className={`h-5 w-5 text-zinc-200 transition-transform ${
-            isOpen ? "rotate-180" : ""
-          }`}
+          className={`shrink-0 text-zinc-200 transition-transform ${
+            compact ? "h-4 w-4" : "h-5 w-5"
+          } ${isOpen ? "rotate-180" : ""}`}
         />
       </button>
 

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { ChevronDown, ChevronUp, Pencil } from "lucide-react";
 
 import WorkoutHeader from "@/components/WorkoutHeader";
 import WorkoutSummary from "@/components/WorkoutSummary";
@@ -18,6 +19,11 @@ import {
 
 import { getWorkout } from "@/store/workoutLibraryStore";
 import { getSpecializedWarmup } from "@/store/warmupLibraryStore";
+import {
+  applyExerciseOrder,
+  getExerciseOrder,
+  setExerciseOrder,
+} from "@/store/workoutOrderStore";
 import { walkCharacterIcon } from "@/data/characterIcons";
 import type { Exercise } from "@/data/workoutLibrary";
 
@@ -72,6 +78,27 @@ function WorkoutPage() {
   // slider on cancel.
   const [walkConfirmOpen, setWalkConfirmOpen] = useState(false);
   const [walkResetKey, setWalkResetKey] = useState(0);
+
+  // Manual reorder mode for today's exercise list, toggled by the pencil
+  // button below the list. `reorderList` is a working copy edited with the
+  // up/down buttons and only written back to workoutOrderStore on save —
+  // cancelling just discards it.
+  const [reorderMode, setReorderMode] = useState(false);
+  const [reorderList, setReorderList] = useState<Exercise[]>([]);
+
+  function moveReorderItem(index: number, direction: -1 | 1) {
+    setReorderList((prev) => {
+      const target = index + direction;
+
+      if (target < 0 || target >= prev.length) return prev;
+
+      const next = [...prev];
+
+      [next[index], next[target]] = [next[target], next[index]];
+
+      return next;
+    });
+  }
 
   function finishWalk(calories: number | null) {
     setWalkConfirmOpen(false);
@@ -243,40 +270,134 @@ const workout = workoutType
     session.checkedExercises,
   );
 
+  // The user's own manually-saved order (if any) takes priority over the
+  // exercises' natural group order — everything downstream (the checklist
+  // and the reorder screen itself) builds on top of this.
+  const orderedExercises = applyExerciseOrder(
+    exercises,
+    workoutType ? getExerciseOrder(workoutType) : undefined,
+  );
+
   const checkedExerciseIds = new Set(session.checkedExercises);
   // A stable sort just sinks checked-off exercises to the bottom, keeping
   // both groups in their original relative order — no re-shuffling within
   // "still to do" or "already done" as you check more of them off.
-  const sortedExercises = [...exercises].sort(
+  const sortedExercises = [...orderedExercises].sort(
     (a, b) =>
       Number(checkedExerciseIds.has(a.id)) - Number(checkedExerciseIds.has(b.id)),
   );
+
+  function startReorder() {
+    setReorderList(orderedExercises);
+    setReorderMode(true);
+  }
+
+  function saveReorder() {
+    if (workoutType) {
+      setExerciseOrder(
+        workoutType,
+        reorderList.map((exercise) => exercise.id),
+      );
+    }
+
+    setReorderMode(false);
+  }
 
   return (
     <div className="space-y-6 px-5 pb-5 pt-10">
       <WorkoutHeader title={workout.title} showForgotButton />
 
-      <WarmupBlock exercises={warmupExercises} />
+      <div
+        className={`grid gap-3 ${specializedWarmup ? "grid-cols-2" : "grid-cols-1"}`}
+      >
+        <WarmupBlock exercises={warmupExercises} compact />
 
-      {specializedWarmup && (
-        <SpecializedWarmupBlock
-          title={`🎯 ${specializedWarmup.title}`}
-          groups={enabledSpecializedWarmupGroups}
-        />
-      )}
-
-      <div className="space-y-4">
-        {sortedExercises.map((exercise) => (
-          <ExerciseCard
-            key={exercise.id}
-            exercise={exercise}
-            checked={checkedExerciseIds.has(exercise.id)}
-            onToggleChecked={() => handleToggleExercise(exercise)}
+        {specializedWarmup && (
+          <SpecializedWarmupBlock
+            title={`🎯 ${specializedWarmup.title}`}
+            groups={enabledSpecializedWarmupGroups}
+            compact
           />
-        ))}
+        )}
       </div>
 
-      {!session.completed && (
+      {!reorderMode && (
+        <div className="space-y-4">
+          {sortedExercises.map((exercise) => (
+            <ExerciseCard
+              key={exercise.id}
+              exercise={exercise}
+              checked={checkedExerciseIds.has(exercise.id)}
+              onToggleChecked={() => handleToggleExercise(exercise)}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Manual reorder mode — up/down buttons instead of drag-and-drop,
+          since there's no such control on this page, and moving an item a
+          few rows takes just as many taps either way. Only touches the
+          user's saved order, not the checklist itself. */}
+      {reorderMode && (
+        <div className="space-y-2">
+          {reorderList.map((exercise, index) => (
+            <div
+              key={exercise.id}
+              className="glass-chip glass-static flex items-center gap-3 rounded-xl p-3"
+            >
+              <span className="flex-1 text-sm font-medium text-white">
+                {exercise.name}
+              </span>
+
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => moveReorderItem(index, -1)}
+                  disabled={index === 0}
+                  className="glass-chip rounded-lg p-2 text-white disabled:opacity-30"
+                >
+                  <ChevronUp size={16} />
+                </button>
+
+                <button
+                  onClick={() => moveReorderItem(index, 1)}
+                  disabled={index === reorderList.length - 1}
+                  className="glass-chip rounded-lg p-2 text-white disabled:opacity-30"
+                >
+                  <ChevronDown size={16} />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {reorderMode ? (
+        <div className="flex gap-3">
+          <button
+            onClick={() => setReorderMode(false)}
+            className="glass-chip flex-1 rounded-2xl py-3 text-sm font-medium text-white"
+          >
+            انصراف
+          </button>
+
+          <button
+            onClick={saveReorder}
+            className="glass-action flex-1 rounded-2xl py-3 text-sm font-bold text-white"
+          >
+            ذخیره ترتیب
+          </button>
+        </div>
+      ) : (
+        <button
+          onClick={startReorder}
+          className="glass-chip mx-auto flex items-center gap-2 rounded-2xl px-4 py-2 text-sm text-white/80"
+        >
+          <Pencil size={14} />
+          تغییر ترتیب تمرین‌ها
+        </button>
+      )}
+
+      {!session.completed && !reorderMode && (
         <CompleteWorkoutButton
           key={resetKey}
           variant="accent"

@@ -1,38 +1,11 @@
 import { useMemo } from "react";
 
 import type { MealSlot } from "@/data/nutrition/foodCatalog";
-import {
-  calculateProteinTarget,
-  getCalorieGoal,
-  proteinStanding,
-  type ProteinStanding,
-} from "@/utils/calorieEngine";
+import { calculateProteinTarget, getCalorieGoal, proteinStanding } from "@/utils/calorieEngine";
 import { getLoggedEntries } from "@/utils/dailyLogEngine";
 import { getLatestWeight } from "@/utils/weightEngine";
 import { toFaDigits } from "@/utils/numberFormat";
-
-// Ring colours for how the day's protein is going. Red reads as "short",
-// which it is; yellow as "more than this is doing anything", not as a
-// warning — eating past the target isn't harmful, it just isn't buying
-// anything, so it shouldn't look like the same kind of problem as red.
-//
-// Plain classes, not Tailwind's ring-2 ring-{color} utilities — those
-// silently render nothing on a .glass-chip, since .glass-chip's own
-// box-shadow (index.css) has the same specificity and comes later in the
-// stylesheet, so it fully replaces the ring's box-shadow instead of the
-// two combining. See index.css's .protein-ring-* comment.
-const PROTEIN_RING: Record<ProteinStanding, string> = {
-  under: "protein-ring-under",
-  onTarget: "protein-ring-on-target",
-  over: "protein-ring-over",
-};
-
-const MACROS = [
-  { key: "protein", label: "پروتئین" },
-  { key: "carbs", label: "کربوهیدرات" },
-  { key: "fat", label: "چربی" },
-  { key: "fiber", label: "فیبر" },
-] as const;
+import MacroTotalsGrid from "@/components/nutrition/MacroTotalsGrid";
 
 export interface DailyTotalsCardProps {
   slots: MealSlot[];
@@ -87,20 +60,8 @@ export default function DailyTotalsCard({ slots, version }: DailyTotalsCardProps
         <span className="text-sm font-normal text-white/60">کالری</span>
       </p>
 
-      <div className="mt-4 grid grid-cols-4 gap-2">
-        {MACROS.map((macro) => (
-          <div
-            key={macro.key}
-            className={`glass-chip rounded-xl py-3 text-center ${
-              macro.key === "protein" && standing ? PROTEIN_RING[standing] : ""
-            }`}
-          >
-            <p className="text-xs text-white/60">{macro.label}</p>
-            <p className="mt-1 text-sm font-bold text-white">
-              {toFaDigits(totals[macro.key])}
-            </p>
-          </div>
-        ))}
+      <div className="mt-4">
+        <MacroTotalsGrid totals={totals} proteinStanding={standing} />
       </div>
 
       {target && (
