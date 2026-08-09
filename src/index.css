@@ -145,13 +145,20 @@ textarea {
 }
 
 /* The selected row in a list of .glass-chip options (the food search in
-   AddMealEntryModal). Same conflict and same fix as the three above —
-   ring-2 ring-avocado-yellow was silently painting nothing, so picking a
-   food showed no sign it had been picked at all. */
+   AddMealEntryModal). Originally a second box-shadow layer stacked on
+   .glass-chip's own hairline (same fix as the three rings above, for the
+   same ring-2 ring-avocado-yellow conflict) — but a 2px box-shadow ring on
+   a rounded, tightly-packed list rendered as a broken/partial outline on
+   at least one real device instead of a clean rectangle. A real border
+   has none of that risk (no shadow-layer stacking, no spread-vs-radius
+   edge cases), so this switched to one, with a matching tint fill so the
+   selected state also reads at a glance without needing the border to be
+   perfectly crisp. box-sizing: border-box (Tailwind's global default)
+   means the border adds no layout shift relative to an unselected chip.
+*/
 .glass-chip-selected {
-  box-shadow:
-    0px 0px 0.5px 0.5px rgb(219 219 219 / 20%),
-    0 0 0 2px rgb(250 234 92 / 80%);
+  border: 1.5px solid rgb(250 234 92 / 90%);
+  background-color: rgb(250 234 92 / 12%);
 }
 
 /* .glass-panel's all-around hairline (the 3rd shadow layer above) draws a

@@ -1,4 +1,5 @@
 import { scopedKey } from "./userEngine";
+import { getTodayLocalDate } from "./dateFormat";
 
 // A date -> single-number history, the shared shape behind water, activity,
 // and the daily-calorie archive — each is otherwise identical (per-day
@@ -9,9 +10,7 @@ export interface DailyMetricEntry {
   value: number;
 }
 
-function today(): string {
-  return new Date().toISOString().split("T")[0];
-}
+const today = getTodayLocalDate;
 
 export function createDailyMetricLog(storageKey: string) {
   function key() {

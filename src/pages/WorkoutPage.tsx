@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronDown, ChevronUp, Pencil } from "lucide-react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 
 import WorkoutHeader from "@/components/WorkoutHeader";
+import ModalOverlay from "@/components/ModalOverlay";
 import WorkoutSummary from "@/components/WorkoutSummary";
 import WorkoutCompleteModal from "@/components/WorkoutCompleteModal";
 import WalkCompleteModal from "@/components/WalkCompleteModal";
@@ -85,6 +86,15 @@ function WorkoutPage() {
   // cancelling just discards it.
   const [reorderMode, setReorderMode] = useState(false);
   const [reorderList, setReorderList] = useState<Exercise[]>([]);
+  // The pencil icon in WorkoutHeader opens this choice between the two
+  // things there are to edit here — today's exercise order (reorder mode,
+  // below) or the workout's own exercises/sets (its library page).
+  const [editChoiceOpen, setEditChoiceOpen] = useState(false);
+
+  // Shared between WarmupBlock and SpecializedWarmupBlock — tapping either
+  // one's header opens both lists together, side by side, rather than each
+  // card toggling only its own.
+  const [warmupOpen, setWarmupOpen] = useState(false);
 
   function moveReorderItem(index: number, direction: -1 | 1) {
     setReorderList((prev) => {
@@ -305,18 +315,29 @@ const workout = workoutType
 
   return (
     <div className="space-y-6 px-5 pb-5 pt-10">
-      <WorkoutHeader title={workout.title} showForgotButton />
+      <WorkoutHeader
+        title={workout.title}
+        showForgotButton
+        onEditWorkout={() => setEditChoiceOpen(true)}
+      />
 
       <div
         className={`grid gap-3 ${specializedWarmup ? "grid-cols-2" : "grid-cols-1"}`}
       >
-        <WarmupBlock exercises={warmupExercises} compact />
+        <WarmupBlock
+          exercises={warmupExercises}
+          compact
+          open={warmupOpen}
+          onToggle={() => setWarmupOpen((prev) => !prev)}
+        />
 
         {specializedWarmup && (
           <SpecializedWarmupBlock
             title={`🎯 ${specializedWarmup.title}`}
             groups={enabledSpecializedWarmupGroups}
             compact
+            open={warmupOpen}
+            onToggle={() => setWarmupOpen((prev) => !prev)}
           />
         )}
       </div>
@@ -371,7 +392,7 @@ const workout = workoutType
         </div>
       )}
 
-      {reorderMode ? (
+      {reorderMode && (
         <div className="flex gap-3">
           <button
             onClick={() => setReorderMode(false)}
@@ -387,14 +408,6 @@ const workout = workoutType
             ذخیره ترتیب
           </button>
         </div>
-      ) : (
-        <button
-          onClick={startReorder}
-          className="glass-chip mx-auto flex items-center gap-2 rounded-2xl px-4 py-2 text-sm text-white/80"
-        >
-          <Pencil size={14} />
-          تغییر ترتیب تمرین‌ها
-        </button>
       )}
 
       {!session.completed && !reorderMode && (
@@ -450,6 +463,44 @@ const workout = workoutType
           forceRerender((n) => n + 1);
         }}
       />
+
+      {editChoiceOpen && (
+        <ModalOverlay onClose={() => setEditChoiceOpen(false)}>
+          <div className="glass-panel glass-static space-y-3 rounded-3xl p-6 text-center">
+            <h2 className="text-lg font-bold text-white">ویرایش تمرین امروز</h2>
+
+            <button
+              onClick={() => {
+                setEditChoiceOpen(false);
+                startReorder();
+              }}
+              className="w-full glass-action rounded-2xl py-3 font-bold text-white"
+            >
+              تغییر ترتیب
+            </button>
+
+            <button
+              onClick={() => {
+                setEditChoiceOpen(false);
+
+                if (workoutType) {
+                  navigate(`/settings/workouts/${workoutType}`);
+                }
+              }}
+              className="glass-tap selector-pill w-full rounded-2xl py-3 font-bold text-white"
+            >
+              تغییر تمرین‌ها و ست‌ها
+            </button>
+
+            <button
+              onClick={() => setEditChoiceOpen(false)}
+              className="ghost-action w-full rounded-2xl py-3 font-medium text-white"
+            >
+              بستن
+            </button>
+          </div>
+        </ModalOverlay>
+      )}
     </div>
   );
 }

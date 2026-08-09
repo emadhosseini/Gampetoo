@@ -42,6 +42,20 @@ export interface Program {
   // existed, treated the same as 0.
   cycleShiftDays?: number;
 
+  // The cycle's actual current position: as of `date`, the active day is
+  // `dayIndex` (an index into workout.days, before the % length wrap).
+  // This is what "today's workout day" is read from now — not pure
+  // date arithmetic from startDate — so a workout day can be held in
+  // place across a rollover instead of always advancing on its own; see
+  // advanceCycleForNewDay in programEngine.ts for the rule. Absent on
+  // programs created before this existed; the first read after upgrading
+  // bootstraps it from the old date-based formula, so nobody's cycle
+  // position jumps the moment this ships.
+  cycleAnchor?: {
+    date: string;
+    dayIndex: number;
+  };
+
   workout: WorkoutCycle;
 
   nutrition: {

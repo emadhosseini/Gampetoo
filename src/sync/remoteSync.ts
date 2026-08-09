@@ -31,6 +31,7 @@ const SYNCED_BASE_KEYS = [
   "emad-water-log",
   "emad-water-goal",
   "emad-activity-log",
+  "emad-activity-log-entries",
   "emad-workout-calorie-log",
 ];
 

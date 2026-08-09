@@ -99,8 +99,13 @@ export default function WeightProgressRow() {
   const height = getCurrentUserHeight();
   const target = getTargetWeight();
 
+  // Rounded to one decimal — weight is stored to two (round2 in
+  // weightEngine), and floating-point subtraction on two such values can
+  // land on something like 14.900000000006 instead of a clean 14.9.
   const remainingKg =
-    current !== null && target !== null ? Math.abs(current - target) : null;
+    current !== null && target !== null
+      ? Math.round(Math.abs(current - target) * 10) / 10
+      : null;
 
   const bmi = current !== null && height !== null ? calculateBmi(current, height) : null;
   const activeZone = bmi !== null ? findBmiZone(bmi) : null;

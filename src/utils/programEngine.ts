@@ -8,8 +8,10 @@ import type {
 import { defaultProgram } from "../data/program/defaultProgram";
 import { scopedKey } from "./userEngine";
 import { generateId } from "./id";
+import { getTodayLocalDate, isoToLocalDate, toLocalDateString } from "./dateFormat";
 
 const STORAGE_KEY = "emad-programs";
+const SESSION_STORAGE_KEY = "emad-session";
 
 function storageKey() {
   return scopedKey(STORAGE_KEY);
@@ -179,11 +181,115 @@ export function setProgramStartDate(
   });
 }
 
-// Nudges every future day-index computation (getProgramDayIndex et al.)
-// forward by one day, for when a workout actually happened but its
-// completion never got logged, so the cycle would otherwise repeat that
-// day — without touching startDate itself, which should keep showing the
-// program's real, unaltered start date.
+// Read-only peek at sessionEngine's own storage — deliberately not an
+// import of sessionEngine (which already imports this module for
+// getCurrentProgramDay; importing back would be circular). Never writes
+// anything. Safe at any point in a render: the only code that ever resets
+// completed/lastDate is sessionEngine's own getSession(), and it always
+// calls getCurrentProgramDay() — which resolves the cycle below — before
+// doing that reset, so this always sees the real, not-yet-reset value for
+// whichever day the session was last live for.
+function peekSession(): { lastDate: string; completed: boolean } | null {
+  try {
+    const raw = localStorage.getItem(scopedKey(SESSION_STORAGE_KEY));
+
+    if (!raw) return null;
+
+    const parsed = JSON.parse(raw) as { lastDate?: string; completed?: boolean };
+
+    if (!parsed.lastDate) return null;
+
+    return { lastDate: parsed.lastDate, completed: !!parsed.completed };
+  } catch {
+    return null;
+  }
+}
+
+function addLocalDays(iso: string, days: number): string {
+  const date = isoToLocalDate(iso);
+
+  date.setDate(date.getDate() + days);
+
+  return toLocalDateString(date);
+}
+
+// The cycle's original logic, kept only as the formula a program's very
+// first cycleAnchor bootstraps from (see resolveCycleAnchor) — so
+// upgrading to the anchor-based system doesn't jump anyone's current day.
+function pureDateDayIndex(program: Program, iso: string): number {
+  if (!program.startDate) return 0;
+
+  const start = isoToLocalDate(program.startDate);
+  const current = isoToLocalDate(iso);
+
+  const diffDays = Math.floor(
+    (current.getTime() - start.getTime()) / 86400000
+  );
+
+  return Math.max(0, diffDays + (program.cycleShiftDays ?? 0));
+}
+
+// The cycle's real current position, resolved (and persisted) lazily —
+// at most once per calendar day. A workout day holds its place across a
+// day rollover until completeWorkout() was actually called for it; a
+// rest/walk day always advances to the next day regardless of whether
+// completeWalk() was tapped. Multiple days skipped without the app being
+// opened are walked one at a time, defaulting every day past the first to
+// "not completed" (there's no session to say otherwise for a day nobody
+// saw) — so the walk naturally stops at the first unconfirmed workout day
+// in the gap, same as if it had happened one day at a time.
+function resolveCycleAnchor(program: Program): { date: string; dayIndex: number } {
+  const today = getTodayLocalDate();
+
+  if (!program.startDate || program.workout.days.length === 0) {
+    return { date: today, dayIndex: 0 };
+  }
+
+  const existing = program.cycleAnchor;
+
+  if (!existing) {
+    const bootstrapped = { date: today, dayIndex: pureDateDayIndex(program, today) };
+
+    updateProgram({ ...program, cycleAnchor: bootstrapped });
+
+    return bootstrapped;
+  }
+
+  if (existing.date === today) {
+    return existing;
+  }
+
+  const session = peekSession();
+  const length = program.workout.days.length;
+
+  let cursorDate = existing.date;
+  let cursorIndex = existing.dayIndex;
+  let completedAtCursor =
+    session && session.lastDate === existing.date ? session.completed : false;
+
+  while (cursorDate < today) {
+    const dayType = program.workout.days[((cursorIndex % length) + length) % length].activity;
+    const canAdvance = dayType !== "workout" || completedAtCursor;
+
+    if (!canAdvance) break;
+
+    cursorIndex += 1;
+    cursorDate = addLocalDays(cursorDate, 1);
+    completedAtCursor = false;
+  }
+
+  const resolved = { date: today, dayIndex: cursorIndex };
+
+  updateProgram({ ...program, cycleAnchor: resolved });
+
+  return resolved;
+}
+
+// Nudges the cycle one day forward regardless of whether the current day
+// would otherwise be held in place — the explicit override behind the
+// "فراموش کردم" button, for when a workout actually happened but its
+// completion never got logged. startDate itself is untouched, which
+// should keep showing the program's real, unaltered start date.
 export function shiftProgramOneDayForward() {
   const program = getActiveProgram();
 
@@ -191,9 +297,12 @@ export function shiftProgramOneDayForward() {
     return;
   }
 
+  const anchor = resolveCycleAnchor(program);
+  const fresh = getActiveProgram();
+
   updateProgram({
-    ...program,
-    cycleShiftDays: (program.cycleShiftDays ?? 0) + 1,
+    ...fresh,
+    cycleAnchor: { date: anchor.date, dayIndex: anchor.dayIndex + 1 },
   });
 }
 
@@ -206,17 +315,14 @@ export function getProgramDayIndex(
     return 0;
   }
 
-  const start = new Date(program.startDate);
-  start.setHours(0, 0, 0, 0);
+  const anchor = resolveCycleAnchor(program);
+  const targetIso = toLocalDateString(date);
 
-  const current = new Date(date);
-  current.setHours(0, 0, 0, 0);
-
-  const diffDays = Math.floor(
-    (current.getTime() - start.getTime()) / 86400000
+  const diffFromAnchor = Math.floor(
+    (isoToLocalDate(targetIso).getTime() - isoToLocalDate(anchor.date).getTime()) / 86400000
   );
 
-  return Math.max(0, diffDays + (program.cycleShiftDays ?? 0));
+  return Math.max(0, anchor.dayIndex + diffFromAnchor);
 }
 
 export function getCycleDayIndex(

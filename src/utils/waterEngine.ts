@@ -1,5 +1,6 @@
 import { createDailyMetricLog, type DailyMetricEntry } from "./dailyMetricLog";
 import { scopedKey } from "./userEngine";
+import { getTodayLocalDate } from "./dateFormat";
 
 const store = createDailyMetricLog("emad-water-log");
 
@@ -31,9 +32,7 @@ export function logGlasses(count: number): DailyMetricEntry[] {
  * that number (in either direction) instead of adding one at a time.
  */
 export function setTodayGlasses(count: number): DailyMetricEntry[] {
-  const today = new Date().toISOString().split("T")[0];
-
-  store.setEntry(today, Math.max(0, Math.round(count)));
+  store.setEntry(getTodayLocalDate(), Math.max(0, Math.round(count)));
 
   return store.getHistory();
 }

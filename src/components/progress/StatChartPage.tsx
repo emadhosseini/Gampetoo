@@ -24,7 +24,12 @@ import {
   computeZeroBasedYAxisRange,
   extendYAxisRangeToInclude,
 } from "@/utils/chartAxis";
-import { formatDayNumber, formatGregorianShort } from "@/utils/dateFormat";
+import {
+  formatDayNumber,
+  formatGregorianMonthYear,
+  formatGregorianShort,
+  toLocalDateString,
+} from "@/utils/dateFormat";
 import { toFaDigits } from "@/utils/numberFormat";
 import {
   buildDailyBuckets,
@@ -41,6 +46,12 @@ const Y_AXIS_ROWS = 4;
 // on the data and needs more rows to stay readable: four rows from zero
 // would put a 2100-calorie day on a 1000-apart grid.
 const BAR_Y_AXIS_ROWS = 7;
+
+// Minimum width per day on the week range's chart, in px — 7 days at this
+// spacing comes out wider than a phone panel, which is the point: it's
+// what makes the chart scroll instead of squeezing every other label
+// away. Matches WeightChart's own minPointSpacing for the same range.
+const WEEK_POINT_PX = 52;
 
 // The bar chart goes through the generic <Chart> rather than <Bar>, because
 // its goal line is a line dataset inside a bar chart and only the generic
@@ -135,7 +146,7 @@ function daysAgoIso(days: number): string {
   const date = new Date();
   date.setDate(date.getDate() - days);
 
-  return date.toISOString().split("T")[0];
+  return toLocalDateString(date);
 }
 
 export interface StatChartPageProps {
@@ -179,6 +190,21 @@ export interface StatChartPageProps {
   renderChart?: (points: StatBucket[]) => ReactNode;
   // Which range is selected on arrival. Defaults to the month.
   defaultRange?: StatRangeKey;
+  // Restricts which range pills show up at all — omit for every range
+  // (the default). The weight page drops "روز" (a single point is nothing
+  // to chart) and hides the summary figure too (see showSummary) rather
+  // than showing a number that doesn't mean much for a point-in-time
+  // metric across a whole range.
+  availableRanges?: StatRangeKey[];
+  // Hides the big number above the chart (and its label/date-range text)
+  // entirely. Defaults to true — off only for the weight page, where the
+  // range's own average was reading as more authoritative than it should
+  // for a point-in-time metric, and the chart already shows the trend.
+  showSummary?: boolean;
+  // Fires whenever the selected range changes (including once on mount,
+  // with the initial range) — for a caller whose renderChart needs to know
+  // which range is active right now, since chartPoints alone doesn't say.
+  onRangeChange?: (range: StatRangeKey) => void;
   // Naming the headline per range also decides what it reports. Every label
   // callers pass describes a single bucket ("کالری روزانه", "میانگین
   // ماهیانه"), so a named headline is always a representative per-bucket
@@ -207,12 +233,31 @@ export default function StatChartPage({
   chartType = "line",
   renderChart,
   defaultRange = "month",
+  availableRanges,
+  showSummary = true,
+  onRangeChange,
   summaryLabels,
   children,
 }: StatChartPageProps) {
   const navigate = useNavigate();
-  const [range, setRange] = useState<RangeKey>(defaultRange);
+  const [range, setRangeState] = useState<RangeKey>(defaultRange);
   const { lineRef, barRef } = useChartResizeOnViewportSettle();
+  const weekScrollRef = useRef<HTMLDivElement>(null);
+
+  function setRange(next: RangeKey) {
+    setRangeState(next);
+    onRangeChange?.(next);
+  }
+
+  // Fires once for the initial range too, same as every later change — a
+  // caller relying on this to know the active range shouldn't have to
+  // special-case "before the first tap".
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => onRangeChange?.(range), []);
+
+  const visibleRanges = availableRanges
+    ? RANGES.filter((r) => availableRanges.includes(r.key))
+    : RANGES;
 
   const activeRange = RANGES.find((r) => r.key === range)!;
 
@@ -320,8 +365,13 @@ export default function StatChartPage({
     // first of the oldest month shown rather than a rolling day count.
     else start.setFullYear(today.getFullYear(), today.getMonth() - (range === "sixMonth" ? 5 : 11), 1);
 
-    return `${formatGregorianShort(start)} – ${formatGregorianShort(today)}`;
-  }, [range]);
+    // 6-month/year read as whole months (e.g. "آگوست ۲۰۲۵ – ژانویه ۲۰۲۶") —
+    // a day-of-month on either end would just be today's, which isn't
+    // what either endpoint of a months-wide window actually means.
+    return usesMonthlyBuckets
+      ? `${formatGregorianMonthYear(start)} – ${formatGregorianMonthYear(today)}`
+      : `${formatGregorianShort(start)} – ${formatGregorianShort(today)}`;
+  }, [range, usesMonthlyBuckets]);
 
   // Sized from the real data only, so the target line (which can sit far
   // from it) never drags the resolution down around the actual trend —
@@ -405,6 +455,30 @@ export default function StatChartPage({
     ],
   };
 
+  // Week gets its own wide, horizontally-scrollable canvas instead of
+  // squeezing 7 days into the panel's normal width — the same reasoning
+  // as WeightChart's minPointSpacing, just for the chart.js-rendered
+  // pages (calories, activity) rather than the weight page's custom SVG
+  // one. autoSkip off is what makes every day's label actually draw once
+  // there's genuine room for each of them.
+  const isWeekRange = range === "week";
+
+  // Chart.js draws index 0 (oldest) at the left and the last index (today)
+  // at the right — a plain LTR layout, matching the scroll container's own
+  // forced `direction: ltr` below. Scrolled to its rightmost position once
+  // it's wider than the viewport, so today shows first and scrolling left
+  // reaches earlier days. Plain `scrollLeft = scrollWidth - clientWidth` is
+  // only an unambiguous "scroll to the end" in an LTR container — this is
+  // exactly why it's forced rather than left inheriting the page's rtl,
+  // where scrollLeft's zero point and sign convention vary by browser.
+  useEffect(() => {
+    const el = weekScrollRef.current;
+
+    if (el && isWeekRange && !renderChart) {
+      el.scrollLeft = el.scrollWidth - el.clientWidth;
+    }
+  }, [isWeekRange, renderChart, chartPoints.length]);
+
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
@@ -418,7 +492,7 @@ export default function StatChartPage({
         ticks: {
           color: "#ffffff",
           font: { family: CHART_FONT_FAMILY, size: 10 },
-          autoSkip: true,
+          autoSkip: !isWeekRange,
           maxRotation: 0,
         },
         grid: { display: false },
@@ -481,7 +555,7 @@ export default function StatChartPage({
         </div>
 
         <div className="glass-chip relative mt-3 flex items-center justify-around rounded-full p-1">
-          {RANGES.map((r) => (
+          {visibleRanges.map((r) => (
             <button
               key={r.key}
               onClick={() => setRange(r.key)}
@@ -499,28 +573,53 @@ export default function StatChartPage({
           ))}
         </div>
 
+        {/* The date-range line (e.g. "۳۱ جولای – ۶ آگوست") shows regardless
+            of showSummary — it says what window the chart/columns below
+            actually span, which matters on its own even without the
+            headline number above it. */}
         <div className="mt-3">
-          <p className="text-xs text-white/50">{summaryLabel}</p>
-          <p className="text-white">
-            <span className="text-2xl font-bold">
-              {summaryValue !== null ? toFaDigits(summaryValue.toFixed(valuePrecision)) : "—"}
-            </span>{" "}
-            <span className="text-sm text-white/60">{unitLabel}</span>
-          </p>
-          <p className="text-xs text-white/50">{dateRangeLabel}</p>
+          {showSummary && (
+            <>
+              <p className="text-xs text-white/50">{summaryLabel}</p>
+              <p className="text-white">
+                <span className="text-2xl font-bold">
+                  {summaryValue !== null ? toFaDigits(summaryValue.toFixed(valuePrecision)) : "—"}
+                </span>{" "}
+                <span className="text-sm text-white/60">{unitLabel}</span>
+              </p>
+            </>
+          )}
+          <p className="text-center text-xs text-white/50">{dateRangeLabel}</p>
         </div>
 
         {/* overflow-hidden: if the canvas is ever transiently mis-sized
             (the stale-viewport case useChartResizeOnViewportSettle exists
             for), it clips inside the panel instead of painting past the
             screen edge until the next resize signal lands. */}
-        <div className="relative mt-2 min-h-0 flex-1 overflow-hidden">
+        <div
+          ref={weekScrollRef}
+          className={`relative mt-2 min-h-0 flex-1 ${
+            isWeekRange && !renderChart ? "overflow-x-auto overflow-y-hidden" : "overflow-hidden"
+          }`}
+          style={isWeekRange && !renderChart ? { direction: "ltr" } : undefined}
+        >
           {renderChart ? (
             renderChart(chartPoints)
-          ) : chartType === "bar" ? (
-            <Chart type="bar" ref={barRef} data={barChartData} options={chartOptions} />
           ) : (
-            <Line ref={lineRef} data={lineChartData} options={chartOptions} />
+            <div
+              className="h-full"
+              style={
+                isWeekRange
+                  ? { width: `${chartPoints.length * WEEK_POINT_PX}px`, minWidth: "100%" }
+                  : undefined
+              }
+            >
+              {chartType === "bar" ? (
+                <Chart type="bar" ref={barRef} data={barChartData} options={chartOptions} />
+              ) : (
+                <Line ref={lineRef} data={lineChartData} options={chartOptions} />
+              )}
+            </div>
           )}
 
           {!hasData && (

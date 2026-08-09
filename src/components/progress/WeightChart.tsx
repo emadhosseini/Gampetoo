@@ -17,8 +17,20 @@ const MAX_X_LABELS = 6;
 
 export interface WeightChartProps {
   points: StatBucket[];
-  /** Dashed goal line, drawn only when it lands inside the axis range. */
+  /**
+   * Dashed goal line. Smart Zoom: the Y axis is built from the logged
+   * weights alone (see computeWeightAxis) and never stretches to reach
+   * this — a target far outside the data's own spread instead gets its
+   * line pinned flat against whichever edge it's past, with its own small
+   * label, while the rest of the chart stays zoomed in on the real trend.
+   */
   targetValue?: number;
+  // Draws every point at least this many px apart and, once that's wider
+  // than the panel, scrolls horizontally instead of squeezing them all
+  // in — the week range's own use, so all 7 days get their own label
+  // instead of every other one disappearing to MAX_X_LABELS' skip logic.
+  // Omit (the default) to fit the full width exactly like before.
+  minPointSpacing?: number;
 }
 
 /**
@@ -31,7 +43,10 @@ export interface WeightChartProps {
  * toward zero or breaking apart. Points are hollow rings, so the line
  * reads as the primary shape and the readings as marks on it.
  */
-export default function WeightChart({ points, targetValue }: WeightChartProps) {
+export default function WeightChart({ points, targetValue, minPointSpacing }: WeightChartProps) {
+  // Measures the OUTER scroll viewport (always 100% of the panel) — the
+  // canvas itself (below) can end up wider than this once minPointSpacing
+  // is set, which is exactly what makes it scroll.
   const containerRef = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
 
@@ -50,21 +65,36 @@ export default function WeightChart({ points, targetValue }: WeightChartProps) {
     return () => observer.disconnect();
   }, []);
 
+  // xFor (below) maps index 0 (oldest) to the left edge and the last index
+  // (today) to the right edge — a plain LTR layout, same as the container's
+  // own forced `direction: ltr` (see the JSX). Scrolled to its rightmost
+  // position once it's actually wider than the viewport, so today is what
+  // shows first; scrolling left from there reaches earlier days. Plain
+  // `scrollLeft = scrollWidth - clientWidth` is only an unambiguous
+  // "scroll to the end" in an LTR container — this is exactly why the
+  // container is forced to ltr rather than inheriting the page's rtl,
+  // where scrollLeft's zero point and sign convention vary by browser.
+  useLayoutEffect(() => {
+    const el = containerRef.current;
+
+    if (el && minPointSpacing) {
+      el.scrollLeft = el.scrollWidth - el.clientWidth;
+    }
+  }, [minPointSpacing, points.length]);
+
   // Index is kept so a reading still lands on its own day's x position
   // even though the empty days around it contribute no point.
   const readings = points
     .map((point, index) => ({ index, value: point.value }))
     .filter((point): point is { index: number; value: number } => point.value !== null);
 
-  const { width, height } = size;
+  const { height } = size;
+  const width = minPointSpacing
+    ? Math.max(size.width, points.length * minPointSpacing)
+    : size.width;
   const ready = width > 0 && height > 0 && readings.length > 0;
 
-  const axis = ready
-    ? computeWeightAxis(
-        readings.map((r) => r.value),
-        targetValue,
-      )
-    : null;
+  const axis = ready ? computeWeightAxis(readings.map((r) => r.value)) : null;
 
   const plotLeft = PADDING.left;
   const plotRight = width - PADDING.right;
@@ -93,8 +123,12 @@ export default function WeightChart({ points, targetValue }: WeightChartProps) {
   }
 
   // Only every nth day gets a label and a vertical line — 30 of either
-  // would be noise rather than orientation.
-  const labelStride = Math.max(1, Math.ceil(points.length / MAX_X_LABELS));
+  // would be noise rather than orientation. minPointSpacing means there's
+  // real room for every point's own label instead (that's the whole
+  // reason to scroll rather than skip), so the stride drops to 1.
+  const labelStride = minPointSpacing
+    ? 1
+    : Math.max(1, Math.ceil(points.length / MAX_X_LABELS));
   const labelIndexes = points
     .map((_, index) => index)
     .filter((index) => index % labelStride === 0);
@@ -112,13 +146,34 @@ export default function WeightChart({ points, targetValue }: WeightChartProps) {
           .join(" ")
       : null;
 
+  // Rule 4: a target outside the zoomed-in axis doesn't stretch it — its
+  // line pins flat against whichever edge it's past instead, so the chart
+  // stays zoomed on the real data while the goal still shows up on the
+  // correct side of it.
+  const targetPin: "top" | "bottom" | null =
+    axis && targetValue !== undefined
+      ? targetValue > axis.max
+        ? "top"
+        : targetValue < axis.min
+          ? "bottom"
+          : null
+      : null;
+
   const targetY =
-    axis && targetValue !== undefined && targetValue >= axis.min && targetValue <= axis.max
-      ? yFor(targetValue)
+    axis && targetValue !== undefined
+      ? targetPin === "top"
+        ? plotTop
+        : targetPin === "bottom"
+          ? plotBottom
+          : yFor(targetValue)
       : null;
 
   return (
-    <div ref={containerRef} className="h-full w-full">
+    <div
+      ref={containerRef}
+      className={`h-full w-full ${minPointSpacing ? "overflow-x-auto overflow-y-hidden" : ""}`}
+      style={minPointSpacing ? { direction: "ltr" } : undefined}
+    >
       {ready && axis && (
         <svg
           width={width}
@@ -172,15 +227,36 @@ export default function WeightChart({ points, targetValue }: WeightChartProps) {
           ))}
 
           {targetY !== null && (
-            <line
-              x1={plotLeft}
-              y1={targetY}
-              x2={plotRight}
-              y2={targetY}
-              stroke={TARGET_COLOR}
-              strokeWidth={1.5}
-              strokeDasharray="6 4"
-            />
+            <g>
+              <line
+                x1={plotLeft}
+                y1={targetY}
+                x2={plotRight}
+                y2={targetY}
+                stroke={TARGET_COLOR}
+                strokeWidth={1.5}
+                strokeDasharray="6 4"
+              />
+
+              {/* Only when pinned — an in-range target already reads
+                  against the Y-axis numbers beside it, but a pinned one
+                  needs to say what it actually is, since its position no
+                  longer reflects the real value. Offset inward from the
+                  edge so it never crowds the plot border. */}
+              {targetPin && targetValue !== undefined && (
+                <text
+                  x={plotLeft + 4}
+                  y={targetPin === "top" ? targetY + 12 : targetY - 6}
+                  textAnchor="start"
+                  fontSize={10}
+                  fontWeight="bold"
+                  fontFamily="Vazirmatn"
+                  fill={TARGET_COLOR}
+                >
+                  {`هدف: ${toFaDigits(targetValue)}`}
+                </text>
+              )}
+            </g>
           )}
 
           {linePath && (

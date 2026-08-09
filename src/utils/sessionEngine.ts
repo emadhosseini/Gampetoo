@@ -2,6 +2,7 @@ import { calculateBurnedCalories } from "@/domain/services/calorieCalculator";
 import { getCurrentProgramDay } from "./programEngine";
 import { getLatestWeight } from "./weightEngine";
 import { scopedKey } from "./userEngine";
+import { getTodayLocalDate } from "./dateFormat";
 
 const STORAGE_KEY = "emad-session";
 
@@ -28,9 +29,7 @@ export interface SessionState {
   checkedExercises: string[];
 }
 
-function today() {
-  return new Date().toISOString().split("T")[0];
-}
+const today = getTodayLocalDate;
 
 function createSession(): SessionState {
   return {
@@ -71,6 +70,14 @@ export function getSession() {
     session.checkedExercises = [];
   }
 
+  // Resolved BEFORE the reset below, deliberately — programEngine's cycle
+  // resolution reads this session's still-live completed/lastDate (via a
+  // read-only peek at this same storage key) to decide whether a workout
+  // day held its place or a rest day advanced. Once the reset below runs,
+  // that information is gone, so this has to be the one call that happens
+  // first each day.
+  const activity = getCurrentProgramDay().activity;
+
   if (session.lastDate !== today()) {
     session.completed = false;
     session.lastDate = today();
@@ -82,7 +89,7 @@ export function getSession() {
   return {
     ...session,
     workoutIndex: 0,
-    activity: getCurrentProgramDay().activity,
+    activity,
   };
 }
 

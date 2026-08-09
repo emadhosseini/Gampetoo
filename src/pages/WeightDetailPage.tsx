@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 import BmiCard from "@/components/BmiCard";
-import StatChartPage from "@/components/progress/StatChartPage";
+import StatChartPage, { type StatRangeKey } from "@/components/progress/StatChartPage";
 import TargetWeightModal from "@/components/progress/TargetWeightModal";
 import WeightHistoryModal from "@/components/progress/WeightHistoryModal";
 import WeightModal from "@/components/WeightModal";
@@ -17,6 +17,10 @@ export default function WeightDetailPage() {
   // getTargetWeight()/getLatestWeight() reads below pick up the change;
   // they're not memoized, so any re-render already refreshes them.
   const [, setVersion] = useState(0);
+  // Tracked so renderChart knows which range is active right now — only
+  // the week range gets the wide, scrollable, one-label-per-day treatment
+  // (see WeightChart's minPointSpacing).
+  const [chartRange, setChartRange] = useState<StatRangeKey>("week");
 
   const entries = getWeightLog();
   const currentWeight = getLatestWeight();
@@ -36,13 +40,23 @@ export default function WeightDetailPage() {
         targetValue={targetWeight ?? undefined}
         targetLabel="وزن هدف"
         defaultRange="week"
+        availableRanges={["week", "month", "sixMonth", "year"]}
+        showSummary={false}
+        onRangeChange={setChartRange}
         summaryLabels={{
           day: "وزن فعلی",
           daily: "وزن روزانه",
           monthly: "میانگین ماهیانه",
         }}
         renderChart={(points) => (
-          <WeightChart points={points} targetValue={targetWeight ?? undefined} />
+          <WeightChart
+            points={points}
+            targetValue={targetWeight ?? undefined}
+            // Only the week view — 7 days is few enough that giving each
+            // its own ~52px and scrolling to see them all beats squeezing
+            // every other one's label away.
+            minPointSpacing={chartRange === "week" ? 52 : undefined}
+          />
         )}
       >
         {/* Label first, value second — RTL puts the first child at the right

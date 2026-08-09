@@ -403,6 +403,16 @@ export default function NutritionPlanDetailPage() {
         {typeTitles[type]}
       </h1>
 
+      {/* Same handler and label as the button at the bottom — this page's
+          list of meals/foods can run long, and scrolling all the way down
+          just to save shouldn't be the only way to do it. */}
+      <button
+        onClick={handleSave}
+        className="w-full glass-action rounded-2xl py-4 text-lg font-bold text-white"
+      >
+        {saved ? "ذخیره شد ✅" : "ذخیره"}
+      </button>
+
       <div className="space-y-3">
         {plan.meals.map((meal) => {
           const isOpen = openMealId === meal.id;

@@ -121,6 +121,10 @@ export default function WorkoutDetailPage() {
   const [warmupSectionOpen, setWarmupSectionOpen] = useState(false);
 
   const [saved, setSaved] = useState(false);
+  // Whether there's a change since the last save — the floating pill up
+  // top only shows up while this is true, rather than sitting there at
+  // full size the whole time regardless of whether anything changed.
+  const [dirty, setDirty] = useState(false);
 
   const [query, setQuery] = useState("");
 
@@ -153,6 +157,7 @@ export default function WorkoutDetailPage() {
 
   function toggleWarmupGroup(groupId: string) {
     setSaved(false);
+    setDirty(true);
 
     setWarmupGroups((prev) =>
       prev.map((group) =>
@@ -169,6 +174,7 @@ export default function WorkoutDetailPage() {
     patch: Partial<ExerciseGroup["exercises"][number]>,
   ) {
     setSaved(false);
+    setDirty(true);
 
     setGroups((prev) =>
       prev.map((group) =>
@@ -194,12 +200,31 @@ export default function WorkoutDetailPage() {
     }
 
     setSaved(true);
+    setDirty(false);
   }
 
   const isWarmupWorkout = workout.id === "warmup";
 
   return (
     <div className="space-y-6 px-5 pb-5 pt-10">
+      {/* Small floating pill, not the full-size button — only appears once
+          there's actually something unsaved (dirty), sitting up top-left
+          so a change made after scrolling down doesn't need a trip all
+          the way back to the bottom button just to save it. Sticky rather
+          than fixed: MobileContainer's phone-shaped frame is narrower than
+          the real viewport on desktop, and fixed positions relative to the
+          viewport, not that frame. */}
+      {dirty && (groups.length > 0 || specializedWarmup) && (
+        <div className="sticky top-2 z-30 flex justify-end">
+          <button
+            onClick={handleSave}
+            className="glass-action rounded-full px-4 py-2 text-xs font-bold text-white shadow-lg"
+          >
+            ذخیره
+          </button>
+        </div>
+      )}
+
       <h1 className="text-2xl font-bold">
         {workout.title}
       </h1>

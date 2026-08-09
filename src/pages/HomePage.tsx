@@ -112,7 +112,7 @@ const workout = workoutType
           ? "فردا برنامه‌ای نداری\nاستراحت و پیاده روی کن"
           : isTomorrowWorkout
             ? tomorrowWorkout?.title ?? tomorrowDay.title
-            : "استراحت و پیاده‌روی سبک"
+            : "استراحت"
       }
     />
   );
@@ -151,13 +151,13 @@ const workout = workoutType
             than sitting in an empty-looking two-column row. */}
         {started ? (
           <div className="grid grid-cols-2 gap-4">
-            {tomorrowCard}
-
             <InfoCard
               icon={<ClipboardList />}
               title="وضعیت برنامه امروز"
               value={session.completed ? "انجام شده ✅" : "انجام نشده"}
             />
+
+            {tomorrowCard}
           </div>
         ) : (
           tomorrowCard
