@@ -268,6 +268,8 @@ export default function AddMealEntryModal({
 
             <p className="text-center text-sm text-white/70">
               {toFaDigits(caloriesForServing(selected, unit, quantity))} کالری
+              {" · "}
+              {toFaDigits(macrosForServing(selected, unit, quantity).protein)} گرم پروتئین
             </p>
           </div>
         )}

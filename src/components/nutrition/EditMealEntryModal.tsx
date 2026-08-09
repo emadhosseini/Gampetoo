@@ -50,6 +50,11 @@ export default function EditMealEntryModal({
       ? Math.round(((entry.base!.calories ?? 0) * quantity) / entry.base!.quantity)
       : (entry.calories ?? 0);
 
+  const previewProtein =
+    editable && valid
+      ? Math.round(((entry.base!.protein ?? 0) * quantity) / entry.base!.quantity)
+      : (entry.protein ?? 0);
+
   return (
     <ModalOverlay onClose={onClose}>
       <div className="glass-panel glass-static space-y-4 rounded-3xl p-6">
@@ -76,7 +81,7 @@ export default function EditMealEntryModal({
               </span>
 
               <span className="text-sm text-white/70">
-                {toFaDigits(previewCalories)} کالری
+                {toFaDigits(previewCalories)} کالری · {toFaDigits(previewProtein)} گرم پروتئین
               </span>
             </div>
 
@@ -94,7 +99,7 @@ export default function EditMealEntryModal({
           // it is the only way to change it.
           <p className="glass-chip rounded-xl p-3 text-center text-sm text-white">
             {entry.amount ? `${entry.amount} — ` : ""}
-            {toFaDigits(previewCalories)} کالری
+            {toFaDigits(previewCalories)} کالری · {toFaDigits(previewProtein)} گرم پروتئین
             <span className="mt-1 block text-xs text-white/60">
               مقدار این مورد قابل ویرایش نیست؛ برای تغییرش حذفش کن و دوباره
               اضافه کن.

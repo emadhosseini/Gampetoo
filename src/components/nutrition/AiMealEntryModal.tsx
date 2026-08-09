@@ -109,6 +109,8 @@ export default function AiMealEntryModal({ meal, onClose, onChange }: AiMealEntr
 
   const totalCalories =
     screen.step === "results" ? screen.matched.reduce((sum, m) => sum + m.calories, 0) : 0;
+  const totalProtein =
+    screen.step === "results" ? screen.matched.reduce((sum, m) => sum + m.protein, 0) : 0;
 
   return (
     <ModalOverlay onClose={onClose}>
@@ -179,7 +181,9 @@ export default function AiMealEntryModal({ meal, onClose, onChange }: AiMealEntr
                         </span>
                       )}
                     </span>
-                    <span className="text-white/70">{toFaDigits(item.calories)} کالری</span>
+                    <span className="text-white/70">
+                      {toFaDigits(item.calories)} کالری · {toFaDigits(item.protein)} گرم پروتئین
+                    </span>
                   </motion.div>
                 ))}
               </div>
@@ -198,7 +202,7 @@ export default function AiMealEntryModal({ meal, onClose, onChange }: AiMealEntr
               )}
 
               <p className="text-center text-sm font-semibold text-white">
-                جمع کالری: {toFaDigits(totalCalories)}
+                جمع کالری: {toFaDigits(totalCalories)} · جمع پروتئین: {toFaDigits(totalProtein)} گرم
               </p>
 
               <button

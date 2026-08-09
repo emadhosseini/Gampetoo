@@ -266,11 +266,6 @@ const workout = workoutType
     );
   }
 
-  const totalSets = exercises.reduce(
-  (sum, exercise) => sum + exercise.sets,
-  0
-);
-
   // Derived from the checklist on every render rather than accumulated as
   // exercises are ticked, so it always matches what's actually checked off
   // right now. Nothing has been written anywhere yet at this point — that
@@ -278,6 +273,20 @@ const workout = workoutType
   const checkedCalories = estimateCheckedWorkoutCalories(
     exercises,
     session.checkedExercises,
+  );
+
+  // The summary (both the confirm popup and the post-completion card)
+  // reports what was actually checked off, not every exercise the workout
+  // has on offer — same idea as checkedCalories above, which already only
+  // ever counted checked exercises; the exercise/set counts here used to
+  // report the workout's full list regardless of what got ticked.
+  const checkedExercisesForSummary = exercises.filter((exercise) =>
+    session.checkedExercises.includes(exercise.id),
+  );
+  const summaryExerciseCount = checkedExercisesForSummary.length;
+  const summarySets = checkedExercisesForSummary.reduce(
+    (sum, exercise) => sum + exercise.sets,
+    0,
   );
 
   // The user's own manually-saved order (if any) takes priority over the
@@ -431,15 +440,15 @@ const workout = workoutType
 
           <p className="text-sm text-white/70">خلاصه تمرین امروز</p>
 
-          <WorkoutSummary exercises={exercises.length} sets={totalSets} />
+          <WorkoutSummary exercises={summaryExerciseCount} sets={summarySets} />
         </div>
       )}
 
       <WorkoutCompleteModal
         open={confirmOpen}
         workoutTitle={workout.title}
-        exercises={exercises.length}
-        sets={totalSets}
+        exercises={summaryExerciseCount}
+        sets={summarySets}
         calories={checkedCalories}
         addToActivity={addCaloriesToActivity}
         onToggleAddToActivity={() => setAddCaloriesToActivity((on) => !on)}
