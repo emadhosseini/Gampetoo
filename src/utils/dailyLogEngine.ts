@@ -2,6 +2,7 @@ import { generateId } from "./id";
 import { toFaDigits } from "./numberFormat";
 import { scopedKey } from "./userEngine";
 import { createDailyMetricLog, type DailyMetricEntry } from "./dailyMetricLog";
+import { getTodayLocalDate } from "./dateFormat";
 
 const STORAGE_KEY = "emad-daily-log";
 const TARGET_KEY = "emad-daily-calorie-target";
@@ -16,9 +17,7 @@ function storageKey() {
   return scopedKey(STORAGE_KEY);
 }
 
-function today() {
-  return new Date().toISOString().split("T")[0];
-}
+const today = getTodayLocalDate;
 
 function sumMacro(
   meals: DailyLogState["meals"],

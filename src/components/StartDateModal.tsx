@@ -13,10 +13,9 @@ import "react-multi-date-picker/styles/backgrounds/bg-dark.css";
 import "react-multi-date-picker/styles/colors/green.css";
 
 import ModalOverlay from "@/components/ModalOverlay";
+import { getTodayLocalDate } from "@/utils/dateFormat";
 
-function today(): string {
-  return new Date().toISOString().split("T")[0];
-}
+const today = getTodayLocalDate;
 
 // Same ISO<->local-Date conversion the old setup-page date picker used —
 // avoids `new Date(iso)`'s UTC parsing, which lands a day off from the

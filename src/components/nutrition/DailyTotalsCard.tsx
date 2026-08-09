@@ -16,13 +16,11 @@ export interface DailyTotalsCardProps {
 }
 
 /**
- * The day added up across every meal, for per-meal tracking mode.
- *
- * Daily mode doesn't render this: it has one slot, so its own card already
- * shows exactly these numbers and a second copy would just be the same card
- * twice. Per-meal mode had no total anywhere — each card knew its own meal
- * and nothing knew the day, which is the number a daily protein target has
- * to be judged against.
+ * The day added up across every meal, shown at the top of DailyLogPage in
+ * both tracking modes. Daily mode's own single MealLogCard used to show
+ * these same numbers itself and skip this card entirely — now that card is
+ * just a plain list of today's meals (hideTotals), so this is the one
+ * place either mode shows the day's calorie/macro summary.
  */
 export default function DailyTotalsCard({ slots, version }: DailyTotalsCardProps) {
   const totals = useMemo(() => {

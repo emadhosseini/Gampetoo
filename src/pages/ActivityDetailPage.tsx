@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 
 import StatChartPage from "@/components/progress/StatChartPage";
 import ActivityLogModal from "@/components/progress/ActivityLogModal";
-import { getActivityHistory, getTodayActivityCalories, logActivityCalories } from "@/utils/activityLogEngine";
+import { getActivityHistory, getTodayActivityCalories, logActivityEntry } from "@/utils/activityLogEngine";
 import { getTodayWorkoutCalories, getWorkoutCalorieHistory } from "@/utils/workoutCalorieEngine";
 import { mergeDailyMetricHistories } from "@/utils/dailyMetricLog";
 import { toFaDigits } from "@/utils/numberFormat";
@@ -51,6 +51,8 @@ export default function ActivityDetailPage() {
         missingDays="zero"
         chartType="bar"
         defaultRange="week"
+        availableRanges={["week", "month", "sixMonth", "year"]}
+        showSummary={false}
         summaryLabels={{
           day: "فعالیت امروز",
           daily: "فعالیت روزانه",
@@ -125,7 +127,7 @@ export default function ActivityDetailPage() {
       <ActivityLogModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
-        onLog={(calories) => setHistory(logActivityCalories(calories))}
+        onLog={(calories, note) => setHistory(logActivityEntry(calories, note))}
       />
     </>
   );

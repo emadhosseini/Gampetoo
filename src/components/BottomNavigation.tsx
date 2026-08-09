@@ -14,7 +14,7 @@ import WeightModal from "@/components/WeightModal";
 import WaterLogModal from "@/components/WaterLogModal";
 import { useQuickAddMealFlow } from "@/hooks/useQuickAddMealFlow";
 import { logGlasses } from "@/utils/waterEngine";
-import { logActivityCalories } from "@/utils/activityLogEngine";
+import { logActivityEntry } from "@/utils/activityLogEngine";
 
 // Bar height (h-17 = 68px) and the radius of the quick-add bump that rises
 // out of its top edge. Both feed the single silhouette path below, so they
@@ -365,8 +365,8 @@ export default function BottomNavigation({
       <ActivityLogModal
         open={activityModalOpen}
         onClose={() => setActivityModalOpen(false)}
-        onLog={(calories) => {
-          logActivityCalories(calories);
+        onLog={(calories, note) => {
+          logActivityEntry(calories, note);
           navigate("/progress/activity");
         }}
       />

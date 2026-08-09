@@ -13,7 +13,7 @@ import { getWorkout } from "@/store/workoutLibraryStore";
 export interface WorkoutPickerModalProps {
   open: boolean;
   onClose: () => void;
-  // null means "استراحت / پیاده‌روی" (rest day) was picked.
+  // null means "استراحت" (rest day) was picked.
   onPick: (workoutId: string | null) => void;
 }
 
@@ -113,7 +113,7 @@ export default function WorkoutPickerModal({
           {path.length === 0 && (
             <PickerCard
               icon="🚶"
-              title="استراحت / پیاده‌روی"
+              title="استراحت"
               onClick={() => {
                 onPick(null);
                 onClose();

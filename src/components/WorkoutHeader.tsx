@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Pencil } from "lucide-react";
 
 import ModalOverlay from "@/components/ModalOverlay";
 import { shiftProgramOneDayForward } from "@/utils/programEngine";
@@ -16,12 +17,18 @@ type WorkoutHeaderProps = {
   // button only makes sense on the actual workout page, so it's opt-in
   // rather than always-on.
   showForgotButton?: boolean;
+  // Same idea as showForgotButton — only WorkoutPage has anything to edit
+  // (reorder today's exercises / jump to the workout's library entry), so
+  // this is a callback rather than always-on. Sits right beside the forgot
+  // button rather than as its own separate control lower on the page.
+  onEditWorkout?: () => void;
 };
 
 export default function WorkoutHeader({
   title,
   subtitle,
   showForgotButton = false,
+  onEditWorkout,
 }: WorkoutHeaderProps) {
   const [open, setOpen] = useState(false);
 
@@ -37,14 +44,28 @@ export default function WorkoutHeader({
 
   return (
     <div className="relative mb-6 mt-4 text-center">
-      {showForgotButton && (
-        <button
-          onClick={() => setOpen(true)}
-          aria-label="فراموشی ثبت اتمام تمرین روز گذشته"
-          className="glass-chip absolute end-0 top-0 flex h-10 w-10 items-center justify-center rounded-full text-xl"
-        >
-          🤦
-        </button>
+      {(showForgotButton || onEditWorkout) && (
+        <div className="absolute end-0 top-0 flex items-center gap-2">
+          {onEditWorkout && (
+            <button
+              onClick={onEditWorkout}
+              aria-label="تغییر ترتیب یا حرکت‌های تمرین"
+              className="glass-chip flex h-10 w-10 items-center justify-center rounded-full text-white"
+            >
+              <Pencil size={16} />
+            </button>
+          )}
+
+          {showForgotButton && (
+            <button
+              onClick={() => setOpen(true)}
+              aria-label="فراموشی ثبت اتمام تمرین روز گذشته"
+              className="glass-chip flex h-10 w-10 items-center justify-center rounded-full text-xl"
+            >
+              🤦
+            </button>
+          )}
+        </div>
       )}
 
       {subtitle && <p className="text-sm text-white">{subtitle}</p>}

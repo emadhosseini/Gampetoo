@@ -3,13 +3,7 @@ import { ChevronDown, Pencil, Plus } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
 import type { MealSlot } from "@/data/nutrition/foodCatalog";
-import {
-  calculateProteinTarget,
-  getCalorieGoal,
-  proteinStanding,
-} from "@/utils/calorieEngine";
 import { getLoggedEntries, type LoggedFoodEntry } from "@/utils/dailyLogEngine";
-import { getLatestWeight } from "@/utils/weightEngine";
 import { toFaDigits } from "@/utils/numberFormat";
 import MacroTotalsGrid from "@/components/nutrition/MacroTotalsGrid";
 
@@ -26,10 +20,18 @@ export interface MealLogCardProps {
   // precisely so an edit doesn't collapse the panel the user is editing
   // from.
   version: number;
-  // Whether this card's protein is the whole day's, and so can be judged
-  // against the daily target. True only in daily tracking mode — see
-  // DailyLogPage. In per-meal mode DailyTotalsCard carries it instead.
-  showProteinTarget?: boolean;
+  // Overrides meal.title in the header — daily mode's single slot is
+  // internally still titled "کالری روزانه" (that's what the quick-add
+  // flow's "افزودن به وعده‌ی ..." heading uses), but this card reads as
+  // "وعده‌های غذایی امروز" once its own calorie/macro summary moves out to
+  // DailyTotalsCard above it.
+  title?: string;
+  // Hides the calorie subtitle and the macro-totals block — DailyLogPage
+  // sets this for daily mode's one card now that DailyTotalsCard (always
+  // rendered above the list) carries that summary instead. Per-meal mode
+  // still shows its own totals here, since nothing else does for an
+  // individual meal.
+  hideTotals?: boolean;
 }
 
 export default function MealLogCard({
@@ -37,7 +39,8 @@ export default function MealLogCard({
   onAdd,
   onEditEntry,
   version,
-  showProteinTarget = false,
+  title,
+  hideTotals = false,
 }: MealLogCardProps) {
   const [expanded, setExpanded] = useState(false);
   const entries = useMemo(
@@ -61,16 +64,6 @@ export default function MealLogCard({
     fiber: entries.reduce((sum, entry) => sum + (entry.fiber ?? 0), 0),
   };
 
-  const weight = getLatestWeight();
-  const proteinTarget =
-    showProteinTarget && weight !== null
-      ? calculateProteinTarget(weight, getCalorieGoal() ?? "maintain")
-      : null;
-
-  const standing = proteinTarget
-    ? proteinStanding(macroTotals.protein, proteinTarget)
-    : null;
-
   function toggle() {
     setExpanded((prev) => !prev);
   }
@@ -93,13 +86,15 @@ export default function MealLogCard({
           <span className="text-2xl">{meal.icon}</span>
 
           <div>
-            <h2 className="text-lg font-semibold text-white">{meal.title}</h2>
+            <h2 className="text-lg font-semibold text-white">{title ?? meal.title}</h2>
 
-            <p className="text-sm text-white/70">
-              {entries.length > 0
-                ? `${toFaDigits(totalCalories)} کالری ثبت‌شده`
-                : "چیزی ثبت نشده"}
-            </p>
+            {!hideTotals && (
+              <p className="text-sm text-white/70">
+                {entries.length > 0
+                  ? `${toFaDigits(totalCalories)} کالری ثبت‌شده`
+                  : "چیزی ثبت نشده"}
+              </p>
+            )}
           </div>
         </button>
 
@@ -121,9 +116,11 @@ export default function MealLogCard({
             transition={{ type: "spring", stiffness: 320, damping: 32 }}
             className="overflow-hidden"
           >
-            <div className="px-5">
-              <MacroTotalsGrid totals={macroTotals} proteinStanding={standing} />
-            </div>
+            {!hideTotals && (
+              <div className="px-5">
+                <MacroTotalsGrid totals={macroTotals} />
+              </div>
+            )}
 
             {/* What those totals are made of. Each row opens the amount
                 editor for that one food — the macro chips above are read-only

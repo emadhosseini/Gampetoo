@@ -24,7 +24,11 @@ import {
   updateLoggedEntryQuantity,
   type LoggedFoodEntry,
 } from "@/utils/dailyLogEngine";
-import { getTodayActivityCalories, logActivityCalories } from "@/utils/activityLogEngine";
+import {
+  getTodayActivityCalories,
+  getTodaysActivityEntries,
+  logActivityEntry,
+} from "@/utils/activityLogEngine";
 import { getTodayWorkoutCalories } from "@/utils/workoutCalorieEngine";
 import { toFaDigits } from "@/utils/numberFormat";
 
@@ -67,6 +71,7 @@ function ActivityTabRoot() {
 
   const workoutCalories = getTodayWorkoutCalories();
   const manualCalories = getTodayActivityCalories();
+  const notedEntries = getTodaysActivityEntries();
 
   return (
     <div className="space-y-4 px-5 pb-5 pt-6">
@@ -106,11 +111,30 @@ function ActivityTabRoot() {
         </button>
       </div>
 
+      {/* Only the entries that came with a note — an activity logged
+          without one has nothing to show here beyond the total above. */}
+      {notedEntries.length > 0 && (
+        <div className="space-y-2">
+          {notedEntries.map((entry) => (
+            <div
+              key={entry.id}
+              className="glass-chip flex items-start justify-between gap-3 rounded-xl p-3 text-right"
+            >
+              <p className="flex-1 text-sm text-white">{entry.note}</p>
+
+              <span className="shrink-0 text-xs text-white/60">
+                {toFaDigits(entry.calories)} کالری
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+
       <ActivityLogModal
         open={activityModalOpen}
         onClose={() => setActivityModalOpen(false)}
-        onLog={(calories) => {
-          logActivityCalories(calories);
+        onLog={(calories, note) => {
+          logActivityEntry(calories, note);
           setVersion((v) => v + 1);
         }}
       />
@@ -212,20 +236,24 @@ function MealLogTab({
 
   return (
     <div className="space-y-4 px-5 pb-5 pt-6">
-      {/* Only for per-meal tracking. In daily mode the single card below is
-          already the day's total, so this would be the same numbers twice. */}
-      {mode === "perMeal" && <DailyTotalsCard slots={slots} version={version} />}
+      {/* Now rendered in both modes: it used to be per-meal only, since
+          daily mode's single card below was already showing exactly these
+          numbers — now that card's own totals are hidden (see hideTotals
+          below), so this is the only place either mode shows them. */}
+      <DailyTotalsCard slots={slots} version={version} />
 
       {slots.map((meal) => (
         <MealLogCard
           key={meal.id}
           meal={meal}
           version={version}
-          // Daily mode has one card and its macros *are* the day's, so the
-          // protein target applies to it directly. In per-meal mode a single
-          // meal's protein says nothing about a daily target — the card
-          // above carries that instead.
-          showProteinTarget={mode === "daily"}
+          // Daily mode's one slot is internally still "کالری روزانه" (used
+          // by the quick-add flow's own heading) — this is just what shows
+          // on the card here, now that it's a plain list of today's meals
+          // rather than a calorie summary.
+          title={mode === "daily" ? "وعده‌های غذایی امروز" : undefined}
+          // DailyTotalsCard above carries the totals for both modes now.
+          hideTotals={mode === "daily"}
           onAdd={(meal) => setModal({ meal, screen: "choice" })}
           onEditEntry={(meal, entry) =>
             setModal({ meal, screen: "edit", entry })

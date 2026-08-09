@@ -1,5 +1,5 @@
 import type { DailyMetricEntry } from "./dailyMetricLog";
-import { formatDayNumber, formatMonthNumber } from "./dateFormat";
+import { formatDayNumber, formatMonthNumber, toLocalDateString } from "./dateFormat";
 
 export interface StatBucket {
   label: string;
@@ -19,10 +19,6 @@ export interface StatBucket {
  *   it had looked like those three.
  */
 export type MissingDayMeaning = "gap" | "zero";
-
-function toIsoDate(date: Date): string {
-  return date.toISOString().split("T")[0];
-}
 
 /**
  * One bucket per calendar day, oldest first, ending today — days with no
@@ -45,7 +41,7 @@ export function buildDailyBuckets(
 
     date.setDate(date.getDate() - i);
 
-    const iso = toIsoDate(date);
+    const iso = toLocalDateString(date);
 
     buckets.push({ label: formatDayNumber(date), value: byDate.get(iso) ?? fallback });
   }

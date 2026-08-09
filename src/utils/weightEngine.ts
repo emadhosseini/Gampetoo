@@ -1,4 +1,5 @@
 import { scopedKey } from "./userEngine";
+import { getTodayLocalDate } from "./dateFormat";
 
 const STORAGE_KEY = "emad-weight-log";
 const TARGET_KEY = "emad-weight-target";
@@ -13,9 +14,7 @@ function storageKey() {
   return scopedKey(STORAGE_KEY);
 }
 
-export function today(): string {
-  return new Date().toISOString().split("T")[0];
-}
+export const today = getTodayLocalDate;
 
 function round2(value: number): number {
   return Math.round(value * 100) / 100;

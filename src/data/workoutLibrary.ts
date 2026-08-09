@@ -359,7 +359,16 @@ export const workoutLibrary: WorkoutDefinition[] = [
             metValue: 5,
           },
           {
-            id: "face-pull",
+            // Same move as "پشت" group's "face-pull" above — was sharing
+            // that exact id (a real content duplication, both groups
+            // reasonably claim the exercise) which meant toggling either
+            // copy's checkbox (whether reached by scrolling to its group
+            // or via WorkoutDetailPage's search) also flipped the OTHER
+            // one: sessionEngine's checklist and workoutLibraryStore's
+            // overrides both key purely by exercise id, with no group in
+            // the key, so two entries sharing an id are really one
+            // toggle-state wearing two rows. Unique id, independent state.
+            id: "face-pull-rear-shoulder",
             name: "فیس پول",
             sets: 3,
             reps: 10,

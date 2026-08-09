@@ -21,12 +21,16 @@ export default function TodayDashboardCard() {
       </h2>
 
       <div className="mt-2 flex flex-col gap-3">
+        {/* Weight leads the card now — the rest (calorie/protein/water)
+            follow below it, each set off with the same divider line. */}
+        <WeightProgressRow />
+
         {/* CalorieOrbCard's circle is a fixed h-36 (~144px) regardless of
             its wrapper's height — min-h-40 (not h-40) just guarantees at
             least that much room; it can still grow past it (e.g. its text
             column wrapped in its own card now needs a bit more), rather
             than clipping or overlapping the row below. */}
-        <div className="min-h-40 shrink-0">
+        <div className="min-h-40 shrink-0 border-t border-white/10 pt-3">
           <CalorieOrbCard />
         </div>
 
@@ -36,12 +40,6 @@ export default function TodayDashboardCard() {
 
         <div className="border-t border-white/10 pt-3">
           <WaterProgressRow />
-        </div>
-
-        {/* Experimental — trying the water/protein row style for weight
-            too. */}
-        <div className="border-t border-white/10 pt-3">
-          <WeightProgressRow />
         </div>
       </div>
     </div>

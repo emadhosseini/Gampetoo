@@ -41,6 +41,8 @@ export default function CaloriesDetailPage() {
         missingDays="zero"
         chartType="bar"
         defaultRange="week"
+        availableRanges={["week", "month", "sixMonth", "year"]}
+        showSummary={false}
         summaryLabels={{
           day: "کالری دریافتی امروز",
           daily: "کالری روزانه",

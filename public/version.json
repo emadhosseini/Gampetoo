@@ -1,6 +1,18 @@
 {
-  "current": "1.0.11",
+  "current": "1.0.12",
   "history": [
+    {
+      "version": "1.0.12",
+      "date": "2026-08-09",
+      "description": "The workout cycle now holds its place: a workout day no longer auto-advances to the next day until you actually confirm it's done, however many days pass — only rest days keep cycling on their own regardless of confirmation. The weight chart got a real \"smart zoom\": its axis is built only from the weights actually logged in view (never stretched to reach a distant target), with a dynamic grid step (0.5–5kg) and guaranteed padding so points never touch the panel edges; a target outside that zoomed range pins its dashed line flat to the correct edge with a small label instead of flattening the whole trend. Every stat chart (weight, calories, activity) dropped the single-day view and its big headline number, but always shows the date range the columns span now, centered; the week view scrolls horizontally with one full-width slot per day instead of skipping every other day's label, fixed to scroll in a predictable direction. Fixed a duplicated exercise id (face-pull, filed under both back and rear-shoulder) that made checking it off in one group silently check it off in the other too. Fixed a broken/partial selection ring in the food-add search list on at least one device — swapped a box-shadow ring for a plain border. Activity logging gained a notes field and finer calorie control (direct entry instead of only ±50 steps).",
+      "highlights": [
+        "🔒 روز تمرین تا وقتی تیک نخوره ثابت می‌مونه؛ روز استراحت همیشه می‌چرخه",
+        "⚖️ نمودار وزن یک زوم هوشمند گرفت: فقط روی داده‌های واقعی زوم می‌کنه، نه فاصله تا وزن هدف",
+        "📊 نمودارهای وزن/کالری/فعالیت: حذف نمای «روز»، بازه تاریخ همیشه نشون داده می‌شه، هفته قابل‌اسکروله",
+        "🐛 یک باگ داده‌ای واقعی رفع شد: فیس‌پول با آیدی تکراری در دو گروه، تیک یکی رو به اون‌یکی هم می‌زد",
+        "📝 ثبت فعالیت حالا یادداشت و کنترل دقیق‌تر کالری داره"
+      ]
+    },
     {
       "version": "1.0.11",
       "date": "2026-08-08",

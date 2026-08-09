@@ -43,6 +43,11 @@ export default function AddMealEntryModal({
   const [selected, setSelected] = useState<FoodItem | null>(null);
   const [unit, setUnit] = useState<ServingUnit | null>(null);
   const [quantity, setQuantity] = useState(1);
+  // Name of the food just added, or null. Adding clears `selected` (which
+  // already returns to the food list, since that's what hides the
+  // quantity picker), but gave no feedback that anything happened — this
+  // is a brief confirmation banner, self-clearing below.
+  const [justAdded, setJustAdded] = useState<string | null>(null);
 
   const requestId = useRef(0);
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
@@ -74,11 +79,20 @@ export default function AddMealEntryModal({
     setSelected(null);
     setUnit(null);
     setQuantity(1);
+    setJustAdded(null);
   }, [meal]);
 
   useEffect(() => {
     return () => clearTimeout(debounceTimer.current);
   }, []);
+
+  useEffect(() => {
+    if (!justAdded) return;
+
+    const timer = setTimeout(() => setJustAdded(null), 2500);
+
+    return () => clearTimeout(timer);
+  }, [justAdded]);
 
   async function runSearch(value: string) {
     const id = ++requestId.current;
@@ -146,6 +160,7 @@ export default function AddMealEntryModal({
       ...macros,
     });
 
+    setJustAdded(selected.nameFa);
     setSelected(null);
     setUnit(null);
     setQuantity(1);
@@ -158,6 +173,12 @@ export default function AddMealEntryModal({
         <h2 className="text-center text-lg font-bold text-white">
           افزودن به وعده {meal.title}
         </h2>
+
+        {justAdded && (
+          <p className="rounded-xl bg-green-500/15 py-2 text-center text-sm font-semibold text-green-400">
+            «{justAdded}» اضافه شد ✅
+          </p>
+        )}
 
         <div className="glass-chip flex items-center gap-2 rounded-xl p-2">
           <input
