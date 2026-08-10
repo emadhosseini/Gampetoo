@@ -165,7 +165,7 @@ const workout = workoutType
   if (!hasProgramStarted()) {
     return (
       <div className="px-5 pb-5 pt-10">
-        <div className="glass-panel rounded-3xl p-6 text-center">
+        <div className="glass-panel glass-static rounded-3xl p-6 text-center">
           <p className="text-xl font-bold text-white">
             امروز تمرینی نداری
           </p>
@@ -179,7 +179,7 @@ const workout = workoutType
       <div className="space-y-6 px-5 pb-5 pt-10">
         <WorkoutHeader title="روز استراحت" showForgotButton />
 
-        <div className="glass-panel rounded-3xl p-6 text-center">
+        <div className="glass-panel glass-static rounded-3xl p-6 text-center">
           {/* Same male/female walking illustration HomePage's hero card
               already uses for a rest day (walkCharacterIcon) — not a
               generic rest/bed icon, since the day's actual ask is the
@@ -208,7 +208,7 @@ const workout = workoutType
         )}
 
         {session.completed && (
-          <div className="glass-panel mt-6 rounded-full py-4 text-center text-lg font-semibold text-white">
+          <div className="glass-panel glass-static mt-6 rounded-full py-4 text-center text-lg font-semibold text-white">
             تمرین امروز رو انجام دادی☺️
           </div>
         )}
@@ -236,7 +236,7 @@ const workout = workoutType
       <div className="space-y-6 px-5 pb-5 pt-10">
         <WorkoutHeader title={day.title} showForgotButton />
 
-        <div className="glass-panel rounded-3xl p-2 text-center">
+        <div className="glass-panel glass-static rounded-3xl p-2 text-center">
 
           <p className="m-3 text-white">
             برای این تمرین هنوز حرکتی انتخاب نشده.
@@ -258,7 +258,7 @@ const workout = workoutType
         )}
 
         {session.completed && (
-          <div className="glass-panel mt-6 rounded-full py-4 text-center text-lg font-semibold text-white">
+          <div className="glass-panel glass-static mt-6 rounded-full py-4 text-center text-lg font-semibold text-white">
             تمرین امروز رو انجام دادی ☺️
           </div>
         )}
@@ -383,7 +383,7 @@ const workout = workoutType
                 <button
                   onClick={() => moveReorderItem(index, -1)}
                   disabled={index === 0}
-                  className="glass-chip rounded-lg p-2 text-white disabled:opacity-30"
+                  className="glass-chip glass-static rounded-lg p-2 text-white disabled:opacity-30"
                 >
                   <ChevronUp size={16} />
                 </button>
@@ -391,7 +391,7 @@ const workout = workoutType
                 <button
                   onClick={() => moveReorderItem(index, 1)}
                   disabled={index === reorderList.length - 1}
-                  className="glass-chip rounded-lg p-2 text-white disabled:opacity-30"
+                  className="glass-chip glass-static rounded-lg p-2 text-white disabled:opacity-30"
                 >
                   <ChevronDown size={16} />
                 </button>
@@ -405,14 +405,14 @@ const workout = workoutType
         <div className="flex gap-3">
           <button
             onClick={() => setReorderMode(false)}
-            className="glass-chip flex-1 rounded-2xl py-3 text-sm font-medium text-white"
+            className="glass-chip glass-static flex-1 rounded-2xl py-3 text-sm font-medium text-white"
           >
             انصراف
           </button>
 
           <button
             onClick={saveReorder}
-            className="glass-action flex-1 rounded-2xl py-3 text-sm font-bold text-white"
+            className="glass-action glass-action-static flex-1 rounded-2xl py-3 text-sm font-bold text-white"
           >
             ذخیره ترتیب
           </button>
@@ -433,7 +433,7 @@ const workout = workoutType
           where they were just noise repeating what the checklist itself
           already shows. */}
       {session.completed && (
-        <div className="glass-panel mt-6 space-y-3 rounded-3xl p-5 text-center">
+        <div className="glass-panel glass-static mt-6 space-y-3 rounded-3xl p-5 text-center">
           <p className="text-lg font-semibold text-white">
             تمرین امروز رو انجام دادی☺️
           </p>
@@ -483,7 +483,7 @@ const workout = workoutType
                 setEditChoiceOpen(false);
                 startReorder();
               }}
-              className="w-full glass-action rounded-2xl py-3 font-bold text-white"
+              className="w-full glass-action glass-action-static rounded-2xl py-3 font-bold text-white"
             >
               تغییر ترتیب
             </button>
@@ -496,14 +496,14 @@ const workout = workoutType
                   navigate(`/settings/workouts/${workoutType}`);
                 }
               }}
-              className="glass-tap selector-pill w-full rounded-2xl py-3 font-bold text-white"
+              className="glass-tap glass-static selector-pill w-full rounded-2xl py-3 font-bold text-white"
             >
               تغییر تمرین‌ها و ست‌ها
             </button>
 
             <button
               onClick={() => setEditChoiceOpen(false)}
-              className="ghost-action w-full rounded-2xl py-3 font-medium text-white"
+              className="ghost-action ghost-action-static w-full rounded-2xl py-3 font-medium text-white"
             >
               بستن
             </button>

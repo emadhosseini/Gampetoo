@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 
 import DatePickerImport, { DateObject } from "react-multi-date-picker";
 import persianCalendar from "react-date-object/calendars/persian";
+import gregorianCalendar from "react-date-object/calendars/gregorian";
 // react-multi-date-picker ships as CommonJS; depending on the bundler's
 // interop the default import can arrive as the module namespace rather
 // than the component itself.
@@ -9,11 +10,16 @@ const DatePicker =
   (DatePickerImport as unknown as { default?: typeof DatePickerImport })
     .default ?? DatePickerImport;
 import persian_fa from "react-date-object/locales/persian_fa";
+// Persian script/digits, Gregorian calendar system — keeps month names and
+// numerals reading the same as the rest of this Persian-language app while
+// actually switching which calendar the picker counts days in.
+import gregorian_fa from "react-date-object/locales/gregorian_fa";
 import "react-multi-date-picker/styles/backgrounds/bg-dark.css";
 import "react-multi-date-picker/styles/colors/green.css";
 
 import ModalOverlay from "@/components/ModalOverlay";
 import { getTodayLocalDate } from "@/utils/dateFormat";
+import { getPreferredCalendar } from "@/utils/calendarPreferenceEngine";
 
 const today = getTodayLocalDate;
 
@@ -52,6 +58,10 @@ export default function StartDateModal({
 }: StartDateModalProps) {
   const [step, setStep] = useState<"choice" | "calendar">("choice");
   const [calendarDate, setCalendarDate] = useState(today);
+
+  const isGregorian = getPreferredCalendar() === "gregorian";
+  const calendar = isGregorian ? gregorianCalendar : persianCalendar;
+  const locale = isGregorian ? gregorian_fa : persian_fa;
 
   useEffect(() => {
     if (open) {
@@ -112,8 +122,8 @@ export default function StartDateModal({
               value={
                 new DateObject({
                   date: isoToLocalDate(calendarDate),
-                  calendar: persianCalendar,
-                  locale: persian_fa,
+                  calendar,
+                  locale,
                 })
               }
               onChange={(date) => {
@@ -121,8 +131,8 @@ export default function StartDateModal({
                   setCalendarDate(dateToISO(date.toDate()));
                 }
               }}
-              calendar={persianCalendar}
-              locale={persian_fa}
+              calendar={calendar}
+              locale={locale}
               calendarPosition="top-center"
               editable={false}
               format="D MMMM YYYY"

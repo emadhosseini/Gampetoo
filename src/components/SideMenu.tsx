@@ -25,6 +25,8 @@ import {
 import { useLocation, useNavigate } from "react-router-dom";
 
 import CalorieModePickerModal from "@/components/CalorieModePickerModal";
+import SettingsButton from "@/components/settings/SettingsButton";
+import SettingsSidebar from "@/components/settings/SettingsSidebar";
 import { avatarCharacterIcon } from "@/data/characterIcons";
 import { getCurrentUserGender, getCurrentUserName } from "@/utils/userEngine";
 import { getCalorieTrackingMode } from "@/utils/calorieModeEngine";
@@ -86,6 +88,7 @@ export default function SideMenu({ children }: SideMenuProps) {
   const { pathname } = useLocation();
   const isHomePage = pathname === "/";
   const userName = getCurrentUserName() ?? "";
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   // How far (in px) the drawer has entered from the right: 0 = fully closed
   // (off-screen), drawerWidth = fully open.
@@ -286,6 +289,10 @@ export default function SideMenu({ children }: SideMenuProps) {
                   (index.css), 24px corners per that component's own radius.
                   Top gap matches space-y-3 (the gap between rows) instead of
                   being its own much larger, disproportionate margin. */}
+              <div className="flex justify-start">
+                <SettingsButton onClick={() => setSettingsOpen(true)} />
+              </div>
+
               <button
                 onClick={() => goTo("/profile")}
                 aria-label="رفتن به پروفایل"
@@ -373,6 +380,8 @@ export default function SideMenu({ children }: SideMenuProps) {
         open={calorieModalOpen}
         onClose={() => setCalorieModalOpen(false)}
       />
+
+      <SettingsSidebar open={settingsOpen} onClose={() => setSettingsOpen(false)} />
 
       {!open && (
         <div

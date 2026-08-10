@@ -17,11 +17,13 @@ type WorkoutHeaderProps = {
   // button only makes sense on the actual workout page, so it's opt-in
   // rather than always-on.
   showForgotButton?: boolean;
-  // Same idea as showForgotButton — only WorkoutPage has anything to edit
-  // (reorder today's exercises / jump to the workout's library entry), so
-  // this is a callback rather than always-on. Sits right beside the forgot
-  // button rather than as its own separate control lower on the page.
+  // Same idea as showForgotButton — a callback rather than always-on, and
+  // opt-in per caller. Used by both the workout page (reorder today's
+  // exercises / jump to the workout's library entry) and the nutrition
+  // page (jump straight to today's meal plan settings), which is why the
+  // label is caller-supplied rather than a single hardcoded string.
   onEditWorkout?: () => void;
+  onEditWorkoutLabel?: string;
 };
 
 export default function WorkoutHeader({
@@ -29,6 +31,7 @@ export default function WorkoutHeader({
   subtitle,
   showForgotButton = false,
   onEditWorkout,
+  onEditWorkoutLabel = "تغییر ترتیب یا حرکت‌های تمرین",
 }: WorkoutHeaderProps) {
   const [open, setOpen] = useState(false);
 
@@ -49,8 +52,8 @@ export default function WorkoutHeader({
           {onEditWorkout && (
             <button
               onClick={onEditWorkout}
-              aria-label="تغییر ترتیب یا حرکت‌های تمرین"
-              className="glass-chip flex h-10 w-10 items-center justify-center rounded-full text-white"
+              aria-label={onEditWorkoutLabel}
+              className="glass-chip glass-static flex h-10 w-10 items-center justify-center rounded-full text-white"
             >
               <Pencil size={16} />
             </button>
@@ -60,7 +63,7 @@ export default function WorkoutHeader({
             <button
               onClick={() => setOpen(true)}
               aria-label="فراموشی ثبت اتمام تمرین روز گذشته"
-              className="glass-chip flex h-10 w-10 items-center justify-center rounded-full text-xl"
+              className="glass-chip glass-static flex h-10 w-10 items-center justify-center rounded-full text-xl"
             >
               🤦
             </button>
@@ -77,7 +80,7 @@ export default function WorkoutHeader({
       {showForgotButton && open && (
         <ModalOverlay onClose={() => setOpen(false)}>
           <div className="glass-panel glass-static rounded-3xl p-6 text-center">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center glass-chip rounded-full text-2xl">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center glass-chip glass-static rounded-full text-2xl">
               🤦
             </div>
 
@@ -94,14 +97,14 @@ export default function WorkoutHeader({
             <div className="mt-6 flex flex-col gap-3">
               <button
                 onClick={handleConfirm}
-                className="w-full rounded-2xl glass-action py-3 font-bold text-white"
+                className="w-full rounded-2xl glass-action glass-action-static py-3 font-bold text-white"
               >
                 فراموشی ثبت تمرین
               </button>
 
               <button
                 onClick={() => setOpen(false)}
-                className="ghost-action w-full rounded-2xl py-3 font-medium text-white"
+                className="ghost-action ghost-action-static w-full rounded-2xl py-3 font-medium text-white"
               >
                 متوجه شدم
               </button>

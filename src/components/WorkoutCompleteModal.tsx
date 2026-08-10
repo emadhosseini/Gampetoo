@@ -61,7 +61,7 @@ export default function WorkoutCompleteModal({
               {toFaDigits(calories)}
             </p>
 
-            <div className="glass-chip flex items-center gap-3 rounded-2xl p-3 text-right">
+            <div className="glass-chip glass-static flex items-center gap-3 rounded-2xl p-3 text-right">
               <span className="flex-1 text-sm text-white">
                 به کالری سوخته‌شده‌ی امروز اضافه بشه
               </span>
@@ -79,14 +79,14 @@ export default function WorkoutCompleteModal({
 
         <button
           onClick={onConfirm}
-          className="w-full glass-action rounded-2xl py-3 font-bold text-white"
+          className="w-full glass-action glass-action-static rounded-2xl py-3 font-bold text-white"
         >
           تایید
         </button>
 
         <button
           onClick={onCancel}
-          className="ghost-action w-full rounded-2xl py-3 font-medium text-white"
+          className="ghost-action ghost-action-static w-full rounded-2xl py-3 font-medium text-white"
         >
           انصراف
         </button>

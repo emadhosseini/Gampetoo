@@ -254,6 +254,25 @@ textarea {
   transform: none;
 }
 
+/* .glass-static (above) only zeroes the transform — enough for
+   .glass-panel/.glass-chip/.glass-tap, whose :active rules set nothing
+   else. .glass-action and .ghost-action also swap their background-color
+   on :active, and both of their own :active rules are declared AFTER
+   .glass-static in this file, so .glass-static's plain transform:none
+   would lose the cascade tie and get overridden right back — these two
+   redeclare both properties back to each class's own resting values, so
+   they actually win. Used on the daily workout page, where every press
+   animation was asked to go. */
+.glass-action-static:active {
+  transform: none;
+  background-color: rgb(255 255 255 / 14%);
+}
+
+.ghost-action-static:active {
+  transform: none;
+  background-color: transparent;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .glass-panel,
   .glass-chip,

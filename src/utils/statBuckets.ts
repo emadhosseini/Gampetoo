@@ -1,5 +1,5 @@
 import type { DailyMetricEntry } from "./dailyMetricLog";
-import { formatDayNumber, formatMonthNumber, toLocalDateString } from "./dateFormat";
+import { formatDisplayDayNumber, formatMonthNumber, toLocalDateString } from "./dateFormat";
 
 export interface StatBucket {
   label: string;
@@ -43,7 +43,7 @@ export function buildDailyBuckets(
 
     const iso = toLocalDateString(date);
 
-    buckets.push({ label: formatDayNumber(date), value: byDate.get(iso) ?? fallback });
+    buckets.push({ label: formatDisplayDayNumber(date), value: byDate.get(iso) ?? fallback });
   }
 
   return buckets;
@@ -70,6 +70,14 @@ function elapsedDaysInMonth(monthDate: Date, now: Date): number {
  * data, as opposed to a real zero), so months from before the user started
  * using the app don't draw a misleading flat line.
  */
+// Deliberately still Gregorian-only (formatMonthNumber, not the calendar-
+// aware formatDisplayMonthNumber): the grouping below buckets entries by
+// Gregorian calendar month (the `key` a few lines down), and Jalali month
+// boundaries don't line up with Gregorian ones — relabeling with a Jalali
+// month number would put the wrong number on a bucket whose actual data
+// is grouped by Gregorian months. Properly supporting a Jalali-bucketed
+// 6-month/year view means re-grouping by Jalali month, not just
+// relabeling, which is out of scope for now.
 export function buildMonthlyBuckets(
   history: DailyMetricEntry[],
   months: number,

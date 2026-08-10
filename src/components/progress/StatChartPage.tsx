@@ -25,9 +25,9 @@ import {
   extendYAxisRangeToInclude,
 } from "@/utils/chartAxis";
 import {
-  formatDayNumber,
-  formatGregorianMonthYear,
-  formatGregorianShort,
+  formatDisplayDayNumber,
+  formatDisplayMonthYear,
+  formatDisplayShort,
   toLocalDateString,
 } from "@/utils/dateFormat";
 import { toFaDigits } from "@/utils/numberFormat";
@@ -286,7 +286,7 @@ export default function StatChartPage({
     if (range === "year") return buildMonthlyBuckets(history, 12, missingDays);
 
     return entries.map((entry) => ({
-      label: formatDayNumber(isoToLocalDate(entry.date)),
+      label: formatDisplayDayNumber(isoToLocalDate(entry.date)),
       value: entry.value,
     }));
   }, [range, history, entries, missingDays]);
@@ -354,7 +354,7 @@ export default function StatChartPage({
     const today = new Date();
 
     if (range === "day") {
-      return formatGregorianShort(today);
+      return formatDisplayShort(today);
     }
 
     const start = new Date();
@@ -369,8 +369,8 @@ export default function StatChartPage({
     // a day-of-month on either end would just be today's, which isn't
     // what either endpoint of a months-wide window actually means.
     return usesMonthlyBuckets
-      ? `${formatGregorianMonthYear(start)} – ${formatGregorianMonthYear(today)}`
-      : `${formatGregorianShort(start)} – ${formatGregorianShort(today)}`;
+      ? `${formatDisplayMonthYear(start)} – ${formatDisplayMonthYear(today)}`
+      : `${formatDisplayShort(start)} – ${formatDisplayShort(today)}`;
   }, [range, usesMonthlyBuckets]);
 
   // Sized from the real data only, so the target line (which can sit far

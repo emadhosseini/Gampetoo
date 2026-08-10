@@ -69,7 +69,20 @@ function MealFoodList({
     () => (isSupplementsMeal ? supplementFoods : sortFoodsForMeal(localFoods, meal.id)),
     [meal.id, isSupplementsMeal],
   );
-  const visibleFoods = isFiltering ? results : suggestedFoods;
+  const unsortedVisibleFoods = isFiltering ? results : suggestedFoods;
+
+  // Already-selected foods float to the top of the list (search results or
+  // suggestions alike) — otherwise a food you picked can scroll out of
+  // view under everything else, with nothing marking where it went.
+  // A stable sort, so the relative order within "selected" and within
+  // "not selected" stays whatever it already was.
+  const visibleFoods = useMemo(() => {
+    const selectedIds = new Set(meal.foods.map((food) => food.id));
+
+    return [...unsortedVisibleFoods].sort(
+      (a, b) => Number(selectedIds.has(b.id)) - Number(selectedIds.has(a.id)),
+    );
+  }, [unsortedVisibleFoods, meal.foods]);
 
   return (
     <div className="mt-4 space-y-2">

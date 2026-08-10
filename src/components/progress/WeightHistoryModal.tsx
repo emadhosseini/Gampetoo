@@ -2,14 +2,8 @@ import { X } from "lucide-react";
 
 import ModalOverlay from "@/components/ModalOverlay";
 import { deleteWeightEntry, getWeightLog } from "@/utils/weightEngine";
-import { formatGregorianShort } from "@/utils/dateFormat";
+import { formatDisplayShort, isoToLocalDate } from "@/utils/dateFormat";
 import { toFaDigits } from "@/utils/numberFormat";
-
-function isoToLocalDate(iso: string): Date {
-  const [y, m, d] = iso.split("-").map(Number);
-
-  return new Date(y, m - 1, d);
-}
 
 export interface WeightHistoryModalProps {
   open: boolean;
@@ -52,7 +46,7 @@ export default function WeightHistoryModal({
                 className="glass-chip flex items-center gap-2 rounded-xl p-3"
               >
                 <span className="flex-1 text-sm text-white/70">
-                  {formatGregorianShort(isoToLocalDate(entry.date))}
+                  {formatDisplayShort(isoToLocalDate(entry.date))}
                 </span>
 
                 <span className="text-sm font-semibold text-white">
@@ -61,7 +55,7 @@ export default function WeightHistoryModal({
 
                 <button
                   onClick={() => handleDelete(entry.id)}
-                  aria-label={`حذف وزن ${formatGregorianShort(isoToLocalDate(entry.date))}`}
+                  aria-label={`حذف وزن ${formatDisplayShort(isoToLocalDate(entry.date))}`}
                   className="glass-tap flex h-7 w-7 shrink-0 items-center justify-center rounded-full"
                 >
                   <X size={14} className="text-white" />

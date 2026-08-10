@@ -15,7 +15,7 @@ import {
 } from "@/utils/userEngine";
 import { getLatestWeight } from "@/utils/weightEngine";
 import { avatarCharacterIcon } from "@/data/characterIcons";
-import { formatGregorianFull } from "@/utils/dateFormat";
+import { formatDisplayFull } from "@/utils/dateFormat";
 import { toFaDigits } from "@/utils/numberFormat";
 
 export default function ProfilePage() {
@@ -108,7 +108,7 @@ export default function ProfilePage() {
         <p className="text-lg font-bold text-white">تاریخ تولد</p>
         <p className="mt-1 text-sm text-white">
           {birthDate !== null
-            ? `${formatGregorianFull(birthDate)}${age !== null ? ` · ${toFaDigits(age)} سال` : ""}`
+            ? `${formatDisplayFull(birthDate)}${age !== null ? ` · ${toFaDigits(age)} سال` : ""}`
             : "ثبت نشده"}
         </p>
       </button>
