@@ -1,6 +1,15 @@
 {
-  "current": "1.0.16",
+  "current": "1.0.17",
   "history": [
+    {
+      "version": "1.0.17",
+      "date": "2026-08-10",
+      "description": "The birth-date picker in the profile now follows the calendar setting — Jalali wheels (with real leap-year-aware day counts) when تقویم is set to شمسی, Gregorian wheels otherwise — instead of always showing Gregorian regardless of preference; it still stores and computes age from the same Gregorian date underneath either way. The date button above the daily-log's meal and activity tabs now shows a standing yellow warning whenever a day other than today is selected, with a one-tap way back to today, so browsing a past day isn't mistaken for today's numbers mid-session.",
+      "highlights": [
+        "🎂 تاریخ تولد حالا با تقویم انتخابی (شمسی/میلادی) هماهنگه",
+        "⚠️ وقتی روی روز دیگه‌ای غیر از امروزی، یک هشدار ثابت با دکمه‌ی برگشت سریع نشون داده می‌شه"
+      ]
+    },
     {
       "version": "1.0.16",
       "date": "2026-08-10",

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CalendarDays } from "lucide-react";
+import { CalendarDays, TriangleAlert } from "lucide-react";
 
 import { Calendar, DateObject } from "react-multi-date-picker";
 import persianCalendar from "react-date-object/calendars/persian";
@@ -50,7 +50,7 @@ export default function WeeklyDatePicker({
 
   return (
     <>
-      <div className="px-5 pt-4">
+      <div className="space-y-2 px-5 pt-4">
         <button
           type="button"
           onClick={() => setOpen(true)}
@@ -59,6 +59,23 @@ export default function WeeklyDatePicker({
           <CalendarDays size={16} className="text-white/60" />
           {isToday ? "امروز" : formatDisplayShort(isoToLocalDate(selectedDate))}
         </button>
+
+        {/* Stays on screen (not just inside the calendar popup) for as long
+            as a non-today date is selected — a reminder that everything
+            below is being logged/edited against that day, not right now,
+            so it isn't forgotten mid-session and mistaken for today's
+            numbers. Tapping it jumps straight back without reopening the
+            calendar. */}
+        {!isToday && (
+          <button
+            type="button"
+            onClick={() => onSelectDate(today())}
+            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-avocado-yellow/15 py-2 text-xs font-medium text-avocado-yellow"
+          >
+            <TriangleAlert size={14} />
+            داری روز دیگه‌ای رو می‌بینی — برای برگشت به امروز بزن
+          </button>
+        )}
       </div>
 
       {open && (
