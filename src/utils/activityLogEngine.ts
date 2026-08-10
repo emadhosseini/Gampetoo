@@ -42,38 +42,62 @@ function writeEntries(entries: ActivityNoteEntry[]) {
   localStorage.setItem(entriesKey(), JSON.stringify(entries));
 }
 
+// Which day's noted activities to show — defaults to today. DailyLogPage's
+// activity tab passes its own WeeklyDatePicker selection through instead,
+// same date-browsing pattern as the meal tab.
+export function getActivityEntries(date: string = today()): ActivityNoteEntry[] {
+  return readEntries().filter((entry) => entry.date === date);
+}
+
 export function getTodaysActivityEntries(): ActivityNoteEntry[] {
-  return readEntries().filter((entry) => entry.date === today());
+  return getActivityEntries();
 }
 
 export function getActivityHistory(): DailyMetricEntry[] {
   return store.getHistory();
 }
 
+export function getActivityCalories(date: string = today()): number {
+  return date === today() ? store.getToday() : store.getHistory().find((e) => e.date === date)?.value ?? 0;
+}
+
 export function getTodayActivityCalories(): number {
-  return store.getToday();
+  return getActivityCalories();
 }
 
-export function logActivityCalories(calories: number): DailyMetricEntry[] {
-  return store.addToday(calories);
+// Adds to whatever that date's running total already is — today() ends up
+// exactly where store.addToday() always left it; any other date reads its
+// current total first since store has no addToDate of its own.
+export function logActivityCalories(
+  calories: number,
+  date: string = today(),
+): DailyMetricEntry[] {
+  store.setEntry(date, getActivityCalories(date) + calories);
+
+  return store.getHistory();
 }
 
-// Logs one activity: adds its calories to today's running total exactly
-// like logActivityCalories always did, and — only if a note was actually
-// typed — keeps a record of what the activity was, so there's something
-// behind the number besides a count.
-export function logActivityEntry(calories: number, note: string): DailyMetricEntry[] {
+// Logs one activity: adds its calories to the given day's running total
+// exactly like logActivityCalories always did, and — only if a note was
+// actually typed — keeps a record of what the activity was, so there's
+// something behind the number besides a count. Defaults to today, but
+// DailyLogPage's date-picker flow can log against any browsed day too.
+export function logActivityEntry(
+  calories: number,
+  note: string,
+  date: string = today(),
+): DailyMetricEntry[] {
   const trimmed = note.trim();
 
   if (trimmed) {
     const entries = readEntries();
 
-    entries.push({ id: generateId(), date: today(), calories, note: trimmed });
+    entries.push({ id: generateId(), date, calories, note: trimmed });
 
     writeEntries(entries);
   }
 
-  return logActivityCalories(calories);
+  return logActivityCalories(calories, date);
 }
 
 export function resetActivityLog() {

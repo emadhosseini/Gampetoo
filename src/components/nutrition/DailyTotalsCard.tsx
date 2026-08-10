@@ -13,6 +13,12 @@ export interface DailyTotalsCardProps {
   // MealLogCard, since this reads the same storage with nothing reactive in
   // between.
   version: number;
+  // Which day to total up — defaults to today inside dailyLogEngine.
+  date?: string;
+  // Whether `date` actually is today, so the "مجموع امروز" label can say
+  // so honestly instead of claiming "today" while showing a different
+  // day's total.
+  isToday?: boolean;
 }
 
 /**
@@ -22,9 +28,14 @@ export interface DailyTotalsCardProps {
  * just a plain list of today's meals (hideTotals), so this is the one
  * place either mode shows the day's calorie/macro summary.
  */
-export default function DailyTotalsCard({ slots, version }: DailyTotalsCardProps) {
+export default function DailyTotalsCard({
+  slots,
+  version,
+  date,
+  isToday = true,
+}: DailyTotalsCardProps) {
   const totals = useMemo(() => {
-    const entries = slots.flatMap((slot) => getLoggedEntries(slot.id));
+    const entries = slots.flatMap((slot) => getLoggedEntries(slot.id, date));
 
     const sum = (pick: (entry: (typeof entries)[number]) => number | undefined) =>
       entries.reduce((total, entry) => total + (pick(entry) ?? 0), 0);
@@ -37,7 +48,7 @@ export default function DailyTotalsCard({ slots, version }: DailyTotalsCardProps
       fiber: sum((e) => e.fiber),
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [slots, version]);
+  }, [slots, version, date]);
 
   // Needs a logged weight to mean anything — without one there's no target,
   // so the ring is left off rather than drawn against a guess.
@@ -51,7 +62,9 @@ export default function DailyTotalsCard({ slots, version }: DailyTotalsCardProps
 
   return (
     <div className="glass-panel glass-static rounded-2xl p-5">
-      <p className="text-center text-sm text-white/60">مجموع امروز</p>
+      <p className="text-center text-sm text-white/60">
+        {isToday ? "مجموع امروز" : "مجموع این روز"}
+      </p>
 
       <p className="mt-1 text-center text-2xl font-bold text-white">
         {toFaDigits(totals.calories)}{" "}

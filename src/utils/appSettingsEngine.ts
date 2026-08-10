@@ -38,7 +38,14 @@ export function getAppSettings(): AppSettings {
   if (!saved) return { ...DEFAULT_SETTINGS };
 
   try {
-    return { ...DEFAULT_SETTINGS, ...(JSON.parse(saved) as Partial<AppSettings>) };
+    const parsed = { ...DEFAULT_SETTINGS, ...(JSON.parse(saved) as Partial<AppSettings>) };
+
+    // زبان" is disabled in SettingsSidebar (i18n coverage is still
+    // partial), but a few accounts saved "en" back when that row was
+    // briefly selectable — forcing fa here brings every account back to
+    // Persian regardless of what it saved earlier, until the language
+    // switch is actually finished and re-enabled.
+    return { ...parsed, language: "fa" };
   } catch {
     return { ...DEFAULT_SETTINGS };
   }

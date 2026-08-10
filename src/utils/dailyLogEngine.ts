@@ -7,10 +7,13 @@ import { getTodayLocalDate } from "./dateFormat";
 const STORAGE_KEY = "emad-daily-log";
 const TARGET_KEY = "emad-daily-calorie-target";
 
-// Today's meals (below) get discarded the moment the date rolls over — see
-// readState(). Before that happens, its final total is archived here, so
-// there's still a real history to chart even though the meal-by-meal
-// breakdown itself isn't kept past its own day.
+// Every day's calorie total, kept indefinitely (see LogsByDate below) so a
+// chart always has a real series to draw from rather than only today's
+// live number plus whatever calorieHistory happened to archive on the way
+// out. Still its own separate log rather than derived on the fly from
+// LogsByDate on every chart read — same reasoning as before this became
+// multi-day: it's a plain number series, cheap to read, and untouched by a
+// factory reset's meal-by-meal wipe timing.
 const calorieHistory = createDailyMetricLog("emad-daily-log-history");
 
 function storageKey() {
@@ -20,7 +23,7 @@ function storageKey() {
 const today = getTodayLocalDate;
 
 function sumMacro(
-  meals: DailyLogState["meals"],
+  meals: DayLog["meals"],
   pick: (entry: LoggedFoodEntry) => number | undefined,
 ): number {
   return Object.values(meals)
@@ -28,7 +31,7 @@ function sumMacro(
     .reduce((sum, entry) => sum + (pick(entry) ?? 0), 0);
 }
 
-function sumCalories(meals: DailyLogState["meals"]): number {
+function sumCalories(meals: DayLog["meals"]): number {
   return sumMacro(meals, (entry) => entry.calories);
 }
 
@@ -71,63 +74,93 @@ export function isEntryEditable(entry: LoggedFoodEntry): boolean {
   );
 }
 
-interface DailyLogState {
-  date: string;
+interface DayLog {
   // mealId -> freely-entered food items logged as eaten that meal — not
   // tied to any prescribed nutrition plan, the user can log anything.
   meals: Record<string, LoggedFoodEntry[]>;
 }
 
-function createState(): DailyLogState {
-  return { date: today(), meals: {} };
+// date (YYYY-MM-DD, local) -> that day's full meal breakdown. Every day
+// ever logged stays here — this used to hold only "today"'s state and
+// discard the rest at midnight rollover (calorieHistory above was the only
+// thing that survived), which is exactly what made a horizontal date picker
+// impossible: there was nothing to look back at. A date with nothing logged
+// simply has no key here at all.
+type LogsByDate = Record<string, DayLog>;
+
+interface LegacyDailyLogState {
+  date: string;
+  meals: DayLog["meals"];
 }
 
-function readState(): DailyLogState {
+function isLegacyShape(value: unknown): value is LegacyDailyLogState {
+  return (
+    !!value &&
+    typeof value === "object" &&
+    "date" in value &&
+    "meals" in value &&
+    typeof (value as LegacyDailyLogState).date === "string"
+  );
+}
+
+function readLogs(): LogsByDate {
   const saved = localStorage.getItem(storageKey());
 
-  if (saved) {
-    try {
-      const parsed = JSON.parse(saved) as DailyLogState;
+  if (!saved) return {};
 
-      if (parsed.date === today() && parsed.meals) {
-        return parsed;
-      }
+  try {
+    const parsed: unknown = JSON.parse(saved);
 
-      // A previous day's log, about to be discarded below — archive its
-      // final total first, or that day would vanish from the chart
-      // entirely instead of just losing its meal-by-meal breakdown.
-      if (parsed.date && parsed.meals) {
-        calorieHistory.setEntry(parsed.date, sumCalories(parsed.meals));
-      }
-    } catch {
-      // Corrupted storage — fall through and start a fresh, empty log.
+    // One-time migration from the old today-only shape ({date, meals}) to
+    // the per-date record below — an account that already has a saved log
+    // from before this change gets that single day preserved under its own
+    // date instead of losing it.
+    if (isLegacyShape(parsed)) {
+      return { [parsed.date]: { meals: parsed.meals } };
     }
+
+    return (parsed as LogsByDate) ?? {};
+  } catch {
+    return {};
   }
-
-  return createState();
 }
 
-function writeState(state: DailyLogState) {
-  localStorage.setItem(storageKey(), JSON.stringify(state));
-  // Keeps today's entry in the history log continuously accurate, rather
-  // than only archiving it once the day is already over.
-  calorieHistory.setEntry(state.date, sumCalories(state.meals));
+function writeLogs(logs: LogsByDate) {
+  localStorage.setItem(storageKey(), JSON.stringify(logs));
 }
 
-export function getLoggedEntries(mealId: string): LoggedFoodEntry[] {
-  return readState().meals[mealId] ?? [];
+function getDay(logs: LogsByDate, date: string): DayLog {
+  return logs[date] ?? { meals: {} };
+}
+
+// Writes one day's log back into the full record and keeps calorieHistory
+// (the chart's data source) in sync with it — for any date, not just
+// today's, so logging or editing a past day updates its chart bar too.
+function writeDay(logs: LogsByDate, date: string, day: DayLog) {
+  logs[date] = day;
+  writeLogs(logs);
+  calorieHistory.setEntry(date, sumCalories(day.meals));
+}
+
+export function getLoggedEntries(
+  mealId: string,
+  date: string = today(),
+): LoggedFoodEntry[] {
+  return getDay(readLogs(), date).meals[mealId] ?? [];
 }
 
 export function addLoggedEntry(
   mealId: string,
   entry: Omit<LoggedFoodEntry, "id">,
+  date: string = today(),
 ) {
-  const state = readState();
-  const entries = state.meals[mealId] ?? [];
+  const logs = readLogs();
+  const day = getDay(logs, date);
+  const entries = day.meals[mealId] ?? [];
 
-  state.meals[mealId] = [...entries, { ...entry, id: generateId() }];
+  day.meals[mealId] = [...entries, { ...entry, id: generateId() }];
 
-  writeState(state);
+  writeDay(logs, date, day);
 }
 
 function scaled(value: number | undefined, ratio: number) {
@@ -141,11 +174,13 @@ export function updateLoggedEntryQuantity(
   mealId: string,
   entryId: string,
   quantity: number,
+  date: string = today(),
 ) {
-  const state = readState();
-  const entries = state.meals[mealId] ?? [];
+  const logs = readLogs();
+  const day = getDay(logs, date);
+  const entries = day.meals[mealId] ?? [];
 
-  state.meals[mealId] = entries.map((entry) => {
+  day.meals[mealId] = entries.map((entry) => {
     if (entry.id !== entryId || !isEntryEditable(entry)) {
       return entry;
     }
@@ -169,54 +204,89 @@ export function updateLoggedEntryQuantity(
     };
   });
 
-  writeState(state);
+  writeDay(logs, date, day);
 }
 
-export function removeLoggedEntry(mealId: string, entryId: string) {
-  const state = readState();
-  const entries = state.meals[mealId] ?? [];
+export function removeLoggedEntry(
+  mealId: string,
+  entryId: string,
+  date: string = today(),
+) {
+  const logs = readLogs();
+  const day = getDay(logs, date);
+  const entries = day.meals[mealId] ?? [];
 
-  state.meals[mealId] = entries.filter((entry) => entry.id !== entryId);
+  day.meals[mealId] = entries.filter((entry) => entry.id !== entryId);
 
-  writeState(state);
+  writeDay(logs, date, day);
 }
 
-// Clears everything this module owns, not just today's meals: the archived
-// per-day calorie history behind the progress chart and the daily target
-// live under their own keys, and leaving them behind was why a deleted
-// account's calories reappeared the moment it was recreated.
+// Clears everything this module owns, not just today's meals: every day
+// ever logged, the archived per-day calorie history behind the progress
+// chart, and the daily target all live under keys this owns — leaving any
+// of them behind was why a deleted account's calories reappeared the moment
+// it was recreated. Used by the factory-reset flow (resetApplication.ts).
 export function resetDailyLog() {
   localStorage.removeItem(storageKey());
   localStorage.removeItem(scopedKey(TARGET_KEY));
   calorieHistory.reset();
 }
 
-// Sums every entry under every slot key present today, regardless of which
-// calorie-tracking mode (per-meal or daily) logged it under.
-export function getTodaysTotalCalories(): number {
-  return sumCalories(readState().meals);
+// Clears only today's meals, leaving every other day (and the calorie
+// target) untouched — what CalorieModePickerModal actually needs when
+// switching tracking mode, since a per-meal breakdown and a single daily
+// total aren't reconcilable once both have entries for the same day. A full
+// resetDailyLog() here would have wiped every previously-logged day too,
+// which the "پاک می‌شن" warning it shows never promised.
+export function resetTodaysLog() {
+  const logs = readLogs();
+  writeDay(logs, today(), { meals: {} });
 }
 
-// Same all-slots, both-modes reach as getTodaysTotalCalories, for the
-// progress page's calorie orb — its protein row needs today's actual intake
-// regardless of whether the account tracks per-meal or as one daily total.
+// Sums every entry under every slot key present on the given date,
+// regardless of which calorie-tracking mode (per-meal or daily) logged it
+// under. Defaults to today for every existing caller (the progress page's
+// calorie orb, the daily-calories chart target/history) that has always
+// meant "today" and has no date picker of its own.
+export function getTotalCalories(date: string = today()): number {
+  return sumCalories(getDay(readLogs(), date).meals);
+}
+
+export function getTotalProtein(date: string = today()): number {
+  return sumMacro(getDay(readLogs(), date).meals, (entry) => entry.protein);
+}
+
+// Kept as thin today-only aliases — every call site outside DailyLogPage's
+// own date-picker flow means literally "today" and reads better that way
+// than spelling out getTotalCalories() with no argument.
+export function getTodaysTotalCalories(): number {
+  return getTotalCalories();
+}
+
 export function getTodaysTotalProtein(): number {
-  return sumMacro(readState().meals, (entry) => entry.protein);
+  return getTotalProtein();
 }
 
 // The chartable history behind the progress page's daily-calories detail
 // page — today's live total plus every previous day's archived total (see
-// readState/writeState above).
+// writeDay above).
 export function getCalorieHistory(): DailyMetricEntry[] {
   return calorieHistory.getHistory();
 }
 
 // Used to decide whether switching calorie-tracking mode needs to warn the
-// user first — a mode switch clears today's log (see CalorieModePickerModal),
-// since a per-meal breakdown and a single daily total aren't reconcilable
-// into one coherent view once both have entries.
+// user first — a mode switch clears today's log (see
+// CalorieModePickerModal/resetTodaysLog), since a per-meal breakdown and a
+// single daily total aren't reconcilable into one coherent view once both
+// have entries.
+export function hasLoggedEntries(date: string = today()): boolean {
+  return Object.values(getDay(readLogs(), date).meals).some(
+    (entries) => entries.length > 0,
+  );
+}
+
 export function hasTodaysLoggedEntries(): boolean {
-  return Object.values(readState().meals).some((entries) => entries.length > 0);
+  return hasLoggedEntries();
 }
 
 export function getCalorieTarget(): number | null {

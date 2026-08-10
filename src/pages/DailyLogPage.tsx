@@ -4,6 +4,7 @@ import { Activity, Flame, Plus, UtensilsCrossed } from "lucide-react";
 import PillTabBar, { type PillTabBarItem } from "@/components/PillTabBar";
 import MealLogCard from "@/components/nutrition/MealLogCard";
 import DailyTotalsCard from "@/components/nutrition/DailyTotalsCard";
+import WeeklyDatePicker from "@/components/nutrition/WeeklyDatePicker";
 import MealAddChoiceModal from "@/components/nutrition/MealAddChoiceModal";
 import AddMealEntryModal from "@/components/nutrition/AddMealEntryModal";
 import AiMealEntryModal from "@/components/nutrition/AiMealEntryModal";
@@ -25,11 +26,12 @@ import {
   type LoggedFoodEntry,
 } from "@/utils/dailyLogEngine";
 import {
-  getTodayActivityCalories,
-  getTodaysActivityEntries,
+  getActivityCalories,
+  getActivityEntries,
   logActivityEntry,
 } from "@/utils/activityLogEngine";
-import { getTodayWorkoutCalories } from "@/utils/workoutCalorieEngine";
+import { getWorkoutCalories } from "@/utils/workoutCalorieEngine";
+import { getTodayLocalDate } from "@/utils/dateFormat";
 import { toFaDigits } from "@/utils/numberFormat";
 
 type Tab = "meal" | "activity";
@@ -68,77 +70,83 @@ export default function DailyLogPage() {
 function ActivityTabRoot() {
   const [activityModalOpen, setActivityModalOpen] = useState(false);
   const [, setVersion] = useState(0);
+  const [selectedDate, setSelectedDate] = useState(getTodayLocalDate);
 
-  const workoutCalories = getTodayWorkoutCalories();
-  const manualCalories = getTodayActivityCalories();
-  const notedEntries = getTodaysActivityEntries();
+  const isToday = selectedDate === getTodayLocalDate();
+  const workoutCalories = getWorkoutCalories(selectedDate);
+  const manualCalories = getActivityCalories(selectedDate);
+  const notedEntries = getActivityEntries(selectedDate);
 
   return (
-    <div className="space-y-4 px-5 pb-5 pt-6">
-      <div className="glass-panel rounded-3xl p-5 text-center">
-        <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white">
-          <Flame size={20} />
-        </div>
+    <>
+      <WeeklyDatePicker selectedDate={selectedDate} onSelectDate={setSelectedDate} />
 
-        <p className="mt-3 font-semibold text-white">
-          کالری سوخته‌شده برنامه تمرینی روزانه
-        </p>
+      <div className="space-y-4 px-5 pb-5 pt-3">
+        <div className="glass-panel rounded-3xl p-5 text-center">
+          <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white">
+            <Flame size={20} />
+          </div>
 
-        <p className="mt-1 text-3xl font-bold text-white">
-          {toFaDigits(workoutCalories)}
-        </p>
-
-        <p className="text-sm text-white/60">کالری</p>
-      </div>
-
-      <div className="glass-panel flex items-center justify-between gap-3 rounded-3xl p-5">
-        <div className="flex-1 text-right">
-          <p className="font-semibold text-white">سایر فعالیت‌ها</p>
-
-          <p className="mt-1 text-sm text-white/70">
-            {manualCalories > 0
-              ? `${toFaDigits(manualCalories)} کالری ثبت‌شده`
-              : "چیزی ثبت نشده"}
+          <p className="mt-3 font-semibold text-white">
+            {isToday ? "کالری سوخته‌شده برنامه تمرینی روزانه" : "کالری سوخته‌شده برنامه تمرینی این روز"}
           </p>
+
+          <p className="mt-1 text-3xl font-bold text-white">
+            {toFaDigits(workoutCalories)}
+          </p>
+
+          <p className="text-sm text-white/60">کالری</p>
         </div>
 
-        <button
-          onClick={() => setActivityModalOpen(true)}
-          aria-label="افزودن فعالیت"
-          className="glass-action flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white"
-        >
-          <Plus size={20} />
-        </button>
+        <div className="glass-panel flex items-center justify-between gap-3 rounded-3xl p-5">
+          <div className="flex-1 text-right">
+            <p className="font-semibold text-white">سایر فعالیت‌ها</p>
+
+            <p className="mt-1 text-sm text-white/70">
+              {manualCalories > 0
+                ? `${toFaDigits(manualCalories)} کالری ثبت‌شده`
+                : "چیزی ثبت نشده"}
+            </p>
+          </div>
+
+          <button
+            onClick={() => setActivityModalOpen(true)}
+            aria-label="افزودن فعالیت"
+            className="glass-action flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white"
+          >
+            <Plus size={20} />
+          </button>
+        </div>
+
+        {/* Only the entries that came with a note — an activity logged
+            without one has nothing to show here beyond the total above. */}
+        {notedEntries.length > 0 && (
+          <div className="space-y-2">
+            {notedEntries.map((entry) => (
+              <div
+                key={entry.id}
+                className="glass-chip flex items-start justify-between gap-3 rounded-xl p-3 text-right"
+              >
+                <p className="flex-1 text-sm text-white">{entry.note}</p>
+
+                <span className="shrink-0 text-xs text-white/60">
+                  {toFaDigits(entry.calories)} کالری
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <ActivityLogModal
+          open={activityModalOpen}
+          onClose={() => setActivityModalOpen(false)}
+          onLog={(calories, note) => {
+            logActivityEntry(calories, note, selectedDate);
+            setVersion((v) => v + 1);
+          }}
+        />
       </div>
-
-      {/* Only the entries that came with a note — an activity logged
-          without one has nothing to show here beyond the total above. */}
-      {notedEntries.length > 0 && (
-        <div className="space-y-2">
-          {notedEntries.map((entry) => (
-            <div
-              key={entry.id}
-              className="glass-chip flex items-start justify-between gap-3 rounded-xl p-3 text-right"
-            >
-              <p className="flex-1 text-sm text-white">{entry.note}</p>
-
-              <span className="shrink-0 text-xs text-white/60">
-                {toFaDigits(entry.calories)} کالری
-              </span>
-            </div>
-          ))}
-        </div>
-      )}
-
-      <ActivityLogModal
-        open={activityModalOpen}
-        onClose={() => setActivityModalOpen(false)}
-        onLog={(calories, note) => {
-          logActivityEntry(calories, note);
-          setVersion((v) => v + 1);
-        }}
-      />
-    </div>
+    </>
   );
 }
 
@@ -148,16 +156,22 @@ function ActivityTabRoot() {
 // only decides which slot ids MealLogTab loops over.
 function MealTabRoot() {
   const [mode, setMode] = useState(() => getCalorieTrackingMode());
+  const [selectedDate, setSelectedDate] = useState(getTodayLocalDate);
 
   if (mode === null) {
     return <CalorieModeChoicePrompt onChoose={setMode} />;
   }
 
   return (
-    <MealLogTab
-      slots={mode === "daily" ? [DAILY_MODE_SLOT] : getMealSlots()}
-      mode={mode}
-    />
+    <>
+      <WeeklyDatePicker selectedDate={selectedDate} onSelectDate={setSelectedDate} />
+
+      <MealLogTab
+        slots={mode === "daily" ? [DAILY_MODE_SLOT] : getMealSlots()}
+        mode={mode}
+        date={selectedDate}
+      />
+    </>
   );
 }
 
@@ -219,9 +233,14 @@ type ModalScreen =
 function MealLogTab({
   slots,
   mode,
+  date,
 }: {
   slots: MealSlot[];
   mode: CalorieTrackingMode;
+  // The WeeklyDatePicker selection from MealTabRoot above — every read/
+  // write in this tab now happens against this date instead of always
+  // "today".
+  date: string;
 }) {
   const [modal, setModal] = useState<ModalScreen>(null);
   // Bumped after every add/edit/remove so the cards — which read straight
@@ -233,25 +252,30 @@ function MealLogTab({
   }
 
   const editing = modal?.screen === "edit" ? modal : null;
+  const isToday = date === getTodayLocalDate();
 
   return (
-    <div className="space-y-4 px-5 pb-5 pt-6">
+    // pt-3 rather than the pt-6 every other tab's root uses — WeeklyDatePicker
+    // sits directly above this (its own px-5 pt-4), so the usual top padding
+    // here stacked with that into a much bigger gap than any other page has.
+    <div className="space-y-4 px-5 pb-5 pt-3">
       {/* Now rendered in both modes: it used to be per-meal only, since
           daily mode's single card below was already showing exactly these
           numbers — now that card's own totals are hidden (see hideTotals
           below), so this is the only place either mode shows them. */}
-      <DailyTotalsCard slots={slots} version={version} />
+      <DailyTotalsCard slots={slots} version={version} date={date} isToday={isToday} />
 
       {slots.map((meal) => (
         <MealLogCard
           key={meal.id}
           meal={meal}
           version={version}
+          date={date}
           // Daily mode's one slot is internally still "کالری روزانه" (used
           // by the quick-add flow's own heading) — this is just what shows
           // on the card here, now that it's a plain list of today's meals
           // rather than a calorie summary.
-          title={mode === "daily" ? "وعده‌های غذایی امروز" : undefined}
+          title={mode === "daily" ? (isToday ? "وعده‌های غذایی امروز" : "وعده‌های غذایی این روز") : undefined}
           // DailyTotalsCard above carries the totals for both modes now.
           hideTotals={mode === "daily"}
           onAdd={(meal) => setModal({ meal, screen: "choice" })}
@@ -272,12 +296,14 @@ function MealLogTab({
         meal={modal?.screen === "add" ? modal.meal : null}
         onClose={() => setModal(null)}
         onChange={refresh}
+        date={date}
       />
 
       <AiMealEntryModal
         meal={modal?.screen === "ai" ? modal.meal : null}
         onClose={() => setModal(null)}
         onChange={refresh}
+        date={date}
       />
 
       <EditMealEntryModal
@@ -286,13 +312,13 @@ function MealLogTab({
         onClose={() => setModal(null)}
         onSave={(quantity) => {
           if (!editing) return;
-          updateLoggedEntryQuantity(editing.meal.id, editing.entry.id, quantity);
+          updateLoggedEntryQuantity(editing.meal.id, editing.entry.id, quantity, date);
           refresh();
           setModal(null);
         }}
         onRemove={() => {
           if (!editing) return;
-          removeLoggedEntry(editing.meal.id, editing.entry.id);
+          removeLoggedEntry(editing.meal.id, editing.entry.id, date);
           refresh();
           setModal(null);
         }}

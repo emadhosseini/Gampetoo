@@ -37,11 +37,13 @@ function SegmentedControl<T extends string>({
   value,
   onChange,
   layoutId,
+  disabled,
 }: {
   options: { value: T; label: string }[];
   value: T;
   onChange: (value: T) => void;
   layoutId: string;
+  disabled?: boolean;
 }) {
   return (
     <div className="glass-chip relative flex items-center rounded-full p-1">
@@ -49,8 +51,9 @@ function SegmentedControl<T extends string>({
         <button
           key={option.value}
           type="button"
+          disabled={disabled}
           onClick={() => onChange(option.value)}
-          className="relative z-10 flex-1 rounded-full px-3 py-1.5 text-xs font-medium text-white [-webkit-tap-highlight-color:transparent]"
+          className="relative z-10 flex-1 rounded-full px-3 py-1.5 text-xs font-medium text-white [-webkit-tap-highlight-color:transparent] disabled:pointer-events-none"
         >
           {value === option.value && (
             <motion.div
@@ -68,10 +71,22 @@ function SegmentedControl<T extends string>({
 
 // One labeled row inside the popup — label on the right (RTL reading
 // start), its control on the left, same layout convention every other
-// settings-style row in this app already uses.
-function SettingsRow({ label, children }: { label: string; children: ReactNode }) {
+// settings-style row in this app already uses. `disabled` dims the whole
+// row (label included) and blocks its control — used for settings that are
+// saved but not wired up to anything yet (see SettingsSidebar below).
+function SettingsRow({
+  label,
+  children,
+  disabled,
+}: {
+  label: string;
+  children: ReactNode;
+  disabled?: boolean;
+}) {
   return (
-    <div className="flex items-center justify-between gap-3 py-3">
+    <div
+      className={`flex items-center justify-between gap-3 py-3 ${disabled ? "opacity-40" : ""}`}
+    >
       <span className="text-sm font-medium text-white">{label}</span>
       {children}
     </div>
@@ -124,30 +139,10 @@ export default function SettingsSidebar({ open, onClose }: SettingsSidebarProps)
         </div>
 
         <div className="mt-2 divide-y divide-white/10">
-          <SettingsRow label="تم">
-            <SegmentedControl
-              layoutId="settings-theme"
-              value={theme}
-              onChange={setTheme}
-              options={[
-                { value: "dark", label: "تاریک" },
-                { value: "light", label: "روشن" },
-              ]}
-            />
-          </SettingsRow>
-
-          <SettingsRow label="زبان">
-            <SegmentedControl
-              layoutId="settings-language"
-              value={language}
-              onChange={setLanguage}
-              options={[
-                { value: "fa", label: "فارسی" },
-                { value: "en", label: "English" },
-              ]}
-            />
-          </SettingsRow>
-
+          {/* تقویم و زمان استراحت تنها گزینه‌های واقعاً فعال‌ان فعلاً —
+              بقیه (تم، زبان، واحد وزن، روز شروع هفته) ذخیره می‌شن ولی هنوز
+              جای دیگه‌ای از اپ ازشون استفاده نمی‌کنه، پس غیرفعال و کم‌رنگ
+              نمایش داده می‌شن تا گزینه‌ای که کار نمی‌کنه گمراه‌کننده نباشه. */}
           <SettingsRow label="تقویم">
             <SegmentedControl
               layoutId="settings-calendar"
@@ -156,30 +151,6 @@ export default function SettingsSidebar({ open, onClose }: SettingsSidebarProps)
               options={[
                 { value: "jalali", label: "شمسی" },
                 { value: "gregorian", label: "میلادی" },
-              ]}
-            />
-          </SettingsRow>
-
-          <SettingsRow label="واحد وزن">
-            <SegmentedControl
-              layoutId="settings-weight-unit"
-              value={weightUnit}
-              onChange={setWeightUnit}
-              options={[
-                { value: "kg", label: "کیلوگرم" },
-                { value: "lb", label: "پوند" },
-              ]}
-            />
-          </SettingsRow>
-
-          <SettingsRow label="روز شروع هفته">
-            <SegmentedControl
-              layoutId="settings-week-start"
-              value={weekStart}
-              onChange={setWeekStart}
-              options={[
-                { value: "saturday", label: "شنبه" },
-                { value: "monday", label: "دوشنبه" },
               ]}
             />
           </SettingsRow>
@@ -196,6 +167,58 @@ export default function SettingsSidebar({ open, onClose }: SettingsSidebarProps)
               />
               <span className="text-xs text-white/50">ثانیه</span>
             </div>
+          </SettingsRow>
+
+          <SettingsRow label="تم" disabled>
+            <SegmentedControl
+              layoutId="settings-theme"
+              value={theme}
+              onChange={setTheme}
+              disabled
+              options={[
+                { value: "dark", label: "تاریک" },
+                { value: "light", label: "روشن" },
+              ]}
+            />
+          </SettingsRow>
+
+          <SettingsRow label="زبان" disabled>
+            <SegmentedControl
+              layoutId="settings-language"
+              value={language}
+              onChange={setLanguage}
+              disabled
+              options={[
+                { value: "fa", label: "فارسی" },
+                { value: "en", label: "English" },
+              ]}
+            />
+          </SettingsRow>
+
+          <SettingsRow label="واحد وزن" disabled>
+            <SegmentedControl
+              layoutId="settings-weight-unit"
+              value={weightUnit}
+              onChange={setWeightUnit}
+              disabled
+              options={[
+                { value: "kg", label: "کیلوگرم" },
+                { value: "lb", label: "پوند" },
+              ]}
+            />
+          </SettingsRow>
+
+          <SettingsRow label="روز شروع هفته" disabled>
+            <SegmentedControl
+              layoutId="settings-week-start"
+              value={weekStart}
+              onChange={setWeekStart}
+              disabled
+              options={[
+                { value: "saturday", label: "شنبه" },
+                { value: "monday", label: "دوشنبه" },
+              ]}
+            />
           </SettingsRow>
         </div>
 

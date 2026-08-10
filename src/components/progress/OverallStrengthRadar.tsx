@@ -112,7 +112,14 @@ export default function OverallStrengthRadar({
         )}
       </div>
 
-      <div className="mt-4 h-80 w-full">
+      {/* Was h-80 with a big mt-4 — a fixed 320px box around a small
+          centered triangle (outerRadius 70%, often near-empty at 0%) left
+          a lot of dead space above and below it before the top spoke
+          label and after the bottom two, independent of how tall the
+          actual triangle happened to be. Shrinking the box itself is what
+          removes that space, since ResponsiveContainer always fills
+          whatever height it's given regardless of the data. */}
+      <div className="mt-2 h-60 w-full">
         <ResponsiveContainer width="100%" height="100%">
           <RadarChart data={chartData} outerRadius="70%">
             <PolarGrid stroke={GRID_COLOR} />

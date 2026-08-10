@@ -20,6 +20,8 @@ export interface AiMealEntryModalProps {
   // Bumped after every add/remove so the card behind the modal shows the
   // fresh totals once this closes — matches AddMealEntryModal's contract.
   onChange: () => void;
+  // Which day to log against — see AddMealEntryModal's own `date` prop.
+  date?: string;
 }
 
 type Screen =
@@ -34,7 +36,12 @@ type Screen =
 // src/domain/nutrition/aiFoodParser.ts), matches whatever it extracts
 // against the app's real local food database (aiFoodMatching.ts), and lets
 // the user confirm before anything is actually logged.
-export default function AiMealEntryModal({ meal, onClose, onChange }: AiMealEntryModalProps) {
+export default function AiMealEntryModal({
+  meal,
+  onClose,
+  onChange,
+  date,
+}: AiMealEntryModalProps) {
   const [description, setDescription] = useState("");
   const [screen, setScreen] = useState<Screen>({ step: "input" });
 
@@ -86,17 +93,21 @@ export default function AiMealEntryModal({ meal, onClose, onChange }: AiMealEntr
         fiber: item.fiber,
       };
 
-      addLoggedEntry(meal!.id, {
-        name: item.food.nameFa,
-        amount: `${toFaDigits(item.quantity)} ${item.unit.label}`,
-        // Same editable-amount basis the manual flow records — the AI's
-        // guess at how much you ate is exactly the one most worth
-        // correcting afterwards.
-        quantity: item.quantity,
-        unitLabel: item.unit.label,
-        base: { quantity: item.quantity, ...macros },
-        ...macros,
-      });
+      addLoggedEntry(
+        meal!.id,
+        {
+          name: item.food.nameFa,
+          amount: `${toFaDigits(item.quantity)} ${item.unit.label}`,
+          // Same editable-amount basis the manual flow records — the AI's
+          // guess at how much you ate is exactly the one most worth
+          // correcting afterwards.
+          quantity: item.quantity,
+          unitLabel: item.unit.label,
+          base: { quantity: item.quantity, ...macros },
+          ...macros,
+        },
+        date,
+      );
     }
 
     onChange();

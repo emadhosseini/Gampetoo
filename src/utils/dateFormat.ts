@@ -226,3 +226,13 @@ export function formatDisplayMonthYear(date: Date): string {
     ? formatGregorianMonthYear(date)
     : formatJalaliMonthYear(date);
 }
+
+/** Single-letter weekday label (ی, د, س, چ, پ, ج, ش) for a dense row of
+ * date chips — WeeklyDatePicker's own column header above each day number.
+ * Same Persian weekday whichever calendar is picked (Jalali/Gregorian only
+ * changes which day-of-month number sits below it, not which day of the
+ * week Saturday/Sunday/etc. actually is), and every one of PERSIAN_WEEKDAYS'
+ * first letters is already distinct, so a plain index lookup is enough. */
+export function formatWeekdayLetter(date: Date): string {
+  return PERSIAN_WEEKDAYS[date.getDay()][0];
+}

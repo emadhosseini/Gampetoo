@@ -289,10 +289,6 @@ export default function SideMenu({ children }: SideMenuProps) {
                   (index.css), 24px corners per that component's own radius.
                   Top gap matches space-y-3 (the gap between rows) instead of
                   being its own much larger, disproportionate margin. */}
-              <div className="flex justify-start">
-                <SettingsButton onClick={() => setSettingsOpen(true)} />
-              </div>
-
               <button
                 onClick={() => goTo("/profile")}
                 aria-label="رفتن به پروفایل"
@@ -362,6 +358,14 @@ export default function SideMenu({ children }: SideMenuProps) {
                   <SlidersHorizontal size={18} />
                 </div>
               </button>
+            </div>
+
+            {/* Moved down from the top of the drawer — a settings gear
+                reads as a low-priority, "if you need it" action, so it
+                sits at the bottom near the version number rather than
+                above the profile row where it competed for attention. */}
+            <div className="flex justify-start pt-3">
+              <SettingsButton onClick={() => setSettingsOpen(true)} />
             </div>
 
             <p dir="ltr" className="pt-4 text-center text-xs text-white/40">

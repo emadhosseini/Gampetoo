@@ -28,12 +28,18 @@ export interface AddMealEntryModalProps {
   // this closes — there's no shared reactive store to push the change
   // through automatically.
   onChange: () => void;
+  // Which day to log against — defaults to today inside dailyLogEngine,
+  // which is exactly what the quick-add flow (the other caller of this
+  // modal) wants. DailyLogPage's own meal tab passes its WeeklyDatePicker
+  // selection through instead.
+  date?: string;
 }
 
 export default function AddMealEntryModal({
   meal,
   onClose,
   onChange,
+  date,
 }: AddMealEntryModalProps) {
   const [query, setQuery] = useState("");
   const [searchActive, setSearchActive] = useState(false);
@@ -149,16 +155,20 @@ export default function AddMealEntryModal({
 
     const macros = macrosForServing(selected, unit, quantity);
 
-    addLoggedEntry(meal!.id, {
-      name: selected.nameFa,
-      amount: `${toFaDigits(quantity)} ${unit.label}`,
-      // Kept alongside the totals so the amount stays editable from the
-      // meal card afterwards — see LoggedFoodEntry.
-      quantity,
-      unitLabel: unit.label,
-      base: { quantity, ...macros },
-      ...macros,
-    });
+    addLoggedEntry(
+      meal!.id,
+      {
+        name: selected.nameFa,
+        amount: `${toFaDigits(quantity)} ${unit.label}`,
+        // Kept alongside the totals so the amount stays editable from the
+        // meal card afterwards — see LoggedFoodEntry.
+        quantity,
+        unitLabel: unit.label,
+        base: { quantity, ...macros },
+        ...macros,
+      },
+      date,
+    );
 
     setJustAdded(selected.nameFa);
     setSelected(null);

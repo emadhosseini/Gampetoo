@@ -1,6 +1,17 @@
 {
-  "current": "1.0.15",
+  "current": "1.0.16",
   "history": [
+    {
+      "version": "1.0.16",
+      "date": "2026-08-10",
+      "description": "The daily-log page's meal and activity tabs each gained a date button above them (a calendar popup, opening on today) — tapping a past day now shows exactly what was logged for it, and food/activity can be logged against that day directly instead of always meaning \"right now\". Underneath this, the food-log storage was rebuilt from keeping only today's meals (discarding the rest at midnight, down to a single archived calorie number) to keeping every day's full meal breakdown indefinitely — verified with real data that an account upgrading to this loses nothing: an existing account's current-day log is preserved automatically, and every past day now stays fully browsable instead of being thrown away. Switching calorie-tracking mode (daily/per-meal) now clears only today's entries instead of the account's entire food history. Also tightened a couple of layout gaps: the strength-index radar card and the space above the daily-log's totals card.",
+      "highlights": [
+        "📅 دکمه‌ی تاریخ بالای وعده‌های غذایی و فعالیت — می‌تونی روزهای قبل رو ببینی و براشون ثبت کنی",
+        "🗄️ ذخیره‌سازی غذای روزانه از «فقط امروز» به «آرشیو کامل هر روز» تغییر کرد — چیزی از دست نمی‌ره",
+        "🔁 عوض کردن روش ثبت کالری دیگه فقط امروز رو پاک می‌کنه، نه کل تاریخچه",
+        "🧹 چند فاصله‌ی خالی توی صفحه‌ی شاخص قدرت و صفحه‌ی ثبت روزانه رفع شد"
+      ]
+    },
     {
       "version": "1.0.15",
       "date": "2026-08-10",
