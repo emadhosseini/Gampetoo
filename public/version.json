@@ -1,6 +1,14 @@
 {
-  "current": "1.0.14",
+  "current": "1.0.15",
   "history": [
+    {
+      "version": "1.0.15",
+      "date": "2026-08-10",
+      "description": "Added a real light theme, wired to the 'تم' setting in the settings popup (previously saved but had no effect). Picking 'روشن' and hitting ذخیره now actually flips the app to a light look — glass panels, chips, buttons and text all get light-mode colors, applied via a data-theme attribute set on boot before first paint. The dark background photo has no light counterpart yet so it's hidden in light mode in favor of a flat light backdrop; picking 'تاریک' keeps the app exactly as it always looked.",
+      "highlights": [
+        "☀️ تم «روشن» توی تنظیمات حالا واقعاً کار می‌کنه، نه فقط ذخیره می‌شه"
+      ]
+    },
     {
       "version": "1.0.14",
       "date": "2026-08-09",

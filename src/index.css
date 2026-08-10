@@ -43,7 +43,12 @@
 }
 
 html {
-  direction: rtl;
+  /* No hardcoded direction here anymore — main.tsx sets the `dir`
+     attribute on this element from the language setting (fa → rtl,
+     en → ltr) before first paint, and the UA stylesheet already maps
+     that attribute to the `direction` property, so an explicit
+     `direction: rtl` here would just override it back to Persian
+     regardless of what the user picked. */
   /* Blocks pinch-zoom and double-tap-zoom everywhere. The viewport meta's
      user-scalable=no (index.html) covers most browsers, but some ignore it
      for accessibility reasons — this is the more reliable, modern way to
@@ -324,4 +329,173 @@ textarea {
   .ghost-action {
     transition: none;
   }
+}
+
+/* Light theme — see appSettingsEngine's `theme` field and main.tsx, which
+   stamps data-theme="light" on <html> before first paint when the user has
+   picked "روشن" in settings. Dark stays the default (no attribute, or
+   data-theme="dark") so an account that never opens settings is unaffected.
+
+   Two halves:
+   1. The shared glass design-system classes below — these get real
+      light-mode colors (dark tints/text on a light backdrop instead of
+      white tints/text on dark), same recipe just inverted.
+   2. A finite, grep-enumerated set of literal Tailwind utility classes
+      used directly in component files (text-white/N, bg-white/N,
+      border-white/N, divide-white/10, placeholder:text-white/N) — higher
+      specificity than the bare utility so these win without touching
+      every component. bg-black/25 and bg-black/70 are deliberately NOT
+      overridden: both are modal/overlay dimmer scrims, and a dark scrim
+      behind a popup reads correctly in either theme. */
+[data-theme="light"] body {
+  background: #f4f4f0;
+  color: #1c1c1c;
+}
+
+[data-theme="light"] .app-gradient-bg {
+  background: #eceae2;
+}
+
+/* The dark mesh photograph has no light counterpart yet — hidden rather
+   than stretched/inverted, which would look like a bug rather than a
+   deliberate flat light background. */
+[data-theme="light"] .mesh-gradient-bg {
+  display: none;
+}
+
+[data-theme="light"] .glass-panel {
+  background-color: rgb(0 0 0 / 4%);
+  box-shadow:
+    1.25px 0px 1px -0.75px rgb(0 0 0 / 12%),
+    -1.25px 0px 1px -0.75px rgb(0 0 0 / 12%),
+    0px 0px 0.5px 0.5px rgb(0 0 0 / 10%),
+    0 10px 30px -14px rgb(0 0 0 / 15%);
+}
+
+[data-theme="light"] .glass-panel-flush-top {
+  box-shadow:
+    1.25px 0px 1px -0.75px rgb(0 0 0 / 12%),
+    -1.25px 0px 1px -0.75px rgb(0 0 0 / 12%),
+    0 10px 30px -14px rgb(0 0 0 / 15%);
+}
+
+[data-theme="light"] .glass-chip {
+  background-color: rgb(0 0 0 / 5%);
+  box-shadow: 0px 0px 0.5px 0.5px rgb(0 0 0 / 12%);
+}
+
+[data-theme="light"] .glass-panel:active,
+[data-theme="light"] .glass-tap:active {
+  box-shadow:
+    1.25px 0px 1px -0.75px rgb(0 0 0 / 12%),
+    -1.25px 0px 1px -0.75px rgb(0 0 0 / 12%),
+    0px 0px 0.5px 0.5px rgb(0 0 0 / 10%),
+    0 4px 14px -10px rgb(0 0 0 / 15%);
+}
+
+[data-theme="light"] .glass-chip:active {
+  background-color: rgb(0 0 0 / 10%);
+}
+
+[data-theme="light"] .glass-action {
+  background-color: rgb(0 0 0 / 6%);
+  box-shadow:
+    0px 0px 0.5px 0.5px rgb(0 0 0 / 18%),
+    0 8px 20px -12px rgb(0 0 0 / 20%);
+}
+
+[data-theme="light"] .glass-action:active,
+[data-theme="light"] .glass-action-static:active {
+  background-color: rgb(0 0 0 / 10%);
+}
+
+[data-theme="light"] .glass-selected {
+  background-color: rgb(0 0 0 / 10%);
+  box-shadow: 0 0 0 1.5px rgb(0 0 0 / 35%);
+}
+
+[data-theme="light"] .selector-pill {
+  background-color: rgb(0 0 0 / 5%);
+  box-shadow: 0px 0px 0.5px 0.5px rgb(0 0 0 / 15%);
+}
+
+[data-theme="light"] .ghost-action {
+  border-color: rgb(0 0 0 / 25%);
+}
+
+[data-theme="light"] .ghost-action:active {
+  background-color: rgb(0 0 0 / 5%);
+}
+
+[data-theme="light"] .glass-chip-selected {
+  background-color: rgb(180 140 0 / 12%);
+}
+
+[data-theme="light"] .text-white,
+[data-theme="light"] .text-white\/40,
+[data-theme="light"] .text-white\/50,
+[data-theme="light"] .text-white\/60,
+[data-theme="light"] .text-white\/70,
+[data-theme="light"] .text-white\/80 {
+  color: #1c1c1c;
+}
+
+[data-theme="light"] .text-white\/40 {
+  color: rgb(28 28 28 / 55%);
+}
+
+[data-theme="light"] .text-white\/50 {
+  color: rgb(28 28 28 / 62%);
+}
+
+[data-theme="light"] .text-white\/60 {
+  color: rgb(28 28 28 / 68%);
+}
+
+[data-theme="light"] .text-white\/70 {
+  color: rgb(28 28 28 / 78%);
+}
+
+[data-theme="light"] .text-white\/80 {
+  color: rgb(28 28 28 / 88%);
+}
+
+[data-theme="light"] .placeholder\:text-white\/40::placeholder {
+  color: rgb(28 28 28 / 40%);
+}
+
+[data-theme="light"] .placeholder\:text-white\/50::placeholder {
+  color: rgb(28 28 28 / 48%);
+}
+
+[data-theme="light"] .bg-white {
+  background-color: #1c1c1c;
+}
+
+[data-theme="light"] .bg-white\/10 {
+  background-color: rgb(0 0 0 / 6%);
+}
+
+[data-theme="light"] .bg-white\/15 {
+  background-color: rgb(0 0 0 / 9%);
+}
+
+[data-theme="light"] .bg-white\/20 {
+  background-color: rgb(0 0 0 / 12%);
+}
+
+[data-theme="light"] .bg-white\/30 {
+  background-color: rgb(0 0 0 / 16%);
+}
+
+[data-theme="light"] .border-white\/10 {
+  border-color: rgb(0 0 0 / 10%);
+}
+
+[data-theme="light"] .border-white\/20 {
+  border-color: rgb(0 0 0 / 16%);
+}
+
+[data-theme="light"] .divide-white\/10 > :not([hidden]) ~ :not([hidden]) {
+  border-color: rgb(0 0 0 / 10%);
 }

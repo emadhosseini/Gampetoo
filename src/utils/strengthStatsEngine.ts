@@ -65,15 +65,6 @@ function buildExerciseCategoryMap(): Map<string, StrengthCategory> {
   return map;
 }
 
-// Standard placeholder numbers (explicitly permitted for an empty state —
-// there's nothing to chart yet on a fresh account, and the spokes should
-// still say what they mean rather than the page just omitting the card).
-const MOCK_STATS: RadarStrengthPoint[] = [
-  { subject: "بالاتنه", A: 120, fullMark: 150, percentage: 80 },
-  { subject: "پایین‌تنه", A: 98, fullMark: 150, percentage: 65 },
-  { subject: "هسته بدن", A: 86, fullMark: 150, percentage: 57 },
-];
-
 /**
  * Every exercise's personal record (see exerciseSetLogEngine), mapped to
  * whichever spoke its workout-library group belongs to — the raw
@@ -100,17 +91,14 @@ function getStrengthCategoryLogs(): StrengthCategoryLog[] {
 
 /**
  * The radar chart's actual data — real personal records averaged per
- * category when there are any, otherwise the standard mock numbers so a
- * fresh account still sees a real-looking chart instead of an empty one.
+ * category. A fresh account with nothing logged yet gets real zeros for
+ * all three (getOverallStrengthStats already returns 0 for a category
+ * with no logs, not a missing spoke), not placeholder numbers standing in
+ * for progress that was never made — a "شاخص قدرت: ۳۰۴" on an account
+ * that hasn't touched the app yet is a real, confusing lie, not a demo.
  */
 export function getOverallStrengthChartData(): RadarStrengthPoint[] {
-  const logs = getStrengthCategoryLogs();
-
-  if (logs.length === 0) {
-    return MOCK_STATS;
-  }
-
-  return getOverallStrengthStats(logs);
+  return getOverallStrengthStats(getStrengthCategoryLogs());
 }
 
 export interface StrengthDashboardData {

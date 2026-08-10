@@ -29,6 +29,7 @@ import {
 import { getCurrentUserGender } from "@/utils/userEngine";
 import { formatTodayFull } from "@/utils/dateFormat";
 import { toFaDigits } from "@/utils/numberFormat";
+import { t } from "@/i18n/t";
 
 function HomePage() {
   const navigate = useNavigate();
@@ -43,9 +44,9 @@ function HomePage() {
 
         <section className="space-y-4 px-6">
           <HeroCard
-            title="شروع کن"
+            title={t("home.setupTitle")}
             emoji="🗓"
-            status="برنامه روزانه تمرینی رو انتخاب کنید"
+            status={t("home.setupStatus")}
             onClick={() => navigate("/settings/program")}
           />
         </section>
@@ -106,13 +107,13 @@ const workout = workoutType
           <Footprints />
         )
       }
-      title="برنامه فردا"
+      title={t("home.tomorrowPlan")}
       value={
         !tomorrowStarted
-          ? "فردا برنامه‌ای نداری\nاستراحت و پیاده روی کن"
+          ? t("home.noTomorrowPlan")
           : isTomorrowWorkout
             ? tomorrowWorkout?.title ?? tomorrowDay.title
-            : "استراحت"
+            : t("home.rest")
       }
     />
   );
@@ -131,16 +132,16 @@ const workout = workoutType
           iconSrc={heroIconSrc ?? undefined}
           status={
             !started
-              ? "امروز برنامه‌ای نداری"
+              ? t("home.noTodayPlan")
               : isWorkout
                 ? workout?.title || day.title
-                : "روز استراحت"
+                : t("home.restDay")
           }
           description={
             !started
               ? daysUntilStart === 1
-                ? "اولین برنامه فردا شروع می‌شه"
-                : `اولین برنامه از ${toFaDigits(daysUntilStart)} روز دیگه شروع می‌شه`
+                ? t("home.startsTomorrow")
+                : t("home.startsInDays", { days: toFaDigits(daysUntilStart) })
               : undefined
           }
         />
@@ -153,8 +154,8 @@ const workout = workoutType
           <div className="grid grid-cols-2 gap-4">
             <InfoCard
               icon={<ClipboardList />}
-              title="وضعیت برنامه امروز"
-              value={session.completed ? "انجام شده ✅" : "انجام نشده"}
+              title={t("home.todayStatus")}
+              value={session.completed ? t("home.done") : t("home.notDone")}
             />
 
             {tomorrowCard}

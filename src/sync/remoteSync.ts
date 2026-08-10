@@ -12,6 +12,7 @@ const SYNCED_BASE_KEYS = [
   "emad-workout-exercise-order",
   "emad-exercise-set-log",
   "emad-calendar-preference",
+  "emad-app-settings",
   "emad-warmup-library-overrides",
   "emad-free-meal",
   "emad-free-meal-settings",

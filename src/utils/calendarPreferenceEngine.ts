@@ -1,18 +1,21 @@
 import { scopedKey } from "./userEngine";
+import { getAppSettings } from "./appSettingsEngine";
 
 const STORAGE_KEY = "emad-calendar-preference";
 
 export type CalendarPreference = "jalali" | "gregorian";
 
-// Jalali (شمسی) is the app's long-standing default — every date display
-// already used it before this setting existed, so an account with no
-// saved preference yet should keep looking exactly like it always did.
-const DEFAULT_CALENDAR: CalendarPreference = "jalali";
-
 export function getPreferredCalendar(): CalendarPreference {
   const saved = localStorage.getItem(scopedKey(STORAGE_KEY));
 
-  return saved === "gregorian" ? "gregorian" : DEFAULT_CALENDAR;
+  if (saved === "gregorian" || saved === "jalali") return saved;
+
+  // Nothing explicitly chosen in settings yet — follow the language:
+  // fa defaults to jalali (the app's long-standing behavior before this
+  // setting existed), en defaults to gregorian. Once the user actually
+  // picks one in تنظیمات (setPreferredCalendar), that choice sticks
+  // regardless of language.
+  return getAppSettings().language === "en" ? "gregorian" : "jalali";
 }
 
 export function setPreferredCalendar(calendar: CalendarPreference) {

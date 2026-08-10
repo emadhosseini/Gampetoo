@@ -12,11 +12,8 @@ import {
   type SetEntry,
 } from "@/utils/exerciseSetLogEngine";
 import { formatDisplayShort, isoToLocalDate } from "@/utils/dateFormat";
+import { getAppSettings } from "@/utils/appSettingsEngine";
 import { toFaDigits } from "@/utils/numberFormat";
-
-// How long the inline rest timer counts down for after confirming a set —
-// a common default rest window between working sets.
-const REST_SECONDS = 90;
 
 const WEIGHT_STEP = 5;
 const REPS_STEP = 1;
@@ -122,7 +119,10 @@ export default function ExerciseSetLogger({
 
   function handleConfirmSet(setId: string) {
     setSets(confirmSet(exerciseId, setId));
-    setRestSecondsLeft(REST_SECONDS);
+    // Read fresh on every confirm rather than once — the settings popup's
+    // own "ذخیره" reloads the page after saving, but reading it live here
+    // costs nothing and needs no invalidation either way.
+    setRestSecondsLeft(getAppSettings().restSeconds);
   }
 
   return (

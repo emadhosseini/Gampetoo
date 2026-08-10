@@ -3,29 +3,30 @@ import { motion } from "framer-motion";
 import { X } from "lucide-react";
 
 import ModalOverlay from "@/components/ModalOverlay";
+import { getPreferredCalendar, setPreferredCalendar } from "@/utils/calendarPreferenceEngine";
 import {
-  getPreferredCalendar,
-  setPreferredCalendar,
-  type CalendarPreference,
-} from "@/utils/calendarPreferenceEngine";
+  getAppSettings,
+  saveAppSettings,
+  type Language,
+  type Theme,
+  type WeekStart,
+  type WeightUnit,
+} from "@/utils/appSettingsEngine";
+import type { CalendarPreference } from "@/utils/calendarPreferenceEngine";
 
-// Every row except "تقویم" is still UI-only, per the original ask — local
-// state driving the control on screen, nothing read from or written to a
-// real engine. تقویم is the one exception: it's wired to
-// calendarPreferenceEngine for real, since the whole point of that
-// setting is that every date display across the app (home page, workout
-// set history, progress charts, ...) actually switches with it — see
-// dateFormat.ts's calendar-aware "Display" formatters.
+// Every row edits local state only while the popup is open — nothing is
+// written to storage until "ذخیره" is actually tapped (see handleSave),
+// so closing without saving (the X button, or tapping outside) discards
+// whatever was changed. Reading the current saved values happens once, on
+// open, via the two engines below (appSettingsEngine for
+// theme/language/weightUnit/weekStart/restSeconds, calendarPreferenceEngine
+// for تقویم — kept separate since calendar predates this Save button and
+// already had its own storage).
 
 export interface SettingsSidebarProps {
   open: boolean;
   onClose: () => void;
 }
-
-type Theme = "dark" | "light";
-type Language = "fa" | "en";
-type WeightUnit = "kg" | "lb";
-type WeekStart = "saturday" | "monday";
 
 // A compact two-option pill switch for one settings row — same sliding-
 // highlight recipe as PillTabBar, just sized for a row rather than a
@@ -78,26 +79,32 @@ function SettingsRow({ label, children }: { label: string; children: ReactNode }
 }
 
 export default function SettingsSidebar({ open, onClose }: SettingsSidebarProps) {
-  const [theme, setTheme] = useState<Theme>("dark");
-  const [language, setLanguage] = useState<Language>("fa");
+  const [theme, setTheme] = useState<Theme>(() => getAppSettings().theme);
+  const [language, setLanguage] = useState<Language>(() => getAppSettings().language);
   const [calendar, setCalendar] = useState<CalendarPreference>(getPreferredCalendar);
-  const [weightUnit, setWeightUnit] = useState<WeightUnit>("kg");
-  const [weekStart, setWeekStart] = useState<WeekStart>("saturday");
-  const [restSeconds, setRestSeconds] = useState(90);
+  const [weightUnit, setWeightUnit] = useState<WeightUnit>(() => getAppSettings().weightUnit);
+  const [weekStart, setWeekStart] = useState<WeekStart>(() => getAppSettings().weekStart);
+  const [restSeconds, setRestSeconds] = useState(() => getAppSettings().restSeconds);
+  const [saved, setSaved] = useState(false);
 
   if (!open) {
     return null;
   }
 
-  // Reloads (like WorkoutHeader's "فراموش کردم" flow, the app's existing
-  // pattern for a change that has to be reflected everywhere at once) —
-  // there's no shared reactive store, so every currently-mounted page's
-  // own date-formatting calls need a fresh read of the new preference,
-  // not just this popup's.
-  function handleCalendarChange(next: CalendarPreference) {
-    setCalendar(next);
-    setPreferredCalendar(next);
-    window.location.reload();
+  function handleSave() {
+    saveAppSettings({ theme, language, weightUnit, weekStart, restSeconds });
+    setPreferredCalendar(calendar);
+
+    setSaved(true);
+
+    // A reload (like WorkoutHeader's "فراموش کردم" flow, the app's
+    // existing pattern for a change that has to be reflected everywhere
+    // at once) — there's no shared reactive store, so every currently-
+    // mounted page's own reads of these settings (تقویم above all —
+    // dateFormat.ts's "Display" formatters read it fresh on every call)
+    // need a real remount to pick up the new values. The brief delay
+    // just lets "ذخیره شد ✅" actually be seen before the page goes away.
+    setTimeout(() => window.location.reload(), 400);
   }
 
   return (
@@ -145,7 +152,7 @@ export default function SettingsSidebar({ open, onClose }: SettingsSidebarProps)
             <SegmentedControl
               layoutId="settings-calendar"
               value={calendar}
-              onChange={handleCalendarChange}
+              onChange={setCalendar}
               options={[
                 { value: "jalali", label: "شمسی" },
                 { value: "gregorian", label: "میلادی" },
@@ -191,6 +198,14 @@ export default function SettingsSidebar({ open, onClose }: SettingsSidebarProps)
             </div>
           </SettingsRow>
         </div>
+
+        <button
+          type="button"
+          onClick={handleSave}
+          className="mt-4 w-full glass-action rounded-2xl py-3 font-bold text-white"
+        >
+          {saved ? "ذخیره شد ✅" : "ذخیره"}
+        </button>
       </div>
     </ModalOverlay>
   );
