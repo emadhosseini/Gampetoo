@@ -36,7 +36,7 @@ export default function SpecializedWarmupBlock({
   }
 
   return (
-    <div className={`glass-panel rounded-3xl ${compact ? "p-3" : "p-4"}`}>
+    <div className={`glass-panel glass-static rounded-3xl ${compact ? "p-3" : "p-4"}`}>
       <button
         onClick={onToggle}
         className="flex w-full items-center justify-between gap-2"

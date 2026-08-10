@@ -6,7 +6,7 @@ import {
   setCalorieTrackingMode,
   type CalorieTrackingMode,
 } from "@/utils/calorieModeEngine";
-import { hasTodaysLoggedEntries, resetDailyLog } from "@/utils/dailyLogEngine";
+import { hasTodaysLoggedEntries, resetTodaysLog } from "@/utils/dailyLogEngine";
 
 export interface CalorieModePickerModalProps {
   open: boolean;
@@ -38,7 +38,7 @@ export default function CalorieModePickerModal({
         return;
       }
 
-      resetDailyLog();
+      resetTodaysLog();
     }
 
     setCalorieTrackingMode(mode);

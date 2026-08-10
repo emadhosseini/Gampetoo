@@ -25,6 +25,8 @@ import {
 import { useLocation, useNavigate } from "react-router-dom";
 
 import CalorieModePickerModal from "@/components/CalorieModePickerModal";
+import SettingsButton from "@/components/settings/SettingsButton";
+import SettingsSidebar from "@/components/settings/SettingsSidebar";
 import { avatarCharacterIcon } from "@/data/characterIcons";
 import { getCurrentUserGender, getCurrentUserName } from "@/utils/userEngine";
 import { getCalorieTrackingMode } from "@/utils/calorieModeEngine";
@@ -86,6 +88,7 @@ export default function SideMenu({ children }: SideMenuProps) {
   const { pathname } = useLocation();
   const isHomePage = pathname === "/";
   const userName = getCurrentUserName() ?? "";
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   // How far (in px) the drawer has entered from the right: 0 = fully closed
   // (off-screen), drawerWidth = fully open.
@@ -357,6 +360,14 @@ export default function SideMenu({ children }: SideMenuProps) {
               </button>
             </div>
 
+            {/* Moved down from the top of the drawer — a settings gear
+                reads as a low-priority, "if you need it" action, so it
+                sits at the bottom near the version number rather than
+                above the profile row where it competed for attention. */}
+            <div className="flex justify-start pt-3">
+              <SettingsButton onClick={() => setSettingsOpen(true)} />
+            </div>
+
             <p dir="ltr" className="pt-4 text-center text-xs text-white/40">
               {__APP_VERSION__}
             </p>
@@ -373,6 +384,8 @@ export default function SideMenu({ children }: SideMenuProps) {
         open={calorieModalOpen}
         onClose={() => setCalorieModalOpen(false)}
       />
+
+      <SettingsSidebar open={settingsOpen} onClose={() => setSettingsOpen(false)} />
 
       {!open && (
         <div

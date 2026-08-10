@@ -42,7 +42,7 @@ export default function WalkCompleteModal({
       <div className="glass-panel glass-static space-y-4 rounded-3xl p-6 text-center">
         <h2 className="text-lg font-bold text-white">پیاده‌روی امروز</h2>
 
-        <div className="glass-chip flex items-center justify-between rounded-2xl p-3">
+        <div className="glass-chip glass-static flex items-center justify-between rounded-2xl p-3">
           <span className="text-sm font-medium text-white">
             اضافه کردن کالری سوخته‌شده
           </span>
@@ -71,14 +71,14 @@ export default function WalkCompleteModal({
 
         <button
           onClick={() => onConfirm(addCalories ? calories : null)}
-          className="w-full glass-action rounded-2xl py-3 font-bold text-white"
+          className="w-full glass-action glass-action-static rounded-2xl py-3 font-bold text-white"
         >
           تایید
         </button>
 
         <button
           onClick={onCancel}
-          className="ghost-action w-full rounded-2xl py-3 font-medium text-white"
+          className="ghost-action ghost-action-static w-full rounded-2xl py-3 font-medium text-white"
         >
           انصراف
         </button>

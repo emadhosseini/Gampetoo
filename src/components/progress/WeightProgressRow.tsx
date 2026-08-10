@@ -32,6 +32,25 @@ function WeightBmiGauge({ weight, height }: { weight: number; height: number | n
   const bmi = height !== null ? calculateBmi(weight, height) : null;
   const activeZone = bmi !== null ? findBmiZone(bmi) : null;
 
+  // BMI needs both weight and height — an account with a logged weight but
+  // no height in its profile used to fall straight through to the gauge
+  // below with bmi stuck at null, which just draws its two center pivot
+  // circles and none of the zone highlighting or needle (nothing gated on
+  // bmi renders), reading as a broken half-empty dial instead of telling
+  // the user what's actually missing.
+  if (bmi === null) {
+    return (
+      <div className="mx-auto flex w-full max-w-40 flex-col items-center gap-2 py-6 text-center">
+        <p className="text-lg font-bold text-white">
+          {toFaDigits(weight)} <span className="text-xs font-normal text-white/60">کیلوگرم</span>
+        </p>
+        <p className="text-xs leading-5 text-white/50">
+          برای نمایش گیج وضعیت وزن، قدت رو هم توی پروفایل ثبت کن
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto w-full max-w-40">
       <svg viewBox="0 0 200 112" className="w-full">

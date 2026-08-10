@@ -32,6 +32,11 @@ export interface MealLogCardProps {
   // still shows its own totals here, since nothing else does for an
   // individual meal.
   hideTotals?: boolean;
+  // Which day's entries to show — defaults to today inside dailyLogEngine
+  // when left out, which is exactly what the quick-add flow (this same
+  // component reused outside DailyLogPage) wants. DailyLogPage's own meal
+  // tab passes its WeeklyDatePicker selection through instead.
+  date?: string;
 }
 
 export default function MealLogCard({
@@ -41,15 +46,16 @@ export default function MealLogCard({
   version,
   title,
   hideTotals = false,
+  date,
 }: MealLogCardProps) {
   const [expanded, setExpanded] = useState(false);
   const entries = useMemo(
-    () => getLoggedEntries(meal.id),
+    () => getLoggedEntries(meal.id, date),
     // `version` looks unused to the linter and is the entire point: this
     // reads localStorage directly, so nothing about the arguments changes
     // when the stored data does. Dropping it would cache the first read.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [meal.id, version],
+    [meal.id, version, date],
   );
 
   const totalCalories = entries.reduce(

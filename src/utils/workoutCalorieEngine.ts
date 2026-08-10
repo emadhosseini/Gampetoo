@@ -1,4 +1,7 @@
 import { createDailyMetricLog, type DailyMetricEntry } from "./dailyMetricLog";
+import { getTodayLocalDate } from "./dateFormat";
+
+const today = getTodayLocalDate;
 
 // Separate from activityLogEngine.ts's "manual activity" log on purpose, so
 // the two can be reported as distinct numbers on the daily-log activity tab
@@ -18,8 +21,16 @@ const store = createDailyMetricLog("emad-workout-calorie-log");
 
 export type { DailyMetricEntry };
 
+// Read-only, unlike activityLogEngine's date param — a workout is only
+// ever completed "just now" (WorkoutCompleteModal), never retroactively for
+// a past day, so there's no writer to match. This just lets DailyLogPage's
+// date-picker flow look back at what a past day's total already was.
+export function getWorkoutCalories(date: string = today()): number {
+  return date === today() ? store.getToday() : store.getHistory().find((e) => e.date === date)?.value ?? 0;
+}
+
 export function getTodayWorkoutCalories(): number {
-  return store.getToday();
+  return getWorkoutCalories();
 }
 
 export function getWorkoutCalorieHistory(): DailyMetricEntry[] {

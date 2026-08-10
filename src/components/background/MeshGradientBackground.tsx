@@ -26,7 +26,7 @@ export default function MeshGradientBackground({
 }: MeshGradientBackgroundProps) {
   return (
     <div
-      className={`pointer-events-none absolute inset-0 overflow-hidden bg-cover bg-center ${className}`}
+      className={`mesh-gradient-bg pointer-events-none absolute inset-0 overflow-hidden bg-cover bg-center ${className}`}
       aria-hidden="true"
       style={{ backgroundImage: "url(/BG.webp)" }}
     />

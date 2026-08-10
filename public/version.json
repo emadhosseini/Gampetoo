@@ -1,6 +1,55 @@
 {
-  "current": "1.0.13",
+  "current": "1.0.18",
   "history": [
+    {
+      "version": "1.0.18",
+      "date": "2026-08-10",
+      "description": "The daily-log activity tab's \"سایر فعالیت‌ها\" card now expands in place when tapped anywhere except the + button, same interaction as a meal card, listing every activity logged that day — including ones logged with no note, which previously vanished into the day's total with no individual record at all. Each row can be removed, which backs its calories out of the day's total correctly.",
+      "highlights": [
+        "📋 کارت «سایر فعالیت‌ها» حالا با لمس، فهرست کامل فعالیت‌های همون روز رو باز می‌کنه — با یا بدون یادداشت",
+        "🗑️ هر فعالیت ثبت‌شده رو می‌شه تکی حذف کرد"
+      ]
+    },
+    {
+      "version": "1.0.17",
+      "date": "2026-08-10",
+      "description": "The birth-date picker in the profile now follows the calendar setting — Jalali wheels (with real leap-year-aware day counts) when تقویم is set to شمسی, Gregorian wheels otherwise — instead of always showing Gregorian regardless of preference; it still stores and computes age from the same Gregorian date underneath either way. The date button above the daily-log's meal and activity tabs now shows a standing yellow warning whenever a day other than today is selected, with a one-tap way back to today, so browsing a past day isn't mistaken for today's numbers mid-session.",
+      "highlights": [
+        "🎂 تاریخ تولد حالا با تقویم انتخابی (شمسی/میلادی) هماهنگه",
+        "⚠️ وقتی روی روز دیگه‌ای غیر از امروزی، یک هشدار ثابت با دکمه‌ی برگشت سریع نشون داده می‌شه"
+      ]
+    },
+    {
+      "version": "1.0.16",
+      "date": "2026-08-10",
+      "description": "The daily-log page's meal and activity tabs each gained a date button above them (a calendar popup, opening on today) — tapping a past day now shows exactly what was logged for it, and food/activity can be logged against that day directly instead of always meaning \"right now\". Underneath this, the food-log storage was rebuilt from keeping only today's meals (discarding the rest at midnight, down to a single archived calorie number) to keeping every day's full meal breakdown indefinitely — verified with real data that an account upgrading to this loses nothing: an existing account's current-day log is preserved automatically, and every past day now stays fully browsable instead of being thrown away. Switching calorie-tracking mode (daily/per-meal) now clears only today's entries instead of the account's entire food history. Also tightened a couple of layout gaps: the strength-index radar card and the space above the daily-log's totals card.",
+      "highlights": [
+        "📅 دکمه‌ی تاریخ بالای وعده‌های غذایی و فعالیت — می‌تونی روزهای قبل رو ببینی و براشون ثبت کنی",
+        "🗄️ ذخیره‌سازی غذای روزانه از «فقط امروز» به «آرشیو کامل هر روز» تغییر کرد — چیزی از دست نمی‌ره",
+        "🔁 عوض کردن روش ثبت کالری دیگه فقط امروز رو پاک می‌کنه، نه کل تاریخچه",
+        "🧹 چند فاصله‌ی خالی توی صفحه‌ی شاخص قدرت و صفحه‌ی ثبت روزانه رفع شد"
+      ]
+    },
+    {
+      "version": "1.0.15",
+      "date": "2026-08-10",
+      "description": "Added a real light theme, wired to the 'تم' setting in the settings popup (previously saved but had no effect). Picking 'روشن' and hitting ذخیره now actually flips the app to a light look — glass panels, chips, buttons and text all get light-mode colors, applied via a data-theme attribute set on boot before first paint. The dark background photo has no light counterpart yet so it's hidden in light mode in favor of a flat light backdrop; picking 'تاریک' keeps the app exactly as it always looked.",
+      "highlights": [
+        "☀️ تم «روشن» توی تنظیمات حالا واقعاً کار می‌کنه، نه فقط ذخیره می‌شه"
+      ]
+    },
+    {
+      "version": "1.0.14",
+      "date": "2026-08-09",
+      "description": "Two new gym-focused features: an exercise card on the daily workout page now opens a drawer to log today's sets (weight/reps steppers, a confirm tick per set with an inline 90s rest timer), see the last 10 sessions, a personal-record badge, and a progress chart (heaviest weight over 1/3/all months) with total volume. The progress page gained an \"Overall Strength Index\" radar chart (upper/lower/core, built from real personal records categorized by workout-library group, Epley-formula 1RM), with a gamified level badge/progress bar and a plain-language strength-imbalance summary. Added a real settings popup (gear icon in the side menu) with a working calendar preference (Jalali/Gregorian) that now actually switches every date shown across the app — home page, workout set history, weight history, the calendar picker, profile birthdate, and every chart's axis labels/date range. Also: workout cycle days now hold in place until confirmed done (rest days still advance daily on their own), fixed a duplicated exercise id that cross-toggled two unrelated groups, fixed the food-substitution list showing a stale snapshot instead of the current one, and several smaller UI fixes across the food/nutrition and workout pages.",
+      "highlights": [
+        "🏋️ ثبت ست‌های امروز برای هر حرکت: وزنه/تکرار، تایمر استراحت، تاریخچه، و نشان رکورد شخصی",
+        "📊 نمودار «شاخص قدرت کلی بدن» توی صفحه پیشرفت، با سیستم سطح‌بندی و تحلیل هوشمند",
+        "⚙️ پاپ‌آپ تنظیمات واقعی اضافه شد؛ انتخاب تقویم شمسی/میلادی الان همه‌جای اپ واقعاً اعمال می‌شه",
+        "🔒 روز تمرین تا تیک‌نخوردن ثابت می‌مونه؛ روز استراحت همیشه می‌چرخه",
+        "🐛 چند باگ واقعی رفع شد: آیدی تکراری حرکت، لیست جایگزین‌های غذایی قدیمی"
+      ]
+    },
     {
       "version": "1.0.13",
       "date": "2026-08-09",

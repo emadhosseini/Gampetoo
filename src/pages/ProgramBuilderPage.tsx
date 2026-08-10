@@ -10,7 +10,7 @@ import { resetSession } from "@/utils/sessionEngine";
 import { generateId } from "@/utils/id";
 import type { WorkoutDay, WorkoutType } from "@/types/program";
 import { toFaDigits } from "@/utils/numberFormat";
-import { formatJalaliFull, getTodayLocalDate } from "@/utils/dateFormat";
+import { formatDisplayFull, getTodayLocalDate } from "@/utils/dateFormat";
 
 const today = getTodayLocalDate;
 
@@ -189,7 +189,7 @@ function ProgramBuilderPage() {
         className="selector-pill w-full rounded-2xl py-4 text-center font-bold text-white"
       >
         {startDate
-          ? `شروع از ${formatJalaliFull(startDate)}`
+          ? `شروع از ${formatDisplayFull(startDate)}`
           : "روز شروع برنامه"}
       </button>
 
@@ -223,7 +223,7 @@ function ProgramBuilderPage() {
             <h2 className="text-lg font-bold text-white">تغییر روز شروع برنامه</h2>
 
             <p className="text-sm text-white/70">
-              با این کار روز اول برنامه دقیقاً {formatJalaliFull(startDate)} می‌شه و
+              با این کار روز اول برنامه دقیقاً {formatDisplayFull(startDate)} می‌شه و
               برنامه‌ی صفحه‌ی خانه و تمرین از همون روز عوض می‌شه. مطمئنی؟
             </p>
 
