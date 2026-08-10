@@ -15,10 +15,12 @@ const today = getTodayLocalDate;
 
 export type { DailyMetricEntry };
 
-// One logged activity with what it actually was, not just its calorie
-// count — ActivityLogModal's note field. Kept as its own small list rather
-// than folded into the day's running total (store, above), since that
-// total is a single number per date and has no room for text.
+// One logged activity — its calories and, if typed, what it actually was
+// (ActivityLogModal's note field). Kept as its own small list rather than
+// folded into the day's running total (store, above), since that total is a
+// single number per date with no room for a per-entry breakdown; `note` can
+// be empty for an activity logged with no description, same as an entry
+// added straight from the quick-add drawer.
 export interface ActivityNoteEntry {
   id: string;
   date: string;
@@ -78,26 +80,37 @@ export function logActivityCalories(
 }
 
 // Logs one activity: adds its calories to the given day's running total
-// exactly like logActivityCalories always did, and — only if a note was
-// actually typed — keeps a record of what the activity was, so there's
-// something behind the number besides a count. Defaults to today, but
-// DailyLogPage's date-picker flow can log against any browsed day too.
+// exactly like logActivityCalories always did, and keeps a record of it
+// (note included when one was actually typed, empty string otherwise) so
+// every logged activity — not just the ones with a note — shows up in
+// getActivityEntries and can be listed on the daily-log activity tab.
+// Defaults to today, but DailyLogPage's date-picker flow can log against
+// any browsed day too.
 export function logActivityEntry(
   calories: number,
   note: string,
   date: string = today(),
 ): DailyMetricEntry[] {
-  const trimmed = note.trim();
+  const entries = readEntries();
 
-  if (trimmed) {
-    const entries = readEntries();
+  entries.push({ id: generateId(), date, calories, note: note.trim() });
 
-    entries.push({ id: generateId(), date, calories, note: trimmed });
-
-    writeEntries(entries);
-  }
+  writeEntries(entries);
 
   return logActivityCalories(calories, date);
+}
+
+// Removes one logged activity and backs its calories out of that day's
+// running total — the activity-tab equivalent of dailyLogEngine's
+// removeLoggedEntry, once entries became listable/expandable there.
+export function removeActivityEntry(entryId: string) {
+  const entries = readEntries();
+  const entry = entries.find((e) => e.id === entryId);
+
+  if (!entry) return;
+
+  writeEntries(entries.filter((e) => e.id !== entryId));
+  store.setEntry(entry.date, Math.max(0, getActivityCalories(entry.date) - entry.calories));
 }
 
 export function resetActivityLog() {

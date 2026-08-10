@@ -1,6 +1,15 @@
 {
-  "current": "1.0.17",
+  "current": "1.0.18",
   "history": [
+    {
+      "version": "1.0.18",
+      "date": "2026-08-10",
+      "description": "The daily-log activity tab's \"سایر فعالیت‌ها\" card now expands in place when tapped anywhere except the + button, same interaction as a meal card, listing every activity logged that day — including ones logged with no note, which previously vanished into the day's total with no individual record at all. Each row can be removed, which backs its calories out of the day's total correctly.",
+      "highlights": [
+        "📋 کارت «سایر فعالیت‌ها» حالا با لمس، فهرست کامل فعالیت‌های همون روز رو باز می‌کنه — با یا بدون یادداشت",
+        "🗑️ هر فعالیت ثبت‌شده رو می‌شه تکی حذف کرد"
+      ]
+    },
     {
       "version": "1.0.17",
       "date": "2026-08-10",
