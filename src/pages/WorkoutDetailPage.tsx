@@ -463,14 +463,13 @@ export default function WorkoutDetailPage() {
         </div>
       )}
 
-      <h1 className="text-2xl font-bold">
-        {workout.title}
+      <div>
+        <h1 className="text-2xl font-bold">{workout.title}</h1>
+
         {editingVariantName && (
-          <span className="mr-2 text-lg font-normal text-white/60">
-            — {editingVariantName}
-          </span>
+          <p className="mt-1 text-sm font-medium text-white/50">{editingVariantName}</p>
         )}
-      </h1>
+      </div>
 
       {/* Multiple saved plans for this same workout (e.g. "پوش A"/"پوش B")
           — برنامه پیش‌فرض is always the library's own base workout and

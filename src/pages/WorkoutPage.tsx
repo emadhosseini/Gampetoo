@@ -384,7 +384,8 @@ const workout = workoutType
   return (
     <div className="space-y-6 px-5 pb-5 pt-10">
       <WorkoutHeader
-        title={resolvedVariantName ? `${workout.title} — ${resolvedVariantName}` : workout.title}
+        title={workout.title}
+        belowTitle={resolvedVariantName}
         showForgotButton
         onEditWorkout={() => setEditChoiceOpen(true)}
       />
