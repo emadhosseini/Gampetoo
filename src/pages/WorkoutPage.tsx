@@ -561,6 +561,25 @@ const workout = workoutType
               تغییر تمرین‌ها و ست‌ها
             </button>
 
+            {/* Only when this day actually has more than one assigned
+                plan (see ProgramBuilderPage's "چند حالت برنامه") — a day
+                with just the one plan has nothing to switch between.
+                Clearing the day's pick and re-rendering is what puts the
+                page back on the same چند-حالت chooser screen it showed
+                the first time this day came up. */}
+            {needsVariantChoice && (
+              <button
+                onClick={() => {
+                  setEditChoiceOpen(false);
+                  setSelectedVariantId(null);
+                  forceRerender((n) => n + 1);
+                }}
+                className="glass-tap glass-static selector-pill w-full rounded-2xl py-3 font-bold text-white"
+              >
+                تغییر پلن امروز
+              </button>
+            )}
+
             <button
               onClick={() => setEditChoiceOpen(false)}
               className="ghost-action ghost-action-static w-full rounded-2xl py-3 font-medium text-white"
