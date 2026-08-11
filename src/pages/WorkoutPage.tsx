@@ -212,8 +212,8 @@ const workout = workoutType
           {assignedVariantIds.map((variantId) => {
             const label =
               variantId === DEFAULT_VARIANT_ID
-                ? "پیش‌فرض"
-                : (getVariant(variantId)?.name ?? "پیش‌فرض");
+                ? "برنامه پیش‌فرض"
+                : (getVariant(variantId)?.name ?? "برنامه پیش‌فرض");
 
             return (
               <button

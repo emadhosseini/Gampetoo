@@ -85,7 +85,7 @@ export default function VariantAssignModal({
 
         <div className="space-y-2">
           <VariantRow
-            label="پیش‌فرض"
+            label="برنامه پیش‌فرض"
             checked={selected.includes(DEFAULT_VARIANT_ID)}
             onClick={() => toggle(DEFAULT_VARIANT_ID)}
           />
@@ -103,7 +103,7 @@ export default function VariantAssignModal({
         {variants.length === 0 && (
           <p className="text-xs text-white/50">
             هنوز پلن دیگه‌ای برای این تمرین نساختی — از صفحه‌ی خود تمرین، کنار
-            «پیش‌فرض» دکمه‌ی + رو بزن.
+            «برنامه پیش‌فرض» دکمه‌ی + رو بزن.
           </p>
         )}
 
