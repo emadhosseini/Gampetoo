@@ -1,6 +1,17 @@
 {
-  "current": "1.0.18",
+  "current": "1.0.19",
   "history": [
+    {
+      "version": "1.0.19",
+      "date": "2026-08-11",
+      "description": "Added the ability to save multiple named plans for the same workout day (e.g. \"پوش A\"/\"پوش B\") without editing the workout library each time. In a workout's own page (کتابخانه تمرین‌ها), a new plan row above the exercise groups lets you save the current exercises as a named plan, switch between saved plans, rename or delete one — پیش‌فرض (the library's own workout) always stays available and can't be deleted. When building the daily program, a day with at least one saved plan gets a \"چند حالت برنامه\" button to assign more than one plan to that day; if only one is assigned nothing changes, but assigning two or more means the workout page asks which one to do the moment that day actually arrives, remembering the pick for the rest of the day. Also: the workout library's exercise list now floats checked-on exercises to the top of their group, and پشت پا (leg curl) was added to the تمام بدن workout.",
+      "highlights": [
+        "🗂️ برای هر تمرین می‌تونی چند پلن جدا (مثل پوش A/B) بسازی و بینشون سوییچ کنی",
+        "📅 توی برنامه‌ریزی، هر روز می‌تونه چند پلن داشته باشه — روزی که برسه ازت می‌پرسه کدوم",
+        "✅ توی کتابخانه‌ی تمرین‌ها، حرکت‌های تیک‌خورده میان بالای لیست",
+        "🦵 پشت پا به تمرین «تمام بدن» اضافه شد"
+      ]
+    },
     {
       "version": "1.0.18",
       "date": "2026-08-10",

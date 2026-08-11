@@ -27,6 +27,13 @@ export interface SessionState {
   // `completed` on the same day-rollover check, since a stale checklist
   // from a previous day's (possibly different) workout would be meaningless.
   checkedExercises: string[];
+  // Which of today's WorkoutDay.assignedVariantIds the user picked to
+  // actually do — asked once (WorkoutPage's variant-choice prompt) when a
+  // day has 2+ assigned variants, then remembered for the rest of the day
+  // so the same workout keeps showing after a reload. Resets to null on
+  // the same day-rollover as everything else above, so tomorrow asks
+  // again rather than silently repeating yesterday's pick.
+  selectedVariantId: string | null;
 }
 
 const today = getTodayLocalDate;
@@ -36,6 +43,7 @@ function createSession(): SessionState {
     completed: false,
     lastDate: today(),
     checkedExercises: [],
+    selectedVariantId: null,
   };
 }
 
@@ -65,9 +73,14 @@ export function getSession() {
 
   const session: SessionState = saved;
 
-  // Backfills a session saved before checkedExercises existed.
+  // Backfills a session saved before checkedExercises/selectedVariantId
+  // existed.
   if (!session.checkedExercises) {
     session.checkedExercises = [];
+  }
+
+  if (session.selectedVariantId === undefined) {
+    session.selectedVariantId = null;
   }
 
   // Resolved BEFORE the reset below, deliberately — programEngine's cycle
@@ -82,6 +95,7 @@ export function getSession() {
     session.completed = false;
     session.lastDate = today();
     session.checkedExercises = [];
+    session.selectedVariantId = null;
 
     saveSession(session);
   }
@@ -173,6 +187,19 @@ export function estimateCheckedWorkoutCalories(
 
 export function saveSession(session: SessionState) {
   localStorage.setItem(storageKey(), JSON.stringify(session));
+}
+
+// Records which of today's assigned variants the user picked to actually
+// do — see SessionState.selectedVariantId. Deliberately doesn't reset
+// checkedExercises/completed: picking a variant happens before a single
+// exercise is ticked (WorkoutPage's chooser gates the exercise list
+// itself), so there's nothing on those to invalidate.
+export function setSelectedVariantId(variantId: string | null) {
+  const session = parseSession(localStorage.getItem(storageKey())) ?? createSession();
+
+  session.selectedVariantId = variantId;
+
+  saveSession(session);
 }
 
 export function completeWorkout() {

@@ -1,18 +1,82 @@
-import { ChevronDown, Minus, Plus, Search } from "lucide-react";
+import { ChevronDown, Minus, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 
 import Toggle from "@/components/Toggle";
+import ModalOverlay from "@/components/ModalOverlay";
 import { getWorkout, saveWorkoutExercises } from "@/store/workoutLibraryStore";
 import {
   getSpecializedWarmup,
   saveWarmupGroups,
 } from "@/store/warmupLibraryStore";
+import {
+  createVariant,
+  deleteVariant,
+  getVariants,
+  renameVariant,
+  updateVariantGroups,
+} from "@/store/workoutVariantStore";
 
 import type { Exercise, ExerciseGroup } from "@/data/workoutLibrary";
 import type { WarmupGroup } from "@/data/warmupLibrary";
 import { matchesWordPrefix, normalizeFa } from "@/utils/persianSearch";
 import { toFaDigits } from "@/utils/numberFormat";
+
+// A single text-input popup, reused for both "save as a new plan" (asks
+// for a name up front) and "rename this plan" (pre-filled with its current
+// name) — same shape, just a different title/placeholder/initial value.
+function VariantNameModal({
+  open,
+  title,
+  initialName,
+  onClose,
+  onSubmit,
+}: {
+  open: boolean;
+  title: string;
+  initialName: string;
+  onClose: () => void;
+  onSubmit: (name: string) => void;
+}) {
+  const [name, setName] = useState(initialName);
+
+  if (!open) return null;
+
+  return (
+    <ModalOverlay onClose={onClose}>
+      <div className="glass-panel glass-static space-y-4 rounded-3xl p-6 text-center">
+        <h2 className="text-lg font-bold text-white">{title}</h2>
+
+        <input
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="مثلاً پوش B"
+          autoFocus
+          className="glass-chip w-full rounded-xl p-4 text-center text-white placeholder:text-white/40 outline-none"
+        />
+
+        <button
+          onClick={() => {
+            if (!name.trim()) return;
+            onSubmit(name.trim());
+          }}
+          disabled={!name.trim()}
+          className="w-full glass-action rounded-2xl py-3 font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          ذخیره
+        </button>
+
+        <button
+          onClick={onClose}
+          className="ghost-action w-full rounded-2xl py-3 font-medium text-white"
+        >
+          بستن
+        </button>
+      </div>
+    </ModalOverlay>
+  );
+}
 
 // The toggle-plus-steppers block a single exercise is edited with — shared
 // between the normal per-group list and the search results below, so a
@@ -128,6 +192,21 @@ export default function WorkoutDetailPage() {
 
   const [query, setQuery] = useState("");
 
+  // Which of this workout's saved plans (workoutVariantStore) is currently
+  // being viewed/edited — null means the library's own base workout
+  // (پیش‌فرض). Bumping variantVersion forces a fresh getVariants() read
+  // after create/rename/delete, the same "no reactive store" pattern the
+  // rest of this app already uses.
+  const [editingVariantId, setEditingVariantId] = useState<string | null>(null);
+  const [variantVersion, setVariantVersion] = useState(0);
+  const [nameModal, setNameModal] = useState<"create" | "rename" | null>(null);
+  const variants = useMemo(
+    () => (id ? getVariants(id) : []),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [id, variantVersion],
+  );
+  const editingVariant = variants.find((v) => v.id === editingVariantId) ?? null;
+
   // Flattened across every group rather than searched per-group, since the
   // whole point is finding a move without knowing (or opening) which group
   // it's filed under first — that's the actual friction this replaces, on
@@ -193,7 +272,11 @@ export default function WorkoutDetailPage() {
   }
 
   function handleSave() {
-    saveWorkoutExercises(workout!.id, groups);
+    if (editingVariantId) {
+      updateVariantGroups(editingVariantId, groups);
+    } else {
+      saveWorkoutExercises(workout!.id, groups);
+    }
 
     if (specializedWarmup) {
       saveWarmupGroups(specializedWarmup.workoutType, warmupGroups);
@@ -203,7 +286,58 @@ export default function WorkoutDetailPage() {
     setDirty(false);
   }
 
+  // Switches which plan is being viewed/edited — discards any unsaved
+  // change in `groups` first (with a confirmation, since that's a real
+  // loss) since groups always mirrors exactly one plan's own exercises at
+  // a time, not a merged view.
+  function switchTo(variantId: string | null) {
+    if (dirty && !window.confirm("تغییرات ذخیره‌نشده از بین می‌رن. مطمئنی؟")) {
+      return;
+    }
+
+    setEditingVariantId(variantId);
+    setGroups(
+      variantId
+        ? (variants.find((v) => v.id === variantId)?.groups ?? [])
+        : (workout!.groups ?? []),
+    );
+    setSaved(false);
+    setDirty(false);
+  }
+
+  function handleCreateVariant(name: string) {
+    const created = createVariant(workout!.id, name, groups);
+
+    setNameModal(null);
+    setVariantVersion((v) => v + 1);
+    setEditingVariantId(created.id);
+    setSaved(false);
+    setDirty(false);
+  }
+
+  function handleRenameVariant(name: string) {
+    if (!editingVariantId) return;
+
+    renameVariant(editingVariantId, name);
+    setNameModal(null);
+    setVariantVersion((v) => v + 1);
+  }
+
+  function handleDeleteVariant() {
+    if (!editingVariantId) return;
+    if (!window.confirm("این پلن حذف بشه؟ این کار قابل بازگشت نیست.")) return;
+
+    deleteVariant(editingVariantId);
+    setVariantVersion((v) => v + 1);
+    switchTo(null);
+  }
+
   const isWarmupWorkout = workout.id === "warmup";
+  // Only the workouts a program day can actually be assigned to (see
+  // ProgramBuilderPage/WorkoutPickerModal) benefit from multiple plans —
+  // گرم کردن عمومی has no plan concept of its own, and an empty workout has
+  // no exercises yet to clone into a first plan anyway.
+  const supportsVariants = !isWarmupWorkout && (workout.groups?.length ?? 0) > 0;
 
   return (
     <div className="space-y-6 px-5 pb-5 pt-10">
@@ -227,7 +361,73 @@ export default function WorkoutDetailPage() {
 
       <h1 className="text-2xl font-bold">
         {workout.title}
+        {editingVariant && (
+          <span className="mr-2 text-lg font-normal text-white/60">
+            — {editingVariant.name}
+          </span>
+        )}
       </h1>
+
+      {/* Multiple saved plans for this same workout (e.g. "پوش A"/"پوش B")
+          — پیش‌فرض is always the library's own base workout and can't be
+          renamed/deleted; anything else here is a workoutVariantStore
+          entry, cloned from whatever was on screen when "+" was tapped.
+          ProgramBuilderPage lets a program day be assigned more than one
+          of these, and WorkoutPage asks which to do once the day arrives. */}
+      {supportsVariants && (
+        <div className="space-y-2">
+          <div className="no-scrollbar flex items-center gap-2 overflow-x-auto">
+            <button
+              onClick={() => switchTo(null)}
+              className={`glass-chip glass-static shrink-0 rounded-full px-4 py-2 text-sm font-medium text-white ${
+                !editingVariantId ? "glass-chip-selected" : ""
+              }`}
+            >
+              پیش‌فرض
+            </button>
+
+            {variants.map((variant) => (
+              <button
+                key={variant.id}
+                onClick={() => switchTo(variant.id)}
+                className={`glass-chip glass-static shrink-0 rounded-full px-4 py-2 text-sm font-medium text-white ${
+                  editingVariantId === variant.id ? "glass-chip-selected" : ""
+                }`}
+              >
+                {variant.name}
+              </button>
+            ))}
+
+            <button
+              onClick={() => setNameModal("create")}
+              aria-label="ذخیره به عنوان پلن جدید"
+              className="glass-action flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white"
+            >
+              <Plus size={16} />
+            </button>
+          </div>
+
+          {editingVariant && (
+            <div className="flex items-center justify-center gap-2">
+              <button
+                onClick={() => setNameModal("rename")}
+                className="glass-tap glass-static flex items-center gap-1 rounded-full px-3 py-1.5 text-xs text-white/70"
+              >
+                <Pencil size={12} />
+                تغییر نام
+              </button>
+
+              <button
+                onClick={handleDeleteVariant}
+                className="glass-tap glass-static flex items-center gap-1 rounded-full px-3 py-1.5 text-xs text-red-400"
+              >
+                <Trash2 size={12} />
+                حذف این پلن
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="space-y-3">
         {/* Above everything else on the page, including گرم کردن تخصصی —
@@ -367,16 +567,22 @@ export default function WorkoutDetailPage() {
 
               {isOpen && (
                 <div className="mt-4 space-y-4">
-                  {group.exercises.map((exercise) => (
-                    <ExerciseEditRow
-                      key={exercise.id}
-                      exercise={exercise}
-                      isWarmupWorkout={isWarmupWorkout}
-                      onUpdate={(patch) =>
-                        updateExercise(group.id, exercise.id, patch)
-                      }
-                    />
-                  ))}
+                  {/* Enabled (checked) exercises float to the top of their
+                      group — a stable sort, so ties (same enabled state)
+                      keep the library's own order instead of jumping
+                      around as unrelated exercises get toggled. */}
+                  {[...group.exercises]
+                    .sort((a, b) => Number(b.enabled) - Number(a.enabled))
+                    .map((exercise) => (
+                      <ExerciseEditRow
+                        key={exercise.id}
+                        exercise={exercise}
+                        isWarmupWorkout={isWarmupWorkout}
+                        onUpdate={(patch) =>
+                          updateExercise(group.id, exercise.id, patch)
+                        }
+                      />
+                    ))}
                 </div>
               )}
             </div>
@@ -392,6 +598,28 @@ export default function WorkoutDetailPage() {
           {saved ? "ذخیره شد ✅" : "ذخیره"}
         </button>
       )}
+
+      {/* Keyed so each open starts from a fresh initialName — this
+          component holds its own input state internally, which would
+          otherwise stay stuck on whatever it was the first time it
+          mounted (e.g. rename reused across different plans). */}
+      <VariantNameModal
+        key={`create-${nameModal === "create"}`}
+        open={nameModal === "create"}
+        title="نام پلن جدید"
+        initialName=""
+        onClose={() => setNameModal(null)}
+        onSubmit={handleCreateVariant}
+      />
+
+      <VariantNameModal
+        key={`rename-${editingVariant?.id}-${nameModal === "rename"}`}
+        open={nameModal === "rename"}
+        title="تغییر نام پلن"
+        initialName={editingVariant?.name ?? ""}
+        onClose={() => setNameModal(null)}
+        onSubmit={handleRenameVariant}
+      />
     </div>
   );
 }

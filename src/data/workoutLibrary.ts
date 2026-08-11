@@ -1032,6 +1032,14 @@ export const workoutLibrary: WorkoutDefinition[] = [
             metValue: 5,
           },
           {
+            id: "leg-curl",
+            name: "پشت پا",
+            sets: 3,
+            reps: 10,
+            enabled: false,
+            metValue: 5,
+          },
+          {
             id: "lat-pulldown-front",
             name: "لت سیم کش از جلو",
             sets: 3,

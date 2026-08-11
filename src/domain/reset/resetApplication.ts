@@ -2,6 +2,7 @@ import { resetPrograms } from "../../utils/programEngine";
 import { resetSession } from "../../utils/sessionEngine";
 import { resetLibraryOverrides } from "../../store/workoutLibraryStore";
 import { resetExerciseOrder } from "../../store/workoutOrderStore";
+import { resetWorkoutVariants } from "../../store/workoutVariantStore";
 import { resetExerciseSetLog } from "../../utils/exerciseSetLogEngine";
 import { resetCalendarPreference } from "../../utils/calendarPreferenceEngine";
 import { resetAppSettings } from "../../utils/appSettingsEngine";
@@ -38,6 +39,7 @@ function wipeLocalData(username: string | null) {
   resetPrograms();
   resetLibraryOverrides();
   resetExerciseOrder();
+  resetWorkoutVariants();
   resetExerciseSetLog();
   resetCalendarPreference();
   resetAppSettings();

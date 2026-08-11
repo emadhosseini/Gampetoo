@@ -20,6 +20,16 @@ export interface WorkoutDay {
   workoutId: WorkoutType | null;
   title: string;
   activity: ActivityType;
+  // Which workoutVariantStore variants the user has approved for this day
+  // — lets one program day (e.g. "Push") rotate between several exercise
+  // sets ("Push A"/"Push B") without editing the workout library itself
+  // each time. "default" is the sentinel for the plain library workout
+  // (no separate variant record). Absent, empty, or a single entry all
+  // behave exactly like before this existed — no picker, straight to that
+  // one workout; a picker only appears at workout time when 2+ entries are
+  // assigned. See workoutVariantStore.ts and sessionEngine's
+  // selectedVariantId.
+  assignedVariantIds?: string[];
 }
 
 export interface WorkoutCycle {

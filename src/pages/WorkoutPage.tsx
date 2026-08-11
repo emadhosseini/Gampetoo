@@ -19,6 +19,11 @@ import {
 } from "@/utils/programEngine";
 
 import { getWorkout } from "@/store/workoutLibraryStore";
+import {
+  DEFAULT_VARIANT_ID,
+  getVariant,
+  getWorkoutWithVariant,
+} from "@/store/workoutVariantStore";
 import { getSpecializedWarmup } from "@/store/warmupLibraryStore";
 import {
   applyExerciseOrder,
@@ -34,6 +39,7 @@ import {
   completeWalk,
   toggleExerciseChecked,
   estimateCheckedWorkoutCalories,
+  setSelectedVariantId,
 } from "@/utils/sessionEngine";
 import { setTodayWorkoutCalories } from "@/utils/workoutCalorieEngine";
 import { logActivityCalories } from "@/utils/activityLogEngine";
@@ -142,9 +148,27 @@ function WorkoutPage() {
 
  const workoutType = getCurrentWorkoutType();
 
+  // Which of this day's assigned plans (ProgramBuilderPage's "چند حالت
+  // برنامه") to actually show today — see sessionEngine's
+  // selectedVariantId. Fewer than 2 assigned plans never need a choice:
+  // empty/undefined behaves exactly like before this existed (the base
+  // workout), and exactly one entry is used straight away with no prompt.
+  const assignedVariantIds = day.assignedVariantIds ?? [];
+  const needsVariantChoice = assignedVariantIds.length > 1;
+  const resolvedVariantId = needsVariantChoice
+    ? session.selectedVariantId
+    : (assignedVariantIds[0] ?? null);
+
 const workout = workoutType
-  ? getWorkout(workoutType)
+  ? getWorkoutWithVariant(workoutType, resolvedVariantId)
   : undefined;
+
+  // Only a real (non-default) pick gets a label — پیش‌فرض reads as noise
+  // next to a workout title that already says what it is.
+  const resolvedVariantName =
+    resolvedVariantId && resolvedVariantId !== DEFAULT_VARIANT_ID
+      ? getVariant(resolvedVariantId)?.name
+      : undefined;
 
   const isWorkout = day.activity === "workout";
 
@@ -169,6 +193,41 @@ const workout = workoutType
           <p className="text-xl font-bold text-white">
             امروز تمرینی نداری
           </p>
+        </div>
+      </div>
+    );
+  }
+
+  // A workout day with 2+ assigned plans and nothing picked yet blocks the
+  // exercise list until one is chosen — asked once (see setSelectedVariantId,
+  // which sticks for the rest of today).
+  if (isWorkout && needsVariantChoice && resolvedVariantId === null) {
+    return (
+      <div className="space-y-4 px-5 pb-5 pt-10 text-center">
+        <WorkoutHeader title={day.title} showForgotButton />
+
+        <p className="text-white">امروز کدوم برنامه رو می‌خوای انجام بدی؟</p>
+
+        <div className="space-y-2">
+          {assignedVariantIds.map((variantId) => {
+            const label =
+              variantId === DEFAULT_VARIANT_ID
+                ? "پیش‌فرض"
+                : (getVariant(variantId)?.name ?? "پیش‌فرض");
+
+            return (
+              <button
+                key={variantId}
+                onClick={() => {
+                  setSelectedVariantId(variantId);
+                  forceRerender((n) => n + 1);
+                }}
+                className="glass-tap selector-pill w-full rounded-2xl py-4 font-bold text-white"
+              >
+                {label}
+              </button>
+            );
+          })}
         </div>
       </div>
     );
@@ -325,7 +384,7 @@ const workout = workoutType
   return (
     <div className="space-y-6 px-5 pb-5 pt-10">
       <WorkoutHeader
-        title={workout.title}
+        title={resolvedVariantName ? `${workout.title} — ${resolvedVariantName}` : workout.title}
         showForgotButton
         onEditWorkout={() => setEditChoiceOpen(true)}
       />
