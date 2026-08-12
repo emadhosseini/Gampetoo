@@ -26,6 +26,7 @@ import ProfilePage from "@/pages/ProfilePage";
 import WeightDetailPage from "@/pages/WeightDetailPage";
 import CaloriesDetailPage from "@/pages/CaloriesDetailPage";
 import ActivityDetailPage from "@/pages/ActivityDetailPage";
+import CalorieBudgetDetailPage from "@/pages/CalorieBudgetDetailPage";
 
 import { hasCurrentUsername } from "@/utils/userEngine";
 import { initSync } from "@/sync/remoteSync";
@@ -135,6 +136,11 @@ function AppRoutes() {
         <Route
           path="/progress/activity"
           element={<ActivityDetailPage />}
+        />
+
+        <Route
+          path="/progress/calorie-budget"
+          element={<CalorieBudgetDetailPage />}
         />
       </Route>
 

@@ -54,6 +54,50 @@ export function buildDailyBuckets(
   return buckets;
 }
 
+/**
+ * One bucket per calendar day of a fixed calendar week — Saturday..Friday
+ * or Monday..Sunday, per the user's "روز شروع هفته" setting — rather than
+ * buildDailyBuckets' rolling last-7-days-ending-today window. `weekOffset`
+ * counts whole weeks back from the week that contains today (0 = this
+ * week), so panning through weeks always lands on real week boundaries
+ * instead of any arbitrary 7-day slice.
+ *
+ * A day later in the week than today (this week only) genuinely hasn't
+ * happened yet, so it's always null regardless of `missingDays` — "zero"
+ * there would draw a future day as an already-finished zero total, which
+ * isn't true yet.
+ */
+export function buildWeekBuckets(
+  history: DailyMetricEntry[],
+  weekStartDay: number,
+  missingDays: MissingDayMeaning = "gap",
+  weekOffset = 0,
+): StatBucket[] {
+  const byDate = new Map(history.map((entry) => [entry.date, entry.value]));
+  const fallback = missingDays === "zero" ? 0 : null;
+
+  const today = new Date();
+  const todayIso = toLocalDateString(today);
+  const daysSinceWeekStart = (today.getDay() - weekStartDay + 7) % 7;
+
+  const weekStart = new Date(today);
+  weekStart.setDate(today.getDate() - daysSinceWeekStart - weekOffset * 7);
+
+  const buckets: StatBucket[] = [];
+
+  for (let i = 0; i < 7; i++) {
+    const date = new Date(weekStart);
+    date.setDate(weekStart.getDate() + i);
+
+    const iso = toLocalDateString(date);
+    const value = iso > todayIso ? null : (byDate.get(iso) ?? fallback);
+
+    buckets.push({ label: formatDisplayDayNumber(date), value });
+  }
+
+  return buckets;
+}
+
 // How many days of `monthDate`'s month have actually happened — the whole
 // month for a past one, only the days so far for the current one. Dividing
 // by this (rather than by the number of logged days) is what makes a

@@ -13,23 +13,24 @@ export default function SubstitutionsCard({
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="glass-panel rounded-2xl p-5">
+    // Same compact-card treatment as MealCard: p-2.5 + text-sm matches
+    // WeeklyScheduleModal's "تقویم هفته" button height, glass-static drops
+    // the press-scale a plain expand-in-place card shouldn't have.
+    <div className="glass-panel glass-static rounded-2xl p-2.5">
       <button
         onClick={() => setIsOpen((prev) => !prev)}
         className="grid w-full grid-cols-[24px_1fr_24px] items-center"
       >
         <span />
 
-        <span className="flex items-center justify-center gap-3">
-          <span className="text-2xl">🔄</span>
+        <span className="flex items-center justify-center gap-2">
+          <span className="text-lg">🔄</span>
 
-          <h2 className="text-lg font-semibold text-white">
-            جایگزین‌های غذایی
-          </h2>
+          <h2 className="text-sm font-bold text-white">جایگزین‌های غذایی</h2>
         </span>
 
         <ChevronDown
-          className={`h-5 w-5 text-zinc-200 transition-transform ${
+          className={`h-4 w-4 text-zinc-200 transition-transform ${
             isOpen ? "rotate-180" : ""
           }`}
         />

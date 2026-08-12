@@ -139,10 +139,10 @@ export default function SettingsSidebar({ open, onClose }: SettingsSidebarProps)
         </div>
 
         <div className="mt-2 divide-y divide-white/10">
-          {/* تقویم و زمان استراحت تنها گزینه‌های واقعاً فعال‌ان فعلاً —
-              بقیه (تم، زبان، واحد وزن، روز شروع هفته) ذخیره می‌شن ولی هنوز
-              جای دیگه‌ای از اپ ازشون استفاده نمی‌کنه، پس غیرفعال و کم‌رنگ
-              نمایش داده می‌شن تا گزینه‌ای که کار نمی‌کنه گمراه‌کننده نباشه. */}
+          {/* تقویم، زمان استراحت و روز شروع هفته گزینه‌های واقعاً فعال‌ان —
+              بقیه (تم، زبان، واحد وزن) ذخیره می‌شن ولی هنوز جای دیگه‌ای از
+              اپ ازشون استفاده نمی‌کنه، پس غیرفعال و کم‌رنگ نمایش داده
+              می‌شن تا گزینه‌ای که کار نمی‌کنه گمراه‌کننده نباشه. */}
           <SettingsRow label="تقویم">
             <SegmentedControl
               layoutId="settings-calendar"
@@ -208,12 +208,11 @@ export default function SettingsSidebar({ open, onClose }: SettingsSidebarProps)
             />
           </SettingsRow>
 
-          <SettingsRow label="روز شروع هفته" disabled>
+          <SettingsRow label="روز شروع هفته">
             <SegmentedControl
               layoutId="settings-week-start"
               value={weekStart}
               onChange={setWeekStart}
-              disabled
               options={[
                 { value: "saturday", label: "شنبه" },
                 { value: "monday", label: "دوشنبه" },

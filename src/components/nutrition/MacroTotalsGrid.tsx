@@ -46,19 +46,22 @@ export default function MacroTotalsGrid({
   className = "",
 }: MacroTotalsGridProps) {
   return (
-    <div className={`glass-chip rounded-2xl p-2 ${className}`}>
+    // py-1.5 (down from py-3): matches WeeklyDatePicker's own "امروز" pill
+    // (py-2.5, one text-sm line) as closely as a two-line cell (label +
+    // value) can get.
+    <div className={`glass-chip glass-static rounded-2xl p-1.5 ${className}`}>
       <div className="grid grid-cols-4 gap-1">
         {MACRO_FIELDS.map((field) => (
           <div
             key={field.key}
-            className={`rounded-xl py-3 text-center ${
+            className={`rounded-xl py-1.5 text-center ${
               field.key === "protein" && proteinStanding
                 ? PROTEIN_RING[proteinStanding]
                 : ""
             }`}
           >
             <p className="text-xs text-white/60">{field.label}</p>
-            <p className="mt-1 text-sm font-bold text-white">
+            <p className="mt-0.5 text-sm font-bold text-white">
               {toFaDigits(totals[field.key])}
             </p>
           </div>

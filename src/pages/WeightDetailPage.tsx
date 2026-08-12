@@ -87,7 +87,7 @@ export default function WeightDetailPage() {
 
         <button
           onClick={() => setHistoryModalOpen(true)}
-          className="ghost-action w-full rounded-2xl py-3 text-sm font-medium text-white"
+          className="ghost-action ghost-action-static w-full rounded-2xl py-3 text-sm font-medium text-white"
         >
           مشاهده و ویرایش تاریخچه وزن
         </button>

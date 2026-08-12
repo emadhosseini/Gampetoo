@@ -40,7 +40,7 @@ export default function ProfilePage() {
 
       <button
         onClick={() => setAccountModalOpen(true)}
-        className="glass-panel flex w-full items-center justify-between rounded-3xl p-5"
+        className="glass-panel glass-static flex w-full items-center justify-between rounded-3xl p-5"
       >
         <div className="flex items-center gap-4">
           {/* Gender-based avatar, following the same male-unless-female rule
@@ -78,7 +78,7 @@ export default function ProfilePage() {
       <div className="flex gap-4">
         <button
           onClick={() => setWeightModalOpen(true)}
-          className="glass-panel flex-1 rounded-3xl p-4 text-center"
+          className="glass-panel glass-static flex-1 rounded-3xl p-4 text-center"
         >
           <p className="text-lg font-bold text-white">وزن</p>
           <p className="mt-1 text-sm text-white">
@@ -88,7 +88,7 @@ export default function ProfilePage() {
 
         <button
           onClick={() => setHeightModalOpen(true)}
-          className="glass-panel flex-1 rounded-3xl p-4 text-center"
+          className="glass-panel glass-static flex-1 rounded-3xl p-4 text-center"
         >
           <p className="text-lg font-bold text-white">قد</p>
           <p className="mt-1 text-sm text-white">
@@ -103,7 +103,7 @@ export default function ProfilePage() {
           getCurrentUserAge), so it can't go stale on a birthday. */}
       <button
         onClick={() => setBirthDateModalOpen(true)}
-        className="glass-panel w-full rounded-3xl p-4 text-center"
+        className="glass-panel glass-static w-full rounded-3xl p-4 text-center"
       >
         <p className="text-lg font-bold text-white">تاریخ تولد</p>
         <p className="mt-1 text-sm text-white">

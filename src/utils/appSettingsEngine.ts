@@ -24,9 +24,17 @@ const DEFAULT_SETTINGS: AppSettings = {
   theme: "dark",
   language: "fa",
   weightUnit: "kg",
-  weekStart: "saturday",
+  weekStart: "monday",
   restSeconds: 90,
 };
+
+// Date.getDay()'s own 0=Sunday..6=Saturday numbering — what every week-
+// bucketing calculation (StatChartPage's "هفته" range) actually needs,
+// rather than the "saturday"/"monday" strings this setting is stored and
+// shown as.
+export function weekStartDayNumber(weekStart: WeekStart): number {
+  return weekStart === "saturday" ? 6 : 1;
+}
 
 function storageKey() {
   return scopedKey(STORAGE_KEY);
