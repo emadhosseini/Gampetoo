@@ -1,8 +1,8 @@
-import { Sparkles, X } from "lucide-react";
+import { Sparkles } from "lucide-react";
 
 import ModalOverlay from "@/components/ModalOverlay";
 import type { MealSlot } from "@/data/nutrition/foodCatalog";
-import { getLoggedEntries, removeLoggedEntry } from "@/utils/dailyLogEngine";
+import { getLoggedEntries } from "@/utils/dailyLogEngine";
 import { toFaDigits } from "@/utils/numberFormat";
 
 export interface MealOverviewModalProps {
@@ -10,21 +10,21 @@ export interface MealOverviewModalProps {
   onClose: () => void;
   onAdd: () => void;
   onAddAi: () => void;
-  // Bumped after a removal so the card behind this modal (whose own state
-  // was read before it opened) shows the fresh totals once this closes.
-  onChange: () => void;
 }
 
-// Opened by tapping the whole meal card — a review of what's already been
-// logged for that meal, one level up from the two actual add screens:
-// AddMealEntryModal (manual food search, one item at a time) or
-// AiMealEntryModal (free-text description, AI-computed later).
+// Opened by tapping the whole meal card from the bottom-nav quick-add
+// shortcut — a read-only review of what's already logged for that meal,
+// one level up from the two actual add screens: AddMealEntryModal (manual
+// food search, one item at a time) or AiMealEntryModal (free-text
+// description, AI-computed later). Deliberately no edit/remove here —
+// this shortcut exists purely to log something quickly, not to manage
+// what's already there; correcting a past entry still lives on the daily
+// log page's own meal cards, where it belongs.
 export default function MealOverviewModal({
   meal,
   onClose,
   onAdd,
   onAddAi,
-  onChange,
 }: MealOverviewModalProps) {
   if (!meal) {
     return null;
@@ -36,11 +36,6 @@ export default function MealOverviewModal({
     (sum, entry) => sum + (entry.calories ?? 0),
     0,
   );
-
-  function handleRemove(entryId: string) {
-    removeLoggedEntry(meal!.id, entryId);
-    onChange();
-  }
 
   return (
     <ModalOverlay onClose={onClose}>
@@ -75,14 +70,6 @@ export default function MealOverviewModal({
                       {toFaDigits(entry.calories)} کالری
                     </span>
                   )}
-
-                  <button
-                    onClick={() => handleRemove(entry.id)}
-                    aria-label={`حذف ${entry.name}`}
-                    className="glass-tap flex h-7 w-7 shrink-0 items-center justify-center rounded-full"
-                  >
-                    <X size={14} className="text-white" />
-                  </button>
                 </div>
               ))}
             </div>

@@ -78,7 +78,6 @@ export function useQuickAddMealFlow(onChange: () => void = () => {}) {
               : foodStep,
           )
         }
-        onChange={onChange}
       />
 
       <AddMealEntryModal

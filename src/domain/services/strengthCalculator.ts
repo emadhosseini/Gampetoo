@@ -14,15 +14,32 @@ export function calculate1RM(weight: number, reps: number): number {
   return weight * (1 + reps / 30);
 }
 
+/**
+ * Isometric-hold equivalent of calculate1RM — for a timed exercise (پلانک
+ * and the like) hold duration, not weight × reps, is the real measure of
+ * strength/endurance, since most holds carry no external load at all.
+ * calculate1RM would score a 0kg hold as exactly 0 no matter how long it
+ * was held, which is why holds get their own formula instead of reusing
+ * it: the duration itself is the score, with any real added weight (a
+ * weighted plank) folded in as a straightforward bonus on top rather than
+ * multiplied in, so it can only ever help, never require an external load
+ * to register at all.
+ */
+export function calculateIsometricScore(durationSeconds: number, addedWeightKg: number): number {
+  return Math.round(durationSeconds + addedWeightKg);
+}
+
 export type StrengthCategory = "upper" | "lower" | "core";
 
-// One exercise's best-known weight/reps pair (its personal record) for
-// whichever category it belongs to — the raw material
+// One exercise's best-known personal-record score for whichever category
+// it belongs to — already converted to a comparable number (via
+// calculate1RM for a weighted exercise, calculateIsometricScore for a
+// timed one) by the caller, since only the caller (strengthStatsEngine)
+// knows which formula a given exercise actually needs. The raw material
 // getOverallStrengthStats turns into a per-category average.
 export interface StrengthCategoryLog {
   category: StrengthCategory;
-  weight: number;
-  reps: number;
+  score: number;
 }
 
 export interface RadarStrengthPoint {
@@ -49,22 +66,21 @@ const CATEGORY_LABELS: Record<StrengthCategory, string> = {
 const FULL_MARK = 150;
 
 /**
- * Averages each category's logged personal records (already converted to
- * 1RM) into one radar point per category — always all three, in a fixed
- * order, even when a category has no logs yet (average 0 rather than a
- * missing spoke).
+ * Averages each category's logged personal-record scores (already
+ * converted to a comparable number by the caller — see StrengthCategoryLog)
+ * into one radar point per category — always all three, in a fixed order,
+ * even when a category has no logs yet (average 0 rather than a missing
+ * spoke).
  */
 export function getOverallStrengthStats(logs: StrengthCategoryLog[]): RadarStrengthPoint[] {
   const categories: StrengthCategory[] = ["upper", "lower", "core"];
 
   return categories.map((category) => {
-    const oneRepMaxes = logs
-      .filter((log) => log.category === category)
-      .map((log) => calculate1RM(log.weight, log.reps));
+    const scores = logs.filter((log) => log.category === category).map((log) => log.score);
 
     const average =
-      oneRepMaxes.length > 0
-        ? Math.round(oneRepMaxes.reduce((sum, value) => sum + value, 0) / oneRepMaxes.length)
+      scores.length > 0
+        ? Math.round(scores.reduce((sum, value) => sum + value, 0) / scores.length)
         : 0;
 
     const percentage = Math.round((Math.min(average, FULL_MARK) / FULL_MARK) * 100);

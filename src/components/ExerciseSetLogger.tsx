@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { BarChart3, Check, Minus, Plus, Timer } from "lucide-react";
+import { BarChart3, Check, Minus, Plus, Timer, Trash2 } from "lucide-react";
 
 import ExerciseProgressChartModal from "@/components/progress/ExerciseProgressChartModal";
 import {
@@ -7,7 +7,9 @@ import {
   confirmSet,
   getPastSessions,
   getPersonalRecord,
+  getPersonalRecordByDuration,
   getTodaysSets,
+  removeSet,
   updateSet,
   type SetEntry,
 } from "@/utils/exerciseSetLogEngine";
@@ -78,6 +80,11 @@ function formatMMSS(totalSeconds: number): string {
 export interface ExerciseSetLoggerProps {
   exerciseId: string;
   exerciseName: string;
+  // Isometric holds (پلانک and the like) are timed, not repeated — see
+  // Exercise.unit in data/workoutLibrary. Defaults to "reps" so every
+  // existing call site (none of which passed this before) keeps behaving
+  // exactly as it always did.
+  unit?: "reps" | "seconds";
 }
 
 // The drawer under an exercise card on the daily workout page — opened by
@@ -88,26 +95,58 @@ export interface ExerciseSetLoggerProps {
 export default function ExerciseSetLogger({
   exerciseId,
   exerciseName,
+  unit = "reps",
 }: ExerciseSetLoggerProps) {
+  const isSeconds = unit === "seconds";
+  const repsLabel = isSeconds ? "ثانیه" : "تکرار";
+  // Same ±5s vs ±1 rep convention the workout-library editor already uses
+  // for this exact distinction (ExerciseEditRow in WorkoutDetailPage).
+  const repsStep = isSeconds ? 5 : REPS_STEP;
   const [sets, setSets] = useState<SetEntry[]>(() => getTodaysSets(exerciseId));
-  const [restSecondsLeft, setRestSecondsLeft] = useState<number | null>(null);
+  // The wall-clock moment rest actually ends, not a countable "seconds
+  // left" — a plain setTimeout-decrements-a-number timer only ever ticks
+  // while a JS frame actually runs, so backgrounding the tab (throttled
+  // timers) or locking the phone screen (JS fully suspended) freezes it in
+  // place instead of continuing to count down; coming back showed a stale
+  // number nowhere near the real elapsed time. Deriving the remaining time
+  // from Date.now() on every tick — and immediately on visibilitychange,
+  // rather than waiting for the next tick — means the moment the screen
+  // unlocks the display jumps straight to the correct value (or finishes
+  // outright if rest was already over while the phone was locked).
+  const [restEndAt, setRestEndAt] = useState<number | null>(null);
+  // Forces a re-render on every tick/visibility-change so the render-time
+  // Math.ceil below recomputes against the current real time — nothing is
+  // actually stored in this counter itself.
+  const [, forceTick] = useState(0);
   const [chartOpen, setChartOpen] = useState(false);
 
   useEffect(() => {
-    if (restSecondsLeft === null) return;
+    if (restEndAt === null) return;
 
-    if (restSecondsLeft <= 0) {
-      setRestSecondsLeft(null);
-      return;
+    function tick() {
+      if (Date.now() >= restEndAt!) {
+        setRestEndAt(null);
+      } else {
+        forceTick((n) => n + 1);
+      }
     }
 
-    const timer = setTimeout(() => setRestSecondsLeft((s) => (s ?? 0) - 1), 1000);
+    const interval = setInterval(tick, 1000);
+    document.addEventListener("visibilitychange", tick);
 
-    return () => clearTimeout(timer);
-  }, [restSecondsLeft]);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", tick);
+    };
+  }, [restEndAt]);
+
+  const restSecondsLeft =
+    restEndAt === null ? null : Math.max(0, Math.ceil((restEndAt - Date.now()) / 1000));
 
   const pastSessions = getPastSessions(exerciseId, 10);
-  const pr = getPersonalRecord(exerciseId);
+  // Isometric holds record their PR by longest duration, not heaviest
+  // weight (usually 0) — see getPersonalRecordByDuration.
+  const pr = isSeconds ? getPersonalRecordByDuration(exerciseId) : getPersonalRecord(exerciseId);
 
   function handleAddSet() {
     setSets(addSet(exerciseId));
@@ -122,7 +161,11 @@ export default function ExerciseSetLogger({
     // Read fresh on every confirm rather than once — the settings popup's
     // own "ذخیره" reloads the page after saving, but reading it live here
     // costs nothing and needs no invalidation either way.
-    setRestSecondsLeft(getAppSettings().restSeconds);
+    setRestEndAt(Date.now() + getAppSettings().restSeconds * 1000);
+  }
+
+  function handleRemoveSet(setId: string) {
+    setSets(removeSet(exerciseId, setId));
   }
 
   return (
@@ -148,11 +191,12 @@ export default function ExerciseSetLogger({
         )}
 
         {sets.length > 0 && (
-          <div className="mb-2 grid grid-cols-[28px_1fr_1fr_40px] gap-2 px-1 text-xs text-white/50">
+          <div className="mb-2 grid grid-cols-[24px_1fr_1fr_36px_28px] gap-2 px-1 text-xs text-white/50">
             <span>ست</span>
             <span>وزنه (kg)</span>
-            <span>تکرار</span>
+            <span>{repsLabel}</span>
             <span>تایید</span>
+            <span />
           </div>
         )}
 
@@ -160,7 +204,7 @@ export default function ExerciseSetLogger({
           {sets.map((set, index) => (
             <div
               key={set.id}
-              className={`glass-chip glass-static grid grid-cols-[28px_1fr_1fr_40px] items-center gap-2 rounded-xl p-2 ${
+              className={`glass-chip glass-static grid grid-cols-[24px_1fr_1fr_36px_28px] items-center gap-2 rounded-xl p-2 ${
                 set.confirmed ? "opacity-60" : ""
               }`}
             >
@@ -177,7 +221,7 @@ export default function ExerciseSetLogger({
 
               <NumberStepper
                 value={set.reps}
-                step={REPS_STEP}
+                step={repsStep}
                 disabled={set.confirmed}
                 onChange={(reps) => handleUpdateSet(set.id, { reps })}
               />
@@ -194,6 +238,17 @@ export default function ExerciseSetLogger({
               >
                 <Check size={16} />
               </button>
+
+              {/* Deleting stays available even after confirming a set —
+                  the whole point is fixing a wrong entry, and a mistake
+                  isn't necessarily caught before it's confirmed. */}
+              <button
+                onClick={() => handleRemoveSet(set.id)}
+                aria-label={`حذف ست ${toFaDigits(index + 1)}`}
+                className="flex h-8 w-8 items-center justify-center text-white/40"
+              >
+                <Trash2 size={14} />
+              </button>
             </div>
           ))}
         </div>
@@ -209,8 +264,11 @@ export default function ExerciseSetLogger({
 
       {pr && (
         <div className="glass-chip glass-static flex items-center justify-center gap-1.5 rounded-full py-2 text-xs font-bold text-avocado-yellow">
-          🏆 رکورد شخصی (PR): {toFaDigits(pr.weight)} کیلوگرم (ثبت‌شده در{" "}
-          {formatDisplayShort(isoToLocalDate(pr.date))})
+          🏆 رکورد شخصی (PR):{" "}
+          {isSeconds
+            ? `${toFaDigits(pr.reps)} ثانیه`
+            : `${toFaDigits(pr.weight)} کیلوگرم`}{" "}
+          (ثبت‌شده در {formatDisplayShort(isoToLocalDate(pr.date))})
         </div>
       )}
 
@@ -232,7 +290,7 @@ export default function ExerciseSetLogger({
                   .filter((set) => set.confirmed)
                   .map(
                     (set, i) =>
-                      `ست ${toFaDigits(i + 1)}: ${toFaDigits(set.weight)}kg × ${toFaDigits(set.reps)}`,
+                      `ست ${toFaDigits(i + 1)}: ${toFaDigits(set.weight)}kg × ${toFaDigits(set.reps)} ${repsLabel}`,
                   )
                   .join(" | ")}
               </div>

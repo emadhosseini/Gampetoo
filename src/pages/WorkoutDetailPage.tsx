@@ -1,18 +1,88 @@
-import { ChevronDown, Minus, Plus, Search } from "lucide-react";
+import { ChevronDown, Minus, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 
 import Toggle from "@/components/Toggle";
+import ModalOverlay from "@/components/ModalOverlay";
 import { getWorkout, saveWorkoutExercises } from "@/store/workoutLibraryStore";
 import {
   getSpecializedWarmup,
   saveWarmupGroups,
 } from "@/store/warmupLibraryStore";
+import {
+  createVariant,
+  deleteVariant,
+  getVariants,
+  renameVariant,
+  updateVariantGroups,
+} from "@/store/workoutVariantStore";
 
 import type { Exercise, ExerciseGroup } from "@/data/workoutLibrary";
 import type { WarmupGroup } from "@/data/warmupLibrary";
 import { matchesWordPrefix, normalizeFa } from "@/utils/persianSearch";
 import { toFaDigits } from "@/utils/numberFormat";
+import { generateId } from "@/utils/id";
+
+// The library-workout tab's key in `drafts` below — every real plan is
+// keyed by its own id already, so this just needs to not collide with one
+// of those (a generated id never comes out as this literal string).
+const DEFAULT_KEY = "default";
+
+// A single text-input popup, reused for both "save as a new plan" (asks
+// for a name up front) and "rename this plan" (pre-filled with its current
+// name) — same shape, just a different title/placeholder/initial value.
+function VariantNameModal({
+  open,
+  title,
+  initialName,
+  onClose,
+  onSubmit,
+}: {
+  open: boolean;
+  title: string;
+  initialName: string;
+  onClose: () => void;
+  onSubmit: (name: string) => void;
+}) {
+  const [name, setName] = useState(initialName);
+
+  if (!open) return null;
+
+  return (
+    <ModalOverlay onClose={onClose}>
+      <div className="glass-panel glass-static space-y-4 rounded-3xl p-6 text-center">
+        <h2 className="text-lg font-bold text-white">{title}</h2>
+
+        <input
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="مثلاً پوش B"
+          autoFocus
+          className="glass-chip w-full rounded-xl p-4 text-center text-white placeholder:text-white/40 outline-none"
+        />
+
+        <button
+          onClick={() => {
+            if (!name.trim()) return;
+            onSubmit(name.trim());
+          }}
+          disabled={!name.trim()}
+          className="w-full glass-action rounded-2xl py-3 font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          ذخیره
+        </button>
+
+        <button
+          onClick={onClose}
+          className="ghost-action w-full rounded-2xl py-3 font-medium text-white"
+        >
+          بستن
+        </button>
+      </div>
+    </ModalOverlay>
+  );
+}
 
 // The toggle-plus-steppers block a single exercise is edited with — shared
 // between the normal per-group list and the search results below, so a
@@ -108,10 +178,6 @@ export default function WorkoutDetailPage() {
   const workout = id ? getWorkout(id) : undefined;
   const specializedWarmup = id ? getSpecializedWarmup(id) : undefined;
 
-  const [groups, setGroups] = useState<ExerciseGroup[]>(
-    () => workout?.groups ?? [],
-  );
-
   const [warmupGroups, setWarmupGroups] = useState<WarmupGroup[]>(
     () => specializedWarmup?.groups ?? [],
   );
@@ -121,12 +187,82 @@ export default function WorkoutDetailPage() {
   const [warmupSectionOpen, setWarmupSectionOpen] = useState(false);
 
   const [saved, setSaved] = useState(false);
-  // Whether there's a change since the last save — the floating pill up
-  // top only shows up while this is true, rather than sitting there at
-  // full size the whole time regardless of whether anything changed.
-  const [dirty, setDirty] = useState(false);
 
   const [query, setQuery] = useState("");
+
+  // Which of this workout's saved plans (workoutVariantStore) is currently
+  // being viewed/edited — null means the library's own base workout
+  // (برنامه پیش‌فرض). Bumping variantVersion forces a fresh getVariants()
+  // read after create/rename/delete, the same "no reactive store" pattern
+  // the rest of this app already uses.
+  const [editingVariantId, setEditingVariantId] = useState<string | null>(null);
+  const [variantVersion, setVariantVersion] = useState(0);
+  const [nameModal, setNameModal] = useState<"create" | "rename" | null>(null);
+
+  // A plan created via "+" but not saved yet — exists only in this page's
+  // own state (drafts below) until handleSave actually persists it with a
+  // real id via createVariant. Lets a brand-new plan be built up over
+  // several tab switches without writing a half-finished one to storage.
+  const [pendingVariants, setPendingVariants] = useState<
+    { id: string; name: string }[]
+  >([]);
+
+  // Every plan's exercises as edited on screen, keyed by DEFAULT_KEY or a
+  // (real or pending) variant id — populated lazily, the first time a tab
+  // is actually edited (see updateExercise). Switching tabs never touches
+  // this: every plan's edits sit here, untouched, for as long as this page
+  // stays mounted, and handleSave writes every key present here back to
+  // storage in one go — leaving this page without saving (a real
+  // navigation away) is what actually discards it, simply because it's
+  // plain component state and nothing more.
+  const [drafts, setDrafts] = useState<Record<string, ExerciseGroup[]>>({});
+  // Specialized-warmup edits live in `warmupGroups` above, not `drafts`
+  // (warmup isn't per-plan) — tracked separately so it still counts toward
+  // `dirty` below instead of a warmup-only change hiding the save pill.
+  const [warmupDirty, setWarmupDirty] = useState(false);
+
+  const variants = useMemo(
+    () => (id ? getVariants(id) : []),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [id, variantVersion],
+  );
+
+  const currentKey = editingVariantId ?? DEFAULT_KEY;
+
+  // A brand-new plan starts with every exercise off and default sets/reps
+  // — never a copy of whatever happened to be checked on the tab the user
+  // was looking at, so building "پوش B" always starts from a clean slate.
+  function blankGroupsFromBase(): ExerciseGroup[] {
+    return (workout?.groups ?? []).map((group) => ({
+      ...group,
+      exercises: group.exercises.map((exercise) => ({
+        ...exercise,
+        enabled: false,
+      })),
+    }));
+  }
+
+  function sourceGroupsFor(key: string): ExerciseGroup[] {
+    if (key === DEFAULT_KEY) return workout?.groups ?? [];
+
+    return (
+      variants.find((v) => v.id === key)?.groups ??
+      (pendingVariants.some((p) => p.id === key) ? blankGroupsFromBase() : [])
+    );
+  }
+
+  const groups = drafts[currentKey] ?? sourceGroupsFor(currentKey);
+  // Whether ANY plan has an unsaved edit right now, not just the one on
+  // screen — handleSave writes every one of them, so the floating pill
+  // (and the bottom button's label) reflect that same scope rather than
+  // only the currently-open tab.
+  const dirty = warmupDirty || Object.keys(drafts).length > 0;
+
+  const editingVariantName = editingVariantId
+    ? (variants.find((v) => v.id === editingVariantId)?.name ??
+      pendingVariants.find((p) => p.id === editingVariantId)?.name ??
+      null)
+    : null;
 
   // Flattened across every group rather than searched per-group, since the
   // whole point is finding a move without knowing (or opening) which group
@@ -157,7 +293,7 @@ export default function WorkoutDetailPage() {
 
   function toggleWarmupGroup(groupId: string) {
     setSaved(false);
-    setDirty(true);
+    setWarmupDirty(true);
 
     setWarmupGroups((prev) =>
       prev.map((group) =>
@@ -174,36 +310,138 @@ export default function WorkoutDetailPage() {
     patch: Partial<ExerciseGroup["exercises"][number]>,
   ) {
     setSaved(false);
-    setDirty(true);
 
-    setGroups((prev) =>
-      prev.map((group) =>
-        group.id !== groupId
-          ? group
-          : {
-              ...group,
-              exercises: group.exercises.map((exercise) =>
-                exercise.id !== exerciseId
-                  ? exercise
-                  : { ...exercise, ...patch },
-              ),
-            },
-      ),
-    );
+    setDrafts((prev) => {
+      const base = prev[currentKey] ?? sourceGroupsFor(currentKey);
+
+      return {
+        ...prev,
+        [currentKey]: base.map((group) =>
+          group.id !== groupId
+            ? group
+            : {
+                ...group,
+                exercises: group.exercises.map((exercise) =>
+                  exercise.id !== exerciseId
+                    ? exercise
+                    : { ...exercise, ...patch },
+                ),
+              },
+        ),
+      };
+    });
   }
 
+  // Writes every plan that has an unsaved draft — not just the one on
+  // screen — so switching tabs before saving never quietly loses an edit
+  // made to a different plan earlier in the same visit. A pending
+  // (not-yet-real) plan is actually created here for the first time, via
+  // its draft; idMap lets the tab the user is currently looking at follow
+  // it from its temporary id to the real one it gets once persisted.
   function handleSave() {
-    saveWorkoutExercises(workout!.id, groups);
+    if (DEFAULT_KEY in drafts) {
+      saveWorkoutExercises(workout!.id, drafts[DEFAULT_KEY]);
+    }
+
+    for (const variant of variants) {
+      if (variant.id in drafts) {
+        updateVariantGroups(variant.id, drafts[variant.id]);
+      }
+    }
+
+    const idMap: Record<string, string> = {};
+
+    for (const pending of pendingVariants) {
+      const created = createVariant(workout!.id, pending.name, drafts[pending.id] ?? []);
+
+      idMap[pending.id] = created.id;
+    }
 
     if (specializedWarmup) {
       saveWarmupGroups(specializedWarmup.workoutType, warmupGroups);
     }
 
+    setPendingVariants([]);
+    setDrafts({});
+    setWarmupDirty(false);
+    setVariantVersion((v) => v + 1);
+
+    if (editingVariantId && idMap[editingVariantId]) {
+      setEditingVariantId(idMap[editingVariantId]);
+    }
+
     setSaved(true);
-    setDirty(false);
+  }
+
+  // Just changes which plan is on screen — every plan's edits already live
+  // in `drafts`, untouched by this, so there's nothing to discard or
+  // confirm here any more.
+  function switchTo(variantId: string | null) {
+    setEditingVariantId(variantId);
+    setSaved(false);
+  }
+
+  // Doesn't touch storage — see pendingVariants above. Starts blank
+  // (blankGroupsFromBase), not a copy of whatever tab was open, so a new
+  // plan is always built up from scratch.
+  function handleCreateVariant(name: string) {
+    const tempId = generateId();
+
+    setPendingVariants((prev) => [...prev, { id: tempId, name }]);
+    setDrafts((prev) => ({ ...prev, [tempId]: blankGroupsFromBase() }));
+    setEditingVariantId(tempId);
+    setNameModal(null);
+    setSaved(false);
+  }
+
+  function handleRenameVariant(name: string) {
+    if (!editingVariantId) return;
+
+    if (pendingVariants.some((p) => p.id === editingVariantId)) {
+      setPendingVariants((prev) =>
+        prev.map((p) => (p.id === editingVariantId ? { ...p, name } : p)),
+      );
+    } else {
+      renameVariant(editingVariantId, name);
+      setVariantVersion((v) => v + 1);
+    }
+
+    setNameModal(null);
+  }
+
+  function handleDeleteVariant() {
+    if (!editingVariantId) return;
+
+    const isPending = pendingVariants.some((p) => p.id === editingVariantId);
+
+    if (!isPending && !window.confirm("این پلن حذف بشه؟ این کار قابل بازگشت نیست.")) {
+      return;
+    }
+
+    if (isPending) {
+      setPendingVariants((prev) => prev.filter((p) => p.id !== editingVariantId));
+    } else {
+      deleteVariant(editingVariantId);
+      setVariantVersion((v) => v + 1);
+    }
+
+    setDrafts((prev) => {
+      const next = { ...prev };
+
+      delete next[editingVariantId!];
+
+      return next;
+    });
+
+    switchTo(null);
   }
 
   const isWarmupWorkout = workout.id === "warmup";
+  // Only the workouts a program day can actually be assigned to (see
+  // ProgramBuilderPage/WorkoutPickerModal) benefit from multiple plans —
+  // گرم کردن عمومی has no plan concept of its own, and an empty workout has
+  // no exercises yet to clone into a first plan anyway.
+  const supportsVariants = !isWarmupWorkout && (workout.groups?.length ?? 0) > 0;
 
   return (
     <div className="space-y-6 px-5 pb-5 pt-10">
@@ -225,9 +463,77 @@ export default function WorkoutDetailPage() {
         </div>
       )}
 
-      <h1 className="text-2xl font-bold">
-        {workout.title}
-      </h1>
+      <div>
+        <h1 className="text-2xl font-bold">{workout.title}</h1>
+
+        {editingVariantName && (
+          <p className="mt-1 text-sm font-medium text-white/50">{editingVariantName}</p>
+        )}
+      </div>
+
+      {/* Multiple saved plans for this same workout (e.g. "پوش A"/"پوش B")
+          — برنامه پیش‌فرض is always the library's own base workout and
+          can't be renamed/deleted; anything else here is a
+          workoutVariantStore entry (or, until the next save, a pending one
+          that only exists in this page's own state — see pendingVariants).
+          A new one always starts blank (blankGroupsFromBase), never a copy
+          of whatever tab was open. ProgramBuilderPage lets a program day
+          be assigned more than one of these, and WorkoutPage asks which to
+          do once the day arrives. */}
+      {supportsVariants && (
+        <div className="space-y-2">
+          <div className="no-scrollbar flex items-center gap-2 overflow-x-auto">
+            <button
+              onClick={() => switchTo(null)}
+              className={`glass-chip glass-static shrink-0 rounded-full px-4 py-2 text-sm font-medium text-white ${
+                !editingVariantId ? "glass-chip-selected" : ""
+              }`}
+            >
+              برنامه پیش‌فرض
+            </button>
+
+            {[...variants, ...pendingVariants].map((variant) => (
+              <button
+                key={variant.id}
+                onClick={() => switchTo(variant.id)}
+                className={`glass-chip glass-static shrink-0 rounded-full px-4 py-2 text-sm font-medium text-white ${
+                  editingVariantId === variant.id ? "glass-chip-selected" : ""
+                }`}
+              >
+                {variant.name}
+              </button>
+            ))}
+
+            <button
+              onClick={() => setNameModal("create")}
+              aria-label="ذخیره به عنوان پلن جدید"
+              className="glass-action flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white"
+            >
+              <Plus size={16} />
+            </button>
+          </div>
+
+          {editingVariantName && (
+            <div className="flex items-center justify-center gap-2">
+              <button
+                onClick={() => setNameModal("rename")}
+                className="glass-tap glass-static flex items-center gap-1 rounded-full px-3 py-1.5 text-xs text-white/70"
+              >
+                <Pencil size={12} />
+                تغییر نام
+              </button>
+
+              <button
+                onClick={handleDeleteVariant}
+                className="glass-tap glass-static flex items-center gap-1 rounded-full px-3 py-1.5 text-xs text-red-400"
+              >
+                <Trash2 size={12} />
+                حذف این پلن
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="space-y-3">
         {/* Above everything else on the page, including گرم کردن تخصصی —
@@ -367,16 +673,22 @@ export default function WorkoutDetailPage() {
 
               {isOpen && (
                 <div className="mt-4 space-y-4">
-                  {group.exercises.map((exercise) => (
-                    <ExerciseEditRow
-                      key={exercise.id}
-                      exercise={exercise}
-                      isWarmupWorkout={isWarmupWorkout}
-                      onUpdate={(patch) =>
-                        updateExercise(group.id, exercise.id, patch)
-                      }
-                    />
-                  ))}
+                  {/* Enabled (checked) exercises float to the top of their
+                      group — a stable sort, so ties (same enabled state)
+                      keep the library's own order instead of jumping
+                      around as unrelated exercises get toggled. */}
+                  {[...group.exercises]
+                    .sort((a, b) => Number(b.enabled) - Number(a.enabled))
+                    .map((exercise) => (
+                      <ExerciseEditRow
+                        key={exercise.id}
+                        exercise={exercise}
+                        isWarmupWorkout={isWarmupWorkout}
+                        onUpdate={(patch) =>
+                          updateExercise(group.id, exercise.id, patch)
+                        }
+                      />
+                    ))}
                 </div>
               )}
             </div>
@@ -392,6 +704,28 @@ export default function WorkoutDetailPage() {
           {saved ? "ذخیره شد ✅" : "ذخیره"}
         </button>
       )}
+
+      {/* Keyed so each open starts from a fresh initialName — this
+          component holds its own input state internally, which would
+          otherwise stay stuck on whatever it was the first time it
+          mounted (e.g. rename reused across different plans). */}
+      <VariantNameModal
+        key={`create-${nameModal === "create"}`}
+        open={nameModal === "create"}
+        title="نام پلن جدید"
+        initialName=""
+        onClose={() => setNameModal(null)}
+        onSubmit={handleCreateVariant}
+      />
+
+      <VariantNameModal
+        key={`rename-${editingVariantId}-${nameModal === "rename"}`}
+        open={nameModal === "rename"}
+        title="تغییر نام پلن"
+        initialName={editingVariantName ?? ""}
+        onClose={() => setNameModal(null)}
+        onSubmit={handleRenameVariant}
+      />
     </div>
   );
 }

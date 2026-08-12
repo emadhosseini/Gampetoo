@@ -13,6 +13,13 @@ type WorkoutHeaderProps = {
   // currently passes one, but a future screen reusing this header might
   // still want a real caption above its title (not a repeat of "today").
   subtitle?: string;
+  // Small, muted label under the title — e.g. the workout-plan name
+  // ("پوش B") next to the workout's own title ("پوش"), which used to be
+  // appended straight into `title` as one string ("پوش — پوش B") and read
+  // as one big, cluttered heading. Kept distinct from `subtitle` (which
+  // sits above the title, same size as body text) since this is deliberately
+  // smaller and secondary to the title rather than a caption leading into it.
+  belowTitle?: string;
   // WorkoutHeader is also reused on NutritionPage — the forgot-to-log
   // button only makes sense on the actual workout page, so it's opt-in
   // rather than always-on.
@@ -29,6 +36,7 @@ type WorkoutHeaderProps = {
 export default function WorkoutHeader({
   title,
   subtitle,
+  belowTitle,
   showForgotButton = false,
   onEditWorkout,
   onEditWorkoutLabel = "تغییر ترتیب یا حرکت‌های تمرین",
@@ -76,6 +84,10 @@ export default function WorkoutHeader({
       <h1 className={`${subtitle ? "mt-1" : ""} text-3xl font-bold`}>
         {title}
       </h1>
+
+      {belowTitle && (
+        <p className="mt-1 text-sm font-medium text-white/50">{belowTitle}</p>
+      )}
 
       {showForgotButton && open && (
         <ModalOverlay onClose={() => setOpen(false)}>

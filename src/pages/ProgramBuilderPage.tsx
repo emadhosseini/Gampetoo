@@ -4,7 +4,9 @@ import { useNavigate } from "react-router-dom";
 import WorkoutPickerModal from "@/components/WorkoutPickerModal";
 import StartDateModal from "@/components/StartDateModal";
 import ModalOverlay from "@/components/ModalOverlay";
+import VariantAssignModal from "@/components/VariantAssignModal";
 import { getWorkout } from "@/store/workoutLibraryStore";
+import { getVariants } from "@/store/workoutVariantStore";
 import { getActiveProgram, updateProgram } from "@/utils/programEngine";
 import { resetSession } from "@/utils/sessionEngine";
 import { generateId } from "@/utils/id";
@@ -42,6 +44,8 @@ function ProgramBuilderPage() {
   // Which day's WorkoutPickerModal is open — index into `days`, or null
   // when closed.
   const [pickerDayIndex, setPickerDayIndex] = useState<number | null>(null);
+  // Which day's VariantAssignModal is open — same index convention.
+  const [variantDayIndex, setVariantDayIndex] = useState<number | null>(null);
   // Empty until explicitly chosen via StartDateModal — handleSave falls
   // back to program.startDate (an existing cycle's own date, untouched) or
   // today (brand new cycle, never asked) when this is still empty.
@@ -70,8 +74,21 @@ function ProgramBuilderPage() {
           workoutId,
           activity: workoutId ? "workout" : "walk",
           title: workoutTitle,
+          // A previous day's assigned plans belonged to whatever workout
+          // used to be here — carrying them over to a newly-picked, likely
+          // unrelated workout would silently assign plans that don't exist
+          // for it.
+          assignedVariantIds: undefined,
         };
       })
+    );
+  }
+
+  function updateDayVariants(index: number, variantIds: string[]) {
+    setDays((prev) =>
+      prev.map((day, i) =>
+        i !== index ? day : { ...day, assignedVariantIds: variantIds },
+      ),
     );
   }
 
@@ -174,6 +191,21 @@ function ProgramBuilderPage() {
           >
             {day.workoutId ? day.title : "استراحت"}
           </button>
+
+          {/* Only worth showing once this workout actually has a saved
+              plan beyond پیش‌فرض to rotate with — an empty state here would
+              just be a dead end pointing at WorkoutDetailPage's own "+"
+              instead of doing anything useful from this page. */}
+          {day.workoutId && getVariants(day.workoutId).length > 0 && (
+            <button
+              onClick={() => setVariantDayIndex(index)}
+              className="glass-tap glass-static mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-medium text-white/70"
+            >
+              چند حالت برنامه
+              {(day.assignedVariantIds?.length ?? 0) > 1 &&
+                ` (${toFaDigits(day.assignedVariantIds!.length)} حالت)`}
+            </button>
+          )}
         </div>
       ))}
 
@@ -207,6 +239,18 @@ function ProgramBuilderPage() {
         onPick={(workoutId) => {
           if (pickerDayIndex !== null) {
             updateDayWorkout(pickerDayIndex, workoutId as WorkoutType | null);
+          }
+        }}
+      />
+
+      <VariantAssignModal
+        open={variantDayIndex !== null}
+        workoutId={variantDayIndex !== null ? days[variantDayIndex]?.workoutId ?? null : null}
+        initialSelected={variantDayIndex !== null ? days[variantDayIndex]?.assignedVariantIds : undefined}
+        onClose={() => setVariantDayIndex(null)}
+        onSave={(variantIds) => {
+          if (variantDayIndex !== null) {
+            updateDayVariants(variantDayIndex, variantIds);
           }
         }}
       />

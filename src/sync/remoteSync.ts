@@ -10,6 +10,7 @@ const SYNCED_BASE_KEYS = [
   "emad-session",
   "emad-workout-library-overrides",
   "emad-workout-exercise-order",
+  "emad-workout-variants",
   "emad-exercise-set-log",
   "emad-calendar-preference",
   "emad-app-settings",

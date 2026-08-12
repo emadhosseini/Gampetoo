@@ -1,7 +1,16 @@
-import { calculateBurnedCalories } from "@/domain/services/calorieCalculator";
+import {
+  calculateBurnedCalories,
+  calculateBurnedCaloriesFromBmr,
+} from "@/domain/services/calorieCalculator";
 import { getCurrentProgramDay } from "./programEngine";
 import { getLatestWeight } from "./weightEngine";
-import { scopedKey } from "./userEngine";
+import { calculateBmr } from "./calorieEngine";
+import {
+  getCurrentUserAge,
+  getCurrentUserGender,
+  getCurrentUserHeight,
+  scopedKey,
+} from "./userEngine";
 import { getTodayLocalDate } from "./dateFormat";
 
 const STORAGE_KEY = "emad-session";
@@ -27,6 +36,13 @@ export interface SessionState {
   // `completed` on the same day-rollover check, since a stale checklist
   // from a previous day's (possibly different) workout would be meaningless.
   checkedExercises: string[];
+  // Which of today's WorkoutDay.assignedVariantIds the user picked to
+  // actually do — asked once (WorkoutPage's variant-choice prompt) when a
+  // day has 2+ assigned variants, then remembered for the rest of the day
+  // so the same workout keeps showing after a reload. Resets to null on
+  // the same day-rollover as everything else above, so tomorrow asks
+  // again rather than silently repeating yesterday's pick.
+  selectedVariantId: string | null;
 }
 
 const today = getTodayLocalDate;
@@ -36,6 +52,7 @@ function createSession(): SessionState {
     completed: false,
     lastDate: today(),
     checkedExercises: [],
+    selectedVariantId: null,
   };
 }
 
@@ -65,9 +82,14 @@ export function getSession() {
 
   const session: SessionState = saved;
 
-  // Backfills a session saved before checkedExercises existed.
+  // Backfills a session saved before checkedExercises/selectedVariantId
+  // existed.
   if (!session.checkedExercises) {
     session.checkedExercises = [];
+  }
+
+  if (session.selectedVariantId === undefined) {
+    session.selectedVariantId = null;
   }
 
   // Resolved BEFORE the reset below, deliberately — programEngine's cycle
@@ -82,6 +104,7 @@ export function getSession() {
     session.completed = false;
     session.lastDate = today();
     session.checkedExercises = [];
+    session.selectedVariantId = null;
 
     saveSession(session);
   }
@@ -143,8 +166,17 @@ function activityMinutes(exercise: CalorieEstimateInput): number {
     : exercise.sets * ASSUMED_MINUTES_PER_SET;
 }
 
-// What the exercises checked off so far are estimated to have burned, via
-// the standard MET formula (domain/services/calorieCalculator.ts).
+// What the exercises checked off so far are estimated to have burned.
+//
+// Uses a BMR-based MET formula (Mifflin-St Jeor — same one the calorie-goal
+// calculator uses) whenever the profile actually has height, age and
+// gender: it's a more personalized estimate than the plain weight-only MET
+// formula, since BMR itself already accounts for those three, not just
+// weight — this is the part that makes the estimate depend on height, per
+// the user's own request that it should. Falls back to the plain
+// weight-only formula when any of those three is missing, rather than
+// guessing at them, so an incomplete profile still gets a real number
+// instead of no estimate at all.
 //
 // Recomputed from the checklist every time rather than kept as a running
 // total, so it can't drift out of step with it — unchecking an exercise, or
@@ -157,22 +189,47 @@ export function estimateCheckedWorkoutCalories(
   const checked = new Set(checkedExerciseIds);
   const weightKg = getLatestWeight() ?? DEFAULT_WEIGHT_KG;
 
+  const heightCm = getCurrentUserHeight();
+  const age = getCurrentUserAge();
+  const gender = getCurrentUserGender();
+  const bmr =
+    heightCm && age && gender ? calculateBmr(weightKg, heightCm, age, gender) : null;
+
   return exercises
     .filter((exercise) => checked.has(exercise.id))
     .reduce(
       (sum, exercise) =>
         sum +
-        calculateBurnedCalories(
-          exercise.metValue,
-          weightKg,
-          activityMinutes(exercise),
-        ),
+        (bmr
+          ? calculateBurnedCaloriesFromBmr(
+              exercise.metValue,
+              bmr,
+              activityMinutes(exercise),
+            )
+          : calculateBurnedCalories(
+              exercise.metValue,
+              weightKg,
+              activityMinutes(exercise),
+            )),
       0,
     );
 }
 
 export function saveSession(session: SessionState) {
   localStorage.setItem(storageKey(), JSON.stringify(session));
+}
+
+// Records which of today's assigned variants the user picked to actually
+// do — see SessionState.selectedVariantId. Deliberately doesn't reset
+// checkedExercises/completed: picking a variant happens before a single
+// exercise is ticked (WorkoutPage's chooser gates the exercise list
+// itself), so there's nothing on those to invalidate.
+export function setSelectedVariantId(variantId: string | null) {
+  const session = parseSession(localStorage.getItem(storageKey())) ?? createSession();
+
+  session.selectedVariantId = variantId;
+
+  saveSession(session);
 }
 
 export function completeWorkout() {

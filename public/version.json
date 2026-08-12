@@ -1,6 +1,55 @@
 {
-  "current": "1.0.18",
+  "current": "1.0.23",
   "history": [
+    {
+      "version": "1.0.23",
+      "date": "2026-08-11",
+      "description": "Fixed a real gap in the exercise-complete flow: marking an exercise done now auto-confirms any set that had real weight/reps typed in but never got its own تایید tap — before this, that set silently never counted toward the personal record or the strength radar, which just read as \"the chart didn't update\". The exercise-complete toggle now also closes that exercise's set-logging drawer. Time-based holds (پلانک and the like) got their own real fixes too: the set-logging drawer now labels the second field \"ثانیه\" instead of \"تکرار\" with a ±5s step, the personal-record banner shows the longest hold instead of a usually-zero weight, and — the bigger one — the strength radar now scores a hold by its duration (plus any real added weight as a bonus) instead of the weight-based ۱RM formula, which scored a bodyweight-only hold as zero no matter how long it was held. Removed the delete button from the bottom-nav \"افزودن غذا\" shortcut's food-review popup — correcting a past entry now only happens from the daily log page's own meal cards, not the quick-add shortcut. Also fixed the calorie/activity/weight charts' \"ماه\" range having no way to scroll to an individual earlier day (30 bars squeezed to fit, most labels dropped) — it now scrolls horizontally with a real per-day label, matching how \"هفته\" already worked.",
+      "highlights": [
+        "✅ تیک زدن اتمام تمرین، ست‌های واردشده‌ی تاییدنشده رو هم خودکار تایید می‌کنه — تا امتیازشون توی نمودار قدرت گم نشه",
+        "⏱️ حرکات ثانیه‌ای (مثل پلانک) حالا واحدشون درست «ثانیه»ست، و توی نمودار شاخص قدرت بر اساس مدت زمان امتیاز می‌گیرن نه وزنه",
+        "🗑️ حذف امکان حذف غذا از شورتکات «افزودن غذا» — ویرایش فقط از صفحه‌ی ثبت روزانه",
+        "📅 نمودارهای کالری، فعالیت و وزن توی بازه‌ی «ماه» هم مثل «هفته» اسکرول افقی دارن"
+      ]
+    },
+    {
+      "version": "1.0.22",
+      "date": "2026-08-11",
+      "description": "The \"ویرایش تمرین امروز\" popup (pencil icon on the workout page) now has a \"تغییر پلن امروز\" option when today's workout has more than one assigned plan — picking it reopens the same chooser shown when the day first came up, letting you switch which plan you're doing without waiting for tomorrow. Only shows up on days that actually have more than one plan assigned.",
+      "highlights": [
+        "🔀 گزینه‌ی «تغییر پلن امروز» به پاپ‌آپ ویرایش تمرین اضافه شد — وقتی چند پلن برای اون روز تعریف شده باشه"
+      ]
+    },
+    {
+      "version": "1.0.21",
+      "date": "2026-08-11",
+      "description": "Fixed the workout-plan name reading as cluttered, oversized text jammed next to the workout title (\"تمام بدن — برنامه دو\" all as one heading). The plan name now sits on its own line under the title, small and muted — on both the workout page and the workout-library editor.",
+      "highlights": [
+        "🔤 اسم پلن انتخابی حالا زیر عنوان تمرین، ریز و کم‌رنگ نشون داده می‌شه"
+      ]
+    },
+    {
+      "version": "1.0.20",
+      "date": "2026-08-11",
+      "description": "Reworked the workout-plan editor's save behavior. \"پیش‌فرض\" is now labeled \"برنامه پیش‌فرض\" everywhere it appears. A brand-new plan now always starts with every exercise switched off (never a copy of whatever the current tab had checked) — you build it up from a clean slate. Switching between plan tabs before saving no longer discards or asks to confirm losing anything: every plan's edits (including a still-unsaved new one) now stay held in memory for as long as the page is open, and hitting \"ذخیره\" writes every plan that was actually touched — not just whichever tab happens to be on screen — in one go. Leaving the page without saving is what actually discards the in-progress edits.",
+      "highlights": [
+        "🏷️ «پیش‌فرض» شد «برنامه پیش‌فرض»",
+        "🆕 پلن جدید همیشه با همه‌ی حرکت‌های غیرفعال شروع می‌شه",
+        "💾 دکمه‌ی ذخیره حالا همه‌ی پلن‌هایی که تغییر دادی رو با هم ذخیره می‌کنه، نه فقط تب فعلی",
+        "🔀 جابه‌جایی بین پلن‌ها قبل از ذخیره دیگه چیزی رو پاک نمی‌کنه"
+      ]
+    },
+    {
+      "version": "1.0.19",
+      "date": "2026-08-11",
+      "description": "Added the ability to save multiple named plans for the same workout day (e.g. \"پوش A\"/\"پوش B\") without editing the workout library each time. In a workout's own page (کتابخانه تمرین‌ها), a new plan row above the exercise groups lets you save the current exercises as a named plan, switch between saved plans, rename or delete one — پیش‌فرض (the library's own workout) always stays available and can't be deleted. When building the daily program, a day with at least one saved plan gets a \"چند حالت برنامه\" button to assign more than one plan to that day; if only one is assigned nothing changes, but assigning two or more means the workout page asks which one to do the moment that day actually arrives, remembering the pick for the rest of the day. Also: the workout library's exercise list now floats checked-on exercises to the top of their group, and پشت پا (leg curl) was added to the تمام بدن workout.",
+      "highlights": [
+        "🗂️ برای هر تمرین می‌تونی چند پلن جدا (مثل پوش A/B) بسازی و بینشون سوییچ کنی",
+        "📅 توی برنامه‌ریزی، هر روز می‌تونه چند پلن داشته باشه — روزی که برسه ازت می‌پرسه کدوم",
+        "✅ توی کتابخانه‌ی تمرین‌ها، حرکت‌های تیک‌خورده میان بالای لیست",
+        "🦵 پشت پا به تمرین «تمام بدن» اضافه شد"
+      ]
+    },
     {
       "version": "1.0.18",
       "date": "2026-08-10",
