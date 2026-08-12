@@ -1,7 +1,16 @@
-import { calculateBurnedCalories } from "@/domain/services/calorieCalculator";
+import {
+  calculateBurnedCalories,
+  calculateBurnedCaloriesFromBmr,
+} from "@/domain/services/calorieCalculator";
 import { getCurrentProgramDay } from "./programEngine";
 import { getLatestWeight } from "./weightEngine";
-import { scopedKey } from "./userEngine";
+import { calculateBmr } from "./calorieEngine";
+import {
+  getCurrentUserAge,
+  getCurrentUserGender,
+  getCurrentUserHeight,
+  scopedKey,
+} from "./userEngine";
 import { getTodayLocalDate } from "./dateFormat";
 
 const STORAGE_KEY = "emad-session";
@@ -157,8 +166,17 @@ function activityMinutes(exercise: CalorieEstimateInput): number {
     : exercise.sets * ASSUMED_MINUTES_PER_SET;
 }
 
-// What the exercises checked off so far are estimated to have burned, via
-// the standard MET formula (domain/services/calorieCalculator.ts).
+// What the exercises checked off so far are estimated to have burned.
+//
+// Uses a BMR-based MET formula (Mifflin-St Jeor — same one the calorie-goal
+// calculator uses) whenever the profile actually has height, age and
+// gender: it's a more personalized estimate than the plain weight-only MET
+// formula, since BMR itself already accounts for those three, not just
+// weight — this is the part that makes the estimate depend on height, per
+// the user's own request that it should. Falls back to the plain
+// weight-only formula when any of those three is missing, rather than
+// guessing at them, so an incomplete profile still gets a real number
+// instead of no estimate at all.
 //
 // Recomputed from the checklist every time rather than kept as a running
 // total, so it can't drift out of step with it — unchecking an exercise, or
@@ -171,16 +189,28 @@ export function estimateCheckedWorkoutCalories(
   const checked = new Set(checkedExerciseIds);
   const weightKg = getLatestWeight() ?? DEFAULT_WEIGHT_KG;
 
+  const heightCm = getCurrentUserHeight();
+  const age = getCurrentUserAge();
+  const gender = getCurrentUserGender();
+  const bmr =
+    heightCm && age && gender ? calculateBmr(weightKg, heightCm, age, gender) : null;
+
   return exercises
     .filter((exercise) => checked.has(exercise.id))
     .reduce(
       (sum, exercise) =>
         sum +
-        calculateBurnedCalories(
-          exercise.metValue,
-          weightKg,
-          activityMinutes(exercise),
-        ),
+        (bmr
+          ? calculateBurnedCaloriesFromBmr(
+              exercise.metValue,
+              bmr,
+              activityMinutes(exercise),
+            )
+          : calculateBurnedCalories(
+              exercise.metValue,
+              weightKg,
+              activityMinutes(exercise),
+            )),
       0,
     );
 }

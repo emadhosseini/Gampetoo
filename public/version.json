@@ -1,6 +1,17 @@
 {
-  "current": "1.0.22",
+  "current": "1.0.23",
   "history": [
+    {
+      "version": "1.0.23",
+      "date": "2026-08-11",
+      "description": "Fixed a real gap in the exercise-complete flow: marking an exercise done now auto-confirms any set that had real weight/reps typed in but never got its own تایید tap — before this, that set silently never counted toward the personal record or the strength radar, which just read as \"the chart didn't update\". The exercise-complete toggle now also closes that exercise's set-logging drawer. Time-based holds (پلانک and the like) got their own real fixes too: the set-logging drawer now labels the second field \"ثانیه\" instead of \"تکرار\" with a ±5s step, the personal-record banner shows the longest hold instead of a usually-zero weight, and — the bigger one — the strength radar now scores a hold by its duration (plus any real added weight as a bonus) instead of the weight-based ۱RM formula, which scored a bodyweight-only hold as zero no matter how long it was held. Removed the delete button from the bottom-nav \"افزودن غذا\" shortcut's food-review popup — correcting a past entry now only happens from the daily log page's own meal cards, not the quick-add shortcut. Also fixed the calorie/activity/weight charts' \"ماه\" range having no way to scroll to an individual earlier day (30 bars squeezed to fit, most labels dropped) — it now scrolls horizontally with a real per-day label, matching how \"هفته\" already worked.",
+      "highlights": [
+        "✅ تیک زدن اتمام تمرین، ست‌های واردشده‌ی تاییدنشده رو هم خودکار تایید می‌کنه — تا امتیازشون توی نمودار قدرت گم نشه",
+        "⏱️ حرکات ثانیه‌ای (مثل پلانک) حالا واحدشون درست «ثانیه»ست، و توی نمودار شاخص قدرت بر اساس مدت زمان امتیاز می‌گیرن نه وزنه",
+        "🗑️ حذف امکان حذف غذا از شورتکات «افزودن غذا» — ویرایش فقط از صفحه‌ی ثبت روزانه",
+        "📅 نمودارهای کالری، فعالیت و وزن توی بازه‌ی «ماه» هم مثل «هفته» اسکرول افقی دارن"
+      ]
+    },
     {
       "version": "1.0.22",
       "date": "2026-08-11",

@@ -1,6 +1,8 @@
 import { getLibrary } from "@/store/workoutLibraryStore";
-import { getPersonalRecord } from "./exerciseSetLogEngine";
+import { getPersonalRecord, getPersonalRecordByDuration } from "./exerciseSetLogEngine";
 import {
+  calculate1RM,
+  calculateIsometricScore,
   generateSmartInsight,
   getMaxPossibleScore,
   getOverallStrengthStats,
@@ -37,26 +39,60 @@ function categorizeGroupTitle(title: string): StrengthCategory | null {
   return null;
 }
 
-// exerciseId -> which spoke it counts toward, built fresh from the
-// current library each time rather than cached — the library itself
-// barely changes at runtime (only via workoutLibraryStore's own
-// overrides), so there's no real cost to keeping this simple.
-function buildExerciseCategoryMap(): Map<string, StrengthCategory> {
-  const map = new Map<string, StrengthCategory>();
+// "تمام بدن"/"بالاتنه"/"پایین‌تنه" file every one of their exercises under
+// one flat, generically-titled group ("حرکات") instead of per-muscle
+// subgroups the way Push/Pull/Legs do — categorizeGroupTitle has nothing
+// to go on there, so an exercise that ONLY ever appears in one of those
+// generic groups (never duplicated under a properly-titled group
+// elsewhere) never resolved to any spoke, no matter how many real sets got
+// confirmed for it — a squat's PR, for instance, just silently never
+// reached the radar. This is the fallback for exactly that case: the same
+// keyword lists above, applied to the exercise's own name instead of a
+// group title, plus a short list of named lifts (اسکوات, ددلیفت, بارفیکس,
+// ...) whose Persian names don't contain a body-part word at all.
+const UPPER_NAME_KEYWORDS = [...UPPER_KEYWORDS, "بارفیکس", "لت سیم", "قایقی", "نشر"];
+const LOWER_NAME_KEYWORDS = [...LOWER_KEYWORDS, "اسکوات", "ددلیفت", "لانج", "هیپ"];
+const CORE_NAME_KEYWORDS = [...CORE_KEYWORDS, "پلانک", "کرانچ", "کمر"];
+
+function categorizeExerciseName(name: string): StrengthCategory | null {
+  if (CORE_NAME_KEYWORDS.some((kw) => name.includes(kw))) return "core";
+  if (LOWER_NAME_KEYWORDS.some((kw) => name.includes(kw))) return "lower";
+  if (UPPER_NAME_KEYWORDS.some((kw) => name.includes(kw))) return "upper";
+
+  return null;
+}
+
+interface ExerciseStrengthMeta {
+  category: StrengthCategory;
+  // Isometric holds (پلانک and the like) score by duration, not weight ×
+  // reps — see calculateIsometricScore. Absent/"reps" is every ordinary
+  // weighted exercise, unchanged.
+  unit: "reps" | "seconds";
+}
+
+// exerciseId -> which spoke it counts toward (+ how it should be scored),
+// built fresh from the current library each time rather than cached — the
+// library itself barely changes at runtime (only via workoutLibraryStore's
+// own overrides), so there's no real cost to keeping this simple.
+function buildExerciseMetaMap(): Map<string, ExerciseStrengthMeta> {
+  const map = new Map<string, ExerciseStrengthMeta>();
 
   for (const workout of getLibrary()) {
     for (const group of workout.groups) {
-      const category = categorizeGroupTitle(group.title);
-
-      if (!category) continue;
+      const groupCategory = categorizeGroupTitle(group.title);
 
       for (const exercise of group.exercises) {
         // First match wins — the same exercise can appear in more than one
         // workout's groups (e.g. a compound move filed under both a push
-        // and an upper-body day); it should only count once per spoke, not
-        // once per place it happens to be listed.
-        if (!map.has(exercise.id)) {
-          map.set(exercise.id, category);
+        // and an upper-body day, or reused wholesale by تمام بدن); it
+        // should only count once per spoke, not once per place it happens
+        // to be listed.
+        if (map.has(exercise.id)) continue;
+
+        const category = groupCategory ?? categorizeExerciseName(exercise.name);
+
+        if (category) {
+          map.set(exercise.id, { category, unit: exercise.unit ?? "reps" });
         }
       }
     }
@@ -66,8 +102,8 @@ function buildExerciseCategoryMap(): Map<string, StrengthCategory> {
 }
 
 /**
- * Every exercise's personal record (see exerciseSetLogEngine), mapped to
- * whichever spoke its workout-library group belongs to — the raw
+ * Every exercise's personal-record score (see exerciseSetLogEngine),
+ * mapped to whichever spoke its workout-library group belongs to — the raw
  * StrengthCategoryLog[] the pure domain calculator turns into radar
  * points. An exercise with no PR yet (never confirmed a set) or that
  * doesn't map to any of the three categories (warm-ups, "تمام بدن"/"حرکات"
@@ -75,15 +111,26 @@ function buildExerciseCategoryMap(): Map<string, StrengthCategory> {
  * nothing — there's no real number to average in for it.
  */
 function getStrengthCategoryLogs(): StrengthCategoryLog[] {
-  const categoryByExerciseId = buildExerciseCategoryMap();
+  const metaByExerciseId = buildExerciseMetaMap();
   const logs: StrengthCategoryLog[] = [];
 
-  for (const [exerciseId, category] of categoryByExerciseId) {
-    const pr = getPersonalRecord(exerciseId);
+  for (const [exerciseId, meta] of metaByExerciseId) {
+    if (meta.unit === "seconds") {
+      const pr = getPersonalRecordByDuration(exerciseId);
 
-    if (!pr) continue;
+      if (!pr) continue;
 
-    logs.push({ category, weight: pr.weight, reps: pr.reps });
+      logs.push({
+        category: meta.category,
+        score: calculateIsometricScore(pr.reps, pr.weight),
+      });
+    } else {
+      const pr = getPersonalRecord(exerciseId);
+
+      if (!pr) continue;
+
+      logs.push({ category: meta.category, score: calculate1RM(pr.weight, pr.reps) });
+    }
   }
 
   return logs;

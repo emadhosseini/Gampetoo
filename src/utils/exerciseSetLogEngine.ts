@@ -124,6 +124,27 @@ export function confirmSet(exerciseId: string, setId: string): SetEntry[] {
   return updated;
 }
 
+// Confirms every not-yet-confirmed set that actually has real numbers in
+// it (weight or reps above zero) — a still-empty row from "افزودن ست
+// جدید" that was never filled in is left alone rather than confirmed as a
+// real zero-weight set. Used when the exercise itself is marked done
+// (ExerciseCard's toggle) without every individual set's own تایید button
+// having been tapped first: without this, a set typed in but never
+// explicitly confirmed silently never counted toward the personal record
+// (and so never reached the strength radar), which read as the chart
+// just not updating.
+export function confirmAllSets(exerciseId: string): SetEntry[] {
+  const updated = getTodaysSets(exerciseId).map((set) =>
+    set.confirmed || (set.weight <= 0 && set.reps <= 0)
+      ? set
+      : { ...set, confirmed: true },
+  );
+
+  upsertToday(exerciseId, updated);
+
+  return updated;
+}
+
 export function removeSet(exerciseId: string, setId: string): SetEntry[] {
   const updated = getTodaysSets(exerciseId).filter((set) => set.id !== setId);
 
@@ -168,6 +189,28 @@ export function getPersonalRecord(exerciseId: string): PersonalRecord | null {
       if (!set.confirmed) continue;
 
       if (!best || set.weight > best.weight) {
+        best = { weight: set.weight, reps: set.reps, date: session.date };
+      }
+    }
+  }
+
+  return best;
+}
+
+// Longest-held confirmed set ever logged — the isometric-hold equivalent
+// of getPersonalRecord above. For a "seconds"-unit exercise (پلانک and the
+// like), `reps` is the hold's duration, and duration — not weight, which
+// is usually 0 — is what "personal record" actually means: strengthStatsEngine
+// reaches for this instead of getPersonalRecord for exactly those exercises.
+export function getPersonalRecordByDuration(exerciseId: string): PersonalRecord | null {
+  const sessions = sessionsFor(readLog(), exerciseId);
+  let best: PersonalRecord | null = null;
+
+  for (const session of sessions) {
+    for (const set of session.sets) {
+      if (!set.confirmed) continue;
+
+      if (!best || set.reps > best.reps) {
         best = { weight: set.weight, reps: set.reps, date: session.date };
       }
     }

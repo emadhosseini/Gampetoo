@@ -17,9 +17,10 @@ export default function WeightDetailPage() {
   // getTargetWeight()/getLatestWeight() reads below pick up the change;
   // they're not memoized, so any re-render already refreshes them.
   const [, setVersion] = useState(0);
-  // Tracked so renderChart knows which range is active right now — only
-  // the week range gets the wide, scrollable, one-label-per-day treatment
-  // (see WeightChart's minPointSpacing).
+  // Tracked so renderChart knows which range is active right now — week
+  // and month both get the wide, scrollable, one-label-per-day treatment
+  // (see WeightChart's minPointSpacing); month used to have no way to
+  // scroll to an individual earlier day at all.
   const [chartRange, setChartRange] = useState<StatRangeKey>("week");
 
   const entries = getWeightLog();
@@ -52,10 +53,14 @@ export default function WeightDetailPage() {
           <WeightChart
             points={points}
             targetValue={targetWeight ?? undefined}
-            // Only the week view — 7 days is few enough that giving each
-            // its own ~52px and scrolling to see them all beats squeezing
-            // every other one's label away.
-            minPointSpacing={chartRange === "week" ? 52 : undefined}
+            // Week gets ~52px/day (7 days), month a tighter ~28px/day (30
+            // days) — both few enough per-day widths that giving each its
+            // own label and scrolling to see them beats squeezing every
+            // other one away. 6-month/year stay unset (fit-to-width) since
+            // they're already just 6/12 monthly points.
+            minPointSpacing={
+              chartRange === "week" ? 52 : chartRange === "month" ? 28 : undefined
+            }
           />
         )}
       >

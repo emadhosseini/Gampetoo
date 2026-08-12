@@ -53,6 +53,14 @@ const BAR_Y_AXIS_ROWS = 7;
 // away. Matches WeightChart's own minPointSpacing for the same range.
 const WEEK_POINT_PX = 52;
 
+// Same idea for the month range's 30 days — a smaller per-day width than
+// week's, since 30 of them at 52px would make for a lot of scrolling, but
+// still wide enough that every day gets its own label and dot instead of
+// autoSkip hiding most of them. This was the range with no way to see
+// individual earlier days at all before — squeezed to fit, several labels
+// dropped, no scroll.
+const MONTH_POINT_PX = 28;
+
 // The bar chart goes through the generic <Chart> rather than <Bar>, because
 // its goal line is a line dataset inside a bar chart and only the generic
 // component's types admit a mixed dataset list. <Chart> registers nothing on
@@ -455,13 +463,18 @@ export default function StatChartPage({
     ],
   };
 
-  // Week gets its own wide, horizontally-scrollable canvas instead of
-  // squeezing 7 days into the panel's normal width — the same reasoning
-  // as WeightChart's minPointSpacing, just for the chart.js-rendered
-  // pages (calories, activity) rather than the weight page's custom SVG
-  // one. autoSkip off is what makes every day's label actually draw once
-  // there's genuine room for each of them.
+  // Week and month both get their own wide, horizontally-scrollable canvas
+  // instead of squeezing every day into the panel's normal width — same
+  // reasoning as WeightChart's minPointSpacing, just for the chart.js-
+  // rendered pages (calories, activity) rather than the weight page's
+  // custom SVG one. autoSkip off is what makes every day's label actually
+  // draw once there's genuine room for each of them. Month used to have
+  // no scroll at all — 30 bars squeezed to fit, most labels dropped by
+  // autoSkip, with no way to reach an individual earlier day.
   const isWeekRange = range === "week";
+  const isMonthRange = range === "month";
+  const isScrollableRange = isWeekRange || isMonthRange;
+  const scrollPointPx = isWeekRange ? WEEK_POINT_PX : MONTH_POINT_PX;
 
   // Chart.js draws index 0 (oldest) at the left and the last index (today)
   // at the right — a plain LTR layout, matching the scroll container's own
@@ -474,10 +487,10 @@ export default function StatChartPage({
   useEffect(() => {
     const el = weekScrollRef.current;
 
-    if (el && isWeekRange && !renderChart) {
+    if (el && isScrollableRange && !renderChart) {
       el.scrollLeft = el.scrollWidth - el.clientWidth;
     }
-  }, [isWeekRange, renderChart, chartPoints.length]);
+  }, [isScrollableRange, renderChart, chartPoints.length]);
 
   const chartOptions = {
     responsive: true,
@@ -492,7 +505,7 @@ export default function StatChartPage({
         ticks: {
           color: "#ffffff",
           font: { family: CHART_FONT_FAMILY, size: 10 },
-          autoSkip: !isWeekRange,
+          autoSkip: !isScrollableRange,
           maxRotation: 0,
         },
         grid: { display: false },
@@ -599,9 +612,9 @@ export default function StatChartPage({
         <div
           ref={weekScrollRef}
           className={`relative mt-2 min-h-0 flex-1 ${
-            isWeekRange && !renderChart ? "overflow-x-auto overflow-y-hidden" : "overflow-hidden"
+            isScrollableRange && !renderChart ? "overflow-x-auto overflow-y-hidden" : "overflow-hidden"
           }`}
-          style={isWeekRange && !renderChart ? { direction: "ltr" } : undefined}
+          style={isScrollableRange && !renderChart ? { direction: "ltr" } : undefined}
         >
           {renderChart ? (
             renderChart(chartPoints)
@@ -609,8 +622,8 @@ export default function StatChartPage({
             <div
               className="h-full"
               style={
-                isWeekRange
-                  ? { width: `${chartPoints.length * WEEK_POINT_PX}px`, minWidth: "100%" }
+                isScrollableRange
+                  ? { width: `${chartPoints.length * scrollPointPx}px`, minWidth: "100%" }
                   : undefined
               }
             >
