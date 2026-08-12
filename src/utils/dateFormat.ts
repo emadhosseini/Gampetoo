@@ -236,3 +236,9 @@ export function formatDisplayMonthYear(date: Date): string {
 export function formatWeekdayLetter(date: Date): string {
   return PERSIAN_WEEKDAYS[date.getDay()][0];
 }
+
+/** Full weekday name ("شنبه", "یکشنبه", ...) — same weekday regardless of
+ * calendar preference, see formatWeekdayLetter above. */
+export function formatWeekdayName(date: Date): string {
+  return PERSIAN_WEEKDAYS[date.getDay()];
+}

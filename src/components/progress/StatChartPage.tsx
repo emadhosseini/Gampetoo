@@ -1,4 +1,11 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type PointerEvent as ReactPointerEvent,
+  type ReactNode,
+} from "react";
 import { ChevronRight, Plus } from "lucide-react";
 import {
   BarController,
@@ -47,19 +54,16 @@ const Y_AXIS_ROWS = 4;
 // would put a 2100-calorie day on a 1000-apart grid.
 const BAR_Y_AXIS_ROWS = 7;
 
-// Minimum width per day on the week range's chart, in px — 7 days at this
-// spacing comes out wider than a phone panel, which is the point: it's
-// what makes the chart scroll instead of squeezing every other label
-// away. Matches WeightChart's own minPointSpacing for the same range.
-const WEEK_POINT_PX = 52;
+// A drag shorter than this (px) is a tap/scroll attempt, not a pan — same
+// threshold-before-capture idea SideMenu's own drag handling uses, so a
+// plain tap on the chart (or a vertical scroll of the page starting on it)
+// never gets mistaken for a horizontal pan.
+const DRAG_START_THRESHOLD_PX = 6;
 
-// Same idea for the month range's 30 days — a smaller per-day width than
-// week's, since 30 of them at 52px would make for a lot of scrolling, but
-// still wide enough that every day gets its own label and dot instead of
-// autoSkip hiding most of them. This was the range with no way to see
-// individual earlier days at all before — squeezed to fit, several labels
-// dropped, no scroll.
-const MONTH_POINT_PX = 28;
+// How far back (in days) a panned chart can go — a sanity backstop, not
+// tied to how far back the account's own data actually reaches (an empty
+// window just shows the existing "چیزی ثبت نشده" state).
+const MAX_PAN_OFFSET_DAYS = 3650;
 
 // The bar chart goes through the generic <Chart> rather than <Bar>, because
 // its goal line is a line dataset inside a bar chart and only the generic
@@ -157,6 +161,17 @@ function daysAgoIso(days: number): string {
   return toLocalDateString(date);
 }
 
+// Same as `new Date()` but shifted back by a panned window's own offset —
+// every "today"-anchored calculation below (entries cutoff, date-range
+// label) reads the window's actual last day through this instead of the
+// real today once the chart's been dragged into the past.
+function anchorDate(offsetDays: number): Date {
+  const date = new Date();
+  date.setDate(date.getDate() - offsetDays);
+
+  return date;
+}
+
 export interface StatChartPageProps {
   title: string;
   unitLabel: string;
@@ -250,10 +265,24 @@ export default function StatChartPage({
   const navigate = useNavigate();
   const [range, setRangeState] = useState<RangeKey>(defaultRange);
   const { lineRef, barRef } = useChartResizeOnViewportSettle();
-  const weekScrollRef = useRef<HTMLDivElement>(null);
+  const chartAreaRef = useRef<HTMLDivElement>(null);
+
+  // How many days back from today the visible window's own last day sits
+  // — 0 means the window ends today (the normal case). Dragging the chart
+  // left slides the whole window into the past without changing its width
+  // (still exactly 7 or 30 days), dragging right brings it back toward
+  // today. See handlePointerMove below.
+  const [windowOffsetDays, setWindowOffsetDays] = useState(0);
+  const dragState = useRef<{
+    startX: number;
+    startOffset: number;
+    pxPerDay: number;
+    dragging: boolean;
+  } | null>(null);
 
   function setRange(next: RangeKey) {
     setRangeState(next);
+    setWindowOffsetDays(0);
     onRangeChange?.(next);
   }
 
@@ -269,16 +298,68 @@ export default function StatChartPage({
 
   const activeRange = RANGES.find((r) => r.key === range)!;
 
+  // Only week/month are day-bucketed windows of a fixed width worth
+  // panning through one day at a time — 6-month/year are already just six
+  // or twelve whole-month points (nothing to slide a day at a time), and a
+  // single day has no "earlier" within itself to drag to.
+  const isPannable = range === "week" || range === "month";
+
+  function handlePointerDown(e: ReactPointerEvent) {
+    if (!isPannable) return;
+
+    const rect = chartAreaRef.current?.getBoundingClientRect();
+    const pxPerDay = rect && activeRange.days > 0 ? rect.width / activeRange.days : 40;
+
+    dragState.current = {
+      startX: e.clientX,
+      startOffset: windowOffsetDays,
+      pxPerDay,
+      dragging: false,
+    };
+  }
+
+  function handlePointerMove(e: ReactPointerEvent) {
+    const state = dragState.current;
+    if (!state) return;
+
+    const deltaX = e.clientX - state.startX;
+
+    if (!state.dragging) {
+      if (Math.abs(deltaX) < DRAG_START_THRESHOLD_PX) return;
+
+      state.dragging = true;
+      (e.target as Element).setPointerCapture?.(e.pointerId);
+    }
+
+    // Dragging left (negative deltaX) reveals earlier days, so the offset
+    // grows; dragging right shrinks it back toward 0 (today). Rounded to
+    // whole days since the buckets themselves are per-day.
+    const deltaDays = Math.round(-deltaX / state.pxPerDay);
+    const next = Math.min(
+      MAX_PAN_OFFSET_DAYS,
+      Math.max(0, state.startOffset + deltaDays),
+    );
+
+    setWindowOffsetDays(next);
+  }
+
+  function handlePointerUp() {
+    dragState.current = null;
+  }
+
   // The real logged entries within the active window — used for the
   // average/date-range text (which should reflect what was actually
-  // logged, not the zero-filled/aggregated chart buckets below).
+  // logged, not the zero-filled/aggregated chart buckets below). Reads
+  // through the pan offset (0 outside week/month) so a panned chart's own
+  // summary/date-range describe the window actually on screen.
   const entries = useMemo(() => {
-    const cutoff = daysAgoIso(activeRange.days);
+    const cutoff = daysAgoIso(activeRange.days + windowOffsetDays);
+    const endIso = daysAgoIso(windowOffsetDays);
 
     return history
-      .filter((entry) => entry.date >= cutoff)
+      .filter((entry) => entry.date >= cutoff && entry.date <= endIso)
       .sort((a, b) => (a.date < b.date ? -1 : 1));
-  }, [history, activeRange.days]);
+  }, [history, activeRange.days, windowOffsetDays]);
 
   // What the chart itself renders. Week/month get one bucket per calendar
   // day (even days with nothing logged, as a real gap — not skipped, so
@@ -288,8 +369,8 @@ export default function StatChartPage({
   // labelled with the last six month numbers, each the average of what was
   // logged that month. Only the day range plots a real entry directly.
   const chartPoints: StatBucket[] = useMemo(() => {
-    if (range === "week") return buildDailyBuckets(history, 7, missingDays);
-    if (range === "month") return buildDailyBuckets(history, 30, missingDays);
+    if (range === "week") return buildDailyBuckets(history, 7, missingDays, windowOffsetDays);
+    if (range === "month") return buildDailyBuckets(history, 30, missingDays, windowOffsetDays);
     if (range === "sixMonth") return buildMonthlyBuckets(history, 6, missingDays);
     if (range === "year") return buildMonthlyBuckets(history, 12, missingDays);
 
@@ -297,7 +378,7 @@ export default function StatChartPage({
       label: formatDisplayDayNumber(isoToLocalDate(entry.date)),
       value: entry.value,
     }));
-  }, [range, history, entries, missingDays]);
+  }, [range, history, entries, missingDays, windowOffsetDays]);
 
   const hasData = chartPoints.some((point) => point.value !== null);
 
@@ -359,27 +440,30 @@ export default function StatChartPage({
   // Reading "۳۱ جولای – ۳ آگوست" while the ماه tab is selected made the
   // range look like it only covered the days with data.
   const dateRangeLabel = useMemo(() => {
-    const today = new Date();
+    // The window's own last day — real "today" outside week/month (where
+    // panning doesn't apply), or today shifted back by however far the
+    // chart's been dragged.
+    const windowEnd = anchorDate(windowOffsetDays);
 
     if (range === "day") {
-      return formatDisplayShort(today);
+      return formatDisplayShort(windowEnd);
     }
 
-    const start = new Date();
+    const start = anchorDate(windowOffsetDays);
 
-    if (range === "week") start.setDate(today.getDate() - 6);
-    else if (range === "month") start.setDate(today.getDate() - 29);
+    if (range === "week") start.setDate(start.getDate() - 6);
+    else if (range === "month") start.setDate(start.getDate() - 29);
     // 6-month/year are bucketed per month, so their window starts at the
     // first of the oldest month shown rather than a rolling day count.
-    else start.setFullYear(today.getFullYear(), today.getMonth() - (range === "sixMonth" ? 5 : 11), 1);
+    else start.setFullYear(windowEnd.getFullYear(), windowEnd.getMonth() - (range === "sixMonth" ? 5 : 11), 1);
 
     // 6-month/year read as whole months (e.g. "آگوست ۲۰۲۵ – ژانویه ۲۰۲۶") —
     // a day-of-month on either end would just be today's, which isn't
     // what either endpoint of a months-wide window actually means.
     return usesMonthlyBuckets
-      ? `${formatDisplayMonthYear(start)} – ${formatDisplayMonthYear(today)}`
-      : `${formatDisplayShort(start)} – ${formatDisplayShort(today)}`;
-  }, [range, usesMonthlyBuckets]);
+      ? `${formatDisplayMonthYear(start)} – ${formatDisplayMonthYear(windowEnd)}`
+      : `${formatDisplayShort(start)} – ${formatDisplayShort(windowEnd)}`;
+  }, [range, usesMonthlyBuckets, windowOffsetDays]);
 
   // Sized from the real data only, so the target line (which can sit far
   // from it) never drags the resolution down around the actual trend —
@@ -463,35 +547,10 @@ export default function StatChartPage({
     ],
   };
 
-  // Week and month both get their own wide, horizontally-scrollable canvas
-  // instead of squeezing every day into the panel's normal width — same
-  // reasoning as WeightChart's minPointSpacing, just for the chart.js-
-  // rendered pages (calories, activity) rather than the weight page's
-  // custom SVG one. autoSkip off is what makes every day's label actually
-  // draw once there's genuine room for each of them. Month used to have
-  // no scroll at all — 30 bars squeezed to fit, most labels dropped by
-  // autoSkip, with no way to reach an individual earlier day.
-  const isWeekRange = range === "week";
-  const isMonthRange = range === "month";
-  const isScrollableRange = isWeekRange || isMonthRange;
-  const scrollPointPx = isWeekRange ? WEEK_POINT_PX : MONTH_POINT_PX;
-
-  // Chart.js draws index 0 (oldest) at the left and the last index (today)
-  // at the right — a plain LTR layout, matching the scroll container's own
-  // forced `direction: ltr` below. Scrolled to its rightmost position once
-  // it's wider than the viewport, so today shows first and scrolling left
-  // reaches earlier days. Plain `scrollLeft = scrollWidth - clientWidth` is
-  // only an unambiguous "scroll to the end" in an LTR container — this is
-  // exactly why it's forced rather than left inheriting the page's rtl,
-  // where scrollLeft's zero point and sign convention vary by browser.
-  useEffect(() => {
-    const el = weekScrollRef.current;
-
-    if (el && isScrollableRange && !renderChart) {
-      el.scrollLeft = el.scrollWidth - el.clientWidth;
-    }
-  }, [isScrollableRange, renderChart, chartPoints.length]);
-
+  // Week always shows all 7 labels (there's room); month leaves chart.js's
+  // own autoSkip on so 30 labels at the panel's normal width don't collide
+  // — the chart stays a fixed width and the window itself slides via
+  // dragging (see handlePointerMove) instead of a wide scrollable canvas.
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
@@ -505,7 +564,7 @@ export default function StatChartPage({
         ticks: {
           color: "#ffffff",
           font: { family: CHART_FONT_FAMILY, size: 10 },
-          autoSkip: !isScrollableRange,
+          autoSkip: range !== "week",
           maxRotation: 0,
         },
         grid: { display: false },
@@ -602,37 +661,45 @@ export default function StatChartPage({
               </p>
             </>
           )}
-          <p className="text-center text-xs text-white/50">{dateRangeLabel}</p>
+          <div className="flex items-center justify-center gap-2">
+            <p className="text-center text-xs text-white/50">{dateRangeLabel}</p>
+
+            {/* Only once actually panned away from today — a quick way
+                back rather than dragging all the way right again. */}
+            {windowOffsetDays > 0 && (
+              <button
+                onClick={() => setWindowOffsetDays(0)}
+                className="glass-chip glass-static rounded-full px-2 py-0.5 text-[11px] font-medium text-avocado-yellow"
+              >
+                امروز
+              </button>
+            )}
+          </div>
         </div>
 
         {/* overflow-hidden: if the canvas is ever transiently mis-sized
             (the stale-viewport case useChartResizeOnViewportSettle exists
             for), it clips inside the panel instead of painting past the
-            screen edge until the next resize signal lands. */}
+            screen edge until the next resize signal lands. touch-action:
+            pan-y lets the page still scroll vertically through a normal
+            touch drag that starts on the chart — only a drag this handles
+            as a deliberate horizontal pan (past DRAG_START_THRESHOLD_PX)
+            captures the pointer away from that. */}
         <div
-          ref={weekScrollRef}
-          className={`relative mt-2 min-h-0 flex-1 ${
-            isScrollableRange && !renderChart ? "overflow-x-auto overflow-y-hidden" : "overflow-hidden"
-          }`}
-          style={isScrollableRange && !renderChart ? { direction: "ltr" } : undefined}
+          ref={chartAreaRef}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerUp}
+          className="relative mt-2 min-h-0 flex-1 overflow-hidden"
+          style={isPannable ? { touchAction: "pan-y" } : undefined}
         >
           {renderChart ? (
             renderChart(chartPoints)
+          ) : chartType === "bar" ? (
+            <Chart type="bar" ref={barRef} data={barChartData} options={chartOptions} />
           ) : (
-            <div
-              className="h-full"
-              style={
-                isScrollableRange
-                  ? { width: `${chartPoints.length * scrollPointPx}px`, minWidth: "100%" }
-                  : undefined
-              }
-            >
-              {chartType === "bar" ? (
-                <Chart type="bar" ref={barRef} data={barChartData} options={chartOptions} />
-              ) : (
-                <Line ref={lineRef} data={lineChartData} options={chartOptions} />
-              )}
-            </div>
+            <Line ref={lineRef} data={lineChartData} options={chartOptions} />
           )}
 
           {!hasData && (

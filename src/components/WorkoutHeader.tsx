@@ -54,7 +54,7 @@ export default function WorkoutHeader({
   }
 
   return (
-    <div className="relative mb-6 mt-4 text-center">
+    <div className="relative mb-4 text-center">
       {(showForgotButton || onEditWorkout) && (
         <div className="absolute end-0 top-0 flex items-center gap-2">
           {onEditWorkout && (
