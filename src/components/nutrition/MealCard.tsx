@@ -13,23 +13,27 @@ export default function MealCard({ meal }: MealCardProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="glass-panel rounded-2xl p-5">
+    // p-2.5, same as the collapsed row's own text-sm size below: matches
+    // WeeklyScheduleModal's "تقویم هفته" button height exactly (same py-2.5
+    // on a single text-sm line), so every meal reads as one compact row
+    // until it's actually opened — same treatment ExerciseCard got.
+    // glass-static drops the press-scale, which a card that just expands
+    // in place (not a button that fires an action) shouldn't have.
+    <div className="glass-panel glass-static rounded-2xl p-2.5">
       <button
         onClick={() => setIsOpen((prev) => !prev)}
         className="grid w-full grid-cols-[24px_1fr_24px] items-center"
       >
         <span />
 
-        <span className="flex items-center justify-center gap-3">
-          <span className="text-2xl">{meal.icon}</span>
+        <span className="flex items-center justify-center gap-2">
+          <span className="text-lg">{meal.icon}</span>
 
-          <h2 className="text-lg font-semibold text-white">
-            {meal.title}
-          </h2>
+          <h2 className="text-sm font-bold text-white">{meal.title}</h2>
         </span>
 
         <ChevronDown
-          className={`h-5 w-5 text-zinc-200 transition-transform ${
+          className={`h-4 w-4 text-zinc-200 transition-transform ${
             isOpen ? "rotate-180" : ""
           }`}
         />

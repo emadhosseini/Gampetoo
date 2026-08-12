@@ -61,22 +61,22 @@ export default function DailyTotalsCard({
   const standing = target ? proteinStanding(totals.protein, target) : null;
 
   return (
-    <div className="glass-panel glass-static rounded-2xl p-5">
-      <p className="text-center text-sm text-white/60">
+    <div className="glass-panel glass-static rounded-2xl p-3">
+      <p className="text-center text-xs text-white/60">
         {isToday ? "مجموع امروز" : "مجموع این روز"}
       </p>
 
-      <p className="mt-1 text-center text-2xl font-bold text-white">
+      <p className="mt-0.5 text-center text-xl font-bold text-white">
         {toFaDigits(totals.calories)}{" "}
         <span className="text-sm font-normal text-white/60">کالری</span>
       </p>
 
-      <div className="mt-4">
+      <div className="mt-2">
         <MacroTotalsGrid totals={totals} proteinStanding={standing} />
       </div>
 
       {target && (
-        <p className="mt-3 text-center text-xs text-white/50">
+        <p className="mt-2 text-center text-xs text-white/50">
           هدف پروتئین: {toFaDigits(target.grams)} گرم
         </p>
       )}

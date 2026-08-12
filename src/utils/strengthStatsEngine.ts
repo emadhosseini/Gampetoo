@@ -50,7 +50,18 @@ function categorizeGroupTitle(title: string): StrengthCategory | null {
 // keyword lists above, applied to the exercise's own name instead of a
 // group title, plus a short list of named lifts (اسکوات, ددلیفت, بارفیکس,
 // ...) whose Persian names don't contain a body-part word at all.
-const UPPER_NAME_KEYWORDS = [...UPPER_KEYWORDS, "بارفیکس", "لت سیم", "قایقی", "نشر"];
+const UPPER_NAME_KEYWORDS = [
+  ...UPPER_KEYWORDS,
+  "بارفیکس",
+  // "لت" alone (not just "لت سیم") so a name without the "سیم‌کش" qualifier
+  // — e.g. "لت از جلو" — still matches, not only "لت سیم کش از جلو"/"از بالا".
+  "لت",
+  "قایقی",
+  "نشر",
+  // Contains no body-part word at all, same reason اسکوات/ددلیفت/بارفیکس
+  // are listed by name below instead of relying on a keyword match.
+  "فیس پول",
+];
 const LOWER_NAME_KEYWORDS = [...LOWER_KEYWORDS, "اسکوات", "ددلیفت", "لانج", "هیپ"];
 const CORE_NAME_KEYWORDS = [...CORE_KEYWORDS, "پلانک", "کرانچ", "کمر"];
 

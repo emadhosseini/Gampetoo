@@ -100,6 +100,40 @@ export function addSet(exerciseId: string): SetEntry[] {
   return updated;
 }
 
+// Pre-fills today's log with the exercise's own configured set/rep count
+// (e.g. "۳ ست ۱۰ تکرار" becomes three real rows ready to log against) the
+// first time it's opened today, instead of leaving it empty until "افزودن
+// ست جدید" is tapped defaultSets times by hand. Only seeds once: if today
+// already has any rows — from an earlier seed this session, or the user's
+// own edits — it's returned untouched.
+export function ensureTodaysSets(
+  exerciseId: string,
+  defaultSets: number,
+  defaultReps: number,
+): SetEntry[] {
+  const current = getTodaysSets(exerciseId);
+
+  if (current.length > 0 || defaultSets <= 0) return current;
+
+  // Same "repeat the last real weight" seed addSet uses for a brand-new
+  // row — reps come from the exercise's own default instead, since that's
+  // the number this seed exists to pre-fill in the first place.
+  const lastWeight =
+    getPastSessions(exerciseId, 1)[0]?.sets.filter((set) => set.confirmed).slice(-1)[0]
+      ?.weight ?? 0;
+
+  const seeded: SetEntry[] = Array.from({ length: defaultSets }, () => ({
+    id: generateId(),
+    weight: lastWeight,
+    reps: defaultReps,
+    confirmed: false,
+  }));
+
+  upsertToday(exerciseId, seeded);
+
+  return seeded;
+}
+
 export function updateSet(
   exerciseId: string,
   setId: string,

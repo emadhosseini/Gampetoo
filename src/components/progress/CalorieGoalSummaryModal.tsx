@@ -1,3 +1,6 @@
+import { TrendingUp } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+
 import ModalOverlay from "@/components/ModalOverlay";
 import { toFaDigits } from "@/utils/numberFormat";
 
@@ -21,8 +24,15 @@ export default function CalorieGoalSummaryModal({
   calorieTarget,
   proteinGrams,
 }: CalorieGoalSummaryModalProps) {
+  const navigate = useNavigate();
+
   if (!open) {
     return null;
+  }
+
+  function goToTrend() {
+    onClose();
+    navigate("/progress/calorie-budget");
   }
 
   return (
@@ -55,6 +65,14 @@ export default function CalorieGoalSummaryModal({
             </p>
           </div>
         </div>
+
+        <button
+          onClick={goToTrend}
+          className="glass-chip glass-static flex w-full items-center justify-center gap-2 rounded-2xl py-3 text-sm font-medium text-white"
+        >
+          <TrendingUp size={16} className="text-avocado-lime" />
+          روند کالری مجاز هفتگی و ماهیانه
+        </button>
 
         <button
           onClick={onChange}

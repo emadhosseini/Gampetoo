@@ -5,10 +5,10 @@ import ExerciseProgressChartModal from "@/components/progress/ExerciseProgressCh
 import {
   addSet,
   confirmSet,
+  ensureTodaysSets,
   getPastSessions,
   getPersonalRecord,
   getPersonalRecordByDuration,
-  getTodaysSets,
   removeSet,
   updateSet,
   type SetEntry,
@@ -85,6 +85,12 @@ export interface ExerciseSetLoggerProps {
   // existing call site (none of which passed this before) keeps behaving
   // exactly as it always did.
   unit?: "reps" | "seconds";
+  // The exercise's own configured set/rep count (ExerciseCard no longer
+  // shows these directly — this is where they end up instead: seeding
+  // today's log with exactly this many real rows the first time it's
+  // opened, see ensureTodaysSets).
+  defaultSets: number;
+  defaultReps: number;
 }
 
 // The drawer under an exercise card on the daily workout page — opened by
@@ -96,13 +102,17 @@ export default function ExerciseSetLogger({
   exerciseId,
   exerciseName,
   unit = "reps",
+  defaultSets,
+  defaultReps,
 }: ExerciseSetLoggerProps) {
   const isSeconds = unit === "seconds";
   const repsLabel = isSeconds ? "ثانیه" : "تکرار";
   // Same ±5s vs ±1 rep convention the workout-library editor already uses
   // for this exact distinction (ExerciseEditRow in WorkoutDetailPage).
   const repsStep = isSeconds ? 5 : REPS_STEP;
-  const [sets, setSets] = useState<SetEntry[]>(() => getTodaysSets(exerciseId));
+  const [sets, setSets] = useState<SetEntry[]>(() =>
+    ensureTodaysSets(exerciseId, defaultSets, defaultReps),
+  );
   // The wall-clock moment rest actually ends, not a countable "seconds
   // left" — a plain setTimeout-decrements-a-number timer only ever ticks
   // while a JS frame actually runs, so backgrounding the tab (throttled

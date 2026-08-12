@@ -5,7 +5,6 @@ import Toggle from "@/components/Toggle";
 import ExerciseSetLogger from "@/components/ExerciseSetLogger";
 import { confirmAllSets } from "@/utils/exerciseSetLogEngine";
 import type { Exercise } from "@/data/workoutLibrary";
-import { toFaDigits } from "@/utils/numberFormat";
 
 type ExerciseCardProps = {
   exercise: Exercise;
@@ -51,34 +50,28 @@ export default function ExerciseCard({
     <motion.div
       layout
       transition={{ type: "spring", stiffness: 380, damping: 32 }}
-      className={`glass-panel glass-static rounded-3xl p-4 transition-opacity ${
+      className={`glass-panel glass-static rounded-2xl p-2.5 transition-opacity ${
         checked ? "opacity-50" : ""
       }`}
     >
-      <div className="flex items-center gap-4">
+      {/* Collapsed row is deliberately just the name and the toggle now —
+          the configured sets/reps count used to show here too, but that
+          number is what seeds today's actual set rows below instead (see
+          ExerciseSetLogger's defaultSets/defaultReps), so showing it twice
+          was redundant with the drawer this row opens. Height matches
+          WeeklyScheduleModal's own "تقویم هفته" button (same py-2.5 on a
+          text-sm row) so every exercise reads as one compact line until
+          it's actually opened. */}
+      <div className="flex items-center gap-3">
         <button
           onClick={() => setExpanded((prev) => !prev)}
           aria-expanded={expanded}
           className="flex-1 text-right"
         >
-          <h2 className="text-lg font-bold text-white">
-            {exercise.name}
-          </h2>
-
-          <p className="mt-2 text-sm text-white">{toFaDigits(exercise.sets)} ست</p>
+          <h2 className="text-sm font-bold text-white">{exercise.name}</h2>
         </button>
 
-        {/* Reps/seconds sits under the toggle rather than beside the sets
-            count — with the toggle now here, a justify-between row cramming
-            both numbers into the name's own column read as cluttered. This
-            reads as one unit: what you're marking done, and how much of it. */}
-        <div className="flex shrink-0 flex-col items-center gap-1.5">
-          <Toggle checked={checked} onChange={handleToggleChecked} />
-          <span className="text-xs text-white/60">
-            {toFaDigits(exercise.reps)}{" "}
-            {exercise.unit === "seconds" ? "ثانیه" : "تکرار"}
-          </span>
-        </div>
+        <Toggle checked={checked} onChange={handleToggleChecked} />
       </div>
 
       <AnimatePresence initial={false}>
@@ -88,12 +81,20 @@ export default function ExerciseCard({
             animate={{ height: "auto" }}
             exit={{ height: 0 }}
             transition={{ type: "spring", stiffness: 320, damping: 32 }}
-            className="overflow-hidden"
+            // -mx-1/px-1: without this, every rounded-xl/rounded-full chip
+            // inside the drawer below (set rows, PR chip, history rows...)
+            // sits flush against this overflow-hidden edge — tighter now
+            // that the collapsed row's own padding shrank from p-4 to
+            // p-2.5 — and renders visibly flattened instead of rounded.
+            // Same fix as WeeklyScheduleModal's list.
+            className="-mx-1 overflow-hidden px-1"
           >
             <ExerciseSetLogger
               exerciseId={exercise.id}
               exerciseName={exercise.name}
               unit={exercise.unit}
+              defaultSets={exercise.sets}
+              defaultReps={exercise.reps}
             />
           </motion.div>
         )}

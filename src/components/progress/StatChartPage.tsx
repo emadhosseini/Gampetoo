@@ -41,9 +41,11 @@ import { toFaDigits } from "@/utils/numberFormat";
 import {
   buildDailyBuckets,
   buildMonthlyBuckets,
+  buildWeekBuckets,
   type MissingDayMeaning,
   type StatBucket,
 } from "@/utils/statBuckets";
+import { getAppSettings, weekStartDayNumber } from "@/utils/appSettingsEngine";
 
 // Rows the Y-axis always shows, regardless of range — never fewer, so a
 // single point (or a flat week) never collapses onto the bottom edge.
@@ -172,6 +174,21 @@ function anchorDate(offsetDays: number): Date {
   return date;
 }
 
+// The first day of a fixed calendar week — Saturday..Friday or
+// Monday..Sunday per the "روز شروع هفته" setting — `weekOffset` whole weeks
+// back from the week containing today. Shared between chartPoints
+// (buildWeekBuckets) and dateRangeLabel so both describe the exact same
+// week rather than the label drifting from what the bars actually show.
+function weekStartDate(weekStartDay: number, weekOffset: number): Date {
+  const today = new Date();
+  const daysSinceWeekStart = (today.getDay() - weekStartDay + 7) % 7;
+
+  const start = new Date(today);
+  start.setDate(today.getDate() - daysSinceWeekStart - weekOffset * 7);
+
+  return start;
+}
+
 export interface StatChartPageProps {
   title: string;
   unitLabel: string;
@@ -183,8 +200,10 @@ export interface StatChartPageProps {
   // Rounds displayed values (calories/water are whole numbers; weight
   // wants one decimal place). Defaults to 1 (whole numbers).
   valuePrecision?: number;
-  onAdd: () => void;
-  addLabel: string;
+  // Omit both to hide the top-left "+" entirely — for a derived/read-only
+  // chart (e.g. the calorie-budget trend) with no "add" action of its own.
+  onAdd?: () => void;
+  addLabel?: string;
   // Draws a dashed horizontal reference line at this value (e.g. the
   // weight page's target weight) so the chart can be read against a goal
   // at a glance — omit for stats with no such goal (calories/water/
@@ -206,6 +225,13 @@ export interface StatChartPageProps {
   // through them, so columns say what it is where a line implies
   // interpolation between days that never happened.
   chartType?: "line" | "bar";
+  // For a bar chart whose value can go negative (e.g. over budget) rather
+  // than only ever growing from a zero baseline — axis centers on the data
+  // while still guaranteeing zero is inside it (so the "over" bars have
+  // somewhere to go below the line), and each bar past zero is drawn in
+  // `negativeColor` instead of `color`. Only meaningful with chartType="bar".
+  signedBars?: boolean;
+  negativeColor?: string;
   // Swaps the built-in chart.js line for a custom renderer, given the same
   // buckets this component already computed for the selected range. The
   // weight page uses it for a hand-drawn SVG chart with its own axis
@@ -254,6 +280,8 @@ export default function StatChartPage({
   targetLabel = "هدف",
   missingDays = "gap",
   chartType = "line",
+  signedBars = false,
+  negativeColor = "#f87171",
   renderChart,
   defaultRange = "month",
   availableRanges,
@@ -298,6 +326,11 @@ export default function StatChartPage({
 
   const activeRange = RANGES.find((r) => r.key === range)!;
 
+  // Read once per render, not memoized — it's a plain localStorage read, no
+  // heavier than the history array this component already re-derives from
+  // on every render.
+  const weekStartDay = weekStartDayNumber(getAppSettings().weekStart);
+
   // Only week/month are day-bucketed windows of a fixed width worth
   // panning through one day at a time — 6-month/year are already just six
   // or twelve whole-month points (nothing to slide a day at a time), and a
@@ -332,9 +365,14 @@ export default function StatChartPage({
     }
 
     // Dragging left (negative deltaX) reveals earlier days, so the offset
-    // grows; dragging right shrinks it back toward 0 (today). Rounded to
-    // whole days since the buckets themselves are per-day.
-    const deltaDays = Math.round(-deltaX / state.pxPerDay);
+    // grows; dragging right shrinks it back toward 0 (today). A calendar
+    // week only ever slides by whole weeks — a partial week would land on
+    // a 7-day slice that starts on the wrong weekday — so "week" rounds to
+    // the nearest multiple of 7 instead of the nearest single day.
+    const deltaDays =
+      range === "week"
+        ? Math.round(-deltaX / (state.pxPerDay * 7)) * 7
+        : Math.round(-deltaX / state.pxPerDay);
     const next = Math.min(
       MAX_PAN_OFFSET_DAYS,
       Math.max(0, state.startOffset + deltaDays),
@@ -353,13 +391,25 @@ export default function StatChartPage({
   // through the pan offset (0 outside week/month) so a panned chart's own
   // summary/date-range describe the window actually on screen.
   const entries = useMemo(() => {
-    const cutoff = daysAgoIso(activeRange.days + windowOffsetDays);
-    const endIso = daysAgoIso(windowOffsetDays);
+    let cutoff: string;
+    let endIso: string;
+
+    if (range === "week") {
+      const start = weekStartDate(weekStartDay, windowOffsetDays / 7);
+      const end = new Date(start);
+      end.setDate(start.getDate() + 6);
+
+      cutoff = toLocalDateString(start);
+      endIso = toLocalDateString(end);
+    } else {
+      cutoff = daysAgoIso(activeRange.days + windowOffsetDays);
+      endIso = daysAgoIso(windowOffsetDays);
+    }
 
     return history
       .filter((entry) => entry.date >= cutoff && entry.date <= endIso)
       .sort((a, b) => (a.date < b.date ? -1 : 1));
-  }, [history, activeRange.days, windowOffsetDays]);
+  }, [history, activeRange.days, windowOffsetDays, range, weekStartDay]);
 
   // What the chart itself renders. Week/month get one bucket per calendar
   // day (even days with nothing logged, as a real gap — not skipped, so
@@ -369,7 +419,8 @@ export default function StatChartPage({
   // labelled with the last six month numbers, each the average of what was
   // logged that month. Only the day range plots a real entry directly.
   const chartPoints: StatBucket[] = useMemo(() => {
-    if (range === "week") return buildDailyBuckets(history, 7, missingDays, windowOffsetDays);
+    if (range === "week")
+      return buildWeekBuckets(history, weekStartDay, missingDays, windowOffsetDays / 7);
     if (range === "month") return buildDailyBuckets(history, 30, missingDays, windowOffsetDays);
     if (range === "sixMonth") return buildMonthlyBuckets(history, 6, missingDays);
     if (range === "year") return buildMonthlyBuckets(history, 12, missingDays);
@@ -378,7 +429,7 @@ export default function StatChartPage({
       label: formatDisplayDayNumber(isoToLocalDate(entry.date)),
       value: entry.value,
     }));
-  }, [range, history, entries, missingDays, windowOffsetDays]);
+  }, [range, history, entries, missingDays, windowOffsetDays, weekStartDay]);
 
   const hasData = chartPoints.some((point) => point.value !== null);
 
@@ -440,6 +491,14 @@ export default function StatChartPage({
   // Reading "۳۱ جولای – ۳ آگوست" while the ماه tab is selected made the
   // range look like it only covered the days with data.
   const dateRangeLabel = useMemo(() => {
+    if (range === "week") {
+      const start = weekStartDate(weekStartDay, windowOffsetDays / 7);
+      const end = new Date(start);
+      end.setDate(start.getDate() + 6);
+
+      return `${formatDisplayShort(start)} – ${formatDisplayShort(end)}`;
+    }
+
     // The window's own last day — real "today" outside week/month (where
     // panning doesn't apply), or today shifted back by however far the
     // chart's been dragged.
@@ -451,8 +510,7 @@ export default function StatChartPage({
 
     const start = anchorDate(windowOffsetDays);
 
-    if (range === "week") start.setDate(start.getDate() - 6);
-    else if (range === "month") start.setDate(start.getDate() - 29);
+    if (range === "month") start.setDate(start.getDate() - 29);
     // 6-month/year are bucketed per month, so their window starts at the
     // first of the oldest month shown rather than a rolling day count.
     else start.setFullYear(windowEnd.getFullYear(), windowEnd.getMonth() - (range === "sixMonth" ? 5 : 11), 1);
@@ -463,7 +521,7 @@ export default function StatChartPage({
     return usesMonthlyBuckets
       ? `${formatDisplayMonthYear(start)} – ${formatDisplayMonthYear(windowEnd)}`
       : `${formatDisplayShort(start)} – ${formatDisplayShort(windowEnd)}`;
-  }, [range, usesMonthlyBuckets, windowOffsetDays]);
+  }, [range, usesMonthlyBuckets, windowOffsetDays, weekStartDay]);
 
   // Sized from the real data only, so the target line (which can sit far
   // from it) never drags the resolution down around the actual trend —
@@ -473,7 +531,14 @@ export default function StatChartPage({
 
   let yAxis =
     chartType === "bar"
-      ? computeZeroBasedYAxisRange(dataValues, axisRows, minYStep)
+      ? signedBars
+        // Zero has to sit inside the range (not just be one of the bar
+        // baselines) for both over- and under-budget bars to render — 0
+        // is fed in alongside the real data so computeYAxisRange's own
+        // containment guarantee covers it even on a week with every day
+        // on the same side of budget.
+        ? computeYAxisRange([...dataValues, 0], axisRows, minYStep)
+        : computeZeroBasedYAxisRange(dataValues, axisRows, minYStep)
       : computeYAxisRange(dataValues, axisRows, minYStep);
 
   if (targetValue !== undefined) {
@@ -530,12 +595,22 @@ export default function StatChartPage({
       {
         type: "bar" as const,
         data: values,
-        backgroundColor: color,
-        hoverBackgroundColor: color,
+        backgroundColor: signedBars
+          ? ({ dataIndex }: { dataIndex: number }) =>
+              (values[dataIndex] ?? 0) < 0 ? negativeColor : color
+          : color,
+        hoverBackgroundColor: signedBars
+          ? ({ dataIndex }: { dataIndex: number }) =>
+              (values[dataIndex] ?? 0) < 0 ? negativeColor : color
+          : color,
         borderRadius: 4,
         // Rounds the top corners only; a bar sitting on the baseline
-        // shouldn't have its bottom edge rounded away from it.
-        borderSkipped: "bottom" as const,
+        // shouldn't have its bottom edge rounded away from it. A signed
+        // bar's "bottom" (in the geometric, not baseline, sense) is
+        // whichever end is farthest from zero — top for an over-budget bar
+        // hanging below it — so rounding is skipped entirely there rather
+        // than rounding the wrong corner.
+        borderSkipped: signedBars ? false : ("bottom" as const),
         // A single day's bar would otherwise stretch across the whole plot.
         maxBarThickness: 26,
         // Leaves a visible sliver of space between columns even at 30 of
@@ -617,13 +692,15 @@ export default function StatChartPage({
 
           <h1 className="text-lg font-bold text-white">{title}</h1>
 
-          <button
-            onClick={onAdd}
-            aria-label={addLabel}
-            className="glass-chip absolute left-0 flex h-9 w-9 items-center justify-center rounded-full text-avocado-yellow"
-          >
-            <Plus size={18} />
-          </button>
+          {onAdd && (
+            <button
+              onClick={onAdd}
+              aria-label={addLabel}
+              className="glass-chip absolute left-0 flex h-9 w-9 items-center justify-center rounded-full text-avocado-yellow"
+            >
+              <Plus size={18} />
+            </button>
+          )}
         </div>
 
         <div className="glass-chip relative mt-3 flex items-center justify-around rounded-full p-1">

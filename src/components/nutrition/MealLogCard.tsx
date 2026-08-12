@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { ChevronDown, Pencil, Plus } from "lucide-react";
+import { Pencil, Plus } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
 import type { MealSlot } from "@/data/nutrition/foodCatalog";
@@ -48,7 +48,12 @@ export default function MealLogCard({
   hideTotals = false,
   date,
 }: MealLogCardProps) {
-  const [expanded, setExpanded] = useState(false);
+  // Opens by default when this meal already has something logged — reread
+  // only on mount (a lazy initializer, not derived from `entries` below),
+  // so leaving the page and coming back re-evaluates it fresh each time,
+  // but adding the first item during this same mount doesn't yank the
+  // panel open out from under whoever's mid-edit.
+  const [expanded, setExpanded] = useState(() => getLoggedEntries(meal.id, date).length > 0);
   const entries = useMemo(
     () => getLoggedEntries(meal.id, date),
     // `version` looks unused to the linter and is the entire point: this
@@ -166,18 +171,6 @@ export default function MealLogCard({
           </motion.div>
         )}
       </AnimatePresence>
-
-      <button
-        onClick={toggle}
-        aria-label={expanded ? "بستن ارزش‌های غذایی" : "نمایش ارزش‌های غذایی"}
-        aria-expanded={expanded}
-        className="glass-tap flex w-full items-center justify-center py-1.5 text-white/60"
-      >
-        <ChevronDown
-          size={16}
-          className={`transition-transform ${expanded ? "rotate-180" : ""}`}
-        />
-      </button>
     </div>
   );
 }

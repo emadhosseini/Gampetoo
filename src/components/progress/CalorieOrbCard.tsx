@@ -1,6 +1,7 @@
 import { useId, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { TrendingUp } from "lucide-react";
 
 import {
   getCalorieTarget,
@@ -165,7 +166,21 @@ export default function CalorieOrbCard() {
 
   return (
     <>
-    <div className="flex h-full min-h-0 items-center gap-3">
+    <div className="relative flex h-full min-h-0 items-center gap-3">
+      {/* Weekly/monthly trend of the same "باقیمانده" figure — pinned to the
+          whole card's own top-left corner (empty space above the circle),
+          not inside any one chip, so it never crowds their text. */}
+      {target !== null && (
+        <button
+          onClick={() => navigate("/progress/calorie-budget")}
+          aria-label="روند کالری مجاز هفتگی و ماهیانه"
+          className="glass-chip glass-static absolute left-0 top-0 z-10 flex h-7 w-7 items-center justify-center rounded-full"
+          style={{ color: REMAINING_COLOR }}
+        >
+          <TrendingUp size={14} />
+        </button>
+      )}
+
       {/* Every number the circle is made of, on the right where reading
           starts — colored to match the region inside it exactly, and
           باقیمانده set larger since it's the one figure someone opens this

@@ -292,7 +292,7 @@ export default function BottomNavigation({
                 onClick={() => setDrawerOpen((open) => !open)}
                 aria-label={drawerOpen ? "بستن ثبت سریع" : "ثبت سریع"}
                 style={{ position: "absolute", height: BUMP_RADIUS * 2, width: BUMP_RADIUS * 2 }}
-                className="left-1/2 top-0 z-20 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full text-white transition-transform duration-150 active:scale-90 [-webkit-tap-highlight-color:transparent] touch-manipulation"
+                className="left-1/2 top-0 z-20 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full text-white [-webkit-tap-highlight-color:transparent] touch-manipulation"
               >
                 <motion.span
                   animate={{ rotate: drawerOpen ? 45 : 0 }}
