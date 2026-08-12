@@ -188,7 +188,7 @@ const workout = workoutType
 
   if (!hasProgramStarted()) {
     return (
-      <div className="px-5 pb-5 pt-10">
+      <div className="px-5 pb-5 pt-3">
         <div className="glass-panel glass-static rounded-3xl p-6 text-center">
           <p className="text-xl font-bold text-white">
             امروز تمرینی نداری
@@ -203,7 +203,7 @@ const workout = workoutType
   // which sticks for the rest of today).
   if (isWorkout && needsVariantChoice && resolvedVariantId === null) {
     return (
-      <div className="space-y-4 px-5 pb-5 pt-10 text-center">
+      <div className="space-y-4 px-5 pb-5 pt-3 text-center">
         <WorkoutHeader title={day.title} showForgotButton />
 
         <p className="text-white">امروز کدوم برنامه رو می‌خوای انجام بدی؟</p>
@@ -235,7 +235,7 @@ const workout = workoutType
 
   if (!isWorkout) {
     return (
-      <div className="space-y-6 px-5 pb-5 pt-10">
+      <div className="space-y-6 px-5 pb-5 pt-3">
         <WorkoutHeader title="روز استراحت" showForgotButton />
 
         <div className="glass-panel glass-static rounded-3xl p-6 text-center">
@@ -292,7 +292,7 @@ const workout = workoutType
 
   if (!workout || exercises.length === 0) {
     return (
-      <div className="space-y-6 px-5 pb-5 pt-10">
+      <div className="space-y-6 px-5 pb-5 pt-3">
         <WorkoutHeader title={day.title} showForgotButton />
 
         <div className="glass-panel glass-static rounded-3xl p-2 text-center">
@@ -382,7 +382,7 @@ const workout = workoutType
   }
 
   return (
-    <div className="space-y-6 px-5 pb-5 pt-10">
+    <div className="space-y-6 px-5 pb-5 pt-3">
       <WorkoutHeader
         title={workout.title}
         belowTitle={resolvedVariantName}

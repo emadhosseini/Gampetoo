@@ -31,6 +31,11 @@ export function buildDailyBuckets(
   history: DailyMetricEntry[],
   days: number,
   missingDays: MissingDayMeaning = "gap",
+  // How many days back from today the window's own last day sits — 0 (the
+  // default) ends today, same as before this existed. A dragged/panned
+  // chart (see StatChartPage) passes a positive offset to slide the whole
+  // window into the past without changing `days` (the window's width).
+  endOffsetDays = 0,
 ): StatBucket[] {
   const byDate = new Map(history.map((entry) => [entry.date, entry.value]));
   const buckets: StatBucket[] = [];
@@ -39,7 +44,7 @@ export function buildDailyBuckets(
   for (let i = days - 1; i >= 0; i--) {
     const date = new Date();
 
-    date.setDate(date.getDate() - i);
+    date.setDate(date.getDate() - i - endOffsetDays);
 
     const iso = toLocalDateString(date);
 

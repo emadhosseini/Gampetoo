@@ -25,12 +25,6 @@ export interface WeightChartProps {
    * label, while the rest of the chart stays zoomed in on the real trend.
    */
   targetValue?: number;
-  // Draws every point at least this many px apart and, once that's wider
-  // than the panel, scrolls horizontally instead of squeezing them all
-  // in — the week range's own use, so all 7 days get their own label
-  // instead of every other one disappearing to MAX_X_LABELS' skip logic.
-  // Omit (the default) to fit the full width exactly like before.
-  minPointSpacing?: number;
 }
 
 /**
@@ -43,10 +37,12 @@ export interface WeightChartProps {
  * toward zero or breaking apart. Points are hollow rings, so the line
  * reads as the primary shape and the readings as marks on it.
  */
-export default function WeightChart({ points, targetValue, minPointSpacing }: WeightChartProps) {
-  // Measures the OUTER scroll viewport (always 100% of the panel) — the
-  // canvas itself (below) can end up wider than this once minPointSpacing
-  // is set, which is exactly what makes it scroll.
+export default function WeightChart({ points, targetValue }: WeightChartProps) {
+  // The chart's own points always already match whichever window is on
+  // screen (7 days, 30 days, ...) — StatChartPage is what slides that
+  // window through time (dragging the panel it renders this into), not
+  // this component, so there's nothing here to scroll: it just fits
+  // whatever width its container actually has.
   const containerRef = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
 
@@ -65,33 +61,13 @@ export default function WeightChart({ points, targetValue, minPointSpacing }: We
     return () => observer.disconnect();
   }, []);
 
-  // xFor (below) maps index 0 (oldest) to the left edge and the last index
-  // (today) to the right edge — a plain LTR layout, same as the container's
-  // own forced `direction: ltr` (see the JSX). Scrolled to its rightmost
-  // position once it's actually wider than the viewport, so today is what
-  // shows first; scrolling left from there reaches earlier days. Plain
-  // `scrollLeft = scrollWidth - clientWidth` is only an unambiguous
-  // "scroll to the end" in an LTR container — this is exactly why the
-  // container is forced to ltr rather than inheriting the page's rtl,
-  // where scrollLeft's zero point and sign convention vary by browser.
-  useLayoutEffect(() => {
-    const el = containerRef.current;
-
-    if (el && minPointSpacing) {
-      el.scrollLeft = el.scrollWidth - el.clientWidth;
-    }
-  }, [minPointSpacing, points.length]);
-
   // Index is kept so a reading still lands on its own day's x position
   // even though the empty days around it contribute no point.
   const readings = points
     .map((point, index) => ({ index, value: point.value }))
     .filter((point): point is { index: number; value: number } => point.value !== null);
 
-  const { height } = size;
-  const width = minPointSpacing
-    ? Math.max(size.width, points.length * minPointSpacing)
-    : size.width;
+  const { width, height } = size;
   const ready = width > 0 && height > 0 && readings.length > 0;
 
   const axis = ready ? computeWeightAxis(readings.map((r) => r.value)) : null;
@@ -123,12 +99,11 @@ export default function WeightChart({ points, targetValue, minPointSpacing }: We
   }
 
   // Only every nth day gets a label and a vertical line — 30 of either
-  // would be noise rather than orientation. minPointSpacing means there's
-  // real room for every point's own label instead (that's the whole
-  // reason to scroll rather than skip), so the stride drops to 1.
-  const labelStride = minPointSpacing
-    ? 1
-    : Math.max(1, Math.ceil(points.length / MAX_X_LABELS));
+  // would be noise rather than orientation. A week's worth (7) always
+  // gets every one of its own labels instead — there's genuine room for
+  // all 7 at the panel's normal width, no scrolling needed to fit them.
+  const labelStride =
+    points.length <= 7 ? 1 : Math.max(1, Math.ceil(points.length / MAX_X_LABELS));
   const labelIndexes = points
     .map((_, index) => index)
     .filter((index) => index % labelStride === 0);
@@ -169,11 +144,7 @@ export default function WeightChart({ points, targetValue, minPointSpacing }: We
       : null;
 
   return (
-    <div
-      ref={containerRef}
-      className={`h-full w-full ${minPointSpacing ? "overflow-x-auto overflow-y-hidden" : ""}`}
-      style={minPointSpacing ? { direction: "ltr" } : undefined}
-    >
+    <div ref={containerRef} className="h-full w-full">
       {ready && axis && (
         <svg
           width={width}
