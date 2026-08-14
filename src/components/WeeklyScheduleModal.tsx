@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 
 import ModalOverlay from "@/components/ModalOverlay";
 import { getProgramDay, hasProgramStarted } from "@/utils/programEngine";
+import { getCompletedDates } from "@/utils/workoutCompletionLog";
 import { getSession } from "@/utils/sessionEngine";
 import { DEFAULT_VARIANT_ID, getVariant } from "@/store/workoutVariantStore";
 import {
@@ -65,6 +66,9 @@ export default function WeeklyScheduleModal() {
 
   const todayIso = toLocalDateString(new Date());
   const dates = open ? buildWeekRange() : [];
+  // Read once per open rather than per row — every row would otherwise
+  // re-read and re-parse the same localStorage value.
+  const completedDates = open ? new Set(getCompletedDates()) : new Set<string>();
 
   return (
     <>
@@ -100,6 +104,15 @@ export default function WeeklyScheduleModal() {
                     ? resolveVariantName(day.assignedVariantIds ?? [], isToday)
                     : undefined;
 
+                // Only days that are actually over get judged: a day still
+                // ahead (or today, still in progress) hasn't been missed
+                // yet, so it stays neutral rather than reading as a
+                // failure. A day the program hadn't started on isn't
+                // scored either — there was nothing scheduled to miss.
+                const done = completedDates.has(iso);
+                const settled = isPast && started;
+                const missed = settled && !done;
+
                 return (
                   <motion.div
                     key={iso}
@@ -112,6 +125,12 @@ export default function WeeklyScheduleModal() {
                         : isPast
                           ? "glass-chip opacity-50"
                           : "glass-chip"
+                    } ${
+                      done
+                        ? "ring-1 ring-avocado-lime/70"
+                        : missed
+                          ? "ring-1 ring-red-400/70"
+                          : ""
                     }`}
                   >
                     <div
@@ -145,6 +164,12 @@ export default function WeeklyScheduleModal() {
                       <p className="text-xs text-white/50">
                         {formatWeekdayName(date)}
                         {isToday && " · امروز"}
+                        {done && (
+                          <span className="text-avocado-lime"> · انجام دادی ✓</span>
+                        )}
+                        {missed && (
+                          <span className="text-red-400"> · انجام نشد</span>
+                        )}
                       </p>
                     </div>
 

@@ -61,25 +61,34 @@ export default function DailyTotalsCard({
   const standing = target ? proteinStanding(totals.protein, target) : null;
 
   return (
-    <div className="glass-panel glass-static rounded-2xl p-3">
-      <p className="text-center text-xs text-white/60">
-        {isToday ? "مجموع امروز" : "مجموع این روز"}
-      </p>
+    // Label, total and protein goal all share one line above the macro
+    // capsules instead of stacking into three of their own — with the
+    // capsules themselves down to a single line too, that's as short as
+    // this card gets without dropping anything it shows.
+    <div className="glass-panel glass-static rounded-2xl p-2">
+      {/* Both side items are flex-1 (flex-basis 0, equal growth), so they
+          always take exactly half the leftover width each and the calorie
+          total between them lands dead center — justify-between would
+          instead position it by whatever space the two unequal-width
+          labels happened to leave, which is what pushed it off-center. */}
+      <div className="flex items-baseline gap-2 px-1">
+        <p className="min-w-0 flex-1 truncate text-xs text-white/60">
+          {isToday ? "مجموع امروز" : "مجموع این روز"}
+        </p>
 
-      <p className="mt-0.5 text-center text-xl font-bold text-white">
-        {toFaDigits(totals.calories)}{" "}
-        <span className="text-sm font-normal text-white/60">کالری</span>
-      </p>
+        <p className="shrink-0 text-base font-bold leading-none text-white">
+          {toFaDigits(totals.calories)}{" "}
+          <span className="text-xs font-normal text-white/60">کالری</span>
+        </p>
 
-      <div className="mt-2">
-        <MacroTotalsGrid totals={totals} proteinStanding={standing} />
+        <p className="min-w-0 flex-1 truncate text-end text-[10px] text-white/50">
+          {target ? `هدف پروتئین: ${toFaDigits(target.grams)} گرم` : ""}
+        </p>
       </div>
 
-      {target && (
-        <p className="mt-2 text-center text-xs text-white/50">
-          هدف پروتئین: {toFaDigits(target.grams)} گرم
-        </p>
-      )}
+      <div className="mt-1.5">
+        <MacroTotalsGrid totals={totals} proteinStanding={standing} />
+      </div>
     </div>
   );
 }

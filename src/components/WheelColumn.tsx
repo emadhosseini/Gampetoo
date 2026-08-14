@@ -88,6 +88,11 @@ export function WheelColumn({
   const containerRef = useRef<HTMLDivElement>(null);
   const { scrollY } = useScroll({ container: containerRef });
   const settleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // The index onSettle was last called with — lets handleScroll report the
+  // nearest value on every scroll tick (see below) without re-invoking
+  // onSettle (and the parent's setState) dozens of times per flick when the
+  // nearest item hasn't actually changed.
+  const lastReportedIndex = useRef(values.indexOf(selected));
 
   // Jump to the initial value without animating.
   useEffect(() => {
@@ -101,10 +106,32 @@ export function WheelColumn({
   }, []);
 
   function handleScroll() {
+    const container = containerRef.current;
+
+    // Reports the nearest value on every scroll tick — not just once the
+    // debounced timer below fires — so the parent's own state is already
+    // current by the time a scroll settles, not up to SETTLE_DELAY_MS
+    // behind it. Without this, tapping "ذخیره" right after a fast flick
+    // (well within that delay — a real, easy-to-hit gap, not an edge case)
+    // read the *previous* value: a user who scrolled kg to 98 then grams to
+    // 40 and saved quickly could have "۹۸٫۴۰" showing on screen but "۹۸"
+    // (this wheel's last *reported*, not last *shown*, value) actually get
+    // saved. Deduped by index so a flick through many items only re-invokes
+    // onSettle (and the parent's setState) once per item actually crossed,
+    // not on every scroll event.
+    if (container) {
+      const liveIndex = Math.round(container.scrollTop / ITEM_HEIGHT);
+      const liveClamped = Math.min(values.length - 1, Math.max(0, liveIndex));
+
+      if (liveClamped !== lastReportedIndex.current) {
+        lastReportedIndex.current = liveClamped;
+        onSettle(values[liveClamped]);
+      }
+    }
+
     if (settleTimer.current) clearTimeout(settleTimer.current);
 
     settleTimer.current = setTimeout(() => {
-      const container = containerRef.current;
       if (!container) return;
 
       const index = Math.round(container.scrollTop / ITEM_HEIGHT);
@@ -114,10 +141,9 @@ export function WheelColumn({
       // many items on its own momentum instead of hard-resisting between
       // every single one — this corrective scroll guarantees the settled
       // item still ends up exactly centered even if momentum let it stop
-      // a few pixels off a snap point.
+      // a few pixels off a snap point. The value itself was already
+      // reported live above; this is purely the visual snap.
       container.scrollTo({ top: clamped * ITEM_HEIGHT, behavior: "smooth" });
-
-      onSettle(values[clamped]);
     }, SETTLE_DELAY_MS);
   }
 

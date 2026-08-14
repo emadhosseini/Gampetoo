@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Dumbbell, UtensilsCrossed } from "lucide-react";
 
 import PillTabBar, { type PillTabBarItem } from "@/components/PillTabBar";
-import WeeklyScheduleModal from "@/components/WeeklyScheduleModal";
 
 import WorkoutPage from "./WorkoutPage";
 import NutritionPage from "./NutritionPage";
@@ -26,12 +25,9 @@ export default function DailyProgramPage() {
         layoutId="daily-program-tab-selection"
       />
 
-      {tab === "workout" && (
-        <div className="px-5 pt-3">
-          <WeeklyScheduleModal />
-        </div>
-      )}
-
+      {/* "تقویم هفته" used to sit in its own row here — it's now part of
+          WorkoutHeader's own action row inside WorkoutPage, sharing one
+          line with the forgot/edit buttons. */}
       {tab === "workout" ? <WorkoutPage /> : <NutritionPage />}
     </div>
   );

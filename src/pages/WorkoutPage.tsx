@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ChevronDown, ChevronUp } from "lucide-react";
 
 import WorkoutHeader from "@/components/WorkoutHeader";
+import WeeklyScheduleModal from "@/components/WeeklyScheduleModal";
 import ModalOverlay from "@/components/ModalOverlay";
 import WorkoutSummary from "@/components/WorkoutSummary";
 import WorkoutCompleteModal from "@/components/WorkoutCompleteModal";
@@ -188,7 +189,7 @@ const workout = workoutType
 
   if (!hasProgramStarted()) {
     return (
-      <div className="px-5 pb-5 pt-3">
+      <div className="px-5 pb-5 pt-4">
         <div className="glass-panel glass-static rounded-3xl p-6 text-center">
           <p className="text-xl font-bold text-white">
             امروز تمرینی نداری
@@ -203,8 +204,12 @@ const workout = workoutType
   // which sticks for the rest of today).
   if (isWorkout && needsVariantChoice && resolvedVariantId === null) {
     return (
-      <div className="space-y-4 px-5 pb-5 pt-3 text-center">
-        <WorkoutHeader title={day.title} showForgotButton />
+      <div className="space-y-4 px-5 pb-5 pt-4 text-center">
+        <WorkoutHeader
+          title={day.title}
+          showForgotButton
+          inlineActions={<WeeklyScheduleModal />}
+        />
 
         <p className="text-white">امروز کدوم برنامه رو می‌خوای انجام بدی؟</p>
 
@@ -235,8 +240,12 @@ const workout = workoutType
 
   if (!isWorkout) {
     return (
-      <div className="space-y-6 px-5 pb-5 pt-3">
-        <WorkoutHeader title="روز استراحت" showForgotButton />
+      <div className="space-y-6 px-5 pb-5 pt-4">
+        <WorkoutHeader
+          title="روز استراحت"
+          showForgotButton
+          inlineActions={<WeeklyScheduleModal />}
+        />
 
         <div className="glass-panel glass-static rounded-3xl p-6 text-center">
           {/* Same male/female walking illustration HomePage's hero card
@@ -292,8 +301,12 @@ const workout = workoutType
 
   if (!workout || exercises.length === 0) {
     return (
-      <div className="space-y-6 px-5 pb-5 pt-3">
-        <WorkoutHeader title={day.title} showForgotButton />
+      <div className="space-y-6 px-5 pb-5 pt-4">
+        <WorkoutHeader
+          title={day.title}
+          showForgotButton
+          inlineActions={<WeeklyScheduleModal />}
+        />
 
         <div className="glass-panel glass-static rounded-3xl p-2 text-center">
 
@@ -382,12 +395,13 @@ const workout = workoutType
   }
 
   return (
-    <div className="space-y-6 px-5 pb-5 pt-3">
+    <div className="space-y-6 px-5 pb-5 pt-4">
       <WorkoutHeader
         title={workout.title}
         belowTitle={resolvedVariantName}
         showForgotButton
         onEditWorkout={() => setEditChoiceOpen(true)}
+        inlineActions={<WeeklyScheduleModal />}
       />
 
       <div

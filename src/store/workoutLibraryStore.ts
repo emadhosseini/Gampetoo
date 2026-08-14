@@ -170,3 +170,43 @@ export function saveWorkoutExercises(
 
   saveOverrides(overrides);
 }
+
+const DEFAULT_PLAN_NAME_KEY = "emad-default-plan-names";
+const DEFAULT_PLAN_NAME_FALLBACK = "برنامه پیش‌فرض";
+
+function defaultPlanNameStorageKey() {
+  return scopedKey(DEFAULT_PLAN_NAME_KEY);
+}
+
+function readDefaultPlanNames(): Record<string, string> {
+  const saved = localStorage.getItem(defaultPlanNameStorageKey());
+
+  if (!saved) return {};
+
+  try {
+    return JSON.parse(saved) as Record<string, string>;
+  } catch {
+    return {};
+  }
+}
+
+// The "برنامه پیش‌فرض" pill's own label, per workout — unlike a real
+// workoutVariantStore entry, the base library workout has no `name` field
+// of its own to rename, so this is a small separate override keyed by
+// workoutId, falling back to the plain "برنامه پیش‌فرض" label until the
+// user actually renames it once.
+export function getDefaultPlanName(workoutId: string): string {
+  return readDefaultPlanNames()[workoutId] ?? DEFAULT_PLAN_NAME_FALLBACK;
+}
+
+export function setDefaultPlanName(workoutId: string, name: string) {
+  const names = readDefaultPlanNames();
+
+  names[workoutId] = name;
+
+  localStorage.setItem(defaultPlanNameStorageKey(), JSON.stringify(names));
+}
+
+export function resetDefaultPlanNames() {
+  localStorage.removeItem(defaultPlanNameStorageKey());
+}

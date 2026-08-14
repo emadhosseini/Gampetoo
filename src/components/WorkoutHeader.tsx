@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Pencil } from "lucide-react";
 
 import ModalOverlay from "@/components/ModalOverlay";
@@ -31,6 +31,12 @@ type WorkoutHeaderProps = {
   // label is caller-supplied rather than a single hardcoded string.
   onEditWorkout?: () => void;
   onEditWorkoutLabel?: string;
+  // Content to sit on the same line as the action buttons above, taking
+  // whatever width they don't (the daily page's "تقویم هفته" button). Given
+  // one, the buttons drop out of their absolute corner position and share a
+  // real row with it under the title instead — the two used to be separate
+  // stacked rows, which is exactly what this merges.
+  inlineActions?: ReactNode;
 };
 
 export default function WorkoutHeader({
@@ -40,6 +46,7 @@ export default function WorkoutHeader({
   showForgotButton = false,
   onEditWorkout,
   onEditWorkoutLabel = "تغییر ترتیب یا حرکت‌های تمرین",
+  inlineActions,
 }: WorkoutHeaderProps) {
   const [open, setOpen] = useState(false);
 
@@ -53,29 +60,51 @@ export default function WorkoutHeader({
     window.location.href = "/";
   }
 
+  // Rendered either in the absolute top corner (no inlineActions — every
+  // caller that behaved this way before still does) or as the fixed-size
+  // tail of the shared row below the title. Same buttons, same size, both
+  // ways.
+  const actionButtons = (showForgotButton || onEditWorkout) && (
+    <>
+      {onEditWorkout && (
+        <button
+          onClick={onEditWorkout}
+          aria-label={onEditWorkoutLabel}
+          className="glass-chip glass-static flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white"
+        >
+          <Pencil size={16} />
+        </button>
+      )}
+
+      {showForgotButton && (
+        <button
+          onClick={() => setOpen(true)}
+          aria-label="فراموشی ثبت اتمام تمرین روز گذشته"
+          className="glass-chip glass-static flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-xl"
+        >
+          🤦
+        </button>
+      )}
+    </>
+  );
+
   return (
     <div className="relative mb-4 text-center">
-      {(showForgotButton || onEditWorkout) && (
+      {!inlineActions && actionButtons && (
         <div className="absolute end-0 top-0 flex items-center gap-2">
-          {onEditWorkout && (
-            <button
-              onClick={onEditWorkout}
-              aria-label={onEditWorkoutLabel}
-              className="glass-chip glass-static flex h-10 w-10 items-center justify-center rounded-full text-white"
-            >
-              <Pencil size={16} />
-            </button>
-          )}
+          {actionButtons}
+        </div>
+      )}
 
-          {showForgotButton && (
-            <button
-              onClick={() => setOpen(true)}
-              aria-label="فراموشی ثبت اتمام تمرین روز گذشته"
-              className="glass-chip glass-static flex h-10 w-10 items-center justify-center rounded-full text-xl"
-            >
-              🤦
-            </button>
-          )}
+      {/* Above the title, not below it — this row is the page's controls,
+          and burying them under the heading pushed both further down the
+          screen than either needed to be. inlineActions is first within the
+          row too: under RTL that puts it on the right, filling whatever the
+          fixed-size buttons beside it leave. */}
+      {inlineActions && (
+        <div className="mb-3 flex items-center gap-2">
+          <div className="min-w-0 flex-1">{inlineActions}</div>
+          {actionButtons}
         </div>
       )}
 
