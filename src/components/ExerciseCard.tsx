@@ -68,7 +68,14 @@ export default function ExerciseCard({
           aria-expanded={expanded}
           className="flex-1 text-right"
         >
-          <h2 className="text-sm font-bold text-white">{exercise.name}</h2>
+          <h2 className="text-sm font-bold text-white">
+            {exercise.name}
+            {exercise.nameEn && (
+              <span className="ms-1.5 text-[10px] font-normal text-white/40">
+                {exercise.nameEn}
+              </span>
+            )}
+          </h2>
         </button>
 
         <Toggle checked={checked} onChange={handleToggleChecked} />
@@ -95,6 +102,7 @@ export default function ExerciseCard({
               unit={exercise.unit}
               defaultSets={exercise.sets}
               defaultReps={exercise.reps}
+              description={exercise.description}
             />
           </motion.div>
         )}

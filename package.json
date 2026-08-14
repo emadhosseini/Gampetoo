@@ -1,13 +1,14 @@
 {
   "name": "gampetoo",
   "private": true,
-  "version": "1.0.26",
+  "version": "1.0.27",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "release": "node scripts/release.mjs"
   },
   "dependencies": {
     "@fontsource/vazirmatn": "^5.2.8",

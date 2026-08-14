@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { BarChart3, Check, Minus, Plus, Timer, Trash2 } from "lucide-react";
+import { BarChart3, Check, Minus, NotebookText, Plus, Timer, Trash2 } from "lucide-react";
 
 import ExerciseProgressChartModal from "@/components/progress/ExerciseProgressChartModal";
+import ModalOverlay from "@/components/ModalOverlay";
 import {
   addSet,
   confirmSet,
@@ -91,6 +92,10 @@ export interface ExerciseSetLoggerProps {
   // opened, see ensureTodaysSets).
   defaultSets: number;
   defaultReps: number;
+  // The exercise's own "what this trains and why" text (see
+  // Exercise.description). Absent for anything not yet documented, in which
+  // case the note button simply isn't offered.
+  description?: string;
 }
 
 // The drawer under an exercise card on the daily workout page — opened by
@@ -104,6 +109,7 @@ export default function ExerciseSetLogger({
   unit = "reps",
   defaultSets,
   defaultReps,
+  description,
 }: ExerciseSetLoggerProps) {
   const isSeconds = unit === "seconds";
   const repsLabel = isSeconds ? "ثانیه" : "تکرار";
@@ -129,6 +135,7 @@ export default function ExerciseSetLogger({
   // actually stored in this counter itself.
   const [, forceTick] = useState(0);
   const [chartOpen, setChartOpen] = useState(false);
+  const [noteOpen, setNoteOpen] = useState(false);
 
   useEffect(() => {
     if (restEndAt === null) return;
@@ -184,13 +191,25 @@ export default function ExerciseSetLogger({
         <div className="mb-2 flex items-center justify-between">
           <h3 className="text-sm font-semibold text-white">ثبت ست‌های امروز</h3>
 
-          <button
-            onClick={() => setChartOpen(true)}
-            aria-label="نمودار پیشرفت"
-            className="glass-chip glass-static flex h-8 w-8 items-center justify-center rounded-full text-white"
-          >
-            <BarChart3 size={14} />
-          </button>
+          <div className="flex items-center gap-1.5">
+            {description && (
+              <button
+                onClick={() => setNoteOpen(true)}
+                aria-label="توضیح حرکت"
+                className="glass-chip glass-static flex h-8 w-8 items-center justify-center rounded-full text-white"
+              >
+                <NotebookText size={14} />
+              </button>
+            )}
+
+            <button
+              onClick={() => setChartOpen(true)}
+              aria-label="نمودار پیشرفت"
+              className="glass-chip glass-static flex h-8 w-8 items-center justify-center rounded-full text-white"
+            >
+              <BarChart3 size={14} />
+            </button>
+          </div>
         </div>
 
         {restSecondsLeft !== null && (
@@ -307,6 +326,23 @@ export default function ExerciseSetLogger({
             ))}
           </div>
         </div>
+      )}
+
+      {noteOpen && description && (
+        <ModalOverlay onClose={() => setNoteOpen(false)}>
+          <div className="glass-panel glass-static space-y-4 rounded-3xl p-6">
+            <h2 className="text-center text-base font-bold text-white">{exerciseName}</h2>
+
+            <p className="text-sm leading-7 text-white/80">{description}</p>
+
+            <button
+              onClick={() => setNoteOpen(false)}
+              className="ghost-action ghost-action-static w-full rounded-2xl py-3 font-medium text-white"
+            >
+              بستن
+            </button>
+          </div>
+        </ModalOverlay>
       )}
 
       <ExerciseProgressChartModal

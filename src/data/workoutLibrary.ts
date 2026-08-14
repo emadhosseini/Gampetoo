@@ -6,9 +6,27 @@
 // src/data/nutrition/iranianFoodsDatabase.ts). Used by
 // domain/services/calorieCalculator.ts to estimate calories burned once a
 // workout is checked off.
+// Anatomy/reference fields below follow MuscleWiki's own taxonomy, kept in
+// its English canonical form because they're categorical identifiers (the
+// same role `unit` plays), not prose — the human-readable Persian text is
+// `description`. Every one of them is optional: they're reference data the
+// app doesn't compute anything from, so an entry without them behaves
+// exactly as it always did, and older seed entries need no backfill.
+export type ExerciseMechanic = "Compound" | "Isolation";
+
 export interface Exercise {
   id: string;
+  // The Persian name Iranian gyms actually use. One id always carries one
+  // name everywhere it appears (an exercise reused across days keeps the
+  // same wording), and no two ids share a name — assertLibraryIsConsistent
+  // below enforces both, because the same movement showing up as "پرس سینه
+  // دستگاه" in one day and "پرس سینه دستگاه ماشین" in another read as two
+  // unrelated exercises when it's really one.
   name: string;
+  // What the move is called at the source (MuscleWiki). Kept as its own
+  // field rather than appended into `name` so the UI can render it smaller
+  // and quieter beside the Persian name instead of as one long string.
+  nameEn?: string;
   sets: number;
   // What `reps` counts. Isometric holds (planks and the like) aren't
   // repeated, they're endured, so counting them in repetitions was
@@ -18,6 +36,13 @@ export interface Exercise {
   reps: number;
   enabled: boolean;
   metValue: number;
+  // Two or three plain-Persian sentences: which muscle the move is mainly
+  // for, what it also hits, and what it actually does for the body.
+  description?: string;
+  primaryMuscle?: string;
+  secondaryMuscles?: string[];
+  equipment?: string;
+  mechanic?: ExerciseMechanic;
 }
 
 export interface ExerciseGroup {
@@ -50,40 +75,105 @@ export const workoutLibrary: WorkoutDefinition[] = [
         title: "سینه",
         exercises: [
           {
-            id: "barbell-bench-press",
+            id: "chest-press",
             name: "پرس سینه هالتر",
+            nameEn: "Barbell Bench Press",
             sets: 3,
             reps: 10,
             enabled: false,
             metValue: 5,
+            description:
+              "پایه‌ای‌ترین و مؤثرترین حرکت برای حجم‌دهی به کل عضله سینه، مخصوصاً بخش میانی آن. همزمان فشار زیادی روی پشت‌بازو و بخش جلویی سرشانه وارد می‌کند. چون با هالتر و وزنه سنگین انجام می‌شود، بهترین گزینه برای افزایش قدرت کلی بالاتنه است.",
+            primaryMuscle: "Chest",
+            secondaryMuscles: ["Triceps", "Front Deltoids"],
+            equipment: "Barbell",
+            mechanic: "Compound",
           },
           {
             id: "dumbbell-bench-press",
             name: "پرس سینه دمبل",
+            nameEn: "Dumbbell Bench Press",
             sets: 3,
             reps: 10,
             enabled: false,
             metValue: 5,
+            description:
+              "همان کارکرد پرس هالتر را دارد اما دامنه حرکتی بازتری به سینه می‌دهد و کشش بیشتری در پایین حرکت ایجاد می‌کند. پشت‌بازو و سرشانه جلویی هم درگیر می‌شوند. چون هر دست جدا کار می‌کند، عدم تعادل قدرت بین دو سمت بدن را برطرف می‌کند.",
+            primaryMuscle: "Chest",
+            secondaryMuscles: ["Triceps", "Front Deltoids"],
+            equipment: "Dumbbell",
+            mechanic: "Compound",
           },
           {
             id: "incline-barbell-press",
             name: "پرس بالا سینه هالتر",
+            nameEn: "Incline Barbell Bench Press",
             sets: 3,
             reps: 10,
             enabled: false,
             metValue: 5,
+            description:
+              "زاویه شیب‌دار نیمکت باعث می‌شود فشار اصلی روی بخش بالایی عضله سینه بیفتد، جایی که معمولاً عقب‌ماندگی دارد. سرشانه جلویی در این حرکت درگیری بیشتری نسبت به پرس تخت دارد و پشت‌بازو هم کمک می‌کند. برای ساختن ظاهر پُر و برجسته قفسه سینه ضروری است.",
+            primaryMuscle: "Upper Chest",
+            secondaryMuscles: ["Front Deltoids", "Triceps"],
+            equipment: "Barbell",
+            mechanic: "Compound",
           },
           {
             id: "incline-dumbbell-press",
             name: "پرس بالا سینه دمبل",
+            nameEn: "Incline Dumbbell Bench Press",
             sets: 3,
             reps: 10,
             enabled: false,
             metValue: 5,
+            description:
+              "نسخه دمبلی پرس بالا سینه که کشش و دامنه حرکتی بیشتری به بخش بالایی سینه می‌دهد. سرشانه جلویی و پشت‌بازو به‌عنوان عضلات کمکی وارد عمل می‌شوند. برای کسانی که با هالتر در مفصل شانه احساس فشار می‌کنند گزینه راحت‌تری است.",
+            primaryMuscle: "Upper Chest",
+            secondaryMuscles: ["Front Deltoids", "Triceps"],
+            equipment: "Dumbbell",
+            mechanic: "Compound",
           },
           {
             id: "decline-bench-press",
             name: "پرس پایین سینه",
+            nameEn: "Decline Barbell Bench Press",
+            sets: 3,
+            reps: 10,
+            enabled: false,
+            metValue: 5,
+            description:
+              "با شیب رو به پایین، تمرکز حرکت روی بخش زیرین عضله سینه می‌رود و به خط زیر سینه فرم می‌دهد. پشت‌بازو کمک قابل توجهی می‌کند اما درگیری سرشانه نسبت به پرس بالا سینه کمتر است. معمولاً فشار کمتری به مفصل شانه وارد می‌کند.",
+            primaryMuscle: "Lower Chest",
+            secondaryMuscles: ["Triceps", "Front Deltoids"],
+            equipment: "Barbell",
+            mechanic: "Compound",
+          },
+          {
+            id: "chest-press-machine",
+            name: "پرس سینه دستگاه",
+            nameEn: "Machine Chest Press",
+            sets: 3,
+            reps: 10,
+            enabled: false,
+            metValue: 5,
+            description:
+              "مسیر حرکت توسط دستگاه کنترل می‌شود، بنابراین می‌توانید بدون نگرانی از تعادل، تمام تمرکز را روی انقباض عضله سینه بگذارید. پشت‌بازو و سرشانه جلویی کمک می‌کنند اما نقششان کمتر از حرکات آزاد است. گزینه‌ای امن برای مبتدی‌ها و برای ست‌های پایانی تا حد ناتوانی.",
+            primaryMuscle: "Chest",
+            secondaryMuscles: ["Triceps", "Front Deltoids"],
+            equipment: "Machine",
+            mechanic: "Compound",
+          },
+          {
+            id: "smith-chest-press",
+            name: "پرس سینه اسمیت",
+            nameEn: "Smith Machine Bench Press",
+            description:
+              "روی نیمکت تخت و با میله‌ای که روی ریل اسمیت حرکت می‌کند، کل عضله سینه زیر فشار قرار می‌گیرد. پشت‌بازو و سرشانه جلویی به‌عنوان عضلات کمکی درگیر می‌شوند. چون نیازی به تعادل نیست، می‌توانید بدون یار کمکی سنگین بزنید.",
+            primaryMuscle: "Chest",
+            secondaryMuscles: ["Triceps", "Front Deltoids"],
+            equipment: "Smith Machine",
+            mechanic: "Compound",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -92,42 +182,92 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "dumbbell-fly",
             name: "فلای دمبل",
+            nameEn: "Dumbbell Fly",
             sets: 3,
-            reps: 10,
+            reps: 12,
             enabled: false,
             metValue: 5,
+            description:
+              "یک حرکت تک‌مفصلی که با باز و بسته کردن دست‌ها، کشش عمیقی روی عضله سینه ایجاد می‌کند و روی عرض و تفکیک آن کار می‌کند. سرشانه جلویی کمی درگیر می‌شود اما پشت‌بازو تقریباً نقشی ندارد. باید با وزنه سبک‌تر و کنترل کامل انجام شود.",
+            primaryMuscle: "Chest",
+            secondaryMuscles: ["Front Deltoids"],
+            equipment: "Dumbbell",
+            mechanic: "Isolation",
           },
           {
             id: "cable-fly",
-            name: "فلای دستگاه",
+            name: "فلای سیم‌کش",
+            nameEn: "Cable Fly",
             sets: 3,
-            reps: 10,
+            reps: 12,
             enabled: false,
             metValue: 5,
+            description:
+              "برخلاف دمبل، سیم‌کش در تمام طول دامنه حرکت فشار ثابتی روی عضله سینه نگه می‌دارد و انقباض انتهایی بسیار قوی‌تری می‌دهد. عمدتاً روی بخش میانی و داخلی سینه کار می‌کند و سرشانه جلویی به‌عنوان عضله ثانویه کمک جزئی دارد. برای پایان‌بندی تمرین سینه عالی است.",
+            primaryMuscle: "Chest",
+            secondaryMuscles: ["Front Deltoids"],
+            equipment: "Cable",
+            mechanic: "Isolation",
+          },
+          {
+            id: "pec-deck-fly",
+            name: "فلای دستگاه پروانه",
+            nameEn: "Pec Deck Fly",
+            sets: 3,
+            reps: 12,
+            enabled: false,
+            metValue: 5,
+            description:
+              "دستگاه پروانه مسیر حرکت را کاملاً ثابت نگه می‌دارد و اجازه می‌دهد بدون درگیری تعادل، فقط روی فشرده کردن عضله سینه تمرکز کنید. سرشانه جلویی درگیری خیلی کمی دارد و پشت‌بازو کاملاً خارج از حرکت است. بهترین گزینه برای حس کردن انقباض سینه.",
+            primaryMuscle: "Chest",
+            secondaryMuscles: ["Front Deltoids"],
+            equipment: "Machine",
+            mechanic: "Isolation",
           },
           {
             id: "cable-crossover",
             name: "کراس اور",
+            nameEn: "Cable Crossover",
             sets: 3,
-            reps: 10,
+            reps: 12,
             enabled: false,
             metValue: 5,
+            description:
+              "دست‌ها از بالا روی هم عبور می‌کنند و همین باعث انقباض کامل بخش داخلی و پایینی عضله سینه می‌شود. سرشانه جلویی کمک جزئی می‌کند و فشار در تمام دامنه حرکت ثابت می‌ماند. برای تفکیک و خط انداختن روی سینه یکی از بهترین‌هاست.",
+            primaryMuscle: "Chest",
+            secondaryMuscles: ["Front Deltoids"],
+            equipment: "Cable",
+            mechanic: "Isolation",
           },
           {
             id: "pushup",
             name: "شنا سوئدی",
+            nameEn: "Push Up",
             sets: 3,
-            reps: 10,
+            reps: 15,
             enabled: false,
             metValue: 5,
+            description:
+              "حرکتی با وزن بدن که کل عضله سینه را همراه با پشت‌بازو و سرشانه جلویی درگیر می‌کند. عضلات مرکزی بدن هم برای حفظ خط صاف بدن فعال می‌مانند. بدون هیچ تجهیزاتی قابل اجراست و برای گرم کردن یا ست‌های پایانی عالی است.",
+            primaryMuscle: "Chest",
+            secondaryMuscles: ["Triceps", "Front Deltoids", "Abdominals"],
+            equipment: "Bodyweight",
+            mechanic: "Compound",
           },
           {
             id: "chest-dip",
             name: "دیپ سینه",
+            nameEn: "Chest Dip",
             sets: 3,
             reps: 10,
             enabled: false,
             metValue: 5,
+            description:
+              "با خم کردن بالاتنه به جلو، فشار حرکت روی بخش پایینی عضله سینه متمرکز می‌شود. پشت‌بازو و سرشانه جلویی نقش کمکی پررنگی دارند. یکی از قوی‌ترین حرکات با وزن بدن برای ساختن حجم بالاتنه است.",
+            primaryMuscle: "Lower Chest",
+            secondaryMuscles: ["Triceps", "Front Deltoids"],
+            equipment: "Bodyweight",
+            mechanic: "Compound",
           },
         ],
       },
@@ -138,58 +278,122 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "barbell-shoulder-press",
             name: "پرس سرشانه هالتر",
+            nameEn: "Barbell Overhead Press",
             sets: 3,
             reps: 10,
             enabled: false,
             metValue: 5,
+            description:
+              "اصلی‌ترین حرکت برای ساختن قدرت و حجم سرشانه، با تمرکز روی بخش جلویی و میانی دلتوئید. پشت‌بازو و عضلات کول به‌عنوان کمکی وارد عمل می‌شوند. چون ایستاده انجام می‌شود، عضلات مرکزی بدن هم برای ثابت نگه داشتن تنه فعال می‌مانند.",
+            primaryMuscle: "Front Deltoids",
+            secondaryMuscles: ["Side Deltoids", "Triceps", "Traps"],
+            equipment: "Barbell",
+            mechanic: "Compound",
           },
           {
             id: "dumbbell-shoulder-press",
             name: "پرس سرشانه دمبل",
+            nameEn: "Dumbbell Shoulder Press",
             sets: 3,
             reps: 10,
             enabled: false,
             metValue: 5,
+            description:
+              "دامنه حرکتی طبیعی‌تری نسبت به هالتر دارد و بخش جلویی و میانی سرشانه را همزمان درگیر می‌کند. پشت‌بازو در قسمت پایانی حرکت کمک می‌کند. چون هر دست مستقل کار می‌کند، تعادل قدرت بین دو شانه را اصلاح می‌کند.",
+            primaryMuscle: "Front Deltoids",
+            secondaryMuscles: ["Side Deltoids", "Triceps"],
+            equipment: "Dumbbell",
+            mechanic: "Compound",
           },
           {
             id: "arnold-press",
             name: "آرنولد پرس",
+            nameEn: "Arnold Press",
             sets: 3,
             reps: 10,
             enabled: false,
             metValue: 5,
+            description:
+              "چرخش مچ در طول حرکت باعث می‌شود هر سه بخش سرشانه، به‌ویژه جلویی و میانی، در یک تکرار درگیر شوند. پشت‌بازو نقش کمکی دارد و دامنه حرکت از پرس معمولی بیشتر است. برای رشد همه‌جانبه دلتوئید بسیار مؤثر است.",
+            primaryMuscle: "Front Deltoids",
+            secondaryMuscles: ["Side Deltoids", "Triceps"],
+            equipment: "Dumbbell",
+            mechanic: "Compound",
+          },
+          {
+            id: "machine-shoulder-press",
+            name: "پرس سرشانه دستگاه",
+            nameEn: "Machine Shoulder Press",
+            sets: 3,
+            reps: 10,
+            enabled: false,
+            metValue: 5,
+            description:
+              "مسیر ثابت دستگاه نیاز به تعادل را حذف می‌کند و اجازه می‌دهد تمرکز کامل روی فشار آوردن به سرشانه جلویی و میانی باشد. پشت‌بازو کمک می‌کند اما درگیری عضلات مرکزی بدن بسیار کم است. برای مبتدی‌ها و ست‌های سنگین پایانی مناسب است.",
+            primaryMuscle: "Front Deltoids",
+            secondaryMuscles: ["Side Deltoids", "Triceps"],
+            equipment: "Machine",
+            mechanic: "Compound",
           },
           {
             id: "lateral-raise",
             name: "نشر جانب",
+            nameEn: "Dumbbell Lateral Raise",
             sets: 3,
-            reps: 10,
+            reps: 12,
             enabled: false,
             metValue: 5,
+            description:
+              "مهم‌ترین حرکت برای بخش میانی سرشانه که مستقیماً روی عرض و پهنای شانه‌ها کار می‌کند. عضلات کول در بالای حرکت کمی درگیر می‌شوند. باید با وزنه سبک و بدون تاب دادن بدن اجرا شود تا فشار روی خود دلتوئید بماند.",
+            primaryMuscle: "Side Deltoids",
+            secondaryMuscles: ["Traps"],
+            equipment: "Dumbbell",
+            mechanic: "Isolation",
+          },
+          {
+            id: "cable-lateral-raise",
+            name: "نشر جانب سیم‌کش",
+            nameEn: "Cable Lateral Raise",
+            sets: 3,
+            reps: 12,
+            enabled: false,
+            metValue: 5,
+            description:
+              "نسخه سیم‌کشی نشر جانب که برخلاف دمبل، از همان ابتدای حرکت فشار را روی بخش میانی سرشانه نگه می‌دارد. عضلات کول کمک بسیار جزئی می‌کنند. برای کسانی که در نشر دمبل حس خوبی از عضله نمی‌گیرند گزینه بهتری است.",
+            primaryMuscle: "Side Deltoids",
+            secondaryMuscles: ["Traps"],
+            equipment: "Cable",
+            mechanic: "Isolation",
           },
           {
             id: "front-raise",
             name: "نشر جلو",
+            nameEn: "Dumbbell Front Raise",
             sets: 3,
-            reps: 10,
+            reps: 12,
             enabled: false,
             metValue: 5,
+            description:
+              "به‌طور مستقیم بخش جلویی سرشانه را هدف می‌گیرد و به برجستگی جلوی شانه فرم می‌دهد. بخش بالایی عضله سینه و کول کمک جزئی می‌کنند. چون سرشانه جلویی در همه حرکات پرس درگیر است، معمولاً به حجم کمی از این حرکت نیاز است.",
+            primaryMuscle: "Front Deltoids",
+            secondaryMuscles: ["Upper Chest", "Traps"],
+            equipment: "Dumbbell",
+            mechanic: "Isolation",
           },
           {
             id: "bent-over-raise",
             name: "نشر خم",
+            nameEn: "Bent Over Reverse Fly",
             sets: 3,
-            reps: 10,
+            reps: 12,
             enabled: false,
             metValue: 5,
-          },
-          {
-            id: "machine-shoulder-press",
-            name: "پرس دستگاه",
-            sets: 3,
-            reps: 10,
-            enabled: false,
-            metValue: 5,
+            description:
+              "با خم شدن به جلو، فشار روی بخش عقبی سرشانه می‌افتد که در برنامه‌های پوش معمولاً نادیده گرفته می‌شود. عضلات میانی پشت و کول هم درگیر می‌شوند. تقویت این بخش به تعادل شانه و اصلاح افتادگی شانه‌ها کمک می‌کند.",
+            primaryMuscle: "Rear Deltoids",
+            secondaryMuscles: ["Traps", "Middle Back"],
+            equipment: "Dumbbell",
+            mechanic: "Isolation",
           },
         ],
       },
@@ -198,74 +402,154 @@ export const workoutLibrary: WorkoutDefinition[] = [
         title: "پشت بازو",
         exercises: [
           {
-            id: "cable-pushdown",
-            name: "پشت بازو سیم‌کش",
+            id: "close-grip-bench-press",
+            name: "پرس سینه دست جمع",
+            nameEn: "Close Grip Bench Press",
             sets: 3,
             reps: 10,
             enabled: false,
             metValue: 5,
+            description:
+              "با نزدیک کردن فاصله دست‌ها روی هالتر، بار اصلی حرکت از سینه به پشت‌بازو منتقل می‌شود. عضله سینه و سرشانه جلویی هم به‌عنوان کمکی درگیر می‌مانند. سنگین‌ترین و بهترین حرکت چندمفصلی برای ساختن حجم پشت‌بازو است.",
+            primaryMuscle: "Triceps",
+            secondaryMuscles: ["Chest", "Front Deltoids"],
+            equipment: "Barbell",
+            mechanic: "Compound",
+          },
+          {
+            id: "cable-pushdown",
+            name: "پشت بازو سیم‌کش",
+            nameEn: "Cable Pushdown",
+            sets: 3,
+            reps: 12,
+            enabled: false,
+            metValue: 5,
+            description:
+              "حرکت پایه‌ای تفکیکی برای پشت‌بازو که فشار ثابتی در تمام دامنه حرکت روی هر سه سر این عضله نگه می‌دارد. عضله ساعد برای گرفتن میله کمی درگیر می‌شود. برای حجم دادن به کل پشت‌بازو مناسب است.",
+            primaryMuscle: "Triceps",
+            secondaryMuscles: ["Forearms"],
+            equipment: "Cable",
+            mechanic: "Isolation",
           },
           {
             id: "rope-pushdown",
             name: "پشت بازو طناب",
+            nameEn: "Rope Pushdown",
             sets: 3,
-            reps: 10,
+            reps: 12,
             enabled: false,
             metValue: 5,
+            description:
+              "باز کردن طناب در انتهای حرکت باعث انقباض کامل‌تر پشت‌بازو، مخصوصاً سر خارجی آن، می‌شود. ساعد نقش کمکی جزئی دارد. نسبت به میله صاف، فشار کمتری به مچ وارد می‌کند.",
+            primaryMuscle: "Triceps",
+            secondaryMuscles: ["Forearms"],
+            equipment: "Cable",
+            mechanic: "Isolation",
           },
           {
             id: "lying-barbell-extension",
             name: "پشت بازو هالتر خوابیده",
+            nameEn: "Lying Triceps Extension",
             sets: 3,
             reps: 10,
             enabled: false,
             metValue: 5,
+            description:
+              "معروف به اسکال کراشر، که با باز و بسته کردن آرنج در حالت خوابیده، کشش عمیقی روی سر بلند پشت‌بازو ایجاد می‌کند. سرشانه جلویی برای ثابت نگه داشتن بازو کمی درگیر می‌شود. یکی از مؤثرترین حرکات برای ضخامت پشت‌بازو است.",
+            primaryMuscle: "Triceps",
+            secondaryMuscles: ["Front Deltoids"],
+            equipment: "Barbell",
+            mechanic: "Isolation",
           },
           {
             id: "overhead-dumbbell-extension",
             name: "پشت بازو دمبل بالای سر",
+            nameEn: "Overhead Dumbbell Extension",
             sets: 3,
-            reps: 10,
+            reps: 12,
             enabled: false,
             metValue: 5,
+            description:
+              "قرار گرفتن بازو بالای سر باعث کشش حداکثری سر بلند پشت‌بازو می‌شود، بخشی که در حرکات سیم‌کش کمتر درگیر می‌شود. عضلات مرکزی بدن برای حفظ حالت تنه فعال می‌مانند. برای رشد کامل و بلندی پشت‌بازو ضروری است.",
+            primaryMuscle: "Triceps",
+            secondaryMuscles: ["Abdominals"],
+            equipment: "Dumbbell",
+            mechanic: "Isolation",
           },
           {
-            id: "triceps-dip",
-            name: "دیپ پشت بازو",
+            id: "overhead-cable-extension",
+            name: "پشت بازو سیم‌کش بالای سر",
+            nameEn: "Overhead Cable Extension",
             sets: 3,
-            reps: 10,
+            reps: 12,
             enabled: false,
             metValue: 5,
-          },
-          {
-            id: "triceps-kickback",
-            name: "کیک‌بک",
-            sets: 3,
-            reps: 10,
-            enabled: false,
-            metValue: 5,
+            description:
+              "همان زاویه کششی حرکت بالای سر را دارد اما با فشار ثابت سیم‌کش در تمام دامنه حرکت. تمرکز اصلی روی سر بلند پشت‌بازو است و ساعد کمک جزئی می‌کند. گزینه‌ای بسیار خوب برای ست‌های پرتکرار پایان تمرین.",
+            primaryMuscle: "Triceps",
+            secondaryMuscles: ["Forearms"],
+            equipment: "Cable",
+            mechanic: "Isolation",
           },
           {
             id: "machine-triceps",
             name: "پشت بازو دستگاه",
+            nameEn: "Machine Triceps Extension",
             sets: 3,
-            reps: 10,
+            reps: 12,
             enabled: false,
             metValue: 5,
+            description:
+              "مسیر ثابت دستگاه اجازه می‌دهد بدون درگیری تعادل، تمام فشار روی پشت‌بازو بماند. عضلات کمکی تقریباً هیچ نقشی ندارند. برای مبتدی‌ها و برای رساندن عضله به ناتوانی کامل در ست آخر مناسب است.",
+            primaryMuscle: "Triceps",
+            secondaryMuscles: [],
+            equipment: "Machine",
+            mechanic: "Isolation",
           },
-        ],
-      },
-      {
-        id: "core",
-        title: "مرکزی",
-        exercises: [
           {
-            id: "bird-dog",
-            name: "برد داگ",
+            id: "triceps-dip",
+            name: "دیپ پشت بازو",
+            nameEn: "Triceps Dip",
             sets: 3,
             reps: 10,
             enabled: false,
             metValue: 5,
+            description:
+              "با نگه داشتن بالاتنه صاف و عمود، بار حرکت به‌جای سینه روی پشت‌بازو می‌افتد. سینه و سرشانه جلویی کمک می‌کنند اما نقش اصلی با پشت‌بازوست. یکی از سنگین‌ترین حرکات با وزن بدن برای این عضله است.",
+            primaryMuscle: "Triceps",
+            secondaryMuscles: ["Chest", "Front Deltoids"],
+            equipment: "Bodyweight",
+            mechanic: "Compound",
+          },
+          {
+            id: "bench-dip",
+            name: "دیپ روی نیمکت",
+            nameEn: "Bench Dip",
+            sets: 3,
+            reps: 12,
+            enabled: false,
+            metValue: 5,
+            description:
+              "نسخه ساده‌تر دیپ که با تکیه دادن دست‌ها روی نیمکت انجام می‌شود و مستقیماً پشت‌بازو را هدف می‌گیرد. سرشانه جلویی و سینه کمک جزئی می‌کنند. برای مبتدی‌ها یا اجرای بدون دستگاه گزینه خوبی است.",
+            primaryMuscle: "Triceps",
+            secondaryMuscles: ["Front Deltoids", "Chest"],
+            equipment: "Bodyweight",
+            mechanic: "Compound",
+          },
+          {
+            id: "triceps-kickback",
+            name: "کیک‌بک",
+            nameEn: "Dumbbell Triceps Kickback",
+            sets: 3,
+            reps: 12,
+            enabled: false,
+            metValue: 5,
+            description:
+              "در انتهای حرکت، پشت‌بازو به حداکثر انقباض می‌رسد و همین آن را به یک حرکت تفکیکی خالص تبدیل می‌کند. سرشانه عقبی برای ثابت نگه داشتن بازو کمی درگیر می‌شود. باید با وزنه سبک و اجرای کنترل‌شده انجام شود.",
+            primaryMuscle: "Triceps",
+            secondaryMuscles: ["Rear Deltoids"],
+            equipment: "Dumbbell",
+            mechanic: "Isolation",
           },
         ],
       },
@@ -283,6 +567,13 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "pull-up",
             name: "بارفیکس",
+            nameEn: "Pull Up",
+            description:
+              "بهترین حرکت با وزن بدن برای پهن کردن عضلات پشت (زیربغل) و ساختن فرم V شکل بالاتنه. جلو بازو و ساعد به‌عنوان عضلات کمکی فشار زیادی تحمل می‌کنند. چون تمام وزن بدن را جابه‌جا می‌کنید، شاخص خوبی از قدرت نسبی بدن است.",
+            primaryMuscle: "Lats",
+            secondaryMuscles: ["Biceps", "Middle Back", "Forearms"],
+            equipment: "Bodyweight",
+            mechanic: "Compound",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -290,7 +581,14 @@ export const workoutLibrary: WorkoutDefinition[] = [
           },
           {
             id: "lat-pulldown",
-            name: "لت سیم‌کش",
+            name: "لت سیم‌کش دست جمع",
+            nameEn: "Close Grip Lat Pulldown",
+            description:
+              "با فاصله کم دست‌ها، فشار بیشتری روی ضخامت و بخش پایینی عضلات زیربغل می‌آید. جلو بازو و عضلات میانی پشت هم درگیر می‌شوند. برای کسانی که هنوز بارفیکس نمی‌توانند بزنند جایگزین بسیار خوبی است.",
+            primaryMuscle: "Lats",
+            secondaryMuscles: ["Biceps", "Middle Back"],
+            equipment: "Cable",
+            mechanic: "Compound",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -298,7 +596,14 @@ export const workoutLibrary: WorkoutDefinition[] = [
           },
           {
             id: "barbell-row",
-            name: "قایقی هالتر",
+            name: "قایقی هالتر خم",
+            nameEn: "Bent Over Barbell Row",
+            description:
+              "حرکت پایه برای ضخامت دادن به کل عضلات پشت، از زیربغل تا بخش میانی کتف‌ها. جلو بازو و سرشانه عقبی کمک می‌کنند و فیله کمر برای ثابت نگه داشتن تنه فعال می‌ماند. یکی از سنگین‌ترین و مؤثرترین حرکات روز پشت است.",
+            primaryMuscle: "Middle Back",
+            secondaryMuscles: ["Lats", "Biceps", "Rear Deltoids", "Lower Back"],
+            equipment: "Barbell",
+            mechanic: "Compound",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -306,7 +611,14 @@ export const workoutLibrary: WorkoutDefinition[] = [
           },
           {
             id: "seated-row",
-            name: "قایقی سیم‌کش",
+            name: "قایقی سیم‌کش نشسته",
+            nameEn: "Seated Cable Row",
+            description:
+              "فشار ثابت سیم‌کش در تمام دامنه حرکت، ضخامت عضلات میانی پشت را هدف می‌گیرد. زیربغل و جلو بازو کمک می‌کنند و چون نشسته انجام می‌شود فشار کمتری به کمر وارد می‌آید. برای اصلاح افتادگی شانه‌ها بسیار مفید است.",
+            primaryMuscle: "Middle Back",
+            secondaryMuscles: ["Lats", "Biceps", "Rear Deltoids"],
+            equipment: "Cable",
+            mechanic: "Compound",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -315,6 +627,13 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "t-bar-row",
             name: "تی‌بار",
+            nameEn: "T-Bar Row",
+            description:
+              "زاویه حرکت و دسته خنثی باعث فشار سنگین روی ضخامت مرکز پشت و زیربغل می‌شود. جلو بازو و فیله کمر به‌عنوان کمکی درگیر می‌مانند. برای اضافه کردن حجم به بخش میانی پشت یکی از بهترین‌هاست.",
+            primaryMuscle: "Middle Back",
+            secondaryMuscles: ["Lats", "Biceps", "Lower Back"],
+            equipment: "Barbell",
+            mechanic: "Compound",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -323,6 +642,13 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "dumbbell-row",
             name: "روئینگ دمبل",
+            nameEn: "Dumbbell Row",
+            description:
+              "چون هر سمت جدا کار می‌کند، عدم تعادل قدرت بین دو طرف پشت برطرف می‌شود و دامنه حرکتی بیشتری روی زیربغل به دست می‌آید. جلو بازو و سرشانه عقبی کمک می‌کنند. تکیه دادن یک دست روی نیمکت فشار کمر را حذف می‌کند.",
+            primaryMuscle: "Lats",
+            secondaryMuscles: ["Middle Back", "Biceps", "Rear Deltoids"],
+            equipment: "Dumbbell",
+            mechanic: "Compound",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -331,6 +657,13 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "face-pull",
             name: "فیس پول",
+            nameEn: "Face Pull",
+            description:
+              "کشیدن طناب به سمت صورت، مستقیماً سرشانه عقبی و عضلات بین کتف را هدف می‌گیرد. عضلات کول هم درگیر می‌شوند. یکی از بهترین حرکات برای سلامت شانه و اصلاح شانه‌های افتاده به جلو است.",
+            primaryMuscle: "Rear Deltoids",
+            secondaryMuscles: ["Traps", "Middle Back"],
+            equipment: "Cable",
+            mechanic: "Isolation",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -345,6 +678,13 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "reverse-fly",
             name: "فلای معکوس",
+            nameEn: "Reverse Fly",
+            description:
+              "با باز کردن دست‌ها به طرفین، سرشانه عقبی به‌صورت تفکیکی زیر فشار قرار می‌گیرد. عضلات میانی پشت و کول کمک جزئی می‌کنند. برای گرد و کامل شدن فرم شانه ضروری است.",
+            primaryMuscle: "Rear Deltoids",
+            secondaryMuscles: ["Middle Back", "Traps"],
+            equipment: "Dumbbell",
+            mechanic: "Isolation",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -353,6 +693,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "bent-over-raise",
             name: "نشر خم",
+            nameEn: "Bent Over Reverse Fly",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -369,7 +710,14 @@ export const workoutLibrary: WorkoutDefinition[] = [
             // the key, so two entries sharing an id are really one
             // toggle-state wearing two rows. Unique id, independent state.
             id: "face-pull-rear-shoulder",
-            name: "فیس پول",
+            name: "فیس پول سرشانه عقب",
+            nameEn: "Face Pull",
+            description:
+              "همان حرکت فیس پول با تمرکز بیشتر روی سرشانه عقبی، بخشی که در تمرینات پرس تقریباً هیچ فشاری نمی‌گیرد. عضلات کول و میانی پشت کمک می‌کنند. تعادل عضلانی بین جلو و عقب شانه را برقرار می‌کند.",
+            primaryMuscle: "Rear Deltoids",
+            secondaryMuscles: ["Traps", "Middle Back"],
+            equipment: "Cable",
+            mechanic: "Isolation",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -384,6 +732,13 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "barbell-curl",
             name: "جلو بازو هالتر",
+            nameEn: "Barbell Curl",
+            description:
+              "پایه‌ای‌ترین حرکت برای حجم دادن به جلو بازو که اجازه می‌دهد سنگین‌ترین وزنه ممکن را استفاده کنید. ساعد به‌عنوان عضله کمکی درگیر می‌شود. برای رشد کلی بازو ستون اصلی برنامه است.",
+            primaryMuscle: "Biceps",
+            secondaryMuscles: ["Forearms"],
+            equipment: "Barbell",
+            mechanic: "Isolation",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -392,6 +747,13 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "alternating-dumbbell-curl",
             name: "جلو بازو دمبل",
+            nameEn: "Alternating Dumbbell Curl",
+            description:
+              "اجرای یک‌درمیان اجازه می‌دهد روی هر بازو جداگانه تمرکز کنید و چرخش مچ انقباض بهتری در جلو بازو ایجاد کند. ساعد کمک می‌کند. برای رفع اختلاف حجم بین دو بازو مناسب است.",
+            primaryMuscle: "Biceps",
+            secondaryMuscles: ["Forearms"],
+            equipment: "Dumbbell",
+            mechanic: "Isolation",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -400,6 +762,13 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "hammer-curl",
             name: "جلو بازو چکشی",
+            nameEn: "Hammer Curl",
+            description:
+              "گرفتن دمبل به‌صورت خنثی، علاوه بر جلو بازو، عضله بازویی و ساعد را هم به‌شدت درگیر می‌کند. همین باعث ضخیم‌تر شدن کل بازو می‌شود. برای قدرت گرفتن دست هم بسیار مؤثر است.",
+            primaryMuscle: "Biceps",
+            secondaryMuscles: ["Forearms"],
+            equipment: "Dumbbell",
+            mechanic: "Isolation",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -408,6 +777,13 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "cable-curl",
             name: "جلو بازو سیم‌کش",
+            nameEn: "Cable Curl",
+            description:
+              "برخلاف هالتر، سیم‌کش در تمام دامنه حرکت فشار ثابتی روی جلو بازو نگه می‌دارد و لحظه استراحت نمی‌دهد. ساعد کمک جزئی می‌کند. برای ست‌های پرتکرار پایان تمرین عالی است.",
+            primaryMuscle: "Biceps",
+            secondaryMuscles: ["Forearms"],
+            equipment: "Cable",
+            mechanic: "Isolation",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -422,6 +798,13 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "barbell-shrug",
             name: "کول هالتر",
+            nameEn: "Barbell Shrug",
+            description:
+              "بالا کشیدن شانه‌ها با هالتر سنگین، مستقیماً حجم عضلات کول را هدف می‌گیرد. ساعد برای نگه داشتن وزنه به‌شدت درگیر می‌شود. برای پر کردن فاصله بین گردن و شانه بهترین حرکت است.",
+            primaryMuscle: "Traps",
+            secondaryMuscles: ["Forearms"],
+            equipment: "Barbell",
+            mechanic: "Isolation",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -430,6 +813,13 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "dumbbell-shrug",
             name: "کول دمبل",
+            nameEn: "Dumbbell Shrug",
+            description:
+              "دمبل اجازه دامنه حرکتی طبیعی‌تر و کشش بیشتری در پایین حرکت روی عضلات کول می‌دهد. ساعد نقش کمکی پررنگی دارد. نسبت به هالتر فشار کمتری به مچ وارد می‌کند.",
+            primaryMuscle: "Traps",
+            secondaryMuscles: ["Forearms"],
+            equipment: "Dumbbell",
+            mechanic: "Isolation",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -438,6 +828,13 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "reverse-wrist-curl",
             name: "مچ معکوس",
+            nameEn: "Reverse Wrist Curl",
+            description:
+              "با کف دست رو به پایین، عضلات بازکننده مچ در بخش پشتی ساعد هدف قرار می‌گیرند که معمولاً ضعیف می‌مانند. عضله بازویی‌زندی (براکیورادیالیس) به‌عنوان ثانویه کمک می‌کند. تقویت آن به قدرت گرفتن وزنه در تمام حرکات کششی کمک می‌کند.",
+            primaryMuscle: "Forearms",
+            secondaryMuscles: ["Brachioradialis"],
+            equipment: "Barbell",
+            mechanic: "Isolation",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -446,6 +843,13 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "barbell-wrist-curl",
             name: "مچ هالتر",
+            nameEn: "Barbell Wrist Curl",
+            description:
+              "با کف دست رو به بالا، بخش داخلی ساعد که مسئول قدرت گرفتن است تقویت می‌شود. تقریباً هیچ عضله کمکی دیگری درگیر نیست. برای بهتر شدن قدرت پنجه در ددلیفت و بارفیکس مؤثر است.",
+            primaryMuscle: "Forearms",
+            secondaryMuscles: [],
+            equipment: "Barbell",
+            mechanic: "Isolation",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -460,6 +864,13 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "bird-dog",
             name: "برد داگ",
+            nameEn: "Bird Dog",
+            description:
+              "با دراز کردن همزمان دست و پای مخالف، عضلات عمقی مرکزی بدن و فیله کمر برای حفظ ثبات فعال می‌شوند. عضلات سرینی و شانه هم نقش کمکی دارند. حرکتی کم‌فشار برای تقویت ثبات ستون فقرات و پیشگیری از کمردرد است.",
+            primaryMuscle: "Lower Back",
+            secondaryMuscles: ["Abdominals", "Glutes", "Shoulders"],
+            equipment: "Bodyweight",
+            mechanic: "Isolation",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -481,6 +892,13 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "barbell-squat",
             name: "اسکوات هالتر",
+            nameEn: "Barbell Squat",
+            description:
+              "پادشاه حرکات پایین‌تنه که جلو ران را به‌عنوان عضله اصلی و سرینی و پشت ران را به‌عنوان کمکی هدف می‌گیرد. فیله کمر و عضلات مرکزی برای حفظ حالت تنه شدیداً فعال می‌مانند. بیشترین تأثیر را روی قدرت و حجم کلی بدن دارد.",
+            primaryMuscle: "Quads",
+            secondaryMuscles: ["Glutes", "Hamstrings", "Lower Back", "Abdominals"],
+            equipment: "Barbell",
+            mechanic: "Compound",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -488,7 +906,14 @@ export const workoutLibrary: WorkoutDefinition[] = [
           },
           {
             id: "leg-press",
-            name: "پرس پا",
+            name: "پرس پا دستگاه",
+            nameEn: "Leg Press",
+            description:
+              "اجازه می‌دهد بدون درگیر کردن کمر، وزنه بسیار سنگینی روی جلو ران بیندازید. سرینی و پشت ران به‌عنوان کمکی وارد عمل می‌شوند. برای حجم دادن به پا بعد از اسکوات بهترین انتخاب است.",
+            primaryMuscle: "Quads",
+            secondaryMuscles: ["Glutes", "Hamstrings"],
+            equipment: "Machine",
+            mechanic: "Compound",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -497,6 +922,13 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "hack-squat",
             name: "هک اسکوات",
+            nameEn: "Hack Squat",
+            description:
+              "زاویه دستگاه فشار را روی جلو ران، مخصوصاً بخش خارجی آن، متمرکز می‌کند و کمر را کاملاً پشتیبانی می‌کند. سرینی و پشت ران به‌عنوان عضلات ثانویه کمک می‌کنند. برای کسانی که با اسکوات هالتر مشکل کمر دارند جایگزین عالی است.",
+            primaryMuscle: "Quads",
+            secondaryMuscles: ["Glutes", "Hamstrings"],
+            equipment: "Machine",
+            mechanic: "Compound",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -505,6 +937,13 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "dumbbell-lunge",
             name: "لانج دمبل",
+            nameEn: "Dumbbell Lunge",
+            description:
+              "کار کردن روی یک پا در هر تکرار، جلو ران و سرینی را به‌شدت درگیر می‌کند و تعادل را می‌سازد. پشت ران و عضلات مرکزی کمک می‌کنند. برای رفع اختلاف قدرت بین دو پا بسیار مؤثر است.",
+            primaryMuscle: "Quads",
+            secondaryMuscles: ["Glutes", "Hamstrings", "Abdominals"],
+            equipment: "Dumbbell",
+            mechanic: "Compound",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -513,6 +952,13 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "walking-lunge",
             name: "لانج راه رفتنی",
+            nameEn: "Walking Lunge",
+            description:
+              "حرکت پیوسته رو به جلو، فشار مداومی روی جلو ران و سرینی نگه می‌دارد و ضربان قلب را هم بالا می‌برد. پشت ران و عضلات مرکزی درگیر می‌مانند. ترکیبی از تمرین قدرتی و استقامتی است.",
+            primaryMuscle: "Glutes",
+            secondaryMuscles: ["Quads", "Hamstrings", "Abdominals"],
+            equipment: "Dumbbell",
+            mechanic: "Compound",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -521,6 +967,13 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "step-up",
             name: "استپ آپ",
+            nameEn: "Step Up",
+            description:
+              "بالا رفتن روی جعبه، سرینی و جلو ران را به‌صورت تک‌پا زیر فشار می‌برد. پشت ران و ساق کمک می‌کنند. الگوی حرکتی آن بسیار نزدیک به بالا رفتن از پله در زندگی روزمره است.",
+            primaryMuscle: "Glutes",
+            secondaryMuscles: ["Quads", "Hamstrings", "Calves"],
+            equipment: "Dumbbell",
+            mechanic: "Compound",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -529,6 +982,13 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "romanian-deadlift",
             name: "ددلیفت رومانیایی",
+            nameEn: "Romanian Deadlift",
+            description:
+              "با زانوی نیمه‌صاف، کشش عمیقی روی پشت ران و سرینی ایجاد می‌شود. فیله کمر و عضلات پشت برای حفظ کمر صاف فعال می‌مانند. بهترین حرکت برای حجم دادن به پشت ران است.",
+            primaryMuscle: "Hamstrings",
+            secondaryMuscles: ["Glutes", "Lower Back"],
+            equipment: "Barbell",
+            mechanic: "Compound",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -537,6 +997,13 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "lying-leg-curl",
             name: "پشت پا خوابیده",
+            nameEn: "Lying Leg Curl",
+            description:
+              "در حالت خوابیده، پشت ران به‌صورت کاملاً تفکیکی زیر فشار قرار می‌گیرد. ساق کمک جزئی می‌کند و سرینی تقریباً درگیر نیست. برای تعادل عضلانی بین جلو و پشت ران ضروری است.",
+            primaryMuscle: "Hamstrings",
+            secondaryMuscles: ["Calves"],
+            equipment: "Machine",
+            mechanic: "Isolation",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -545,6 +1012,13 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "leg-extension",
             name: "جلو پا دستگاه",
+            nameEn: "Leg Extension",
+            description:
+              "حرکت تفکیکی خالص برای جلو ران که هیچ عضله کمکی قابل توجهی ندارد. تمرکز کامل روی انقباض و تفکیک چهار سر ران است. برای گرم کردن زانو قبل از اسکوات هم مناسب است.",
+            primaryMuscle: "Quads",
+            secondaryMuscles: [],
+            equipment: "Machine",
+            mechanic: "Isolation",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -553,6 +1027,13 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "hip-thrust",
             name: "هیپ تراست",
+            nameEn: "Hip Thrust",
+            description:
+              "مؤثرترین حرکت برای حجم و قدرت عضلات سرینی، با انقباض کامل در بالای حرکت. پشت ران و عضلات مرکزی کمک می‌کنند. برای فرم‌دهی باسن و بهبود قدرت در اسکوات و ددلیفت بسیار مؤثر است.",
+            primaryMuscle: "Glutes",
+            secondaryMuscles: ["Hamstrings", "Abdominals"],
+            equipment: "Barbell",
+            mechanic: "Compound",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -560,7 +1041,14 @@ export const workoutLibrary: WorkoutDefinition[] = [
           },
           {
             id: "calf-raise",
-            name: "ساق ایستاده",
+            name: "ساق پا ایستاده",
+            nameEn: "Standing Calf Raise",
+            description:
+              "در حالت ایستاده و با زانوی صاف، عضله دوقلو (گاستروکنمیوس) که حجم اصلی ساق را می‌سازد هدف قرار می‌گیرد. عضله نعلی زیر آن به‌عنوان ثانویه کمک می‌کند. برای ضخامت دادن به ساق بهترین انتخاب است.",
+            primaryMuscle: "Calves",
+            secondaryMuscles: ["Soleus"],
+            equipment: "Machine",
+            mechanic: "Isolation",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -568,7 +1056,14 @@ export const workoutLibrary: WorkoutDefinition[] = [
           },
           {
             id: "seated-calf-raise",
-            name: "ساق نشسته",
+            name: "ساق پا نشسته",
+            nameEn: "Seated Calf Raise",
+            description:
+              "خم بودن زانو عضله دوقلو را غیرفعال می‌کند و فشار مستقیم روی عضله نعلی (سولئوس) در عمق ساق می‌افتد. عضله دوقلو تنها کمک بسیار جزئی دارد. مکمل ضروری ساق ایستاده است.",
+            primaryMuscle: "Calves",
+            secondaryMuscles: ["Gastrocnemius"],
+            equipment: "Machine",
+            mechanic: "Isolation",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -582,7 +1077,14 @@ export const workoutLibrary: WorkoutDefinition[] = [
         exercises: [
           {
             id: "crunch",
-            name: "کرانچ",
+            name: "کرانچ زمینی",
+            nameEn: "Floor Crunch",
+            description:
+              "حرکت پایه برای بخش بالایی عضلات شکم با دامنه کوتاه و کنترل‌شده. عضلات پهلو کمک جزئی می‌کنند. چون بدون تجهیزات است، همه‌جا قابل اجراست.",
+            primaryMuscle: "Abdominals",
+            secondaryMuscles: ["Obliques"],
+            equipment: "Bodyweight",
+            mechanic: "Isolation",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -591,6 +1093,13 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "machine-crunch",
             name: "کرانچ دستگاه",
+            nameEn: "Machine Crunch",
+            description:
+              "دستگاه اجازه می‌دهد روی عضلات شکم وزنه اضافه کنید، دقیقاً مثل هر عضله دیگری. عضلات پهلو کمک جزئی دارند. برای ضخیم کردن شکم مؤثرتر از کرانچ ساده است.",
+            primaryMuscle: "Abdominals",
+            secondaryMuscles: ["Obliques"],
+            equipment: "Machine",
+            mechanic: "Isolation",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -599,6 +1108,13 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "cable-crunch",
             name: "کرانچ سیم‌کش",
+            nameEn: "Cable Crunch",
+            description:
+              "فشار ثابت سیم‌کش در تمام دامنه حرکت، انقباض بسیار قوی روی عضلات شکم ایجاد می‌کند. عضلات پهلو کمک می‌کنند. یکی از بهترین حرکات وزنه‌ای برای شکم است.",
+            primaryMuscle: "Abdominals",
+            secondaryMuscles: ["Obliques"],
+            equipment: "Cable",
+            mechanic: "Isolation",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -607,6 +1123,13 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "leg-raise",
             name: "بالا آوردن پا آویزان",
+            nameEn: "Hanging Leg Raise",
+            description:
+              "آویزان شدن و بالا آوردن پاها، بخش پایینی شکم را که سخت‌ترین قسمت برای درگیر کردن است هدف می‌گیرد. عضلات پهلو برای کنترل چرخش، و ساعد و زیربغل برای نگه داشتن بدن فعال می‌مانند. یکی از سخت‌ترین و مؤثرترین حرکات شکم است.",
+            primaryMuscle: "Abdominals",
+            secondaryMuscles: ["Obliques", "Forearms", "Lats"],
+            equipment: "Bodyweight",
+            mechanic: "Compound",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -615,6 +1138,13 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "knee-raise",
             name: "بالا آوردن زانو",
+            nameEn: "Hanging Knee Raise",
+            description:
+              "نسخه ساده‌تر بالا آوردن پا که همچنان بخش پایینی شکم را هدف می‌گیرد. عضلات پهلو و ساعد کمک می‌کنند. نقطه شروع خوبی قبل از رفتن سراغ حرکت با پای صاف است.",
+            primaryMuscle: "Abdominals",
+            secondaryMuscles: ["Obliques", "Forearms"],
+            equipment: "Bodyweight",
+            mechanic: "Compound",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -623,6 +1153,13 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "reverse-crunch",
             name: "ریورس کرانچ",
+            nameEn: "Reverse Crunch",
+            description:
+              "با بالا آوردن لگن به سمت سینه، بخش پایینی شکم به‌صورت مستقیم منقبض می‌شود. عضلات پهلو کمک جزئی دارند. فشار بسیار کمی به گردن وارد می‌کند.",
+            primaryMuscle: "Abdominals",
+            secondaryMuscles: ["Obliques"],
+            equipment: "Bodyweight",
+            mechanic: "Isolation",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -631,6 +1168,13 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "plank",
             name: "پلانک",
+            nameEn: "Plank",
+            description:
+              "یک حرکت ایزومتریک که عضلات عمقی مرکزی بدن را برای حفظ خط صاف بدن درگیر می‌کند. سرشانه و سرینی هم فعال می‌مانند. بهترین حرکت برای ثبات مرکزی و پیشگیری از کمردرد است.",
+            primaryMuscle: "Abdominals",
+            secondaryMuscles: ["Shoulders", "Glutes"],
+            equipment: "Bodyweight",
+            mechanic: "Isolation",
             sets: 3,
             unit: "seconds",
             reps: 45,
@@ -640,6 +1184,13 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "side-plank",
             name: "پلانک بغل",
+            nameEn: "Side Plank",
+            description:
+              "به‌صورت ایزومتریک عضلات پهلو و ثبات‌دهنده‌های جانبی تنه را درگیر می‌کند. سرشانه و سرینی برای حفظ حالت فعال می‌مانند. برای تعادل عضلانی دو طرف تنه ضروری است.",
+            primaryMuscle: "Obliques",
+            secondaryMuscles: ["Abdominals", "Shoulders", "Glutes"],
+            equipment: "Bodyweight",
+            mechanic: "Isolation",
             sets: 3,
             unit: "seconds",
             reps: 30,
@@ -649,6 +1200,13 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "dead-bug",
             name: "ددباگ",
+            nameEn: "Dead Bug",
+            description:
+              "با حرکت متقابل دست و پا، عضلات عمقی شکم بدون فشار آوردن به کمر تقویت می‌شوند. هماهنگی عصبی-عضلانی هم بهبود پیدا می‌کند. یکی از ایمن‌ترین حرکات شکم برای افراد با کمردرد است.",
+            primaryMuscle: "Abdominals",
+            secondaryMuscles: ["Obliques"],
+            equipment: "Bodyweight",
+            mechanic: "Isolation",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -657,6 +1215,13 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "ab-wheel",
             name: "آب ویل",
+            nameEn: "Ab Wheel Rollout",
+            description:
+              "باز کردن بدن با چرخ، کل عضلات شکم را در حالت کششی زیر بیشترین فشار ممکن قرار می‌دهد. زیربغل و سرشانه هم درگیر می‌شوند. یکی از سخت‌ترین حرکات شکم است و نیاز به مهارت دارد.",
+            primaryMuscle: "Abdominals",
+            secondaryMuscles: ["Obliques", "Lats", "Shoulders"],
+            equipment: "Bodyweight",
+            mechanic: "Compound",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -665,6 +1230,13 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "pallof-press",
             name: "پالوف پرس",
+            nameEn: "Pallof Press",
+            description:
+              "با مقاومت در برابر چرخش سیم‌کش، عضلات مرکزی و پهلو به‌صورت ضدچرخشی تقویت می‌شوند. سرشانه برای ثابت نگه داشتن دست‌ها فعال است. بهترین حرکت برای ثبات واقعی تنه در ورزش و زندگی روزمره.",
+            primaryMuscle: "Obliques",
+            secondaryMuscles: ["Abdominals", "Shoulders"],
+            equipment: "Cable",
+            mechanic: "Isolation",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -673,6 +1245,13 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "wood-chop",
             name: "وود چاپر",
+            nameEn: "Cable Wood Chop",
+            description:
+              "حرکت مورب سیم‌کش، عضلات پهلو را در الگوی چرخشی طبیعی بدن درگیر می‌کند. شکم و سرشانه هم کمک می‌کنند. برای قدرت چرخشی تنه در ورزش‌هایی مثل تنیس و گلف مفید است.",
+            primaryMuscle: "Obliques",
+            secondaryMuscles: ["Abdominals", "Shoulders"],
+            equipment: "Cable",
+            mechanic: "Compound",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -681,6 +1260,13 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "russian-twist",
             name: "روسین توئیست",
+            nameEn: "Russian Twist",
+            description:
+              "چرخش تنه به دو طرف، مستقیماً عضلات پهلو را هدف می‌گیرد. عضلات شکم برای نگه داشتن حالت نشسته فعال می‌مانند. با وزنه هم قابل سنگین‌تر کردن است.",
+            primaryMuscle: "Obliques",
+            secondaryMuscles: ["Abdominals"],
+            equipment: "Bodyweight",
+            mechanic: "Isolation",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -689,6 +1275,13 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "v-up",
             name: "وی آپ",
+            nameEn: "V-Up",
+            description:
+              "بالا آوردن همزمان دست و پا، بخش بالایی و پایینی شکم را در یک تکرار درگیر می‌کند. عضلات پهلو و خم‌کننده لگن کمک می‌کنند. حرکتی پیشرفته که هماهنگی خوبی می‌طلبد.",
+            primaryMuscle: "Abdominals",
+            secondaryMuscles: ["Obliques"],
+            equipment: "Bodyweight",
+            mechanic: "Compound",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -697,6 +1290,13 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "toes-to-bar",
             name: "توز تو بار",
+            nameEn: "Toes to Bar",
+            description:
+              "رساندن پاها به میله، کل عضلات شکم مخصوصاً بخش پایینی را در بیشترین دامنه ممکن درگیر می‌کند. زیربغل و ساعد برای نگه داشتن بدن شدیداً فعال‌اند. یکی از سخت‌ترین حرکات شکم است.",
+            primaryMuscle: "Abdominals",
+            secondaryMuscles: ["Lats", "Forearms", "Obliques"],
+            equipment: "Bodyweight",
+            mechanic: "Compound",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -705,6 +1305,13 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "hollow-hold",
             name: "هالو هولد",
+            nameEn: "Hollow Hold",
+            description:
+              "نگه داشتن بدن در حالت قایقی، عضلات عمقی شکم را به‌صورت ایزومتریک زیر فشار مداوم می‌گذارد. خم‌کننده‌های لگن هم درگیر می‌شوند. پایه بسیاری از حرکات ژیمناستیک و کالیستنیکس است.",
+            primaryMuscle: "Abdominals",
+            secondaryMuscles: ["Obliques"],
+            equipment: "Bodyweight",
+            mechanic: "Isolation",
             sets: 3,
             unit: "seconds",
             reps: 30,
@@ -714,6 +1321,13 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "bird-dog",
             name: "برد داگ",
+            nameEn: "Bird Dog",
+            description:
+              "با دراز کردن همزمان دست و پای مخالف، عضلات عمقی مرکزی بدن و فیله کمر برای حفظ ثبات فعال می‌شوند. عضلات سرینی و شانه هم نقش کمکی دارند. حرکتی کم‌فشار برای تقویت ثبات ستون فقرات و پیشگیری از کمردرد است.",
+            primaryMuscle: "Lower Back",
+            secondaryMuscles: ["Abdominals", "Glutes", "Shoulders"],
+            equipment: "Bodyweight",
+            mechanic: "Isolation",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -722,6 +1336,13 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "back-extension",
             name: "بک اکستنشن",
+            nameEn: "Back Extension",
+            description:
+              "فیله کمر را به‌صورت مستقیم تقویت می‌کند و سرینی و پشت ران هم کمک می‌کنند. برای متعادل کردن قدرت بین جلو و پشت تنه ضروری است. تقویت آن ریسک کمردرد را به‌شکل قابل توجهی کم می‌کند.",
+            primaryMuscle: "Lower Back",
+            secondaryMuscles: ["Glutes", "Hamstrings"],
+            equipment: "Bodyweight",
+            mechanic: "Isolation",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -743,6 +1364,13 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "bird-dog",
             name: "برد داگ",
+            nameEn: "Bird Dog",
+            description:
+              "با دراز کردن همزمان دست و پای مخالف، عضلات عمقی مرکزی بدن و فیله کمر برای حفظ ثبات فعال می‌شوند. عضلات سرینی و شانه هم نقش کمکی دارند. حرکتی کم‌فشار برای تقویت ثبات ستون فقرات و پیشگیری از کمردرد است.",
+            primaryMuscle: "Lower Back",
+            secondaryMuscles: ["Abdominals", "Glutes", "Shoulders"],
+            equipment: "Bodyweight",
+            mechanic: "Isolation",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -750,15 +1378,29 @@ export const workoutLibrary: WorkoutDefinition[] = [
           },
           {
             id: "chest-press",
-            name: "پرس سینه",
+            name: "پرس سینه هالتر",
+            nameEn: "Barbell Bench Press",
+            description:
+              "حرکت پایه پرس روی نیمکت تخت که کل عضله سینه را هدف می‌گیرد. پشت‌بازو و سرشانه جلویی به‌عنوان عضلات کمکی فشار زیادی تحمل می‌کنند. ستون اصلی هر برنامه بالاتنه‌ای است.",
+            primaryMuscle: "Chest",
+            secondaryMuscles: ["Triceps", "Front Deltoids"],
+            equipment: "Barbell",
+            mechanic: "Compound",
             sets: 3,
             reps: 10,
             enabled: false,
             metValue: 5,
           },
           {
-            id: "shoulder-press",
-            name: "پرس سرشانه",
+            id: "barbell-shoulder-press",
+            name: "پرس سرشانه هالتر",
+            nameEn: "Barbell Overhead Press",
+            description:
+              "حرکت پایه قدرت سرشانه که بخش جلویی و میانی دلتوئید را هدف می‌گیرد. پشت‌بازو و کول کمک می‌کنند و عضلات مرکزی بدن برای ثابت نگه داشتن تنه فعال می‌مانند. یکی از بهترین شاخص‌های قدرت بالاتنه است.",
+            primaryMuscle: "Front Deltoids",
+            secondaryMuscles: ["Side Deltoids", "Triceps", "Traps", "Abdominals"],
+            equipment: "Barbell",
+            mechanic: "Compound",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -767,6 +1409,13 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "pull-up",
             name: "بارفیکس",
+            nameEn: "Pull Up",
+            description:
+              "بهترین حرکت با وزن بدن برای پهن کردن عضلات پشت (زیربغل) و ساختن فرم V شکل بالاتنه. جلو بازو و ساعد به‌عنوان عضلات کمکی فشار زیادی تحمل می‌کنند. چون تمام وزن بدن را جابه‌جا می‌کنید، شاخص خوبی از قدرت نسبی بدن است.",
+            primaryMuscle: "Lats",
+            secondaryMuscles: ["Biceps", "Middle Back", "Forearms"],
+            equipment: "Bodyweight",
+            mechanic: "Compound",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -774,15 +1423,29 @@ export const workoutLibrary: WorkoutDefinition[] = [
           },
           {
             id: "lat-pulldown",
-            name: "لت سیم‌کش",
+            name: "لت سیم‌کش دست جمع",
+            nameEn: "Close Grip Lat Pulldown",
+            description:
+              "با فاصله کم دست‌ها، فشار بیشتری روی ضخامت و بخش پایینی عضلات زیربغل می‌آید. جلو بازو و عضلات میانی پشت هم درگیر می‌شوند. برای کسانی که هنوز بارفیکس نمی‌توانند بزنند جایگزین بسیار خوبی است.",
+            primaryMuscle: "Lats",
+            secondaryMuscles: ["Biceps", "Middle Back"],
+            equipment: "Cable",
+            mechanic: "Compound",
             sets: 3,
             reps: 10,
             enabled: false,
             metValue: 5,
           },
           {
-            id: "row",
-            name: "قایقی",
+            id: "barbell-row",
+            name: "قایقی هالتر خم",
+            nameEn: "Bent Over Barbell Row",
+            description:
+              "با خم شدن از کمر و کشیدن هالتر به سمت شکم، ضخامت عضلات میانی پشت و زیربغل ساخته می‌شود. سرشانه عقبی و جلو بازو نقش کمکی دارند. حفظ کمر صاف در تمام حرکت برای جلوگیری از آسیب ضروری است.",
+            primaryMuscle: "Middle Back",
+            secondaryMuscles: ["Lats", "Biceps", "Rear Deltoids", "Lower Back"],
+            equipment: "Barbell",
+            mechanic: "Compound",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -791,6 +1454,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "lateral-raise",
             name: "نشر جانب",
+            nameEn: "Dumbbell Lateral Raise",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -798,7 +1462,14 @@ export const workoutLibrary: WorkoutDefinition[] = [
           },
           {
             id: "biceps-curl",
-            name: "جلو بازو",
+            name: "جلو بازو دستگاه",
+            nameEn: "Machine Biceps Curl",
+            description:
+              "مسیر ثابت دستگاه تاب دادن بدن را حذف می‌کند و تمام فشار را روی جلو بازو نگه می‌دارد. درگیری ساعد نسبت به حرکات آزاد کمتر است. برای مبتدی‌ها و برای رساندن عضله به ناتوانی کامل مناسب است.",
+            primaryMuscle: "Biceps",
+            secondaryMuscles: ["Forearms"],
+            equipment: "Machine",
+            mechanic: "Isolation",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -806,7 +1477,14 @@ export const workoutLibrary: WorkoutDefinition[] = [
           },
           {
             id: "triceps-extension",
-            name: "پشت بازو",
+            name: "پشت بازو هالتر ایستاده",
+            nameEn: "Standing Barbell Triceps Extension",
+            description:
+              "باز کردن آرنج از بالای سر، کشش حداکثری روی سر بلند پشت‌بازو ایجاد می‌کند. عضلات مرکزی بدن برای حفظ حالت تنه فعال می‌مانند. برای بلندی و ضخامت پشت‌بازو مؤثر است.",
+            primaryMuscle: "Triceps",
+            secondaryMuscles: ["Abdominals"],
+            equipment: "Barbell",
+            mechanic: "Isolation",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -828,6 +1506,13 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "bird-dog",
             name: "برد داگ",
+            nameEn: "Bird Dog",
+            description:
+              "با دراز کردن همزمان دست و پای مخالف، عضلات عمقی مرکزی بدن و فیله کمر برای حفظ ثبات فعال می‌شوند. عضلات سرینی و شانه هم نقش کمکی دارند. حرکتی کم‌فشار برای تقویت ثبات ستون فقرات و پیشگیری از کمردرد است.",
+            primaryMuscle: "Lower Back",
+            secondaryMuscles: ["Abdominals", "Glutes", "Shoulders"],
+            equipment: "Bodyweight",
+            mechanic: "Isolation",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -836,6 +1521,13 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "squat",
             name: "اسکوات",
+            nameEn: "Squat",
+            description:
+              "حرکت پایه پایین‌تنه با تمرکز اصلی روی جلو ران و کمک گرفتن از سرینی و پشت ران. عضلات مرکزی بدن برای ثابت نگه داشتن تنه درگیر می‌شوند. پایه هر برنامه پایین‌تنه‌ای است.",
+            primaryMuscle: "Quads",
+            secondaryMuscles: ["Glutes", "Hamstrings", "Abdominals"],
+            equipment: "Bodyweight",
+            mechanic: "Compound",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -843,7 +1535,14 @@ export const workoutLibrary: WorkoutDefinition[] = [
           },
           {
             id: "leg-press",
-            name: "پرس پا",
+            name: "پرس پا دستگاه",
+            nameEn: "Leg Press",
+            description:
+              "اجازه می‌دهد بدون درگیر کردن کمر، وزنه بسیار سنگینی روی جلو ران بیندازید. سرینی و پشت ران به‌عنوان کمکی وارد عمل می‌شوند. برای حجم دادن به پا بعد از اسکوات بهترین انتخاب است.",
+            primaryMuscle: "Quads",
+            secondaryMuscles: ["Glutes", "Hamstrings"],
+            equipment: "Machine",
+            mechanic: "Compound",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -852,6 +1551,13 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "deadlift",
             name: "ددلیفت",
+            nameEn: "Deadlift",
+            description:
+              "سنگین‌ترین حرکت کل بدن که زنجیره خلفی — پشت ران، سرینی و فیله کمر — را همزمان درگیر می‌کند. عضلات پشت، کول و ساعد هم شدیداً فعال می‌شوند. بیشترین تأثیر را روی قدرت کلی بدن دارد.",
+            primaryMuscle: "Hamstrings",
+            secondaryMuscles: ["Glutes", "Lower Back", "Middle Back", "Traps", "Forearms"],
+            equipment: "Barbell",
+            mechanic: "Compound",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -860,6 +1566,13 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "lunge",
             name: "لانج",
+            nameEn: "Lunge",
+            description:
+              "حرکتی تک‌پا که جلو ران و سرینی را هدف می‌گیرد و همزمان تعادل و ثبات لگن را تقویت می‌کند. پشت ران نقش کمکی دارد. بدون تجهیزات هم قابل اجراست.",
+            primaryMuscle: "Quads",
+            secondaryMuscles: ["Glutes", "Hamstrings"],
+            equipment: "Bodyweight",
+            mechanic: "Compound",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -867,7 +1580,14 @@ export const workoutLibrary: WorkoutDefinition[] = [
           },
           {
             id: "leg-extension",
-            name: "جلو پا",
+            name: "جلو پا دستگاه",
+            nameEn: "Leg Extension",
+            description:
+              "حرکت تفکیکی خالص برای جلو ران که هیچ عضله کمکی قابل توجهی ندارد. تمرکز کامل روی انقباض و تفکیک چهار سر ران است. برای گرم کردن زانو قبل از اسکوات هم مناسب است.",
+            primaryMuscle: "Quads",
+            secondaryMuscles: [],
+            equipment: "Machine",
+            mechanic: "Isolation",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -875,7 +1595,14 @@ export const workoutLibrary: WorkoutDefinition[] = [
           },
           {
             id: "leg-curl",
-            name: "پشت پا",
+            name: "پشت پا دستگاه نشسته",
+            nameEn: "Seated Leg Curl",
+            description:
+              "حالت نشسته کشش بیشتری روی پشت ران ایجاد می‌کند و انقباض قوی‌تری می‌دهد. ساق کمک جزئی دارد. مکمل ضروری حرکات جلو ران برای جلوگیری از آسیب زانوست.",
+            primaryMuscle: "Hamstrings",
+            secondaryMuscles: ["Calves"],
+            equipment: "Machine",
+            mechanic: "Isolation",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -883,7 +1610,14 @@ export const workoutLibrary: WorkoutDefinition[] = [
           },
           {
             id: "calf-raise",
-            name: "ساق پا",
+            name: "ساق پا ایستاده",
+            nameEn: "Standing Calf Raise",
+            description:
+              "در حالت ایستاده و با زانوی صاف، عضله دوقلو (گاستروکنمیوس) که حجم اصلی ساق را می‌سازد هدف قرار می‌گیرد. عضله نعلی زیر آن به‌عنوان ثانویه کمک می‌کند. برای ضخامت دادن به ساق بهترین انتخاب است.",
+            primaryMuscle: "Calves",
+            secondaryMuscles: ["Soleus"],
+            equipment: "Machine",
+            mechanic: "Isolation",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -892,6 +1626,13 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "hip-thrust",
             name: "هیپ تراست",
+            nameEn: "Hip Thrust",
+            description:
+              "مؤثرترین حرکت برای حجم و قدرت عضلات سرینی، با انقباض کامل در بالای حرکت. پشت ران و عضلات مرکزی کمک می‌کنند. برای فرم‌دهی باسن و بهبود قدرت در اسکوات و ددلیفت بسیار مؤثر است.",
+            primaryMuscle: "Glutes",
+            secondaryMuscles: ["Hamstrings", "Abdominals"],
+            equipment: "Barbell",
+            mechanic: "Compound",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -900,6 +1641,13 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "adductor-machine",
             name: "داخل ران دستگاه",
+            nameEn: "Adductor Machine",
+            description:
+              "با فشار دادن پاها به سمت داخل، عضلات داخل ران که در حرکات معمول کمتر درگیر می‌شوند تقویت می‌شوند. سرینی کمک جزئی دارد. برای ثبات لگن و پیشگیری از کشیدگی کشاله ران مفید است.",
+            primaryMuscle: "Adductors",
+            secondaryMuscles: ["Glutes"],
+            equipment: "Machine",
+            mechanic: "Isolation",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -907,7 +1655,14 @@ export const workoutLibrary: WorkoutDefinition[] = [
           },
           {
             id: "abductor-machine",
-            name: "خارج ران دستگاه",
+            name: "دستگاه خارج ران",
+            nameEn: "Abductor Machine",
+            description:
+              "با باز کردن پاها به سمت بیرون، بخش خارجی عضلات سرینی هدف قرار می‌گیرد. عضلات داخل ران در این حرکت نقشی ندارند. برای فرم‌دهی به بالای باسن و ثبات جانبی لگن مؤثر است.",
+            primaryMuscle: "Abductors",
+            secondaryMuscles: ["Glutes"],
+            equipment: "Machine",
+            mechanic: "Isolation",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -929,6 +1684,13 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "bird-dog",
             name: "برد داگ",
+            nameEn: "Bird Dog",
+            description:
+              "با دراز کردن همزمان دست و پای مخالف، عضلات عمقی مرکزی بدن و فیله کمر برای حفظ ثبات فعال می‌شوند. عضلات سرینی و شانه هم نقش کمکی دارند. حرکتی کم‌فشار برای تقویت ثبات ستون فقرات و پیشگیری از کمردرد است.",
+            primaryMuscle: "Lower Back",
+            secondaryMuscles: ["Abdominals", "Glutes", "Shoulders"],
+            equipment: "Bodyweight",
+            mechanic: "Isolation",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -937,6 +1699,13 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "squat",
             name: "اسکوات",
+            nameEn: "Squat",
+            description:
+              "حرکت پایه پایین‌تنه با تمرکز اصلی روی جلو ران و کمک گرفتن از سرینی و پشت ران. عضلات مرکزی بدن برای ثابت نگه داشتن تنه درگیر می‌شوند. پایه هر برنامه پایین‌تنه‌ای است.",
+            primaryMuscle: "Quads",
+            secondaryMuscles: ["Glutes", "Hamstrings", "Abdominals"],
+            equipment: "Bodyweight",
+            mechanic: "Compound",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -945,6 +1714,13 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "deadlift",
             name: "ددلیفت",
+            nameEn: "Deadlift",
+            description:
+              "سنگین‌ترین حرکت کل بدن که زنجیره خلفی — پشت ران، سرینی و فیله کمر — را همزمان درگیر می‌کند. عضلات پشت، کول و ساعد هم شدیداً فعال می‌شوند. بیشترین تأثیر را روی قدرت کلی بدن دارد.",
+            primaryMuscle: "Hamstrings",
+            secondaryMuscles: ["Glutes", "Lower Back", "Middle Back", "Traps", "Forearms"],
+            equipment: "Barbell",
+            mechanic: "Compound",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -952,15 +1728,29 @@ export const workoutLibrary: WorkoutDefinition[] = [
           },
           {
             id: "chest-press",
-            name: "پرس سینه",
+            name: "پرس سینه هالتر",
+            nameEn: "Barbell Bench Press",
+            description:
+              "حرکت پایه پرس روی نیمکت تخت که کل عضله سینه را هدف می‌گیرد. پشت‌بازو و سرشانه جلویی به‌عنوان عضلات کمکی فشار زیادی تحمل می‌کنند. ستون اصلی هر برنامه بالاتنه‌ای است.",
+            primaryMuscle: "Chest",
+            secondaryMuscles: ["Triceps", "Front Deltoids"],
+            equipment: "Barbell",
+            mechanic: "Compound",
             sets: 3,
             reps: 10,
             enabled: false,
             metValue: 5,
           },
           {
-            id: "shoulder-press",
-            name: "پرس سرشانه",
+            id: "barbell-shoulder-press",
+            name: "پرس سرشانه هالتر",
+            nameEn: "Barbell Overhead Press",
+            description:
+              "حرکت پایه قدرت سرشانه که بخش جلویی و میانی دلتوئید را هدف می‌گیرد. پشت‌بازو و کول کمک می‌کنند و عضلات مرکزی بدن برای ثابت نگه داشتن تنه فعال می‌مانند. یکی از بهترین شاخص‌های قدرت بالاتنه است.",
+            primaryMuscle: "Front Deltoids",
+            secondaryMuscles: ["Side Deltoids", "Triceps", "Traps", "Abdominals"],
+            equipment: "Barbell",
+            mechanic: "Compound",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -969,6 +1759,13 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "pull-up",
             name: "بارفیکس",
+            nameEn: "Pull Up",
+            description:
+              "بهترین حرکت با وزن بدن برای پهن کردن عضلات پشت (زیربغل) و ساختن فرم V شکل بالاتنه. جلو بازو و ساعد به‌عنوان عضلات کمکی فشار زیادی تحمل می‌کنند. چون تمام وزن بدن را جابه‌جا می‌کنید، شاخص خوبی از قدرت نسبی بدن است.",
+            primaryMuscle: "Lats",
+            secondaryMuscles: ["Biceps", "Middle Back", "Forearms"],
+            equipment: "Bodyweight",
+            mechanic: "Compound",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -976,7 +1773,14 @@ export const workoutLibrary: WorkoutDefinition[] = [
           },
           {
             id: "lat-pulldown",
-            name: "لت سیم‌کش",
+            name: "لت سیم‌کش دست جمع",
+            nameEn: "Close Grip Lat Pulldown",
+            description:
+              "با فاصله کم دست‌ها، فشار بیشتری روی ضخامت و بخش پایینی عضلات زیربغل می‌آید. جلو بازو و عضلات میانی پشت هم درگیر می‌شوند. برای کسانی که هنوز بارفیکس نمی‌توانند بزنند جایگزین بسیار خوبی است.",
+            primaryMuscle: "Lats",
+            secondaryMuscles: ["Biceps", "Middle Back"],
+            equipment: "Cable",
+            mechanic: "Compound",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -984,7 +1788,14 @@ export const workoutLibrary: WorkoutDefinition[] = [
           },
           {
             id: "biceps-curl",
-            name: "جلو بازو",
+            name: "جلو بازو دستگاه",
+            nameEn: "Machine Biceps Curl",
+            description:
+              "مسیر ثابت دستگاه تاب دادن بدن را حذف می‌کند و تمام فشار را روی جلو بازو نگه می‌دارد. درگیری ساعد نسبت به حرکات آزاد کمتر است. برای مبتدی‌ها و برای رساندن عضله به ناتوانی کامل مناسب است.",
+            primaryMuscle: "Biceps",
+            secondaryMuscles: ["Forearms"],
+            equipment: "Machine",
+            mechanic: "Isolation",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -992,7 +1803,14 @@ export const workoutLibrary: WorkoutDefinition[] = [
           },
           {
             id: "triceps-extension",
-            name: "پشت بازو",
+            name: "پشت بازو هالتر ایستاده",
+            nameEn: "Standing Barbell Triceps Extension",
+            description:
+              "باز کردن آرنج از بالای سر، کشش حداکثری روی سر بلند پشت‌بازو ایجاد می‌کند. عضلات مرکزی بدن برای حفظ حالت تنه فعال می‌مانند. برای بلندی و ضخامت پشت‌بازو مؤثر است.",
+            primaryMuscle: "Triceps",
+            secondaryMuscles: ["Abdominals"],
+            equipment: "Barbell",
+            mechanic: "Isolation",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -1001,6 +1819,13 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "plank",
             name: "پلانک",
+            nameEn: "Plank",
+            description:
+              "یک حرکت ایزومتریک که عضلات عمقی مرکزی بدن را برای حفظ خط صاف بدن درگیر می‌کند. سرشانه و سرینی هم فعال می‌مانند. بهترین حرکت برای ثبات مرکزی و پیشگیری از کمردرد است.",
+            primaryMuscle: "Abdominals",
+            secondaryMuscles: ["Shoulders", "Glutes"],
+            equipment: "Bodyweight",
+            mechanic: "Isolation",
             sets: 3,
             unit: "seconds",
             reps: 45,
@@ -1009,7 +1834,14 @@ export const workoutLibrary: WorkoutDefinition[] = [
           },
           {
             id: "crunch",
-            name: "کرانچ",
+            name: "کرانچ زمینی",
+            nameEn: "Floor Crunch",
+            description:
+              "حرکت پایه برای بخش بالایی عضلات شکم با دامنه کوتاه و کنترل‌شده. عضلات پهلو کمک جزئی می‌کنند. چون بدون تجهیزات است، همه‌جا قابل اجراست.",
+            primaryMuscle: "Abdominals",
+            secondaryMuscles: ["Obliques"],
+            equipment: "Bodyweight",
+            mechanic: "Isolation",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -1018,6 +1850,13 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "torso-twist",
             name: "چرخش شکم",
+            nameEn: "Torso Twist",
+            description:
+              "چرخش کنترل‌شده تنه، عضلات پهلو را درگیر می‌کند و تحرک ستون فقرات را بهبود می‌دهد. عضلات شکم برای ثابت نگه داشتن مرکز بدن فعال می‌مانند. حرکتی سبک و مناسب برای گرم کردن.",
+            primaryMuscle: "Obliques",
+            secondaryMuscles: ["Abdominals"],
+            equipment: "Bodyweight",
+            mechanic: "Isolation",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -1025,7 +1864,14 @@ export const workoutLibrary: WorkoutDefinition[] = [
           },
           {
             id: "leg-press-machine",
-            name: "پرس پا با دستگاه",
+            name: "پرس پا دستگاه عمودی",
+            nameEn: "Vertical Leg Press",
+            description:
+              "زاویه عمودی دستگاه کشش بیشتری روی سرینی و پشت ران ایجاد می‌کند و همزمان جلو ران را هدف می‌گیرد. کمر کاملاً روی تکیه‌گاه ثابت می‌ماند. دامنه حرکتی آن از پرس پای معمولی بیشتر است.",
+            primaryMuscle: "Quads",
+            secondaryMuscles: ["Glutes", "Hamstrings"],
+            equipment: "Machine",
+            mechanic: "Compound",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -1033,7 +1879,14 @@ export const workoutLibrary: WorkoutDefinition[] = [
           },
           {
             id: "leg-curl",
-            name: "پشت پا",
+            name: "پشت پا دستگاه نشسته",
+            nameEn: "Seated Leg Curl",
+            description:
+              "حالت نشسته کشش بیشتری روی پشت ران ایجاد می‌کند و انقباض قوی‌تری می‌دهد. ساق کمک جزئی دارد. مکمل ضروری حرکات جلو ران برای جلوگیری از آسیب زانوست.",
+            primaryMuscle: "Hamstrings",
+            secondaryMuscles: ["Calves"],
+            equipment: "Machine",
+            mechanic: "Isolation",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -1041,7 +1894,14 @@ export const workoutLibrary: WorkoutDefinition[] = [
           },
           {
             id: "lat-pulldown-front",
-            name: "لت سیم کش از جلو",
+            name: "لت سیم‌کش از جلو",
+            nameEn: "Front Lat Pulldown",
+            description:
+              "میله را از جلوی صورت تا بالای سینه پایین می‌آورید که کشش کاملی روی زیربغل ایجاد می‌کند. عضلات میانی پشت و جلو بازو کمک می‌کنند. نسبت به کشیدن از پشت گردن برای مفصل شانه بسیار ایمن‌تر است.",
+            primaryMuscle: "Lats",
+            secondaryMuscles: ["Middle Back", "Biceps"],
+            equipment: "Cable",
+            mechanic: "Compound",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -1049,7 +1909,14 @@ export const workoutLibrary: WorkoutDefinition[] = [
           },
           {
             id: "smith-chest-press",
-            name: "پرس سینه دستگاه ماشین",
+            name: "پرس سینه اسمیت",
+            nameEn: "Smith Machine Bench Press",
+            description:
+              "حرکت پرس سینه روی دستگاه اسمیت که مسیر میله کاملاً ثابت است و تمرکز را روی انقباض عضله سینه نگه می‌دارد. پشت‌بازو و سرشانه جلویی کمک می‌کنند. گزینه‌ای امن برای اضافه کردن وزنه به تمرین سینه.",
+            primaryMuscle: "Chest",
+            secondaryMuscles: ["Triceps", "Front Deltoids"],
+            equipment: "Smith Machine",
+            mechanic: "Compound",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -1058,6 +1925,13 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "seated-dumbbell-shoulder-press",
             name: "سرشانه با دمبل نشسته",
+            nameEn: "Seated Dumbbell Shoulder Press",
+            description:
+              "حالت نشسته تاب دادن بدن را حذف می‌کند و فشار را روی سرشانه جلویی و میانی نگه می‌دارد. پشت‌بازو در انتهای حرکت کمک می‌کند. هر دست جدا کار می‌کند و تعادل قدرت دو شانه را اصلاح می‌کند.",
+            primaryMuscle: "Front Deltoids",
+            secondaryMuscles: ["Side Deltoids", "Triceps"],
+            equipment: "Dumbbell",
+            mechanic: "Compound",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -1065,7 +1939,14 @@ export const workoutLibrary: WorkoutDefinition[] = [
           },
           {
             id: "leg-press",
-            name: "پرس پا",
+            name: "پرس پا دستگاه",
+            nameEn: "Leg Press",
+            description:
+              "اجازه می‌دهد بدون درگیر کردن کمر، وزنه بسیار سنگینی روی جلو ران بیندازید. سرینی و پشت ران به‌عنوان کمکی وارد عمل می‌شوند. برای حجم دادن به پا بعد از اسکوات بهترین انتخاب است.",
+            primaryMuscle: "Quads",
+            secondaryMuscles: ["Glutes", "Hamstrings"],
+            equipment: "Machine",
+            mechanic: "Compound",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -1073,7 +1954,14 @@ export const workoutLibrary: WorkoutDefinition[] = [
           },
           {
             id: "seated-cable-row",
-            name: "قایقی سیمکش نشسته",
+            name: "قایقی سیم‌کش دسته باز",
+            nameEn: "Wide Grip Seated Cable Row",
+            description:
+              "دسته پهن باعث می‌شود سرشانه عقبی و بخش بالایی پشت بیشتر از حالت دست جمع درگیر شوند. زیربغل و جلو بازو هم نقش کمکی دارند. مکمل خوبی برای حرکات کششی عمودی مثل لت است.",
+            primaryMuscle: "Middle Back",
+            secondaryMuscles: ["Rear Deltoids", "Lats", "Biceps"],
+            equipment: "Cable",
+            mechanic: "Compound",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -1081,7 +1969,8 @@ export const workoutLibrary: WorkoutDefinition[] = [
           },
           {
             id: "pec-deck-fly",
-            name: "فلای سینه دستگاه (پروانه)",
+            name: "فلای دستگاه پروانه",
+            nameEn: "Pec Deck Fly",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -1090,6 +1979,13 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "hip-thrust",
             name: "هیپ تراست",
+            nameEn: "Hip Thrust",
+            description:
+              "مؤثرترین حرکت برای حجم و قدرت عضلات سرینی، با انقباض کامل در بالای حرکت. پشت ران و عضلات مرکزی کمک می‌کنند. برای فرم‌دهی باسن و بهبود قدرت در اسکوات و ددلیفت بسیار مؤثر است.",
+            primaryMuscle: "Glutes",
+            secondaryMuscles: ["Hamstrings", "Abdominals"],
+            equipment: "Barbell",
+            mechanic: "Compound",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -1097,7 +1993,14 @@ export const workoutLibrary: WorkoutDefinition[] = [
           },
           {
             id: "lat-pulldown-top",
-            name: "لت سیم کش از بالا",
+            name: "لت سیم‌کش از بالا",
+            nameEn: "Overhead Lat Pulldown",
+            description:
+              "با دست‌های کشیده از بالای سر، کشش حداکثری روی بخش بالایی زیربغل ایجاد می‌شود. جلو بازو درگیری کمتری دارد و تمرکز روی خود عضله پشت می‌ماند. برای حس کردن بهتر انقباض زیربغل مناسب است.",
+            primaryMuscle: "Lats",
+            secondaryMuscles: ["Middle Back", "Biceps"],
+            equipment: "Cable",
+            mechanic: "Compound",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -1106,14 +2009,22 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "chest-press-machine",
             name: "پرس سینه دستگاه",
+            nameEn: "Machine Chest Press",
             sets: 3,
             reps: 10,
             enabled: false,
             metValue: 5,
           },
           {
-            id: "hip-abductor-machine",
-            name: "دستگاه باز کننده ران",
+            id: "abductor-machine",
+            name: "دستگاه خارج ران",
+            nameEn: "Abductor Machine",
+            description:
+              "نسخه‌ای از حرکت باز کردن ران که فشار بیشتری روی ثبات‌دهنده‌های لگن می‌آورد. سرینی به‌عنوان عضله کمکی درگیر می‌شود. تقویت آن به سلامت زانو و پایداری در حرکات تک‌پا کمک می‌کند.",
+            primaryMuscle: "Abductors",
+            secondaryMuscles: ["Glutes"],
+            equipment: "Machine",
+            mechanic: "Isolation",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -1121,7 +2032,14 @@ export const workoutLibrary: WorkoutDefinition[] = [
           },
           {
             id: "standing-dumbbell-lateral-raise",
-            name: "نشر از جانب با دمبل ایستاده",
+            name: "نشر جانب دمبل ایستاده",
+            nameEn: "Standing Dumbbell Lateral Raise",
+            description:
+              "کلاسیک‌ترین حرکت برای عرض شانه که مستقیماً بخش میانی دلتوئید را هدف می‌گیرد. کول در بالای حرکت کمی درگیر می‌شود. باید با وزنه سبک و بدون تاب دادن اجرا شود.",
+            primaryMuscle: "Side Deltoids",
+            secondaryMuscles: ["Traps"],
+            equipment: "Dumbbell",
+            mechanic: "Isolation",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -1130,6 +2048,13 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "lower-back-extension-machine",
             name: "فیله کمر روی دستگاه",
+            nameEn: "Machine Back Extension",
+            description:
+              "نسخه دستگاهی بک اکستنشن که اجازه می‌دهد روی فیله کمر وزنه اضافه کنید. سرینی و پشت ران کمک می‌کنند. برای تقویت کنترل‌شده کمر بدون فشار ناگهانی مناسب است.",
+            primaryMuscle: "Lower Back",
+            secondaryMuscles: ["Glutes", "Hamstrings"],
+            equipment: "Machine",
+            mechanic: "Isolation",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -1138,6 +2063,13 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "incline-chest-press-machine",
             name: "پرس بالا سینه دستگاه",
+            nameEn: "Incline Machine Chest Press",
+            description:
+              "زاویه شیب‌دار دستگاه فشار را روی بخش بالایی عضله سینه متمرکز می‌کند و مسیر حرکت کاملاً کنترل‌شده است. سرشانه جلویی و پشت‌بازو کمک می‌کنند. گزینه‌ای امن برای هدف گرفتن بالاسینه.",
+            primaryMuscle: "Upper Chest",
+            secondaryMuscles: ["Front Deltoids", "Triceps"],
+            equipment: "Machine",
+            mechanic: "Compound",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -1145,7 +2077,14 @@ export const workoutLibrary: WorkoutDefinition[] = [
           },
           {
             id: "front-lat-pulldown",
-            name: "لت از جلو",
+            name: "لت سیم‌کش دست باز",
+            nameEn: "Wide Grip Lat Pulldown",
+            description:
+              "فاصله زیاد دست‌ها باعث می‌شود عرض عضلات زیربغل هدف اصلی قرار بگیرد و بالاتنه پهن‌تر دیده شود. جلو بازو نسبت به حالت دست جمع کمتر درگیر می‌شود. یکی از پایه‌ای‌ترین حرکات روز پشت است.",
+            primaryMuscle: "Lats",
+            secondaryMuscles: ["Middle Back", "Biceps"],
+            equipment: "Cable",
+            mechanic: "Compound",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -1153,7 +2092,14 @@ export const workoutLibrary: WorkoutDefinition[] = [
           },
           {
             id: "seated-row-machine",
-            name: "قایقی نشسته",
+            name: "قایقی دستگاه نشسته",
+            nameEn: "Seated Machine Row",
+            description:
+              "مسیر ثابت دستگاه اجازه می‌دهد بدون درگیری تعادل یا فشار روی کمر، تمرکز کامل روی انقباض عضلات پشت باشد. زیربغل و جلو بازو کمک می‌کنند. گزینه‌ای امن برای مبتدی‌ها و ست‌های سنگین پایانی.",
+            primaryMuscle: "Middle Back",
+            secondaryMuscles: ["Lats", "Biceps"],
+            equipment: "Machine",
+            mechanic: "Compound",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -1161,7 +2107,14 @@ export const workoutLibrary: WorkoutDefinition[] = [
           },
           {
             id: "shoulder-press-machine",
-            name: "پرس سرشانه دستگاه",
+            name: "پرس سرشانه دستگاه نشسته",
+            nameEn: "Seated Machine Shoulder Press",
+            description:
+              "مسیر ثابت دستگاه نیاز به تعادل را حذف می‌کند و تمرکز کامل روی سرشانه جلویی و میانی می‌ماند. پشت‌بازو کمک می‌کند. برای مبتدی‌ها و ست‌های سنگین پایانی مناسب است.",
+            primaryMuscle: "Front Deltoids",
+            secondaryMuscles: ["Side Deltoids", "Triceps"],
+            equipment: "Machine",
+            mechanic: "Compound",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -1170,6 +2123,7 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "cable-pushdown",
             name: "پشت بازو سیم‌کش",
+            nameEn: "Cable Pushdown",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -1178,6 +2132,13 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "cable-crunch",
             name: "کرانچ سیم‌کش",
+            nameEn: "Cable Crunch",
+            description:
+              "فشار ثابت سیم‌کش در تمام دامنه حرکت، انقباض بسیار قوی روی عضلات شکم ایجاد می‌کند. عضلات پهلو کمک می‌کنند. یکی از بهترین حرکات وزنه‌ای برای شکم است.",
+            primaryMuscle: "Abdominals",
+            secondaryMuscles: ["Obliques"],
+            equipment: "Cable",
+            mechanic: "Isolation",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -1186,6 +2147,13 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "face-pull",
             name: "فیس پول",
+            nameEn: "Face Pull",
+            description:
+              "کشیدن طناب به سمت صورت، مستقیماً سرشانه عقبی و عضلات بین کتف را هدف می‌گیرد. عضلات کول هم درگیر می‌شوند. یکی از بهترین حرکات برای سلامت شانه و اصلاح شانه‌های افتاده به جلو است.",
+            primaryMuscle: "Rear Deltoids",
+            secondaryMuscles: ["Traps", "Middle Back"],
+            equipment: "Cable",
+            mechanic: "Isolation",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -1194,6 +2162,13 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "alternating-dumbbell-curl",
             name: "جلو بازو دمبل",
+            nameEn: "Alternating Dumbbell Curl",
+            description:
+              "اجرای یک‌درمیان اجازه می‌دهد روی هر بازو جداگانه تمرکز کنید و چرخش مچ انقباض بهتری در جلو بازو ایجاد کند. ساعد کمک می‌کند. برای رفع اختلاف حجم بین دو بازو مناسب است.",
+            primaryMuscle: "Biceps",
+            secondaryMuscles: ["Forearms"],
+            equipment: "Dumbbell",
+            mechanic: "Isolation",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -1202,6 +2177,13 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "leg-extension",
             name: "جلو پا دستگاه",
+            nameEn: "Leg Extension",
+            description:
+              "حرکت تفکیکی خالص برای جلو ران که هیچ عضله کمکی قابل توجهی ندارد. تمرکز کامل روی انقباض و تفکیک چهار سر ران است. برای گرم کردن زانو قبل از اسکوات هم مناسب است.",
+            primaryMuscle: "Quads",
+            secondaryMuscles: [],
+            equipment: "Machine",
+            mechanic: "Isolation",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -1209,7 +2191,14 @@ export const workoutLibrary: WorkoutDefinition[] = [
           },
           {
             id: "leg-curl-machine",
-            name: "پشت پا دستگاه",
+            name: "پشت پا دستگاه ایستاده",
+            nameEn: "Standing Leg Curl",
+            description:
+              "هر پا جداگانه کار می‌کند و همین باعث تمرکز کامل روی پشت ران همان سمت می‌شود. سرینی برای ثابت نگه داشتن لگن کمی درگیر می‌شود. برای رفع اختلاف قدرت بین دو پا مناسب است.",
+            primaryMuscle: "Hamstrings",
+            secondaryMuscles: ["Glutes", "Calves"],
+            equipment: "Machine",
+            mechanic: "Isolation",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -1218,6 +2207,13 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "smith-squat",
             name: "اسکوات اسمیت",
+            nameEn: "Smith Machine Squat",
+            description:
+              "چون میله روی ریل ثابت حرکت می‌کند، نیاز به تعادل حذف شده و می‌توانید با خیال راحت فشار بیشتری روی جلو ران بیاورید. سرینی و پشت ران کمک می‌کنند. برای مبتدی‌ها یا تمرین سنگین بدون یار کمکی مناسب است.",
+            primaryMuscle: "Quads",
+            secondaryMuscles: ["Glutes", "Hamstrings"],
+            equipment: "Smith Machine",
+            mechanic: "Compound",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -1225,7 +2221,14 @@ export const workoutLibrary: WorkoutDefinition[] = [
           },
           {
             id: "dumbbell-lateral-raise",
-            name: "نشر جانب دمبل",
+            name: "نشر جانب دمبل نشسته",
+            nameEn: "Seated Dumbbell Lateral Raise",
+            description:
+              "حالت نشسته اجازه تقلب و تاب دادن بدن را نمی‌دهد، پس تمام فشار روی بخش میانی سرشانه می‌ماند. عضلات کول کمک جزئی می‌کنند. برای پهن شدن شانه‌ها یکی از خالص‌ترین حرکات است.",
+            primaryMuscle: "Side Deltoids",
+            secondaryMuscles: ["Traps"],
+            equipment: "Dumbbell",
+            mechanic: "Isolation",
             sets: 3,
             reps: 10,
             enabled: false,
@@ -1247,6 +2250,13 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "treadmill-walk",
             name: "راه رفتن روی تردمیل",
+            nameEn: "Treadmill Walk",
+            description:
+              "فعالیت هوازی سبک که ضربان قلب را بالا می‌برد و جریان خون در عضلات پا را افزایش می‌دهد. سرینی و ساق به‌آرامی درگیر می‌شوند. برای گرم کردن قبل از تمرین یا ریکاوری فعال بین جلسات عالی است.",
+            primaryMuscle: "Cardio",
+            secondaryMuscles: ["Quads", "Glutes", "Calves"],
+            equipment: "Cardio Machine",
+            mechanic: "Compound",
             sets: 1,
             reps: 10,
             enabled: false,
@@ -1255,6 +2265,13 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "light-jog",
             name: "دویدن آرام",
+            nameEn: "Light Jog",
+            description:
+              "دویدن با شدت کم که سیستم قلبی-عروقی را فعال می‌کند و دمای بدن را بالا می‌برد. جلو ران، پشت ران و ساق درگیر می‌شوند. بهترین گزینه برای گرم کردن عمومی قبل از تمرین وزنه است.",
+            primaryMuscle: "Cardio",
+            secondaryMuscles: ["Quads", "Hamstrings", "Calves"],
+            equipment: "Bodyweight",
+            mechanic: "Compound",
             sets: 1,
             reps: 10,
             enabled: false,
@@ -1263,6 +2280,13 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "stationary-bike",
             name: "دوچرخه ثابت",
+            nameEn: "Stationary Bike",
+            description:
+              "تمرین هوازی کم‌فشار که بیشترین درگیری را روی جلو ران دارد و به مفاصل زانو فشار نمی‌آورد. سرینی و ساق کمک می‌کنند. برای گرم کردن پایین‌تنه یا کاردیوی بدون ضربه مناسب است.",
+            primaryMuscle: "Cardio",
+            secondaryMuscles: ["Quads", "Glutes", "Calves"],
+            equipment: "Cardio Machine",
+            mechanic: "Compound",
             sets: 1,
             reps: 10,
             enabled: false,
@@ -1271,6 +2295,13 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "elliptical",
             name: "الپتیکال",
+            nameEn: "Elliptical Trainer",
+            description:
+              "حرکت روان و بدون ضربه که همزمان پایین‌تنه و بالاتنه را به‌صورت سبک درگیر می‌کند. جلو ران، سرینی و عضلات پشت فعال می‌شوند. برای گرم کردن کل بدن یا کاردیوی ملایم مناسب است.",
+            primaryMuscle: "Cardio",
+            secondaryMuscles: ["Quads", "Glutes", "Middle Back"],
+            equipment: "Cardio Machine",
+            mechanic: "Compound",
             sets: 1,
             reps: 10,
             enabled: false,
@@ -1279,6 +2310,13 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "jump-rope",
             name: "طناب زدن",
+            nameEn: "Jump Rope",
+            description:
+              "تمرین هوازی پرشدت که ضربان قلب را سریع بالا می‌برد و ساق پا را به‌شدت درگیر می‌کند. عضلات مرکزی و ساعد هم فعال می‌مانند. هماهنگی و چابکی را هم بهبود می‌دهد.",
+            primaryMuscle: "Cardio",
+            secondaryMuscles: ["Calves", "Abdominals", "Forearms"],
+            equipment: "Bodyweight",
+            mechanic: "Compound",
             sets: 1,
             reps: 10,
             enabled: false,
@@ -1287,6 +2325,13 @@ export const workoutLibrary: WorkoutDefinition[] = [
           {
             id: "light-rowing",
             name: "روئینگ سبک",
+            nameEn: "Light Rowing Machine",
+            description:
+              "تمرین هوازی تمام‌بدن که همزمان عضلات پشت، پا و بازو را درگیر می‌کند. سیستم قلبی-عروقی را بدون فشار به مفاصل فعال می‌کند. برای گرم کردن کامل قبل از تمرین سنگین ایده‌آل است.",
+            primaryMuscle: "Cardio",
+            secondaryMuscles: ["Middle Back", "Quads", "Biceps"],
+            equipment: "Cardio Machine",
+            mechanic: "Compound",
             sets: 1,
             reps: 10,
             enabled: false,
@@ -1322,3 +2367,59 @@ export const workoutLibrary: WorkoutDefinition[] = [
   { id: "home-workout", title: "تمرین در خانه", groups: [] },
   { id: "express-15min", title: "تمرین فشرده ۱۵ دقیقه‌ای", groups: [] },
 ];
+// The rule this file has to keep, checked once at module load in dev:
+// an exercise is identified by its id, so the same id appearing in several
+// workouts (deliberate — see the reuse notes above) must always carry the
+// same Persian name, and two different ids must never carry the same one.
+// Both used to drift silently — "پرس سرشانه دستگاه" existed under two
+// separate ids, and "پرس سینه دستگاه"/"پرس سینه دستگاه ماشین" were the same
+// machine press written two ways — which read as unrelated exercises in the
+// picker while quietly sharing (or splitting) one set-log history.
+//
+// Throwing rather than warning is the point: this is seed data, so a
+// violation is always a typo in this file and always fixable right here,
+// and it surfaces the moment the app boots in dev instead of as a confusing
+// duplicate in the UI weeks later. Stripped from production builds, where
+// there's nothing a user could do about it anyway.
+function assertLibraryIsConsistent(library: WorkoutDefinition[]) {
+  const nameById = new Map<string, string>();
+  const idByName = new Map<string, string>();
+  const problems: string[] = [];
+
+  for (const workout of library) {
+    for (const group of workout.groups) {
+      for (const exercise of group.exercises) {
+        const seenName = nameById.get(exercise.id);
+
+        if (seenName === undefined) {
+          nameById.set(exercise.id, exercise.name);
+        } else if (seenName !== exercise.name) {
+          problems.push(
+            `id "${exercise.id}" has two names: "${seenName}" and "${exercise.name}" (in ${workout.id}/${group.id})`,
+          );
+        }
+
+        const seenId = idByName.get(exercise.name);
+
+        if (seenId === undefined) {
+          idByName.set(exercise.name, exercise.id);
+        } else if (seenId !== exercise.id) {
+          problems.push(
+            `name "${exercise.name}" is used by two ids: "${seenId}" and "${exercise.id}" (in ${workout.id}/${group.id})`,
+          );
+        }
+      }
+    }
+  }
+
+  if (problems.length > 0) {
+    throw new Error(`workoutLibrary is inconsistent:\n- ${problems.join("\n- ")}`);
+  }
+}
+
+// Optional-chained: this module is also loaded by tooling outside Vite (where
+// import.meta.env is undefined), and a seed-data consistency check should
+// never be the thing that crashes a script.
+if (import.meta.env?.DEV) {
+  assertLibraryIsConsistent(workoutLibrary);
+}

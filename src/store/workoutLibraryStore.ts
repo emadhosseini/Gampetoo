@@ -106,8 +106,108 @@ function findExercise(
   );
 }
 
+const EXTRAS_KEY = "emad-workout-extras";
+
+// "workoutId:groupId" -> exercise ids pulled in from elsewhere in the
+// catalogue via the search picker. Stored as ids only, never as copies of
+// the exercise: the definition still lives in exactly one place
+// (workoutLibrary), so a description or rep-count fixed there is fixed
+// everywhere it was added too.
+type ExtrasMap = Record<string, string[]>;
+
+function extrasStorageKey() {
+  return scopedKey(EXTRAS_KEY);
+}
+
+function readExtras(): ExtrasMap {
+  const saved = localStorage.getItem(extrasStorageKey());
+
+  if (!saved) return {};
+
+  try {
+    return JSON.parse(saved) as ExtrasMap;
+  } catch {
+    return {};
+  }
+}
+
+export function addExerciseToGroup(
+  workoutId: string,
+  groupId: string,
+  exerciseId: string,
+) {
+  const extras = readExtras();
+  const key = `${workoutId}:${groupId}`;
+  const current = extras[key] ?? [];
+
+  if (current.includes(exerciseId)) return;
+
+  extras[key] = [...current, exerciseId];
+
+  localStorage.setItem(extrasStorageKey(), JSON.stringify(extras));
+}
+
+export function removeExerciseFromGroup(
+  workoutId: string,
+  groupId: string,
+  exerciseId: string,
+) {
+  const extras = readExtras();
+  const key = `${workoutId}:${groupId}`;
+
+  if (!extras[key]) return;
+
+  extras[key] = extras[key].filter((id) => id !== exerciseId);
+
+  localStorage.setItem(extrasStorageKey(), JSON.stringify(extras));
+}
+
+export function resetWorkoutExtras() {
+  localStorage.removeItem(extrasStorageKey());
+}
+
+// Resolves each stored id back to its one canonical definition and appends
+// it to the group it was added to. Anything that no longer exists in the
+// catalogue is skipped rather than crashing — an id can outlive the entry
+// it pointed at if the seed data is edited.
+function applyExtras(
+  library: WorkoutDefinition[],
+  extras: ExtrasMap,
+): WorkoutDefinition[] {
+  if (Object.keys(extras).length === 0) return library;
+
+  const canonical = new Map<string, Exercise>();
+
+  for (const workout of library) {
+    for (const group of workout.groups) {
+      for (const exercise of group.exercises) {
+        if (!canonical.has(exercise.id)) canonical.set(exercise.id, exercise);
+      }
+    }
+  }
+
+  return library.map((workout) => ({
+    ...workout,
+    groups: workout.groups.map((group) => {
+      const added = extras[`${workout.id}:${group.id}`] ?? [];
+
+      if (added.length === 0) return group;
+
+      const present = new Set(group.exercises.map((exercise) => exercise.id));
+      const resolved = added
+        .filter((id) => !present.has(id))
+        .map((id) => canonical.get(id))
+        .filter((exercise): exercise is Exercise => exercise !== undefined);
+
+      return { ...group, exercises: [...group.exercises, ...resolved] };
+    }),
+  }));
+}
+
 export function getLibrary(): WorkoutDefinition[] {
-  return applyOverrides(workoutLibrary, getOverrides());
+  // Extras first, so an added exercise picks up its own saved
+  // sets/reps/enabled override in the same pass as everything else.
+  return applyOverrides(applyExtras(workoutLibrary, readExtras()), getOverrides());
 }
 
 export function getWorkout(
