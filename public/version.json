@@ -1,6 +1,50 @@
 {
-  "current": "1.0.23",
+  "current": "1.0.27",
   "history": [
+    {
+      "version": "1.0.27",
+      "date": "2026-08-14",
+      "description": "Full MuscleWiki audit of the exercise database: all 107 exercises now carry a Persian + English name, a description of which muscles they train, and anatomical data. Several wrong muscle attributions were corrected, five duplicate exercises merged (with their logged history migrated, not lost), and the strength index rewired to read the declared muscle instead of guessing from the exercise name.",
+      "highlights": [
+        "📚 همه‌ی حرکت‌ها توضیح فارسی گرفتن — با دکمه‌ی یادداشت کنار نمودار هر حرکت ببینشون",
+        "🔍 جست‌و‌جوگر جدید: از توی کل حرکت‌های اپ سرچ کن و به برنامه‌ات اضافه کن",
+        "🧬 اصلاح عضلات ثبت‌شده‌ی چند حرکت (ساق ایستاده، مچ معکوس، بالا آوردن پا، هک اسکوات)",
+        "🔗 حذف حرکت‌های تکراری — تاریخچه‌ی ست‌ها و رکوردهات منتقل شد، چیزی پاک نشد",
+        "⚙️ «روش ثبت کالری» از منوی کناری رفت توی تنظیمات و کپسولی شد"
+      ]
+    },
+    {
+      "version": "1.0.26",
+      "date": "2026-08-14",
+      "description": "Fixed a value race in the weight/height/birth-date wheel pickers that could save the previous value, and added a durable per-day workout-completion log so the weekly calendar can show which days were actually done.",
+      "highlights": [
+        "⚖️ رفع باگ وزن اعشاری — زدن سریع «ذخیره» بعد از چرخوندن، دیگه عدد قبلی رو ذخیره نمی‌کنه",
+        "🟢 تقویم هفته: روزهایی که تمرین کردی سبز، روزهایی که جا انداختی قرمز",
+        "✏️ «برنامه پیش‌فرض» هم قابل تغییر نام شد",
+        "📐 فشرده‌سازی کارت‌های کتابخانه تمرین و مجموع کالری روزانه"
+      ]
+    },
+    {
+      "version": "1.0.25",
+      "date": "2026-08-14",
+      "description": "Adds a weekly/monthly calorie-budget trend page and a first-day-of-week setting that aligns every weekly stat chart to a real calendar week.",
+      "highlights": [
+        "📈 صفحه‌ی جدید «روند کالری مجاز» — ببین هفته/ماه گذشته چقدر زیر یا بالای سقفت بودی",
+        "📅 تنظیم «روز شروع هفته» — نمودارهای هفتگی حالا هفته‌ی تقویمی واقعی رو نشون می‌دن",
+        "💪 اضافه شدن چند حرکت جدید به تمام بدن",
+        "🎯 ست و تکرار پیش‌فرض هر تمرین خودکار پر می‌شه"
+      ]
+    },
+    {
+      "version": "1.0.24",
+      "date": "2026-08-14",
+      "description": "Fixes a cross-device sync bug that could silently erase newer data, and adds the weekly schedule preview.",
+      "highlights": [
+        "🔄 رفع باگ جدی سینک — دیگه داده‌های یک دستگاه، داده‌های دستگاه دیگه رو پاک نمی‌کنه",
+        "🗓️ «تقویم هفته» توی صفحه‌ی تمرین — برنامه‌ی ۳ روز قبل تا ۷ روز آینده",
+        "📊 نمودارها رو می‌تونی با کشیدن به عقب ببری و روزهای قبل رو ببینی"
+      ]
+    },
     {
       "version": "1.0.23",
       "date": "2026-08-11",
