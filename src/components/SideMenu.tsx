@@ -3,7 +3,6 @@ import {
   ClipboardList,
   Dumbbell,
   Menu,
-  SlidersHorizontal,
   UtensilsCrossed,
 } from "lucide-react";
 import {
@@ -24,12 +23,10 @@ import {
 } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
-import CalorieModePickerModal from "@/components/CalorieModePickerModal";
 import SettingsButton from "@/components/settings/SettingsButton";
 import SettingsSidebar from "@/components/settings/SettingsSidebar";
 import { avatarCharacterIcon } from "@/data/characterIcons";
 import { getCurrentUserGender, getCurrentUserName } from "@/utils/userEngine";
-import { getCalorieTrackingMode } from "@/utils/calorieModeEngine";
 
 const menuLinks = [
   { to: "/settings/workouts", label: "کتابخانه تمرین‌ها", icon: Dumbbell },
@@ -82,7 +79,6 @@ export default function SideMenu({ children }: SideMenuProps) {
   const [filterActive, setFilterActive] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const [drawerWidth, setDrawerWidth] = useState(0);
-  const [calorieModalOpen, setCalorieModalOpen] = useState(false);
   const prefersReducedMotion = useReducedMotion();
   const navigate = useNavigate();
   const { pathname } = useLocation();
@@ -207,13 +203,6 @@ export default function SideMenu({ children }: SideMenuProps) {
     navigate(path);
     snapTo(false);
   }
-
-  function openCalorieModePicker() {
-    snapTo(false);
-    setCalorieModalOpen(true);
-  }
-
-  const calorieMode = getCalorieTrackingMode();
 
   const dragHandlers = {
     onPointerDown: handlePointerDown,
@@ -340,24 +329,6 @@ export default function SideMenu({ children }: SideMenuProps) {
                   </button>
                 );
               })}
-
-              <button
-                onClick={openCalorieModePicker}
-                className="glass-panel flex w-full items-center gap-3 rounded-3xl p-4"
-              >
-                <div className="flex-1 text-right">
-                  <span className="block font-semibold text-white">
-                    روش ثبت کالری
-                  </span>
-                  <span className="block text-sm text-white/60">
-                    {calorieMode === "daily" ? "روزانه" : "وعده‌ای"}
-                  </span>
-                </div>
-
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/10">
-                  <SlidersHorizontal size={18} />
-                </div>
-              </button>
             </div>
 
             {/* Moved down from the top of the drawer — a settings gear
@@ -375,15 +346,6 @@ export default function SideMenu({ children }: SideMenuProps) {
         </div>
       </motion.aside>
 
-      {/* Rendered here, not inside the motion.aside/children wrapper above
-          — both can carry a CSS filter (drawer glass blur, or the
-          conditional content blur), and any filter on an ancestor makes it
-          a containing block for this modal's own `position: fixed`,
-          breaking its true viewport-relative positioning. */}
-      <CalorieModePickerModal
-        open={calorieModalOpen}
-        onClose={() => setCalorieModalOpen(false)}
-      />
 
       <SettingsSidebar open={settingsOpen} onClose={() => setSettingsOpen(false)} />
 

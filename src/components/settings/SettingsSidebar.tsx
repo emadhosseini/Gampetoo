@@ -3,6 +3,12 @@ import { motion } from "framer-motion";
 import { X } from "lucide-react";
 
 import ModalOverlay from "@/components/ModalOverlay";
+import {
+  getCalorieTrackingMode,
+  setCalorieTrackingMode,
+  type CalorieTrackingMode,
+} from "@/utils/calorieModeEngine";
+import { hasTodaysLoggedEntries, resetTodaysLog } from "@/utils/dailyLogEngine";
 import { getPreferredCalendar, setPreferredCalendar } from "@/utils/calendarPreferenceEngine";
 import {
   getAppSettings,
@@ -28,6 +34,12 @@ export interface SettingsSidebarProps {
   onClose: () => void;
 }
 
+// Every row's control gets this exact width and height, whatever it is —
+// a two-option pill, a number field, or a value button. Before this each
+// sized itself to its own content, so "شمسی/میلادی" and the rest-seconds
+// box ended up visibly different widths in the same column.
+const CONTROL = "h-9 w-40 shrink-0";
+
 // A compact two-option pill switch for one settings row — same sliding-
 // highlight recipe as PillTabBar, just sized for a row rather than a
 // full-width nav bar, and label-only (no icons) since these choices
@@ -46,14 +58,14 @@ function SegmentedControl<T extends string>({
   disabled?: boolean;
 }) {
   return (
-    <div className="glass-chip relative flex items-center rounded-full p-1">
+    <div className={`glass-chip relative flex items-center rounded-full p-1 ${CONTROL}`}>
       {options.map((option) => (
         <button
           key={option.value}
           type="button"
           disabled={disabled}
           onClick={() => onChange(option.value)}
-          className="relative z-10 flex-1 rounded-full px-3 py-1.5 text-xs font-medium text-white [-webkit-tap-highlight-color:transparent] disabled:pointer-events-none"
+          className="relative z-10 h-full flex-1 rounded-full text-xs font-medium text-white [-webkit-tap-highlight-color:transparent] disabled:pointer-events-none"
         >
           {value === option.value && (
             <motion.div
@@ -100,6 +112,9 @@ export default function SettingsSidebar({ open, onClose }: SettingsSidebarProps)
   const [weightUnit, setWeightUnit] = useState<WeightUnit>(() => getAppSettings().weightUnit);
   const [weekStart, setWeekStart] = useState<WeekStart>(() => getAppSettings().weekStart);
   const [restSeconds, setRestSeconds] = useState(() => getAppSettings().restSeconds);
+  const [calorieMode, setCalorieMode] = useState<CalorieTrackingMode>(
+    () => getCalorieTrackingMode() ?? "perMeal",
+  );
   const [saved, setSaved] = useState(false);
 
   if (!open) {
@@ -107,6 +122,26 @@ export default function SettingsSidebar({ open, onClose }: SettingsSidebarProps)
   }
 
   function handleSave() {
+    // Switching how calories are tracked invalidates today's food log —
+    // the two modes store it in incompatible shapes — so it's the one
+    // setting here that has to ask before it can be saved, and that
+    // question belongs on the save, not on the tap that moved the pill.
+    // Answering "no" abandons the whole save rather than quietly keeping
+    // the old mode while writing everything else.
+    const savedMode = getCalorieTrackingMode();
+    const modeChanged = savedMode !== null && savedMode !== calorieMode;
+
+    if (modeChanged && hasTodaysLoggedEntries()) {
+      const confirmed = window.confirm(
+        "با تغییر روش ثبت کالری، غذاهایی که امروز ثبت کردی پاک می‌شن و قابل بازگردانی نیستن.\n\nادامه می‌دی؟",
+      );
+
+      if (!confirmed) return;
+
+      resetTodaysLog();
+    }
+
+    setCalorieTrackingMode(calorieMode);
     saveAppSettings({ theme, language, weightUnit, weekStart, restSeconds });
     setPreferredCalendar(calendar);
 
@@ -139,10 +174,10 @@ export default function SettingsSidebar({ open, onClose }: SettingsSidebarProps)
         </div>
 
         <div className="mt-2 divide-y divide-white/10">
-          {/* تقویم، زمان استراحت و روز شروع هفته گزینه‌های واقعاً فعال‌ان —
-              بقیه (تم، زبان، واحد وزن) ذخیره می‌شن ولی هنوز جای دیگه‌ای از
-              اپ ازشون استفاده نمی‌کنه، پس غیرفعال و کم‌رنگ نمایش داده
-              می‌شن تا گزینه‌ای که کار نمی‌کنه گمراه‌کننده نباشه. */}
+          {/* Working settings first, then the ones that are saved but not
+              wired up to anything yet (تم، زبان، واحد وزن) — those sit at
+              the bottom, dimmed, so the list reads top-down as "things that
+              do something" before "things that don't yet". */}
           <SettingsRow label="تقویم">
             <SegmentedControl
               layoutId="settings-calendar"
@@ -155,8 +190,34 @@ export default function SettingsSidebar({ open, onClose }: SettingsSidebarProps)
             />
           </SettingsRow>
 
+          <SettingsRow label="روز شروع هفته">
+            <SegmentedControl
+              layoutId="settings-week-start"
+              value={weekStart}
+              onChange={setWeekStart}
+              options={[
+                { value: "saturday", label: "شنبه" },
+                { value: "monday", label: "دوشنبه" },
+              ]}
+            />
+          </SettingsRow>
+
+          <SettingsRow label="روش ثبت کالری">
+            <SegmentedControl
+              layoutId="settings-calorie-mode"
+              value={calorieMode}
+              onChange={setCalorieMode}
+              options={[
+                { value: "perMeal", label: "وعده‌ای" },
+                { value: "daily", label: "روزانه" },
+              ]}
+            />
+          </SettingsRow>
+
           <SettingsRow label="زمان استراحت پیش‌فرض">
-            <div className="glass-chip flex items-center gap-1.5 rounded-xl px-3 py-1.5">
+            <div
+              className={`glass-chip flex items-center justify-center gap-1.5 rounded-full ${CONTROL}`}
+            >
               <input
                 type="number"
                 inputMode="numeric"
@@ -207,18 +268,6 @@ export default function SettingsSidebar({ open, onClose }: SettingsSidebarProps)
               ]}
             />
           </SettingsRow>
-
-          <SettingsRow label="روز شروع هفته">
-            <SegmentedControl
-              layoutId="settings-week-start"
-              value={weekStart}
-              onChange={setWeekStart}
-              options={[
-                { value: "saturday", label: "شنبه" },
-                { value: "monday", label: "دوشنبه" },
-              ]}
-            />
-          </SettingsRow>
         </div>
 
         <button
@@ -229,6 +278,7 @@ export default function SettingsSidebar({ open, onClose }: SettingsSidebarProps)
           {saved ? "ذخیره شد ✅" : "ذخیره"}
         </button>
       </div>
+
     </ModalOverlay>
   );
 }

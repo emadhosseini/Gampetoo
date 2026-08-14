@@ -73,6 +73,45 @@ function categorizeExerciseName(name: string): StrengthCategory | null {
   return null;
 }
 
+// The real mapping, now that every library entry states the muscle it
+// actually trains (Exercise.primaryMuscle, MuscleWiki's own taxonomy).
+// Both keyword passes above are guesswork on Persian prose — they broke
+// whenever a name was reworded (renaming "فلای سینه دستگاه" to "فلای
+// دستگاه پروانه" silently dropped that exercise off the radar entirely,
+// because the string "سینه" was the only thing keeping it there). Matching
+// on a declared muscle instead can't drift like that: the name is free to
+// say whatever reads best.
+const MUSCLE_CATEGORY: Record<string, StrengthCategory> = {
+  Chest: "upper",
+  "Upper Chest": "upper",
+  "Lower Chest": "upper",
+  Shoulders: "upper",
+  "Front Deltoids": "upper",
+  "Side Deltoids": "upper",
+  "Rear Deltoids": "upper",
+  Triceps: "upper",
+  Biceps: "upper",
+  Forearms: "upper",
+  Traps: "upper",
+  Lats: "upper",
+  "Middle Back": "upper",
+  Quads: "lower",
+  Hamstrings: "lower",
+  Glutes: "lower",
+  Calves: "lower",
+  Adductors: "lower",
+  Abductors: "lower",
+  Abdominals: "core",
+  Obliques: "core",
+  "Lower Back": "core",
+  // Cardio work has no strength score to contribute — deliberately absent
+  // rather than mapped, so it resolves to null and is skipped.
+};
+
+function categorizeMuscle(primaryMuscle: string | undefined): StrengthCategory | null {
+  return primaryMuscle ? (MUSCLE_CATEGORY[primaryMuscle] ?? null) : null;
+}
+
 interface ExerciseStrengthMeta {
   category: StrengthCategory;
   // Isometric holds (پلانک and the like) score by duration, not weight ×
@@ -100,7 +139,15 @@ function buildExerciseMetaMap(): Map<string, ExerciseStrengthMeta> {
         // to be listed.
         if (map.has(exercise.id)) continue;
 
-        const category = groupCategory ?? categorizeExerciseName(exercise.name);
+        // primaryMuscle first — it's what the exercise actually says it
+        // trains. The group title comes next (a per-muscle group like
+        // "سینه" is still a reliable signal), and the name-keyword guess
+        // stays last as the fallback for any entry that predates the
+        // reference fields.
+        const category =
+          categorizeMuscle(exercise.primaryMuscle) ??
+          groupCategory ??
+          categorizeExerciseName(exercise.name);
 
         if (category) {
           map.set(exercise.id, { category, unit: exercise.unit ?? "reps" });

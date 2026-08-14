@@ -5,9 +5,11 @@ import { AnimatePresence, motion } from "framer-motion";
 
 import Toggle from "@/components/Toggle";
 import ModalOverlay from "@/components/ModalOverlay";
+import ExerciseSearchPicker from "@/components/ExerciseSearchPicker";
 import {
   getDefaultPlanName,
   getWorkout,
+  addExerciseToGroup,
   saveWorkoutExercises,
   setDefaultPlanName,
 } from "@/store/workoutLibraryStore";
@@ -122,7 +124,14 @@ function ExerciseEditRow({
           aria-expanded={canExpand ? expanded : undefined}
           className="flex-1 text-right"
         >
-          <h2 className="text-sm font-bold text-white">{exercise.name}</h2>
+          <h2 className="text-sm font-bold text-white">
+            {exercise.name}
+            {exercise.nameEn && (
+              <span className="ms-1.5 text-[10px] font-normal text-white/40">
+                {exercise.nameEn}
+              </span>
+            )}
+          </h2>
         </button>
 
         <Toggle
@@ -444,6 +453,39 @@ export default function WorkoutDetailPage() {
         ),
       };
     });
+  }
+
+  // Pulls an exercise in from elsewhere in the catalogue (see
+  // ExerciseSearchPicker). It lands in the draft straight away so it shows
+  // up in the list immediately, enabled — nobody searches out a movement
+  // in order to leave it switched off. Where it's persisted depends on the
+  // plan: a variant stores its whole group list wholesale
+  // (updateVariantGroups), while the base library workout has no such
+  // list, so the addition is recorded separately by id (addExerciseToGroup)
+  // and re-applied by getLibrary on the next read.
+  function handleAddExercise(groupId: string, exercise: Exercise) {
+    setSaved(false);
+
+    setDrafts((prev) => {
+      const base = prev[currentKey] ?? sourceGroupsFor(currentKey);
+
+      return {
+        ...prev,
+        [currentKey]: base.map((group) =>
+          group.id !== groupId ||
+          group.exercises.some((existing) => existing.id === exercise.id)
+            ? group
+            : {
+                ...group,
+                exercises: [...group.exercises, { ...exercise, enabled: true }],
+              },
+        ),
+      };
+    });
+
+    if (currentKey === DEFAULT_KEY) {
+      addExerciseToGroup(workout!.id, groupId, exercise.id);
+    }
   }
 
   // Writes every plan that has an unsaved draft — not just the one on
@@ -851,6 +893,13 @@ export default function WorkoutDetailPage() {
                         }
                       />
                     ))}
+
+                  {/* Anything in the catalogue, not just what this day was
+                      seeded with — see ExerciseSearchPicker. */}
+                  <ExerciseSearchPicker
+                    existingIds={group.exercises.map((exercise) => exercise.id)}
+                    onPick={(exercise) => handleAddExercise(group.id, exercise)}
+                  />
                 </div>
               )}
             </div>

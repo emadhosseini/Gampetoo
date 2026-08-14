@@ -30,7 +30,12 @@ import CalorieBudgetDetailPage from "@/pages/CalorieBudgetDetailPage";
 
 import { hasCurrentUsername } from "@/utils/userEngine";
 import { initSync } from "@/sync/remoteSync";
+import { mergeExerciseIds } from "@/domain/migrations/mergeExerciseIds";
 
+// Before initSync, deliberately: the migration rewrites the very keys the
+// sync engine watches, so it has to finish while nothing is listening —
+// otherwise the rewrite itself would be pushed as a change mid-flight.
+mergeExerciseIds();
 initSync();
 
 export default function App() {
