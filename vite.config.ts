@@ -18,6 +18,31 @@ const currentVersionEntry = versionData.history.find(
   (entry: { version: string }) => entry.version === versionData.current
 );
 
+// The app shows version.json's `current`; npm and every tool that reads the
+// manifest show package.json's `version`. They're two hand-edited copies of
+// one fact, and they did drift — four releases shipped while the running app
+// still reported 1.0.23, because only package.json had been bumped. Failing
+// the build is the cheapest possible place to catch that: `npm run release`
+// updates both together, and this makes forgetting impossible rather than
+// merely unlikely.
+const pkgVersion = JSON.parse(
+  readFileSync(fileURLToPath(new URL("./package.json", import.meta.url)), "utf-8")
+).version;
+
+if (pkgVersion !== versionData.current) {
+  throw new Error(
+    `Version mismatch: package.json is ${pkgVersion} but public/version.json is ${versionData.current}.\n` +
+      `Run "npm run release" to bump both together.`
+  );
+}
+
+if (!currentVersionEntry) {
+  throw new Error(
+    `public/version.json lists current="${versionData.current}" but has no history entry for it — ` +
+      `the "what's new" notice would come up empty.`
+  );
+}
+
 export default defineConfig({
   define: {
     __APP_VERSION__: JSON.stringify(versionData.current),
