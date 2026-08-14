@@ -1,10 +1,16 @@
 import { ChevronDown, Minus, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
+import { AnimatePresence, motion } from "framer-motion";
 
 import Toggle from "@/components/Toggle";
 import ModalOverlay from "@/components/ModalOverlay";
-import { getWorkout, saveWorkoutExercises } from "@/store/workoutLibraryStore";
+import {
+  getDefaultPlanName,
+  getWorkout,
+  saveWorkoutExercises,
+  setDefaultPlanName,
+} from "@/store/workoutLibraryStore";
 import {
   getSpecializedWarmup,
   saveWarmupGroups,
@@ -98,76 +104,167 @@ function ExerciseEditRow({
   isWarmupWorkout: boolean;
   onUpdate: (patch: Partial<Exercise>) => void;
 }) {
+  // Collapsed by default, exactly like the daily workout page's own
+  // ExerciseCard — the sets/reps steppers used to always be on screen,
+  // which made every row four times as tall as the same exercise looks
+  // there. The general گرم کردن library has no sets/reps at all, so its
+  // rows never expand (nothing to reveal).
+  const [expanded, setExpanded] = useState(false);
+  const canExpand = !isWarmupWorkout;
+
   return (
-    <div className="glass-chip glass-static rounded-xl p-4">
-      <div
-        className={`flex items-center gap-3 ${isWarmupWorkout ? "" : "mb-4"}`}
-      >
+    // Same shell as ExerciseCard: glass-panel + rounded-2xl + p-2.5, a
+    // single text-sm row, toggle on the end.
+    <div className="glass-panel glass-static rounded-2xl p-2.5">
+      <div className="flex items-center gap-3">
+        <button
+          onClick={() => canExpand && setExpanded((prev) => !prev)}
+          aria-expanded={canExpand ? expanded : undefined}
+          className="flex-1 text-right"
+        >
+          <h2 className="text-sm font-bold text-white">{exercise.name}</h2>
+        </button>
+
         <Toggle
           checked={exercise.enabled}
           onChange={() => onUpdate({ enabled: !exercise.enabled })}
         />
-
-        <span className="flex-1 font-medium">{exercise.name}</span>
       </div>
 
-      {!isWarmupWorkout && (
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <div className="mb-2 text-sm font-medium text-white">ست</div>
+      <AnimatePresence initial={false}>
+        {canExpand && expanded && (
+          <motion.div
+            initial={{ height: 0 }}
+            animate={{ height: "auto" }}
+            exit={{ height: 0 }}
+            transition={{ type: "spring", stiffness: 320, damping: 32 }}
+            // -mx-1/px-1 for the same reason ExerciseCard's own drawer has
+            // it: the rounded steppers inside would otherwise render
+            // flattened against this overflow-hidden edge.
+            className="-mx-1 overflow-hidden px-1"
+          >
+            <div className="mt-2.5 grid grid-cols-2 gap-3 border-t border-white/10 pt-2.5">
+              <div>
+                <div className="mb-1.5 text-xs font-medium text-white/60">ست</div>
 
-            <div className="selector-pill flex items-center justify-between rounded-xl p-2">
-              <button
-                onClick={() => {
-                  if (exercise.sets <= 1) return;
+                <div className="selector-pill flex items-center justify-between rounded-xl p-1.5">
+                  <button
+                    onClick={() => {
+                      if (exercise.sets <= 1) return;
 
-                  onUpdate({ sets: exercise.sets - 1 });
-                }}
-              >
-                <Minus size={18} />
-              </button>
+                      onUpdate({ sets: exercise.sets - 1 });
+                    }}
+                    aria-label="کم کردن ست"
+                  >
+                    <Minus size={16} />
+                  </button>
 
-              <span className="font-bold text-white">{toFaDigits(exercise.sets)}</span>
+                  <span className="text-sm font-bold text-white">
+                    {toFaDigits(exercise.sets)}
+                  </span>
 
-              <button onClick={() => onUpdate({ sets: exercise.sets + 1 })}>
-                <Plus size={18} />
-              </button>
+                  <button
+                    onClick={() => onUpdate({ sets: exercise.sets + 1 })}
+                    aria-label="زیاد کردن ست"
+                  >
+                    <Plus size={16} />
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <div className="mb-1.5 text-xs font-medium text-white/60">
+                  {exercise.unit === "seconds" ? "ثانیه" : "تکرار"}
+                </div>
+
+                <div className="selector-pill flex items-center justify-between rounded-xl p-1.5">
+                  <button
+                    onClick={() => {
+                      const step = exercise.unit === "seconds" ? 5 : 1;
+
+                      if (exercise.reps <= step) return;
+
+                      onUpdate({ reps: exercise.reps - step });
+                    }}
+                    aria-label="کم کردن تکرار"
+                  >
+                    <Minus size={16} />
+                  </button>
+
+                  <span className="text-sm font-bold text-white">
+                    {toFaDigits(exercise.reps)}
+                  </span>
+
+                  <button
+                    onClick={() =>
+                      onUpdate({
+                        reps: exercise.reps + (exercise.unit === "seconds" ? 5 : 1),
+                      })
+                    }
+                    aria-label="زیاد کردن تکرار"
+                  >
+                    <Plus size={16} />
+                  </button>
+                </div>
+              </div>
             </div>
-          </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
 
-          <div>
-            <div className="mb-2 text-sm font-medium text-white">
-              {exercise.unit === "seconds" ? "ثانیه" : "تکرار"}
-            </div>
+// One specialized-warmup group (تحرک مفصلی and the like) — same compact
+// shell as ExerciseEditRow above and the daily page's ExerciseCard: a
+// single text-sm row with its toggle, tapping the title expanding to the
+// moves it actually contains. Its own component purely so each row owns
+// its own `expanded` state.
+function WarmupGroupRow({
+  group,
+  onToggle,
+}: {
+  group: WarmupGroup;
+  onToggle: () => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
 
-            <div className="selector-pill flex items-center justify-between rounded-xl p-2">
-              <button
-                onClick={() => {
-                  const step = exercise.unit === "seconds" ? 5 : 1;
+  return (
+    <div className="glass-panel glass-static rounded-2xl p-2.5">
+      <div className="flex items-center gap-3">
+        <button
+          onClick={() => setExpanded((prev) => !prev)}
+          aria-expanded={expanded}
+          className="flex-1 text-right"
+        >
+          <h2 className="text-sm font-bold text-white">{group.title}</h2>
+        </button>
 
-                  if (exercise.reps <= step) return;
+        <Toggle checked={group.enabled} onChange={onToggle} />
+      </div>
 
-                  onUpdate({ reps: exercise.reps - step });
-                }}
-              >
-                <Minus size={18} />
-              </button>
-
-              <span className="font-bold text-white">{toFaDigits(exercise.reps)}</span>
-
-              <button
-                onClick={() =>
-                  onUpdate({
-                    reps: exercise.reps + (exercise.unit === "seconds" ? 5 : 1),
-                  })
-                }
-              >
-                <Plus size={18} />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <AnimatePresence initial={false}>
+        {expanded && (
+          <motion.div
+            initial={{ height: 0 }}
+            animate={{ height: "auto" }}
+            exit={{ height: 0 }}
+            transition={{ type: "spring", stiffness: 320, damping: 32 }}
+            className="-mx-1 overflow-hidden px-1"
+          >
+            <ul className="mt-2.5 space-y-1.5 border-t border-white/10 pt-2.5">
+              {group.exercises.map((exercise) => (
+                <li
+                  key={exercise.id}
+                  className="glass-chip glass-static rounded-lg px-3 py-2 text-sm text-white"
+                >
+                  {exercise.name}
+                </li>
+              ))}
+            </ul>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -198,6 +295,17 @@ export default function WorkoutDetailPage() {
   const [editingVariantId, setEditingVariantId] = useState<string | null>(null);
   const [variantVersion, setVariantVersion] = useState(0);
   const [nameModal, setNameModal] = useState<"create" | "rename" | null>(null);
+  // Whether the تغییر‌نام/حذف drawer under the selected plan's own pencil
+  // icon is open — separate from `editingVariantId` (which just decides
+  // which plan's exercises are on screen): tapping a pill selects it
+  // without opening anything, tapping its pencil specifically is what
+  // reveals this.
+  const [renameDrawerOpen, setRenameDrawerOpen] = useState(false);
+  // "برنامه پیش‌فرض"'s own label, per workout — not a workoutVariantStore
+  // entry (it's the library's own base workout), so it's a small separate
+  // override (see workoutLibraryStore.getDefaultPlanName) rather than
+  // living alongside variants/pendingVariants below.
+  const [defaultNameVersion, setDefaultNameVersion] = useState(0);
 
   // A plan created via "+" but not saved yet — exists only in this page's
   // own state (drafts below) until handleSave actually persists it with a
@@ -225,6 +333,12 @@ export default function WorkoutDetailPage() {
     () => (id ? getVariants(id) : []),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [id, variantVersion],
+  );
+
+  const defaultPlanName = useMemo(
+    () => (id ? getDefaultPlanName(id) : "برنامه پیش‌فرض"),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [id, defaultNameVersion],
   );
 
   const currentKey = editingVariantId ?? DEFAULT_KEY;
@@ -378,7 +492,22 @@ export default function WorkoutDetailPage() {
   // confirm here any more.
   function switchTo(variantId: string | null) {
     setEditingVariantId(variantId);
+    setRenameDrawerOpen(false);
     setSaved(false);
+  }
+
+  // The pencil on a pill (variantId null means برنامه پیش‌فرض): selects
+  // that plan (same as tapping the pill itself would) and toggles its own
+  // drawer — tapping the pencil on an already-selected plan just opens/
+  // closes the drawer without touching selection again.
+  function togglePencil(variantId: string | null) {
+    if (editingVariantId === variantId) {
+      setRenameDrawerOpen((prev) => !prev);
+    } else {
+      setEditingVariantId(variantId);
+      setRenameDrawerOpen(true);
+      setSaved(false);
+    }
   }
 
   // Doesn't touch storage — see pendingVariants above. Starts blank
@@ -395,7 +524,15 @@ export default function WorkoutDetailPage() {
   }
 
   function handleRenameVariant(name: string) {
-    if (!editingVariantId) return;
+    if (!editingVariantId) {
+      // برنامه پیش‌فرض isn't a workoutVariantStore entry — its label is a
+      // small separate override (see workoutLibraryStore.setDefaultPlanName).
+      setDefaultPlanName(workout!.id, name);
+      setDefaultNameVersion((v) => v + 1);
+      setNameModal(null);
+
+      return;
+    }
 
     if (pendingVariants.some((p) => p.id === editingVariantId)) {
       setPendingVariants((prev) =>
@@ -444,63 +581,90 @@ export default function WorkoutDetailPage() {
   const supportsVariants = !isWarmupWorkout && (workout.groups?.length ?? 0) > 0;
 
   return (
-    <div className="space-y-6 px-5 pb-5 pt-10">
-      {/* Small floating pill, not the full-size button — only appears once
-          there's actually something unsaved (dirty), sitting up top-left
-          so a change made after scrolling down doesn't need a trip all
-          the way back to the bottom button just to save it. Sticky rather
-          than fixed: MobileContainer's phone-shaped frame is narrower than
-          the real viewport on desktop, and fixed positions relative to the
-          viewport, not that frame. */}
-      {dirty && (groups.length > 0 || specializedWarmup) && (
-        <div className="sticky top-2 z-30 flex justify-end">
+    <div className="space-y-6 px-5 pb-5 pt-2">
+      {/* Title and the "ذخیره" pill share one sticky row now instead of
+          the title sitting on its own further down — centered title, save
+          button pinned to one side (only rendered once there's actually
+          something unsaved), the whole row staying on screen while
+          scrolling so a change made further down never needs a trip back
+          up just to save it. Sticky rather than fixed: MobileContainer's
+          phone-shaped frame is narrower than the real viewport on desktop,
+          and fixed positions relative to the viewport, not that frame. */}
+      <div className="sticky top-2 z-30 flex items-center justify-center">
+        <h1 className="text-2xl font-bold">تمرین {workout.title}</h1>
+
+        {dirty && (groups.length > 0 || specializedWarmup) && (
           <button
             onClick={handleSave}
-            className="glass-action rounded-full px-4 py-2 text-xs font-bold text-white shadow-lg"
+            className="glass-action absolute inset-e-0 rounded-full px-4 py-2 text-xs font-bold text-white shadow-lg"
           >
             ذخیره
           </button>
-        </div>
-      )}
-
-      <div>
-        <h1 className="text-2xl font-bold">{workout.title}</h1>
-
-        {editingVariantName && (
-          <p className="mt-1 text-sm font-medium text-white/50">{editingVariantName}</p>
         )}
       </div>
 
       {/* Multiple saved plans for this same workout (e.g. "پوش A"/"پوش B")
-          — برنامه پیش‌فرض is always the library's own base workout and
-          can't be renamed/deleted; anything else here is a
-          workoutVariantStore entry (or, until the next save, a pending one
-          that only exists in this page's own state — see pendingVariants).
-          A new one always starts blank (blankGroupsFromBase), never a copy
-          of whatever tab was open. ProgramBuilderPage lets a program day
-          be assigned more than one of these, and WorkoutPage asks which to
-          do once the day arrives. */}
+          — برنامه پیش‌فرض is the library's own base workout, so its own
+          label is a small separate override (see workoutLibraryStore's
+          getDefaultPlanName/setDefaultPlanName) rather than a
+          workoutVariantStore entry, and it can't be deleted; everything
+          else here is a real variant (or, until the next save, a pending
+          one that only exists in this page's own state — see
+          pendingVariants). A new one always starts blank
+          (blankGroupsFromBase), never a copy of whatever tab was open.
+          ProgramBuilderPage lets a program day be assigned more than one of
+          these, and WorkoutPage asks which to do once the day arrives.
+          One continuous glass-panel wraps the pill row and its rename/
+          delete drawer, so opening a pencil reads as this same card
+          growing rather than a second, separately-bordered box appearing
+          underneath it (same recipe as ExerciseCard's own expand). Every
+          plan pill is `flex-1` (equal width, however many there are)
+          instead of sized to its own text — with just برنامه پیش‌فرض on
+          screen, it alone fills all the room "+" doesn't take. */}
       {supportsVariants && (
-        <div className="space-y-2">
-          <div className="no-scrollbar flex items-center gap-2 overflow-x-auto">
+        // No wrapping card of its own — the pills and "+" sit directly on
+        // the page, and the rename/delete drawer opens beneath them the
+        // same way (also with no panel behind it).
+        <div>
+          <div className="flex items-center gap-1.5">
             <button
               onClick={() => switchTo(null)}
-              className={`glass-chip glass-static shrink-0 rounded-full px-4 py-2 text-sm font-medium text-white ${
+              className={`glass-chip glass-static flex min-w-0 flex-1 items-center justify-between gap-1.5 rounded-full px-3 py-2 text-sm font-medium text-white ${
                 !editingVariantId ? "glass-chip-selected" : ""
               }`}
             >
-              برنامه پیش‌فرض
+              {/* flex-1 text-center on the span, not the button: the
+                  pencil (shrink-0, justify-between) stays pinned at the
+                  pill's own far end while just the label centers itself
+                  within whatever space is left beside it. */}
+              <span className="min-w-0 flex-1 truncate text-center">{defaultPlanName}</span>
+              <Pencil
+                size={12}
+                className="shrink-0 text-white/50"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  togglePencil(null);
+                }}
+              />
             </button>
 
             {[...variants, ...pendingVariants].map((variant) => (
               <button
                 key={variant.id}
                 onClick={() => switchTo(variant.id)}
-                className={`glass-chip glass-static shrink-0 rounded-full px-4 py-2 text-sm font-medium text-white ${
+                className={`glass-chip glass-static flex min-w-0 flex-1 items-center justify-between gap-1.5 rounded-full px-3 py-2 text-sm font-medium text-white ${
                   editingVariantId === variant.id ? "glass-chip-selected" : ""
                 }`}
               >
-                {variant.name}
+                <span className="min-w-0 flex-1 truncate text-center">{variant.name}</span>
+                <Pencil
+                  size={12}
+                  className="shrink-0 text-white/50"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    togglePencil(variant.id);
+                  }}
+                />
               </button>
             ))}
 
@@ -513,25 +677,43 @@ export default function WorkoutDetailPage() {
             </button>
           </div>
 
-          {editingVariantName && (
-            <div className="flex items-center justify-center gap-2">
-              <button
-                onClick={() => setNameModal("rename")}
-                className="glass-tap glass-static flex items-center gap-1 rounded-full px-3 py-1.5 text-xs text-white/70"
+          <AnimatePresence initial={false}>
+            {renameDrawerOpen && (
+              <motion.div
+                initial={{ height: 0 }}
+                animate={{ height: "auto" }}
+                exit={{ height: 0 }}
+                transition={{ type: "spring", stiffness: 320, damping: 32 }}
+                className="overflow-hidden"
               >
-                <Pencil size={12} />
-                تغییر نام
-              </button>
+                {/* Each action gets its own chip — same rounded-full shape,
+                    gap and padding as the plan pills above, so the two rows
+                    line up as one system rather than the drawer reading as
+                    two bare labels. */}
+                <div className="mt-1.5 flex items-center gap-1.5">
+                  <button
+                    onClick={() => setNameModal("rename")}
+                    className="glass-chip glass-static flex flex-1 items-center justify-center gap-1 rounded-full px-3 py-2 text-xs font-medium text-white"
+                  >
+                    <Pencil size={12} />
+                    تغییر نام
+                  </button>
 
-              <button
-                onClick={handleDeleteVariant}
-                className="glass-tap glass-static flex items-center gap-1 rounded-full px-3 py-1.5 text-xs text-red-400"
-              >
-                <Trash2 size={12} />
-                حذف این پلن
-              </button>
-            </div>
-          )}
+                  {/* برنامه پیش‌فرض can't be deleted — it's the library's
+                      own base workout, not a real variant. */}
+                  {editingVariantId && (
+                    <button
+                      onClick={handleDeleteVariant}
+                      className="glass-chip glass-static flex flex-1 items-center justify-center gap-1 rounded-full px-3 py-2 text-xs font-medium text-red-400"
+                    >
+                      <Trash2 size={12} />
+                      حذف این پلن
+                    </button>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       )}
 
@@ -543,8 +725,11 @@ export default function WorkoutDetailPage() {
             group list below (ExerciseEditRow), so there's nothing extra to
             learn once something's found. */}
         {groups.length > 0 && (
-          <div className="glass-panel glass-static rounded-2xl p-4">
-            <div className="glass-chip flex items-center gap-2 rounded-xl p-2">
+          // Like the plan-variants row above it: no wrapping card, just the
+          // input itself — same rounded-full pill shape and padding as the
+          // plan pills, so the two rows read as siblings.
+          <div>
+            <div className="glass-chip glass-static flex items-center gap-2 rounded-full px-3 py-2">
               <Search size={16} className="shrink-0 text-white/60" />
 
               <input
@@ -552,7 +737,7 @@ export default function WorkoutDetailPage() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="جستجوی حرکت..."
-                className="w-full bg-transparent px-1 py-2 text-sm text-white placeholder:text-white/50 outline-none"
+                className="w-full bg-transparent text-sm text-white placeholder:text-white/50 outline-none"
               />
             </div>
 
@@ -604,34 +789,11 @@ export default function WorkoutDetailPage() {
             {warmupSectionOpen && (
               <div className="mt-4 space-y-3">
                 {warmupGroups.map((group) => (
-                  <div
+                  <WarmupGroupRow
                     key={group.id}
-                    className="glass-chip glass-static rounded-xl p-4"
-                  >
-                    <div className="flex items-center gap-3">
-                      <Toggle
-                        checked={group.enabled}
-                        onChange={() => toggleWarmupGroup(group.id)}
-                      />
-
-                      <span className="flex-1 font-medium">
-                        {group.title}
-                      </span>
-                    </div>
-
-                    {group.enabled && (
-                      <ul className="mt-3 space-y-2">
-                        {group.exercises.map((exercise) => (
-                          <li
-                            key={exercise.id}
-                            className="glass-chip rounded-lg px-3 py-2 text-sm"
-                          >
-                            {exercise.name}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
+                    group={group}
+                    onToggle={() => toggleWarmupGroup(group.id)}
+                  />
                 ))}
               </div>
             )}
@@ -722,7 +884,7 @@ export default function WorkoutDetailPage() {
         key={`rename-${editingVariantId}-${nameModal === "rename"}`}
         open={nameModal === "rename"}
         title="تغییر نام پلن"
-        initialName={editingVariantName ?? ""}
+        initialName={editingVariantId ? (editingVariantName ?? "") : defaultPlanName}
         onClose={() => setNameModal(null)}
         onSubmit={handleRenameVariant}
       />

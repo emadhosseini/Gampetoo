@@ -12,6 +12,7 @@ import {
   scopedKey,
 } from "./userEngine";
 import { getTodayLocalDate } from "./dateFormat";
+import { markCompleted } from "./workoutCompletionLog";
 
 const STORAGE_KEY = "emad-session";
 
@@ -232,12 +233,17 @@ export function setSelectedVariantId(variantId: string | null) {
   saveSession(session);
 }
 
+// Both of these also stamp the date into workoutCompletionLog — the
+// session's own `completed` is wiped at the next day-rollover, so that log
+// is the only thing that can still answer "was this day done" afterwards
+// (see WeeklyScheduleModal's green/red days).
 export function completeWorkout() {
   const session = parseSession(localStorage.getItem(storageKey())) ?? createSession();
 
   session.completed = true;
 
   saveSession(session);
+  markCompleted();
 }
 
 export function completeWalk() {
@@ -246,6 +252,7 @@ export function completeWalk() {
   session.completed = true;
 
   saveSession(session);
+  markCompleted();
 }
 
 export function resetSession() {

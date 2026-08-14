@@ -34,39 +34,37 @@ export interface MacroTotalsGridProps {
   className?: string;
 }
 
-// The four macros as one merged card, not four separate floating chips —
-// each used to be its own .glass-chip box, which read as four unrelated
-// cards sitting side by side rather than one breakdown of the same total.
-// Protein still gets its own small ring inside the merged card when a
-// standing is given, since it's the one figure here judged against
-// anything.
+// The four macros as a row of single-line capsules. Protein gets its own
+// ring when a standing is given, since it's the one figure here judged
+// against anything.
 export default function MacroTotalsGrid({
   totals,
   proteinStanding,
   className = "",
 }: MacroTotalsGridProps) {
   return (
-    // py-1.5 (down from py-3): matches WeeklyDatePicker's own "امروز" pill
-    // (py-2.5, one text-sm line) as closely as a two-line cell (label +
-    // value) can get.
-    <div className={`glass-chip glass-static rounded-2xl p-1.5 ${className}`}>
-      <div className="grid grid-cols-4 gap-1">
-        {MACRO_FIELDS.map((field) => (
-          <div
-            key={field.key}
-            className={`rounded-xl py-1.5 text-center ${
-              field.key === "protein" && proteinStanding
-                ? PROTEIN_RING[proteinStanding]
-                : ""
-            }`}
-          >
-            <p className="text-xs text-white/60">{field.label}</p>
-            <p className="mt-0.5 text-sm font-bold text-white">
-              {toFaDigits(totals[field.key])}
-            </p>
-          </div>
-        ))}
-      </div>
+    // No wrapping chip of its own any more — four capsules sitting directly
+    // in the card that holds them, each with its value stacked under its
+    // label so a long one ("کربوهیدرات") gets the pill's full width to
+    // itself instead of sharing the line with a number.
+    <div className={`grid grid-cols-4 gap-1 ${className}`}>
+      {MACRO_FIELDS.map((field) => (
+        <div
+          key={field.key}
+          className={`glass-chip glass-static flex min-w-0 flex-col items-center justify-center rounded-full px-1.5 py-1.5 ${
+            field.key === "protein" && proteinStanding
+              ? PROTEIN_RING[proteinStanding]
+              : ""
+          }`}
+        >
+          <span className="max-w-full truncate text-[10px] leading-tight text-white/60">
+            {field.label}
+          </span>
+          <span className="text-xs font-bold leading-tight text-white">
+            {toFaDigits(totals[field.key])}
+          </span>
+        </div>
+      ))}
     </div>
   );
 }

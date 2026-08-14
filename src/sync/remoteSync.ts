@@ -8,7 +8,9 @@ import { getCurrentUsername } from "@/utils/userEngine";
 const SYNCED_BASE_KEYS = [
   "emad-programs",
   "emad-session",
+  "emad-workout-completion-log",
   "emad-workout-library-overrides",
+  "emad-default-plan-names",
   "emad-workout-exercise-order",
   "emad-workout-variants",
   "emad-exercise-set-log",

@@ -1,6 +1,7 @@
 import { resetPrograms } from "../../utils/programEngine";
 import { resetSession } from "../../utils/sessionEngine";
-import { resetLibraryOverrides } from "../../store/workoutLibraryStore";
+import { resetWorkoutCompletionLog } from "../../utils/workoutCompletionLog";
+import { resetDefaultPlanNames, resetLibraryOverrides } from "../../store/workoutLibraryStore";
 import { resetExerciseOrder } from "../../store/workoutOrderStore";
 import { resetWorkoutVariants } from "../../store/workoutVariantStore";
 import { resetExerciseSetLog } from "../../utils/exerciseSetLogEngine";
@@ -36,8 +37,10 @@ export interface DeleteAccountResult {
  */
 function wipeLocalData(username: string | null) {
   resetSession();
+  resetWorkoutCompletionLog();
   resetPrograms();
   resetLibraryOverrides();
+  resetDefaultPlanNames();
   resetExerciseOrder();
   resetWorkoutVariants();
   resetExerciseSetLog();
