@@ -12,7 +12,7 @@ import {
   scopedKey,
 } from "./userEngine";
 import { getTodayLocalDate } from "./dateFormat";
-import { markCompleted } from "./workoutCompletionLog";
+import { isCompletedOn, markCompleted, unmarkCompleted } from "./workoutCompletionLog";
 
 const STORAGE_KEY = "emad-session";
 
@@ -67,51 +67,56 @@ function parseSession(saved: string | null): SessionState | null {
   }
 }
 
-export function getSession() {
+/**
+ * Today's session, derived in memory — never written.
+ *
+ * The rollover used to be persisted right here, and that quietly destroyed
+ * data across devices: the write marked emad-session as a local edit, an
+ * unconfirmed local edit beats anything the server has (see remoteSync's
+ * mergeByKey), so a second device merely being OPENED the next day pushed
+ * its freshly-blanked session over a workout the first device had already
+ * completed. Deriving instead of writing means a device that has nothing
+ * to say says nothing, and the completed session survives.
+ *
+ * Every mutator below builds on this, so a write that happens after a
+ * rollover still lands on today's session rather than yesterday's.
+ */
+function readTodaysSession(): SessionState {
   const saved = parseSession(localStorage.getItem(storageKey()));
 
-  if (!saved) {
-    const session = createSession();
-    saveSession(session);
+  if (!saved || saved.lastDate !== today()) return createSession();
 
-    return {
-      ...session,
-      workoutIndex: 0,
-      activity: getCurrentProgramDay().activity,
-    };
-  }
+  return {
+    ...saved,
+    // Backfills a session saved before checkedExercises/selectedVariantId
+    // existed.
+    checkedExercises: saved.checkedExercises ?? [],
+    selectedVariantId: saved.selectedVariantId ?? null,
+  };
+}
 
-  const session: SessionState = saved;
+export function getSession() {
+  const session = readTodaysSession();
 
-  // Backfills a session saved before checkedExercises/selectedVariantId
-  // existed.
-  if (!session.checkedExercises) {
-    session.checkedExercises = [];
-  }
+  // `completed` is OR-ed with the durable per-date log rather than trusted
+  // from the session alone. The session is a single blob that whichever
+  // device wrote last owns outright, so it can be — and was — replaced
+  // wholesale by a second device that simply hadn't seen the workout
+  // happen. The completion log is keyed by date and only ever written by
+  // an actual completion, so it survives that, and reading it here means
+  // the home screen and the weekly calendar can no longer disagree about
+  // whether today was done.
+  const completed = session.completed || isCompletedOn(today());
 
-  if (session.selectedVariantId === undefined) {
-    session.selectedVariantId = null;
-  }
-
-  // Resolved BEFORE the reset below, deliberately — programEngine's cycle
-  // resolution reads this session's still-live completed/lastDate (via a
-  // read-only peek at this same storage key) to decide whether a workout
-  // day held its place or a rest day advanced. Once the reset below runs,
-  // that information is gone, so this has to be the one call that happens
-  // first each day.
+  // programEngine's cycle resolution peeks at this same stored key to see
+  // whether yesterday's workout was completed. Nothing here overwrites it
+  // any more, so that peek is reliable at any point in a render rather than
+  // only before a reset that used to race it.
   const activity = getCurrentProgramDay().activity;
-
-  if (session.lastDate !== today()) {
-    session.completed = false;
-    session.lastDate = today();
-    session.checkedExercises = [];
-    session.selectedVariantId = null;
-
-    saveSession(session);
-  }
 
   return {
     ...session,
+    completed,
     workoutIndex: 0,
     activity,
   };
@@ -123,7 +128,7 @@ export function getSession() {
 // on demand (estimateCheckedWorkoutCalories below) and only reaches the
 // day's activity total if the user opts in when completing the workout.
 export function toggleExerciseChecked(exerciseId: string) {
-  const session = parseSession(localStorage.getItem(storageKey())) ?? createSession();
+  const session = readTodaysSession();
 
   if (!session.checkedExercises) {
     session.checkedExercises = [];
@@ -226,7 +231,7 @@ export function saveSession(session: SessionState) {
 // exercise is ticked (WorkoutPage's chooser gates the exercise list
 // itself), so there's nothing on those to invalidate.
 export function setSelectedVariantId(variantId: string | null) {
-  const session = parseSession(localStorage.getItem(storageKey())) ?? createSession();
+  const session = readTodaysSession();
 
   session.selectedVariantId = variantId;
 
@@ -238,7 +243,7 @@ export function setSelectedVariantId(variantId: string | null) {
 // is the only thing that can still answer "was this day done" afterwards
 // (see WeeklyScheduleModal's green/red days).
 export function completeWorkout() {
-  const session = parseSession(localStorage.getItem(storageKey())) ?? createSession();
+  const session = readTodaysSession();
 
   session.completed = true;
 
@@ -247,7 +252,7 @@ export function completeWorkout() {
 }
 
 export function completeWalk() {
-  const session = parseSession(localStorage.getItem(storageKey())) ?? createSession();
+  const session = readTodaysSession();
 
   session.completed = true;
 
@@ -257,4 +262,5 @@ export function completeWalk() {
 
 export function resetSession() {
   localStorage.removeItem(storageKey());
+  unmarkCompleted();
 }

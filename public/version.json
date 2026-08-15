@@ -1,6 +1,16 @@
 {
-  "current": "1.0.28",
+  "current": "1.0.29",
   "history": [
+    {
+      "version": "1.0.29",
+      "date": "2026-08-15",
+      "description": "Fixes a cross-device data-loss bug: opening the app on a second device the day after a workout was completed on the first would overwrite the completed session with the second device's freshly-blanked one.",
+      "highlights": [
+        "🛟 رفع باگ جدی: باز کردن اپ روی دستگاه دوم دیگه تمرین کامل‌شده‌ی دستگاه اول رو پاک نمی‌کنه",
+        "♻️ وضعیت «انجام شده» از تاریخچه‌ی بادوام خونده می‌شه — صفحه‌ی خانه و تقویم هفته دیگه با هم اختلاف ندارن",
+        "🔁 اگه قبلاً تمرینی این‌طوری گم شده بود، بعد از این آپدیت دوباره برمی‌گرده"
+      ]
+    },
     {
       "version": "1.0.28",
       "date": "2026-08-15",
