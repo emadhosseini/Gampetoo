@@ -11,6 +11,8 @@ import {
 } from "lucide-react";
 
 import { getSession } from "@/utils/sessionEngine";
+import { getCompletionFor } from "@/utils/workoutCompletionLog";
+import { getTodayLocalDate } from "@/utils/dateFormat";
 import {
   getCurrentProgramDay,
   getCurrentWorkoutType,
@@ -57,6 +59,11 @@ function HomePage() {
   const session = getSession();
 
   const day = getCurrentProgramDay();
+  // A finished day shows what was actually done, not what the program now
+  // says that cycle position is — editing the plan for a future day must
+  // not relabel a workout already completed.
+  const todaysRecord = getCompletionFor(getTodayLocalDate());
+  const todaysTitle = todaysRecord?.title ?? day.title;
 
   const workoutType = getCurrentWorkoutType();
 
@@ -134,7 +141,7 @@ const workout = workoutType
             !started
               ? t("home.noTodayPlan")
               : isWorkout
-                ? workout?.title || day.title
+                ? todaysTitle || workout?.title || day.title
                 : t("home.restDay")
           }
           description={

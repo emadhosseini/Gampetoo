@@ -6,28 +6,23 @@ import StartDateModal from "@/components/StartDateModal";
 import ModalOverlay from "@/components/ModalOverlay";
 import VariantAssignModal from "@/components/VariantAssignModal";
 import { getWorkout } from "@/store/workoutLibraryStore";
-import { getVariants } from "@/store/workoutVariantStore";
-import { getActiveProgram, updateProgram } from "@/utils/programEngine";
+import { DEFAULT_VARIANT_ID, getVariant, getVariants } from "@/store/workoutVariantStore";
+import { isCompletedOn } from "@/utils/workoutCompletionLog";
+import {
+  formatDisplayFull,
+  formatDisplayShort,
+  formatWeekdayName,
+  getTodayLocalDate,
+  isoToLocalDate,
+} from "@/utils/dateFormat";
+import { cycleDayDates, getActiveProgram, updateProgram } from "@/utils/programEngine";
 import { resetSession } from "@/utils/sessionEngine";
 import { generateId } from "@/utils/id";
 import type { WorkoutDay, WorkoutType } from "@/types/program";
 import { toFaDigits } from "@/utils/numberFormat";
-import { formatDisplayFull, getTodayLocalDate } from "@/utils/dateFormat";
 
 const today = getTodayLocalDate;
 
-const persianDays = [
-  "اول",
-  "دوم",
-  "سوم",
-  "چهارم",
-  "پنجم",
-  "ششم",
-  "هفتم",
-  "هشتم",
-  "نهم",
-  "دهم",
-];
 
 function ProgramBuilderPage() {
   const navigate = useNavigate();
@@ -158,72 +153,143 @@ function ProgramBuilderPage() {
     applySave();
   }
 
+  // Real dates for each cycle position, so the list reads as a calendar
+  // rather than an abstract "روز اول/دوم/سوم" the user has to translate in
+  // their head — translating it wrong is exactly how a plan meant for a
+  // future day landed on one already finished.
+  const dayDates = cycleDayDates(days.length);
+  const todayIso = getTodayLocalDate();
+
+  // Rendered starting from today and running forward, not from the cycle's
+  // own "day 1". Nobody sets up or edits a program in the past: the days
+  // that matter are today (if it isn't already done) and the ones after
+  // it, so showing the cycle from an arbitrary position that may sit days
+  // behind just adds a step of "which of these is today?".
+  //
+  // Display order only — `days` itself still defines the cycle, and every
+  // handler below gets the real index into it, so reordering what's on
+  // screen can't reorder the program.
+  const todayIndex = dayDates.indexOf(todayIso);
+  const displayOrder =
+    todayIndex < 0
+      ? days.map((_, index) => index)
+      : days.map((_, offset) => (todayIndex + offset) % days.length);
+
   return (
     <div className="space-y-6 px-5 pb-5 pt-10">
       <div className="mb-6 mt-4 text-center">
         <h1 className="text-3xl font-bold">
-          {isFirstTime ? "برنامه تمرینی روزانه رو بساز" : "تغییر برنامه تمرینی"}
+          {isFirstTime ? "برنامه تمرینی روزانه رو بساز" : "تقویم تمرین"}
         </h1>
       </div>
 
-      {days.map((day, index) => (
-        <div
-          key={day.id}
-          className="glass-panel glass-static rounded-2xl p-4"
-        >
-          <div className="flex items-center justify-between">
-            <div className="text-lg font-bold text-white">
-              روز {persianDays[index] ?? toFaDigits(index + 1)}
+      {/* Two to a row and square-ish rather than one full-width block
+          each: a cycle is a handful of days, and seeing them side by side
+          reads as a calendar you can take in at a glance instead of a
+          scrolling form. */}
+      <div className="grid grid-cols-2 gap-3">
+        {displayOrder.map((index) => {
+          const day = days[index];
+          const iso = dayDates[index];
+          const isToday = iso === todayIso;
+          // A finished day is history. Editing it here used to rewrite what
+          // had already been done, so it's shown but not editable.
+          const locked = isToday && isCompletedOn(iso);
+          // The plan actually assigned to this day, named — so the card
+          // says "تمام بدن / پشت" rather than making the user open it to
+          // find out which plan is on it.
+          const assigned = day.assignedVariantIds ?? [];
+          const planNames = assigned
+            .filter((id) => id !== DEFAULT_VARIANT_ID)
+            .map((id) => getVariant(id)?.name)
+            .filter((name): name is string => Boolean(name));
+
+          return (
+            <div
+              key={day.id}
+              className={`glass-panel glass-static flex h-full flex-col gap-2 rounded-2xl p-3 ${
+                locked ? "opacity-60" : ""
+              } ${isToday ? "glass-chip-selected" : ""}`}
+            >
+              {/* Date and workout share the top line — the title used to
+                  sit in the middle of a square card, which made every card
+                  taller than the little it actually has to say. */}
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-sm font-bold text-white">
+                    {iso
+                      ? formatWeekdayName(isoToLocalDate(iso))
+                      : `روز ${toFaDigits(index + 1)}`}
+                  </div>
+
+                  <div className="truncate text-[10px] text-white/50">
+                    {iso && formatDisplayShort(isoToLocalDate(iso))}
+                    {isToday && " · امروز"}
+                    {locked && " 🔒"}
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => !locked && setPickerDayIndex(index)}
+                  disabled={locked}
+                  className="min-w-0 max-w-[55%] text-left disabled:opacity-100"
+                >
+                  <span className="line-clamp-2 text-xs font-bold text-white">
+                    {day.workoutId ? day.title : "استراحت"}
+                  </span>
+                </button>
+              </div>
+
+              {/* mt-auto pins this row to the bottom, so cards of
+                  differing content still line their controls up. */}
+              <div className="mt-auto flex items-center justify-between gap-2">
+                {/* Names the plan that's actually on this day rather than a
+                    generic label, so the card answers "which one?" without
+                    being opened. Only offered once the workout has a plan
+                    beyond پیش‌فرض to rotate with. */}
+                <div className="min-w-0">
+                  {!locked && day.workoutId && getVariants(day.workoutId).length > 0 && (
+                    <button
+                      onClick={() => setVariantDayIndex(index)}
+                      className="glass-tap glass-static block max-w-full truncate rounded-lg px-2 py-1 text-[10px] font-medium text-white/70"
+                    >
+                      {planNames.length > 0 ? planNames.join(" · ") : "انتخاب پلن"}
+                    </button>
+                  )}
+                </div>
+
+                <button
+                  onClick={() => removeDay(index)}
+                  disabled={days.length <= 1 || locked}
+                  className="shrink-0 px-1 text-[10px] font-medium text-red-400 disabled:opacity-30"
+                >
+                  حذف
+                </button>
+              </div>
             </div>
+          );
+        })}
+      </div>
 
-            <button
-              onClick={() => removeDay(index)}
-              disabled={days.length <= 1}
-              className="text-sm text-white disabled:opacity-30"
-            >
-              حذف
-            </button>
-          </div>
+      {/* Two halves of one row — same shape and weight, since they're
+          peers: one extends the cycle, the other says where it begins. */}
+      <div className="grid grid-cols-2 gap-3">
+        <button
+          onClick={addDay}
+          className="ghost-action rounded-2xl py-4 text-center text-sm font-medium text-white"
+        >
+          + افزودن روز تمرینی
+        </button>
 
-          <button
-            onClick={() => setPickerDayIndex(index)}
-            className="selector-pill mt-3 w-full rounded-xl p-3 text-right font-bold text-white"
-          >
-            {day.workoutId ? day.title : "استراحت"}
-          </button>
-
-          {/* Only worth showing once this workout actually has a saved
-              plan beyond پیش‌فرض to rotate with — an empty state here would
-              just be a dead end pointing at WorkoutDetailPage's own "+"
-              instead of doing anything useful from this page. */}
-          {day.workoutId && getVariants(day.workoutId).length > 0 && (
-            <button
-              onClick={() => setVariantDayIndex(index)}
-              className="glass-tap glass-static mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-medium text-white/70"
-            >
-              چند حالت برنامه
-              {(day.assignedVariantIds?.length ?? 0) > 1 &&
-                ` (${toFaDigits(day.assignedVariantIds!.length)} حالت)`}
-            </button>
-          )}
-        </div>
-      ))}
-
-      <button
-        onClick={addDay}
-        className="ghost-action w-full rounded-2xl py-4 text-center font-medium text-white"
-      >
-        + افزودن روز تمرینی
-      </button>
-
-      <button
-        onClick={() => setStartDateModalOpen(true)}
-        className="selector-pill w-full rounded-2xl py-4 text-center font-bold text-white"
-      >
-        {startDate
-          ? `شروع از ${formatDisplayFull(startDate)}`
-          : "روز شروع برنامه"}
-      </button>
+        <button
+          onClick={() => setStartDateModalOpen(true)}
+          className="ghost-action truncate rounded-2xl py-4 text-center text-sm font-medium text-white"
+        >
+          {startDate
+            ? `شروع از ${formatDisplayShort(isoToLocalDate(startDate))}`
+            : "روز شروع برنامه"}
+        </button>
+      </div>
 
       <button
         onClick={handleSave}

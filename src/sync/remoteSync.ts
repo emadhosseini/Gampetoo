@@ -1,6 +1,11 @@
 import { supabase } from "@/lib/supabaseClient";
 import { getCurrentUsername } from "@/utils/userEngine";
-import { mergeDailyLog, mergeIdList, mergeMetricLog } from "./mergeStrategies";
+import {
+  mergeCompletionLog,
+  mergeDailyLog,
+  mergeIdList,
+  mergeMetricLog,
+} from "./mergeStrategies";
 
 // Every localStorage base key that should follow the account across devices.
 // Deliberately excludes device-local state: emad-current-username (which
@@ -391,8 +396,9 @@ function mergeCollection(
     // keeps a completion or a deletion recorded on one device from being
     // dropped by the other.
     case "emad-daily-log-deleted":
-    case "emad-workout-completion-log":
       return mergeIdList(local, remote);
+    case "emad-workout-completion-log":
+      return mergeCompletionLog(local, remote);
     default:
       return undefined;
   }

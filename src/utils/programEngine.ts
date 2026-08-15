@@ -194,6 +194,35 @@ export function resolvableVariantIds(
   );
 }
 
+/**
+ * The next real date each position in the cycle lands on, counting forward
+ * from today — so a builder can say "دوشنبه ۱۷ آگوست" instead of "روز ۳".
+ *
+ * "روز سوم" is an abstraction the user has to translate into a date in
+ * their head, and translating it wrong is exactly how a plan meant for a
+ * future day got assigned to one already finished. Position 0 of the
+ * returned array is today's cycle day, so the list reads as a calendar
+ * starting now.
+ *
+ * `cycleLength` is passed in rather than read from the stored program: the
+ * builder edits an unsaved copy whose length changes as days are added or
+ * removed, and the dates have to follow that copy, not what's on disk.
+ */
+export function cycleDayDates(cycleLength: number, from = new Date()): string[] {
+  if (cycleLength <= 0) return [];
+
+  const todayIndex = getCycleDayIndex(from);
+  const fromIso = toLocalDateString(from);
+  const dates: string[] = new Array<string>(cycleLength);
+
+  for (let offset = 0; offset < cycleLength; offset++) {
+    // offset days from today lands on cycle position (todayIndex + offset).
+    dates[(todayIndex + offset) % cycleLength] = addLocalDays(fromIso, offset);
+  }
+
+  return dates;
+}
+
 export function resetPrograms() {
   localStorage.removeItem(storageKey());
 }

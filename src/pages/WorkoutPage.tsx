@@ -47,6 +47,8 @@ import { setTodayWorkoutCalories } from "@/utils/workoutCalorieEngine";
 import { logActivityCalories } from "@/utils/activityLogEngine";
 import { getCurrentUserGender, getCurrentUsername } from "@/utils/userEngine";
 import { flushPendingSync } from "@/sync/remoteSync";
+import { getCompletionFor } from "@/utils/workoutCompletionLog";
+import { getTodayLocalDate } from "@/utils/dateFormat";
 
 // Completing used to navigate home right after this, which is why it was
 // needed in the first place: a full page navigation tears down the JS
@@ -125,7 +127,7 @@ function WorkoutPage() {
       logActivityCalories(calories);
     }
 
-    completeWalk();
+    completeWalk({ title: "روز استراحت" });
     void flushAfterCompleting();
     // getSession() re-reads localStorage on every render but nothing
     // schedules a render on its own — this is what actually surfaces the
@@ -167,14 +169,30 @@ function WorkoutPage() {
     ? session.selectedVariantId
     : (assignedVariantIds[0] ?? null);
 
-const workout = workoutType
-  ? getWorkoutWithVariant(workoutType, resolvedVariantId)
+  // What today was actually finished as, if it was. A completed day is
+  // history: the program it came from is a mutable repeating cycle, so
+  // re-deriving the day from it meant assigning a new plan to the same
+  // cycle position rewrote a workout that had already been done — پشت
+  // started showing as پا, with a 0-exercise summary because the checked
+  // exercises belonged to the plan actually performed. The record wins.
+  const todaysRecord = session.completed ? getCompletionFor(getTodayLocalDate()) : null;
+
+  const effectiveWorkoutType = todaysRecord?.workoutId ?? workoutType;
+  const effectiveVariantId = todaysRecord
+    ? (todaysRecord.variantId ?? null)
+    : resolvedVariantId;
+
+const workout = effectiveWorkoutType
+  ? getWorkoutWithVariant(effectiveWorkoutType, effectiveVariantId)
   : undefined;
 
   // Only a real (non-default) pick gets a label — پیش‌فرض reads as noise
-  // next to a workout title that already says what it is.
-  const resolvedVariantName =
-    resolvedVariantId && resolvedVariantId !== DEFAULT_VARIANT_ID
+  // next to a workout title that already says what it is. A recorded day
+  // uses the name saved with it, so renaming the plan later can't relabel
+  // a workout that is already in the past.
+  const resolvedVariantName = todaysRecord
+    ? todaysRecord.variantName
+    : resolvedVariantId && resolvedVariantId !== DEFAULT_VARIANT_ID
       ? getVariant(resolvedVariantId)?.name
       : undefined;
 
@@ -209,7 +227,7 @@ const workout = workoutType
   // A workout day with 2+ assigned plans and nothing picked yet blocks the
   // exercise list until one is chosen — asked once (see setSelectedVariantId,
   // which sticks for the rest of today).
-  if (isWorkout && needsVariantChoice && resolvedVariantId === null) {
+  if (isWorkout && needsVariantChoice && resolvedVariantId === null && !session.completed) {
     return (
       <div className="space-y-4 px-5 pb-5 pt-4 text-center">
         <WorkoutHeader
@@ -548,7 +566,12 @@ const workout = workoutType
           // sets rather than adds, so confirming twice in a day can't double
           // it (see workoutCalorieEngine).
           setTodayWorkoutCalories(addCaloriesToActivity ? checkedCalories : 0);
-          completeWorkout();
+          completeWorkout({
+            workoutId: workoutType ?? null,
+            variantId: resolvedVariantId,
+            title: workout.title,
+            variantName: resolvedVariantName,
+          });
           void flushAfterCompleting();
           // Same reason as finishWalk: nothing else schedules a re-render,
           // and this is what actually shows the "انجام دادی" summary in

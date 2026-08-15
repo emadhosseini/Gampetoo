@@ -133,7 +133,36 @@ export function mergeMetricLog(
   );
 }
 
-/** Union of two id lists — used for the deleted-entry and completion logs. */
+/**
+ * Union of completion entries by date. Where both sides know a date, the
+ * richer one wins: a device still on the old date-only shape must not
+ * erase the workout/plan another device recorded for that same day.
+ */
+export function mergeCompletionLog(
+  localRaw: string | undefined,
+  remoteRaw: string | undefined,
+): string {
+  const norm = (raw: string | undefined) =>
+    parse<unknown[]>(raw, []).map((item) =>
+      typeof item === "string" ? { date: item } : (item as { date?: string }),
+    );
+
+  const byDate = new Map<string, Record<string, unknown>>();
+
+  for (const entry of [...norm(remoteRaw), ...norm(localRaw)]) {
+    if (typeof entry?.date !== "string") continue;
+
+    const existing = byDate.get(entry.date);
+    const merged = { ...existing, ...entry };
+
+    // Never let a bare {date} overwrite details already recorded.
+    byDate.set(entry.date, Object.keys(merged).length >= Object.keys(existing ?? {}).length ? merged : existing!);
+  }
+
+  return JSON.stringify([...byDate.values()]);
+}
+
+/** Union of two id lists — used for the deleted-entry log. */
 export function mergeIdList(
   localRaw: string | undefined,
   remoteRaw: string | undefined,
