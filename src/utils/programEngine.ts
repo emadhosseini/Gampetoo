@@ -9,6 +9,7 @@ import { defaultProgram } from "../data/program/defaultProgram";
 import { scopedKey } from "./userEngine";
 import { generateId } from "./id";
 import { getTodayLocalDate, isoToLocalDate, toLocalDateString } from "./dateFormat";
+import { withoutSyncTracking } from "@/sync/remoteSync";
 
 const STORAGE_KEY = "emad-programs";
 const SESSION_STORAGE_KEY = "emad-session";
@@ -274,6 +275,15 @@ function pureDateDayIndex(program: Program, iso: string): number {
 // "not completed" (there's no session to say otherwise for a day nobody
 // saw) — so the walk naturally stops at the first unconfirmed workout day
 // in the gap, same as if it had happened one day at a time.
+// The cycle anchor is re-derived identically by every device from the same
+// program + session, so persisting it is a device talking to itself, not
+// the user editing anything. Announcing it as an edit made merely opening
+// the app on a second device out-rank real changes made on the first (see
+// remoteSync's withoutSyncTracking).
+function persistDerived(program: Program) {
+  withoutSyncTracking(() => updateProgram(program));
+}
+
 function resolveCycleAnchor(program: Program): { date: string; dayIndex: number } {
   const today = getTodayLocalDate();
 
@@ -286,7 +296,7 @@ function resolveCycleAnchor(program: Program): { date: string; dayIndex: number 
   if (!existing) {
     const bootstrapped = { date: today, dayIndex: pureDateDayIndex(program, today) };
 
-    updateProgram({ ...program, cycleAnchor: bootstrapped });
+    persistDerived({ ...program, cycleAnchor: bootstrapped });
 
     return bootstrapped;
   }
@@ -316,7 +326,7 @@ function resolveCycleAnchor(program: Program): { date: string; dayIndex: number 
 
   const resolved = { date: today, dayIndex: cursorIndex };
 
-  updateProgram({ ...program, cycleAnchor: resolved });
+  persistDerived({ ...program, cycleAnchor: resolved });
 
   return resolved;
 }

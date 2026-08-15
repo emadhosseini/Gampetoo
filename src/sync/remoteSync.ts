@@ -308,6 +308,38 @@ function snapshotsDiffer(
  * is one neither device has touched since times existed; keep whatever value
  * is there rather than treating absence as intent.
  */
+/**
+ * Keys whose value is only ever a claim about *today*. emad-session is the
+ * one: it carries its own lastDate and is rebuilt from scratch each day.
+ *
+ * A stale one is not an older edit of the same fact — it is not a statement
+ * about today at all, so it must never win, no matter what the timestamps
+ * or the unconfirmed-changes bookkeeping say. That bookkeeping is exactly
+ * what destroyed real data: a second device that had not been opened for a
+ * day still held yesterday's session, had never pushed it, and so counted
+ * as holding an "unconfirmed local change" — which wins outright. Opening
+ * the app there was enough to overwrite a workout the first device had
+ * already completed.
+ */
+const DAY_SCOPED_KEYS = new Set(["emad-session"]);
+
+function isAboutToday(raw: string | undefined): boolean {
+  if (raw === undefined) return false;
+
+  try {
+    const { lastDate } = JSON.parse(raw) as { lastDate?: string };
+    const now = new Date();
+    const pad = (n: number) => String(n).padStart(2, "0");
+
+    return (
+      lastDate ===
+      `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
+    );
+  } catch {
+    return false;
+  }
+}
+
 function mergeByKey(
   local: Record<string, string>,
   localTimes: Record<string, string>,
@@ -325,7 +357,16 @@ function mergeByKey(
     let value: string | undefined;
     let time: string | undefined;
 
-    if (unconfirmed.has(base)) {
+    if (DAY_SCOPED_KEYS.has(base) && isAboutToday(remote[base]) !== isAboutToday(local[base])) {
+      // Exactly one side is about today — it wins, and the other is simply
+      // yesterday's leftovers. Checked before everything below, because
+      // both the unconfirmed rule and the timestamps would happily let
+      // those leftovers through.
+      const preferRemote = isAboutToday(remote[base]);
+
+      value = preferRemote ? remote[base] : local[base];
+      time = preferRemote ? rt : lt;
+    } else if (unconfirmed.has(base)) {
       // Holding a change the server hasn't taken. Nothing coming back from
       // it can be newer than something it has never seen, so this wins
       // outright — no timestamp is consulted, because every source of
@@ -725,6 +766,32 @@ function retryPendingIfAny() {
 }
 
 /** Called once at app boot. Safe to call even when sync isn't configured. */
+/**
+ * Runs `write` without the sync engine treating what it writes as a user
+ * edit — no timestamp bump, no dirty key, nothing queued to push.
+ *
+ * For writes a device makes *to itself* rather than on the user's behalf:
+ * the daily session reset at midnight, the lazily-persisted cycle anchor.
+ * Those are re-derived independently by every device, so letting them count
+ * as edits made the last device to merely OPEN the app authoritative — and
+ * because an unconfirmed local change wins the merge outright (see
+ * mergeByKey), a second device opening the app after a rollover pushed its
+ * freshly-blanked session over the top of a workout the primary device had
+ * already completed, destroying it. A derived write must never out-rank a
+ * real one; the way to guarantee that is to not announce it at all.
+ */
+export function withoutSyncTracking<T>(write: () => T): T {
+  const previous = suppressing;
+
+  suppressing = true;
+
+  try {
+    return write();
+  } finally {
+    suppressing = previous;
+  }
+}
+
 export function initSync() {
   if (initialized) return;
   initialized = true;

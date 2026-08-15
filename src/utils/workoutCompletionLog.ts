@@ -45,6 +45,17 @@ export function markCompleted(date: string = getTodayLocalDate()) {
   localStorage.setItem(storageKey(), JSON.stringify([...dates, date]));
 }
 
+// The "فراموش کردم دیروز رو ثبت کنم" flow rewinds today back to
+// not-done — since `completed` is now read from this log, un-marking here
+// is what actually makes that rewind stick.
+export function unmarkCompleted(date: string = getTodayLocalDate()) {
+  const dates = readDates();
+
+  if (!dates.includes(date)) return;
+
+  localStorage.setItem(storageKey(), JSON.stringify(dates.filter((d) => d !== date)));
+}
+
 export function resetWorkoutCompletionLog() {
   localStorage.removeItem(storageKey());
 }
