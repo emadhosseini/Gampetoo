@@ -20,7 +20,7 @@ import {
 } from "../../utils/userEngine";
 import { resetFreeMeal } from "../../utils/freeMealEngine";
 import { resetWeightLog } from "../../utils/weightEngine";
-import { resetDailyLog } from "../../utils/dailyLogEngine";
+import { resetDailyLog, resetDeletedEntryIds } from "../../utils/dailyLogEngine";
 import { resetCalorieTrackingMode } from "../../utils/calorieModeEngine";
 import { resetCalorieProfile } from "../../utils/calorieEngine";
 import { resetWaterLog } from "../../utils/waterEngine";
@@ -55,6 +55,7 @@ function wipeLocalData(username: string | null) {
   resetFreeMeal();
   resetWeightLog();
   resetDailyLog();
+  resetDeletedEntryIds();
   resetCalorieTrackingMode();
   resetCalorieProfile();
   resetWaterLog();
