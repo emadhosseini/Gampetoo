@@ -17,9 +17,10 @@ import {
   getCurrentProgramDay,
   getCurrentWorkoutType,
   hasProgramStarted,
+  resolvableVariantIds,
 } from "@/utils/programEngine";
 
-import { getWorkout } from "@/store/workoutLibraryStore";
+import { getDefaultPlanName, getWorkout } from "@/store/workoutLibraryStore";
 import {
   DEFAULT_VARIANT_ID,
   getVariant,
@@ -154,7 +155,13 @@ function WorkoutPage() {
   // selectedVariantId. Fewer than 2 assigned plans never need a choice:
   // empty/undefined behaves exactly like before this existed (the base
   // workout), and exactly one entry is used straight away with no prompt.
-  const assignedVariantIds = day.assignedVariantIds ?? [];
+  // Filtered, not raw: a plan deleted before unassignVariantEverywhere
+  // existed can still be listed on a day, and an unresolvable id used to
+  // render as one more identically-labelled "برنامه پیش‌فرض" button.
+  const assignedVariantIds = resolvableVariantIds(
+    day.assignedVariantIds,
+    (id) => getVariant(id) !== undefined,
+  );
   const needsVariantChoice = assignedVariantIds.length > 1;
   const resolvedVariantId = needsVariantChoice
     ? session.selectedVariantId
@@ -215,9 +222,12 @@ const workout = workoutType
 
         <div className="space-y-2">
           {assignedVariantIds.map((variantId) => {
+            // The default plan can be renamed (see getDefaultPlanName), so
+            // its own name is read rather than hardcoded — a day whose
+            // default is called "سینه" shouldn't offer "برنامه پیش‌فرض".
             const label =
               variantId === DEFAULT_VARIANT_ID
-                ? "برنامه پیش‌فرض"
+                ? (workoutType ? getDefaultPlanName(workoutType) : "برنامه پیش‌فرض")
                 : (getVariant(variantId)?.name ?? "برنامه پیش‌فرض");
 
             return (

@@ -157,6 +157,42 @@ export function deleteProgram(programId: string) {
   savePrograms(state);
 }
 
+// Drops a variant id from every day of every program that had it assigned.
+// Deleting a plan used to leave its id behind on the days it was assigned
+// to: getVariant() then returned undefined for it, and the day's own
+// chooser fell back to labelling it "برنامه پیش‌فرض" — so deleting two
+// plans made a day offer three identical-looking "برنامه پیش‌فرض" buttons,
+// two of which pointed at plans that no longer existed.
+export function unassignVariantEverywhere(variantId: string) {
+  const state = getPrograms();
+  let touched = false;
+
+  for (const program of state.programs) {
+    for (const day of program.workout.days) {
+      if (!day.assignedVariantIds?.includes(variantId)) continue;
+
+      day.assignedVariantIds = day.assignedVariantIds.filter((id) => id !== variantId);
+      touched = true;
+    }
+  }
+
+  if (touched) savePrograms(state);
+}
+
+// Every assigned id that still resolves to something real — the default
+// sentinel, or a variant that actually exists. Defensive rather than
+// corrective: it keeps days written before unassignVariantEverywhere
+// existed (or by an older build on another device) from showing phantom
+// entries, without needing a migration pass over stored programs.
+export function resolvableVariantIds(
+  assignedVariantIds: string[] | undefined,
+  variantExists: (id: string) => boolean,
+): string[] {
+  return [...new Set(assignedVariantIds ?? [])].filter(
+    (id) => id === "default" || variantExists(id),
+  );
+}
+
 export function resetPrograms() {
   localStorage.removeItem(storageKey());
 }

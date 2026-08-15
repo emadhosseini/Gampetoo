@@ -1,5 +1,6 @@
 import { generateId } from "../utils/id";
 import { scopedKey } from "../utils/userEngine";
+import { unassignVariantEverywhere } from "../utils/programEngine";
 import { getWorkout as getLibraryWorkout } from "./workoutLibraryStore";
 
 import type { ExerciseGroup, WorkoutDefinition } from "../data/workoutLibrary";
@@ -92,6 +93,9 @@ export function renameVariant(variantId: string, name: string) {
 
 export function deleteVariant(variantId: string) {
   writeAll(readAll().filter((variant) => variant.id !== variantId));
+  // A deleted plan must stop being assigned to program days too, or the
+  // day keeps offering it as a choice that resolves to nothing.
+  unassignVariantEverywhere(variantId);
 }
 
 export function resetWorkoutVariants() {

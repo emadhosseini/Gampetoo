@@ -3,6 +3,7 @@ import { Check } from "lucide-react";
 
 import ModalOverlay from "@/components/ModalOverlay";
 import { DEFAULT_VARIANT_ID, getVariants } from "@/store/workoutVariantStore";
+import { getDefaultPlanName } from "@/store/workoutLibraryStore";
 
 export interface VariantAssignModalProps {
   open: boolean;
@@ -85,7 +86,7 @@ export default function VariantAssignModal({
 
         <div className="space-y-2">
           <VariantRow
-            label="برنامه پیش‌فرض"
+            label={workoutId ? getDefaultPlanName(workoutId) : "برنامه پیش‌فرض"}
             checked={selected.includes(DEFAULT_VARIANT_ID)}
             onClick={() => toggle(DEFAULT_VARIANT_ID)}
           />
