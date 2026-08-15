@@ -1,6 +1,16 @@
 {
-  "current": "1.0.29",
+  "current": "1.0.30",
   "history": [
+    {
+      "version": "1.0.30",
+      "date": "2026-08-15",
+      "description": "Merges the daily food log, water log and other date-keyed logs entry by entry instead of replacing the whole blob, so two devices logging on the same day no longer overwrite each other.",
+      "highlights": [
+        "🍽️ رفع باگ: غذا و آبی که روی یک دستگاه ثبت می‌کنی دیگه با دستگاه دیگه پاک نمی‌شه",
+        "🗑️ حذف غذا هم درست سینک می‌شه و آیتم حذف‌شده دوباره برنمی‌گرده",
+        "📅 روزهای گذشته دیگه قربانی نوشتن دستگاه دوم نمی‌شن"
+      ]
+    },
     {
       "version": "1.0.29",
       "date": "2026-08-15",

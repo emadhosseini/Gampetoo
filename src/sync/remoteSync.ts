@@ -1,5 +1,6 @@
 import { supabase } from "@/lib/supabaseClient";
 import { getCurrentUsername } from "@/utils/userEngine";
+import { mergeDailyLog, mergeIdList, mergeMetricLog } from "./mergeStrategies";
 
 // Every localStorage base key that should follow the account across devices.
 // Deliberately excludes device-local state: emad-current-username (which
@@ -31,6 +32,7 @@ const SYNCED_BASE_KEYS = [
   "emad-weight-log",
   "emad-weight-target",
   "emad-daily-log",
+  "emad-daily-log-deleted",
   "emad-daily-log-history",
   "emad-daily-calorie-target",
   "emad-calorie-mode",
@@ -340,6 +342,62 @@ function isAboutToday(raw: string | undefined): boolean {
   }
 }
 
+/**
+ * Keys that are collections, not single values — merged element by element
+ * instead of one side replacing the other. Last-writer-wins on a whole log
+ * is silent data loss: two devices each logging a meal on the same day
+ * meant whichever pushed second erased the other's, which is exactly how a
+ * day's calories went backwards.
+ *
+ * Runs before every other rule below, including the unconfirmed-changes
+ * one — those all pick a winner, and the entire point here is that there
+ * doesn't have to be one.
+ */
+function safeIdList(raw: string | undefined): string[] {
+  if (raw === undefined) return [];
+
+  try {
+    const parsed: unknown = JSON.parse(raw);
+
+    return Array.isArray(parsed) ? (parsed as string[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function mergeCollection(
+  base: string,
+  local: string | undefined,
+  remote: string | undefined,
+  lt: string | undefined,
+  rt: string | undefined,
+  deletedIds: Set<string>,
+): string | undefined {
+  if (local === undefined) return remote;
+  if (remote === undefined) return local;
+
+  switch (base) {
+    case "emad-daily-log":
+      return mergeDailyLog(local, remote, deletedIds);
+    // Plain date -> number logs. Water is the one that actually bit (8
+    // glasses replaced by 2), but every one of these has the same shape and
+    // the same exposure.
+    case "emad-water-log":
+    case "emad-activity-log":
+    case "emad-workout-calorie-log":
+    case "emad-daily-log-history":
+      return mergeMetricLog(local, remote, { localTime: lt, remoteTime: rt });
+    // Append-only id/date lists — a union is always right, and it's what
+    // keeps a completion or a deletion recorded on one device from being
+    // dropped by the other.
+    case "emad-daily-log-deleted":
+    case "emad-workout-completion-log":
+      return mergeIdList(local, remote);
+    default:
+      return undefined;
+  }
+}
+
 function mergeByKey(
   local: Record<string, string>,
   localTimes: Record<string, string>,
@@ -350,6 +408,14 @@ function mergeByKey(
   const values: Record<string, string> = {};
   const times: Record<string, string> = {};
 
+  // Built from both sides first: a deletion recorded on either device must
+  // suppress the entry everywhere, including in the very same merge pass
+  // that is unioning the log back together.
+  const deletedIds = new Set<string>([
+    ...safeIdList(local["emad-daily-log-deleted"]),
+    ...safeIdList(remote["emad-daily-log-deleted"]),
+  ]);
+
   for (const base of SYNCED_BASE_KEYS) {
     const lt = localTimes[base];
     const rt = remoteTimes[base];
@@ -357,7 +423,14 @@ function mergeByKey(
     let value: string | undefined;
     let time: string | undefined;
 
-    if (DAY_SCOPED_KEYS.has(base) && isAboutToday(remote[base]) !== isAboutToday(local[base])) {
+    const combined = mergeCollection(base, local[base], remote[base], lt, rt, deletedIds);
+
+    if (combined !== undefined) {
+      value = combined;
+      // The later of the two, so a device that has merged both sides is not
+      // mistaken for one holding stale data on the next comparison.
+      time = lt !== undefined && rt !== undefined ? (lt > rt ? lt : rt) : (lt ?? rt);
+    } else if (DAY_SCOPED_KEYS.has(base) && isAboutToday(remote[base]) !== isAboutToday(local[base])) {
       // Exactly one side is about today — it wins, and the other is simply
       // yesterday's leftovers. Checked before everything below, because
       // both the unconfirmed rule and the timestamps would happily let

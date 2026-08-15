@@ -6,6 +6,11 @@ import { getTodayLocalDate } from "./dateFormat";
 
 const STORAGE_KEY = "emad-daily-log";
 const TARGET_KEY = "emad-daily-calorie-target";
+// Ids of food entries the user actually deleted. Needed because the daily
+// log is merged across devices by unioning entries (see
+// sync/mergeStrategies): without a record of a deletion, the other device
+// still holding the entry would hand it straight back on the next pull.
+const DELETED_KEY = "emad-daily-log-deleted";
 
 // Every day's calorie total, kept indefinitely (see LogsByDate below) so a
 // chart always has a real series to draw from rather than only today's
@@ -207,6 +212,36 @@ export function updateLoggedEntryQuantity(
   writeDay(logs, date, day);
 }
 
+function deletedStorageKey() {
+  return scopedKey(DELETED_KEY);
+}
+
+export function getDeletedEntryIds(): string[] {
+  const saved = localStorage.getItem(deletedStorageKey());
+
+  if (!saved) return [];
+
+  try {
+    const parsed: unknown = JSON.parse(saved);
+
+    return Array.isArray(parsed) ? (parsed as string[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function rememberDeletion(entryId: string) {
+  const ids = getDeletedEntryIds();
+
+  if (ids.includes(entryId)) return;
+
+  localStorage.setItem(deletedStorageKey(), JSON.stringify([...ids, entryId]));
+}
+
+export function resetDeletedEntryIds() {
+  localStorage.removeItem(deletedStorageKey());
+}
+
 export function removeLoggedEntry(
   mealId: string,
   entryId: string,
@@ -217,6 +252,8 @@ export function removeLoggedEntry(
   const entries = day.meals[mealId] ?? [];
 
   day.meals[mealId] = entries.filter((entry) => entry.id !== entryId);
+
+  rememberDeletion(entryId);
 
   writeDay(logs, date, day);
 }
