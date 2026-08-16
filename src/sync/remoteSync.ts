@@ -296,6 +296,44 @@ function writeLocalSnapshot(
   }
 }
 
+/**
+ * Re-checks, immediately before a merged snapshot is written over local
+ * storage, whether the user changed anything while the pull was in flight —
+ * and if so, keeps what they wrote.
+ *
+ * A pull is several awaits long (a push, then a read of the row). Anything
+ * the user does in that window was not part of `local` when the merge was
+ * computed, so writing the result back would erase it, along with the time
+ * that would have identified it as newer on the next pass. Tapping a glass
+ * of water just as the app comes back to the foreground — which is exactly
+ * when a pull runs — is the everyday version of this.
+ */
+function keepConcurrentLocalEdits(
+  username: string,
+  before: Record<string, string>,
+  merged: { values: Record<string, string>; times: Record<string, string> },
+): { values: Record<string, string>; times: Record<string, string> } {
+  const now = readLocalSnapshot(username);
+  const nowTimes = readKeyTimes(username);
+
+  const values = { ...merged.values };
+  const times = { ...merged.times };
+
+  for (const base of SYNCED_BASE_KEYS) {
+    if (now[base] === before[base]) continue;
+
+    if (now[base] === undefined) {
+      delete values[base];
+    } else {
+      values[base] = now[base];
+    }
+
+    if (nowTimes[base] !== undefined) times[base] = nowTimes[base];
+  }
+
+  return { values, times };
+}
+
 function snapshotsDiffer(
   a: Record<string, string>,
   b: Record<string, string>
@@ -552,7 +590,13 @@ async function pushToServer(username: string): Promise<void> {
 
     if (data) {
       const remote = readRemote(data.data as Record<string, unknown>, data.updated_at);
-      const merged = mergeByKey(local, localTimes, remote.values, remote.times, unconfirmedKeys(username));
+      // Same in-flight-edit guard the pull path uses — this branch is a
+      // round trip to the server too, and writes its result over local.
+      const merged = keepConcurrentLocalEdits(
+        username,
+        local,
+        mergeByKey(local, localTimes, remote.values, remote.times, unconfirmedKeys(username)),
+      );
 
       // Not just an upload: this device just learned about every key it
       // never had (including possibly this one's own history from before
@@ -656,12 +700,16 @@ async function pullFromServer(username: string): Promise<boolean> {
     data.updated_at
   );
 
-  const merged = mergeByKey(
+  const merged = keepConcurrentLocalEdits(
+    username,
     local,
-    localTimes,
-    remote.values,
-    remote.times,
-    unconfirmedKeys(username)
+    mergeByKey(
+      local,
+      localTimes,
+      remote.values,
+      remote.times,
+      unconfirmedKeys(username)
+    )
   );
 
   const localChanged = snapshotsDiffer(local, merged.values);

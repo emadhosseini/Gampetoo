@@ -305,10 +305,35 @@ export function getTodaysTotalProtein(): number {
 }
 
 // The chartable history behind the progress page's daily-calories detail
-// page — today's live total plus every previous day's archived total (see
-// writeDay above).
+// page.
+//
+// Derived from the meal log on every read, with the archived series used
+// only for dates the log itself no longer covers (days that predate the
+// per-date LogsByDate shape). The archive alone was the source of truth
+// here, and it drifted: it's written only by writeDay, so anything that
+// changes the log without going through this module leaves it stale —
+// which is exactly what a sync does. The log and its archive are merged by
+// separate rules (union of entries vs. most-recent-writer per date, see
+// sync/mergeStrategies), so a pull that unions in another device's meals
+// leaves the archive holding whichever single number won the recency test.
+// That's how a day showing 1525 calories on the dashboard could draw a
+// 147-calorie bar on the chart.
+//
+// Recomputing instead of repairing makes the two views incapable of
+// disagreeing, and needs no migration to fix an account already in that
+// state.
 export function getCalorieHistory(): DailyMetricEntry[] {
-  return calorieHistory.getHistory();
+  const totals = new Map(
+    calorieHistory.getHistory().map((entry) => [entry.date, entry.value]),
+  );
+
+  for (const [date, day] of Object.entries(readLogs())) {
+    totals.set(date, sumCalories(day.meals));
+  }
+
+  return Array.from(totals, ([date, value]) => ({ date, value })).sort(
+    (a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0),
+  );
 }
 
 // Used to decide whether switching calorie-tracking mode needs to warn the

@@ -9,6 +9,8 @@ const MEAL_SUGGESTIONS: Record<string, string[]> = {
   "wake-up": ["dates", "banana"],
 
   breakfast: [
+    "egg",
+    "oats",
     "egg-white-raw",
     "boiled-egg",
     "oatmeal",
@@ -19,9 +21,10 @@ const MEAL_SUGGESTIONS: Record<string, string[]> = {
     "naan-sangak",
   ],
 
-  "pre-workout": ["dates", "banana", "oatmeal", "rice-cakes"],
+  "pre-workout": ["dates", "banana", "oats", "oatmeal", "rice-cakes"],
 
   "post-workout": [
+    "chicken",
     "chicken-breast-boiled",
     "chicken-breast-grilled",
     "whey-protein",
@@ -32,6 +35,10 @@ const MEAL_SUGGESTIONS: Record<string, string[]> = {
   ],
 
   lunch: [
+    "chicken",
+    "beef",
+    "salad",
+    "vegetables",
     "chicken-breast-grilled",
     "chicken-fillet",
     "joojeh-kabab",
@@ -54,6 +61,9 @@ const MEAL_SUGGESTIONS: Record<string, string[]> = {
   ],
 
   dinner: [
+    "fish",
+    "vegetables",
+    "salad",
     "grilled-trout",
     "grilled-salmon",
     "tuna-canned",

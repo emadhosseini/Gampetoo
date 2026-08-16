@@ -2,14 +2,17 @@ import { ChevronDown } from "lucide-react";
 import { useState } from "react";
 
 import MealItem from "./MealItem";
-import type { MealSection } from "../../types/nutrition";
+import type { FoodItem, MealSection } from "../../types/nutrition";
 import { toFaDigits } from "@/utils/numberFormat";
 
 interface MealCardProps {
   meal: MealSection;
+  // Passed through to each food row — see MealItem. Optional so this card
+  // stays usable as a plain read-only view of a meal.
+  onSelectFood?: (meal: MealSection, food: FoodItem) => void;
 }
 
-export default function MealCard({ meal }: MealCardProps) {
+export default function MealCard({ meal, onSelectFood }: MealCardProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -43,7 +46,13 @@ export default function MealCard({ meal }: MealCardProps) {
         <div className="mt-4 space-y-4">
           <div className="space-y-2">
             {meal.foods.map((food) => (
-              <MealItem key={food.id} item={food} />
+              <MealItem
+                key={food.id}
+                item={food}
+                onSelect={
+                  onSelectFood ? (item) => onSelectFood(meal, item) : undefined
+                }
+              />
             ))}
           </div>
 

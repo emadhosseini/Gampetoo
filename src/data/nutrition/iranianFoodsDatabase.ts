@@ -221,6 +221,7 @@ export const iranianFoodsDatabase: FoodItem[] = [
     id: "white-rice",
     nameFa: "برنج سفید",
     nameEn: "White Rice (cooked)",
+    aliases: ["برنج پخته", "برنج"],
     category: "bread_grain",
     servingUnits: [
       { label: "پیمانه", grams: 150 },
@@ -1650,6 +1651,7 @@ export const iranianFoodsDatabase: FoodItem[] = [
     id: "boiled-potato",
     nameFa: "سیب زمینی آب‌پز",
     nameEn: "Boiled Potato",
+    aliases: ["سیب زمینی", "سیب‌زمینی"],
     category: "bread_grain",
     servingUnits: [
       { label: "عدد", grams: 150 },

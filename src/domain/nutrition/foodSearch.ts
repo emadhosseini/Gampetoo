@@ -1,4 +1,5 @@
 import type { FoodItem, ServingUnit } from "@/types/food";
+import { basicFoodsDatabase } from "@/data/nutrition/basicFoodsDatabase";
 import { iranianFoodsDatabase } from "@/data/nutrition/iranianFoodsDatabase";
 import { internationalFoodsDatabase } from "@/data/nutrition/internationalFoodsDatabase";
 import { gymFoodsDatabase } from "@/data/nutrition/gymFoodsDatabase";
@@ -63,10 +64,26 @@ export function macrosForServing(
 // of them cover. Exported so screens can show the full browsable list before
 // the user has typed a search query.
 export const localFoods: FoodItem[] = [
+  ...basicFoodsDatabase,
   ...iranianFoodsDatabase,
   ...internationalFoodsDatabase,
   ...gymFoodsDatabase,
 ];
+
+// Every Persian name a food answers to — its own plus any aliases (see
+// FoodItem.aliases). Searching by an alias has to work as well as searching
+// by the catalog's chosen name: "سیب زمینی" and "برنج پخته" are what people
+// (and the built-in meal plans) actually call these foods.
+export function foodNamesFa(food: FoodItem): string[] {
+  return [food.nameFa, ...(food.aliases ?? [])];
+}
+
+function matchesFood(food: FoodItem, qFa: string, qEn: string): boolean {
+  return (
+    foodNamesFa(food).some((name) => matchesWordPrefix(normalizeFa(name), qFa)) ||
+    matchesWordPrefix(food.nameEn.toLowerCase(), qEn)
+  );
+}
 
 // Kept out of localFoods deliberately — supplements/vitamins belong to their
 // own "مکمل و ویتامین‌ها" meal slot, not the regular per-meal food search
@@ -87,10 +104,8 @@ function searchLocal(query: string): FoodItem[] {
   // Learned foods (discovered via an external lookup elsewhere — see
   // learnedFoodsStore.ts) count as local from here on, so a manual search
   // benefits from anything the AI meal-parsing flow already found.
-  return [...localFoods, ...getLearnedFoods()].filter(
-    (food) =>
-      matchesWordPrefix(normalizeFa(food.nameFa), qFa) ||
-      matchesWordPrefix(food.nameEn.toLowerCase(), qEn),
+  return [...localFoods, ...getLearnedFoods()].filter((food) =>
+    matchesFood(food, qFa, qEn),
   );
 }
 
@@ -103,11 +118,7 @@ export function searchSupplements(query: string): FoodItem[] {
 
   if (!qFa) return [];
 
-  return supplementFoods.filter(
-    (food) =>
-      matchesWordPrefix(normalizeFa(food.nameFa), qFa) ||
-      matchesWordPrefix(food.nameEn.toLowerCase(), qEn),
-  );
+  return supplementFoods.filter((food) => matchesFood(food, qFa, qEn));
 }
 
 export interface FoodSearchResult {

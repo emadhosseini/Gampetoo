@@ -8,6 +8,16 @@ import { getTodayLocalDate } from "./dateFormat";
 export interface DailyMetricEntry {
   date: string;
   value: number;
+  // When this date's value was last written, ISO-8601. Optional because
+  // every entry written before it existed simply has none.
+  //
+  // It's what lets a sync merge two versions of the same day by which one
+  // is actually newer. Without it the merge could only compare the whole
+  // key's write time, and that comparison is a coin toss the moment the two
+  // sides agree on it — which is the state every device is left in right
+  // after a sync, and how a fifth glass of water logged after one came back
+  // as four on the next launch.
+  at?: string;
 }
 
 const today = getTodayLocalDate;
@@ -43,11 +53,12 @@ export function createDailyMetricLog(storageKey: string) {
   function setEntry(date: string, value: number) {
     const history = getHistory();
     const idx = history.findIndex((entry) => entry.date === date);
+    const entry = { date, value, at: new Date().toISOString() };
 
     if (idx >= 0) {
-      history[idx] = { date, value };
+      history[idx] = entry;
     } else {
-      history.push({ date, value });
+      history.push(entry);
     }
 
     saveHistory(history);

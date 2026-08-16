@@ -1,10 +1,13 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import MealCard from "../components/nutrition/MealCard";
 import FreeMealCard from "../components/nutrition/FreeMealCard";
+import LogPlanFoodModal from "../components/nutrition/LogPlanFoodModal";
 import SubstitutionsCard from "../components/nutrition/SubstitutionsCard";
 import WorkoutHeader from "../components/WorkoutHeader";
 import { mealPlans } from "../data/nutrition/mealPlans";
+import type { FoodItem, MealSection } from "../types/nutrition";
 
 import {
   getActiveProgram,
@@ -14,6 +17,24 @@ import {
 
 export default function NutritionPage() {
   const navigate = useNavigate();
+
+  // Which planned food is being logged as eaten, and a brief confirmation
+  // once it has been — tapping a food here writes straight to the daily
+  // log, which lives on a different screen entirely, so without this the
+  // tap would look like it did nothing at all.
+  const [picked, setPicked] = useState<{
+    meal: MealSection;
+    food: FoodItem;
+  } | null>(null);
+  const [justLogged, setJustLogged] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!justLogged) return;
+
+    const timer = setTimeout(() => setJustLogged(null), 2500);
+
+    return () => clearTimeout(timer);
+  }, [justLogged]);
 
   const started = hasProgramStarted();
 
@@ -69,9 +90,26 @@ export default function NutritionPage() {
         onEditWorkoutLabel="تغییر برنامه غذایی"
       />
 
+      {justLogged && (
+        <p className="rounded-xl bg-green-500/15 py-2 text-center text-sm font-semibold text-green-400">
+          «{justLogged}» به غذاهای خورده‌شده اضافه شد ✅
+        </p>
+      )}
+
       {enabledMeals.map((meal) => (
-        <MealCard key={meal.id} meal={meal} />
+        <MealCard
+          key={meal.id}
+          meal={meal}
+          onSelectFood={(meal, food) => setPicked({ meal, food })}
+        />
       ))}
+
+      <LogPlanFoodModal
+        meal={picked?.meal ?? null}
+        food={picked?.food ?? null}
+        onClose={() => setPicked(null)}
+        onLogged={setJustLogged}
+      />
 
       {/* Read from the static source, not plan.substitutions — that field
           is only ever a snapshot copied into the user's own program at
