@@ -5,9 +5,10 @@ import WorkoutPickerModal from "@/components/WorkoutPickerModal";
 import StartDateModal from "@/components/StartDateModal";
 import ModalOverlay from "@/components/ModalOverlay";
 import VariantAssignModal from "@/components/VariantAssignModal";
-import { getWorkout } from "@/store/workoutLibraryStore";
+import { getDefaultPlanName, getWorkout } from "@/store/workoutLibraryStore";
 import { DEFAULT_VARIANT_ID, getVariant, getVariants } from "@/store/workoutVariantStore";
-import { isCompletedOn } from "@/utils/workoutCompletionLog";
+import { getCompletionFor, isCompletedOn } from "@/utils/workoutCompletionLog";
+import { getSession } from "@/utils/sessionEngine";
 import {
   formatDisplayFull,
   formatDisplayShort,
@@ -169,6 +170,8 @@ function ProgramBuilderPage() {
   // Display order only — `days` itself still defines the cycle, and every
   // handler below gets the real index into it, so reordering what's on
   // screen can't reorder the program.
+  // Today's own pick, if the workout page asked and got an answer.
+  const todaysPick = getSession().selectedVariantId;
   const todayIndex = dayDates.indexOf(todayIso);
   const displayOrder =
     todayIndex < 0
@@ -199,10 +202,47 @@ function ProgramBuilderPage() {
           // says "تمام بدن / پشت" rather than making the user open it to
           // find out which plan is on it.
           const assigned = day.assignedVariantIds ?? [];
+          // The default plan is named too. It used to be filtered out
+          // entirely, so a day assigned only the default — even one
+          // renamed to something meaningful like "سینه" — fell through to
+          // the "انتخاب پلن" placeholder, as if nothing were assigned.
           const planNames = assigned
-            .filter((id) => id !== DEFAULT_VARIANT_ID)
-            .map((id) => getVariant(id)?.name)
+            .map((id) =>
+              id === DEFAULT_VARIANT_ID
+                ? day.workoutId
+                  ? getDefaultPlanName(day.workoutId)
+                  : undefined
+                : getVariant(id)?.name,
+            )
             .filter((name): name is string => Boolean(name));
+
+          // One plan is named outright; several are counted, since a card
+          // this size can't list them and the count is the useful part.
+          // Nothing assigned says so explicitly rather than reading as a
+          // vague invitation — the workout page will ask on the day.
+          let planLabel =
+            planNames.length === 0
+              ? "حالت برنامه انتخاب نشده"
+              : planNames.length === 1
+                ? planNames[0]
+                : "چند حالت انتخاب شده";
+
+          // Today shows the plan actually in play, not the day's abstract
+          // assignment: whatever was recorded if it's finished, otherwise
+          // whatever was picked on the workout page. Changing the plan
+          // there has to be visible here rather than leaving the calendar
+          // insisting on something else.
+          if (isToday && day.workoutId) {
+            const pickedId = getCompletionFor(iso)?.variantId ?? todaysPick;
+            const pickedName =
+              pickedId === DEFAULT_VARIANT_ID
+                ? getDefaultPlanName(day.workoutId)
+                : pickedId
+                  ? getVariant(pickedId)?.name
+                  : undefined;
+
+            if (pickedName) planLabel = pickedName;
+          }
 
           return (
             <div
@@ -253,7 +293,7 @@ function ProgramBuilderPage() {
                       onClick={() => setVariantDayIndex(index)}
                       className="glass-tap glass-static block max-w-full truncate rounded-lg px-2 py-1 text-[10px] font-medium text-white/70"
                     >
-                      {planNames.length > 0 ? planNames.join(" · ") : "انتخاب پلن"}
+                      {planLabel}
                     </button>
                   )}
                 </div>
