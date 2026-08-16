@@ -1,6 +1,15 @@
 {
-  "current": "1.0.33",
+  "current": "1.0.34",
   "history": [
+    {
+      "version": "1.0.34",
+      "date": "2026-08-16",
+      "description": "Fixes adding a day to the training calendar landing in the middle of the list instead of at the end, and the weekly schedule not matching the calendar after saving. Both came from the array order and the on-screen order drifting apart.",
+      "highlights": [
+        "🐛 رفع باگ: «افزودن روز تمرینی» حالا به آخر لیست اضافه می‌شه، نه وسطش",
+        "🔄 رفع باگ: برنامه‌ای که توی تقویم ذخیره می‌کنی، توی تقویم هفته و بقیه‌ی صفحات هم درست نشون داده می‌شه"
+      ]
+    },
     {
       "version": "1.0.33",
       "date": "2026-08-16",
