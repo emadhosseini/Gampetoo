@@ -105,7 +105,15 @@ const BUBBLES = [
   { x: 78, r: 1.2, duration: 2.5, delay: 0.3 },
 ];
 
-export default function CalorieOrbCard() {
+export interface CalorieOrbCardProps {
+  // Saving a calorie goal here also changes what the rows BESIDE this card
+  // show — the protein target is computed from the same goal and weight,
+  // and the calculate flow records a weigh-in. Those are siblings, so this
+  // card's own re-render can't reach them; the parent has to be told.
+  onGoalSaved?: () => void;
+}
+
+export default function CalorieOrbCard({ onGoalSaved }: CalorieOrbCardProps = {}) {
   const clipId = useId();
   const navigate = useNavigate();
 
@@ -133,6 +141,7 @@ export default function CalorieOrbCard() {
   function handleGoalSaved() {
     setGoalScreen(null);
     forceRerender((n) => n + 1);
+    onGoalSaved?.();
   }
 
   // Three regions stacked bottom-to-top inside the glass, each the exact
