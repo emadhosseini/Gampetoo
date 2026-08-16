@@ -15,6 +15,7 @@ import {
   supplementFoods,
 } from "@/domain/nutrition/foodSearch";
 import { sortFoodsForMeal } from "@/domain/nutrition/mealFoodSuggestions";
+import { parseAmount } from "@/domain/nutrition/planFoodLogging";
 import { toFaDigits } from "@/utils/numberFormat";
 
 const SUPPLEMENTS_MEAL_ID = "supplements";
@@ -26,17 +27,6 @@ const typeTitles: Record<MealPlanType, string> = {
   workout: "برنامه غذایی روزهای تمرین",
   rest: "برنامه غذایی روزهای استراحت",
 };
-
-const AMOUNT_PATTERN = /^(\d+(?:\.\d+)?)\s+(.+)$/;
-
-// A persisted amount string is always "<quantity> <unit label>" — split it
-// back apart so the quantity input and unit dropdown can be driven from it.
-function parseAmount(amount: string): { quantity: number; unitLabel: string } {
-  const match = amount.match(AMOUNT_PATTERN);
-  return match
-    ? { quantity: Number(match[1]), unitLabel: match[2] }
-    : { quantity: 1, unitLabel: amount };
-}
 
 function mealCalories(meal: MealSection): number {
   return meal.foods.reduce((sum, food) => sum + (food.calories ?? 0), 0);
@@ -115,7 +105,14 @@ function MealFoodList({
         <p className="py-3 text-center text-sm text-white">غذایی پیدا نشد.</p>
       )}
 
-      {(!isFiltering || !loading) &&
+      {/* The catalog runs to hundreds of foods — left to grow freely it
+          pushed every meal below it kilometers down the page, so the list
+          gets its own bounded, scrollable box instead. Tall enough (~5 rows)
+          to browse in, short enough that the meals below stay reachable.
+          The already-selected-first sort above is what makes a bounded box
+          safe: what you picked is always at the top of it. */}
+      <div className="max-h-76 space-y-2 overflow-y-auto overscroll-contain pl-1">
+        {(!isFiltering || !loading) &&
         visibleFoods.map((entry) => {
           const selected = meal.foods.find((food) => food.id === entry.id);
           const parsed = selected ? parseAmount(selected.amount) : null;
@@ -175,6 +172,7 @@ function MealFoodList({
             </div>
           );
         })}
+      </div>
     </div>
   );
 }
