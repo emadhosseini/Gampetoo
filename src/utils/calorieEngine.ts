@@ -207,6 +207,20 @@ export function getCalorieGoal(): CalorieGoal | null {
 }
 
 /**
+ * Records which of the three goals the user is on, on its own.
+ *
+ * saveCalorieProfile below writes this as part of a full recalculation, but
+ * the goal is also what the protein target is computed from — so the manual
+ * "کالری هدف روزانه" flow, which states a calorie number outright and runs
+ * no calculation at all, needs to be able to state the goal with it.
+ * Without that, setting a target by hand left protein pinned to whatever
+ * the last calculation (or the "maintain" default) had decided.
+ */
+export function setCalorieGoal(goal: CalorieGoal) {
+  localStorage.setItem(scopedKey(CALORIE_GOAL_KEY), goal);
+}
+
+/**
  * Runs the calculation and persists everything it touches: the target goes
  * to dailyLogEngine, and each input the form actually collects goes back to
  * the engine that owns it — so filling this form in also records today's
