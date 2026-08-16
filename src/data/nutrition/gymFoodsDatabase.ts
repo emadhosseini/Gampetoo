@@ -119,6 +119,7 @@ export const gymFoodsDatabase: FoodItem[] = [
     id: "cottage-cheese-lowfat",
     nameFa: "پنیر کاتیج کم‌چرب",
     nameEn: "Low-Fat Cottage Cheese",
+    aliases: ["پنیر کاتیج", "پنیر کاتیج کم چرب"],
     category: "dairy",
     servingUnits: [
       { label: "پیمانه", grams: 110 },

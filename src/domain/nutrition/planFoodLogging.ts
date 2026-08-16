@@ -8,7 +8,11 @@
 
 import { DAILY_MODE_SLOT } from "@/data/nutrition/foodCatalog";
 import { mealPlans } from "@/data/nutrition/mealPlans";
-import { localFoods, supplementFoods } from "@/domain/nutrition/foodSearch";
+import {
+  foodNamesFa,
+  localFoods,
+  supplementFoods,
+} from "@/domain/nutrition/foodSearch";
 import { getLearnedFoods } from "@/store/learnedFoodsStore";
 import { getCalorieTrackingMode } from "@/utils/calorieModeEngine";
 import { normalizeFa } from "@/utils/persianSearch";
@@ -50,7 +54,11 @@ export function findCatalogFood(id: string, name?: string): FoodItem | null {
 
   const target = normalizeFa(name);
 
-  return catalog.find((food) => normalizeFa(food.nameFa) === target) ?? null;
+  return (
+    catalog.find((food) =>
+      foodNamesFa(food).some((known) => normalizeFa(known) === target),
+    ) ?? null
+  );
 }
 
 // Macros for a serving worth `calories` of this food, derived from its

@@ -295,6 +295,7 @@ export const internationalFoodsDatabase: FoodItem[] = [
     id: "almonds",
     nameFa: "بادام خام",
     nameEn: "Almonds",
+    aliases: ["بادام"],
     category: "snack",
     servingUnits: [
       { label: "قاشق غذاخوری", grams: 10 },
