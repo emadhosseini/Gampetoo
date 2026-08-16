@@ -182,7 +182,7 @@ function ProgramBuilderPage() {
     <div className="space-y-6 px-5 pb-5 pt-10">
       <div className="mb-6 mt-4 text-center">
         <h1 className="text-3xl font-bold">
-          {isFirstTime ? "برنامه تمرینی روزانه رو بساز" : "تقویم تمرین"}
+          {isFirstTime ? "برنامه تمرینی روزانه رو بساز" : "تقویم تمرینی"}
         </h1>
       </div>
 

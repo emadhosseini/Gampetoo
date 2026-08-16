@@ -1,6 +1,14 @@
 {
-  "current": "1.0.32",
+  "current": "1.0.33",
   "history": [
+    {
+      "version": "1.0.33",
+      "date": "2026-08-16",
+      "description": "Uses one name for the training calendar in both the side menu and the page itself.",
+      "highlights": [
+        "🏷️ نام «تقویم تمرینی» در منو و داخل خود صفحه یکسان شد"
+      ]
+    },
     {
       "version": "1.0.32",
       "date": "2026-08-16",
