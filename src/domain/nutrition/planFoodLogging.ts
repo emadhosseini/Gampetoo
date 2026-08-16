@@ -7,10 +7,13 @@
 // read a stored amount string back apart.
 
 import { DAILY_MODE_SLOT } from "@/data/nutrition/foodCatalog";
+import { mealPlans } from "@/data/nutrition/mealPlans";
 import { localFoods, supplementFoods } from "@/domain/nutrition/foodSearch";
 import { getLearnedFoods } from "@/store/learnedFoodsStore";
 import { getCalorieTrackingMode } from "@/utils/calorieModeEngine";
+import { normalizeFa } from "@/utils/persianSearch";
 import type { FoodItem } from "@/types/food";
+import type { EntryMacros } from "@/utils/dailyLogEngine";
 
 const AMOUNT_PATTERN = /^(\d+(?:\.\d+)?)\s+(.+)$/;
 
@@ -31,14 +34,84 @@ export function parseAmount(amount: string): {
 
 // The full catalog entry a planned food came from, or null when it can't be
 // found — a plan can outlive the catalog row it was built from (an external
-// lookup that was never learned, a database entry since renamed away). The
-// caller falls back to scaling the plan's own stored calories in that case.
-export function findCatalogFood(id: string): FoodItem | null {
-  return (
-    [...localFoods, ...supplementFoods, ...getLearnedFoods()].find(
-      (food) => food.id === id,
-    ) ?? null
-  );
+// lookup that was never learned, a database entry since renamed away).
+//
+// Matched by name as well as by id, and that second pass is not a nicety:
+// the built-in default plans (mealPlans.ts) were written by hand with their
+// own ad-hoc ids ("egg", "oats") that were never catalog ids, so an id-only
+// lookup finds nothing for any food in them — which is exactly how a food
+// logged off the default plan ended up contributing calories and no macros
+// at all.
+export function findCatalogFood(id: string, name?: string): FoodItem | null {
+  const catalog = [...localFoods, ...supplementFoods, ...getLearnedFoods()];
+
+  const byId = catalog.find((food) => food.id === id);
+  if (byId || !name) return byId ?? null;
+
+  const target = normalizeFa(name);
+
+  return catalog.find((food) => normalizeFa(food.nameFa) === target) ?? null;
+}
+
+// Macros for a serving worth `calories` of this food, derived from its
+// per-100g composition. The way out of the unit mismatch a name-matched
+// food brings with it: the plan says "۶۰ گرم" but the catalog entry may
+// count that food in پیمانه, and reading the plan's quantity against the
+// wrong unit would be far more wrong than reading it against none. Calories
+// are the one figure both sides agree on, so they anchor the conversion.
+export function macrosFromCalories(
+  entry: FoodItem,
+  calories: number,
+): { calories: number; protein: number; carbs: number; fat: number; fiber?: number } {
+  const grams = entry.caloriesPer100g > 0 ? calories / entry.caloriesPer100g : 0;
+
+  return {
+    calories: Math.round(calories),
+    protein: Math.round(entry.proteinPer100g * grams),
+    carbs: Math.round(entry.carbsPer100g * grams),
+    fat: Math.round(entry.fatPer100g * grams),
+    fiber:
+      entry.fiberPer100g !== undefined
+        ? Math.round(entry.fiberPer100g * grams)
+        : undefined,
+  };
+}
+
+// The macros the built-in plans record for a food, rescaled to `calories`
+// worth of it. Every user's saved program is a copy of those plans taken at
+// setup time, and copies taken before the plans carried macros at all still
+// hold calorie-only foods with no catalog entry to fall back on ("egg",
+// "oats" were never catalog ids — see findCatalogFood). This is what keeps
+// those accounts logging real protein/carbs/fat instead of zeros, without
+// rewriting anyone's stored plan behind their back.
+export function findSeedFoodMacros(
+  id: string,
+  calories: number,
+): EntryMacros | null {
+  for (const plan of Object.values(mealPlans)) {
+    for (const meal of plan.meals) {
+      const seed = meal.foods.find((food) => food.id === id);
+
+      if (!seed || seed.protein === undefined) continue;
+
+      // Ratio against the seed's own calorie figure, so a plan whose amount
+      // was since changed still scales instead of reporting the original
+      // portion's macros.
+      const ratio = seed.calories ? calories / seed.calories : 1;
+      const scale = (value: number | undefined) =>
+        value === undefined ? undefined : Math.round(value * ratio);
+
+      return {
+        calories: Math.round(calories),
+        protein: scale(seed.protein),
+        carbs: scale(seed.carbs),
+        fat: scale(seed.fat),
+        fiber: scale(seed.fiber),
+      };
+    }
+  }
+
+  return null;
 }
 
 // Which slot in the daily log a food eaten at `mealId` should be recorded

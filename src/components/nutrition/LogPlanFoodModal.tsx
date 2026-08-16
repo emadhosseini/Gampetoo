@@ -1,15 +1,17 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import ModalOverlay from "@/components/ModalOverlay";
 import { macrosForServing } from "@/domain/nutrition/foodSearch";
 import {
   findCatalogFood,
+  findSeedFoodMacros,
+  macrosFromCalories,
   parseAmount,
   resolveLogSlotId,
 } from "@/domain/nutrition/planFoodLogging";
-import { addLoggedEntry } from "@/utils/dailyLogEngine";
+import { addLoggedEntry, type EntryMacros } from "@/utils/dailyLogEngine";
 import { toFaDigits } from "@/utils/numberFormat";
-import type { ServingUnit } from "@/types/food";
+import type { FoodItem as CatalogFood, ServingUnit } from "@/types/food";
 import type { FoodItem, MealSection } from "@/types/nutrition";
 
 export interface LogPlanFoodModalProps {
@@ -20,44 +22,85 @@ export interface LogPlanFoodModalProps {
   onLogged: (name: string) => void;
 }
 
+// Where a planned food's macros come from, best source first. Getting this
+// right is the whole point of the screen: an entry logged with calories
+// alone leaves every macro chart flat no matter how much you ate.
+//
+//  - "serving": the food is in the catalog AND the plan's unit is one the
+//    catalog counts it in, so every macro is recomputed from the per-100g
+//    figures for whatever amount is currently typed. Fully accurate, and
+//    the unit stays switchable.
+//  - "plan": the plan itself recorded the macros when it was built (see
+//    types/nutrition FoodItem) — scaled linearly off the planned amount.
+//  - "composition": catalog match with a unit the catalog doesn't know
+//    (the hand-written default plans count تخم مرغ in عدد, جو دوسر in
+//    گرم). Calories are the figure both sides agree on, so the macros are
+//    derived from them — see macrosFromCalories.
+//  - "calories": nothing to go on but the plan's own calorie figure. The
+//    modal says so out loud rather than quietly logging zeros.
+type MacroSource = "serving" | "plan" | "composition" | "calories";
+
+function planMacros(food: FoodItem): EntryMacros | null {
+  return food.protein === undefined &&
+    food.carbs === undefined &&
+    food.fat === undefined
+    ? null
+    : {
+        calories: food.calories,
+        protein: food.protein,
+        carbs: food.carbs,
+        fat: food.fat,
+        fiber: food.fiber,
+      };
+}
+
+function scaleMacros(macros: EntryMacros, ratio: number): EntryMacros {
+  const scale = (value: number | undefined) =>
+    value === undefined ? undefined : Math.round(value * ratio);
+
+  return {
+    calories: scale(macros.calories),
+    protein: scale(macros.protein),
+    carbs: scale(macros.carbs),
+    fat: scale(macros.fat),
+    fiber: scale(macros.fiber),
+  };
+}
+
 // Tapping a food inside a meal on the nutrition (plan) page opens this:
 // confirm — and adjust — the amount, then it goes straight into today's
 // eaten-food log. The plan's own amount is only ever a prescription, so it
 // is the starting point here, never a fixed one.
-//
-// Two shapes of food arrive here. Most are still in the catalog, so the
-// full unit dropdown is available and every macro is recomputed from the
-// per-100g figures. The rest (a plan built from an external lookup that was
-// never learned, a catalog row since renamed away) have nothing to recompute
-// from — those scale the plan's own stored calories linearly instead, and
-// the unit is fixed to whatever the plan recorded.
 export default function LogPlanFoodModal({
   meal,
   food,
   onClose,
   onLogged,
 }: LogPlanFoodModalProps) {
-  const catalogFood = food ? findCatalogFood(food.id) : null;
   const planned = food ? parseAmount(food.amount) : null;
+
+  const catalogFood = useMemo<CatalogFood | null>(
+    () => (food ? findCatalogFood(food.id, food.name) : null),
+    [food],
+  );
 
   // Text, not a number, for the same reason EditMealEntryModal keeps it as
   // text: an emptied field has to stay empty while it's retyped rather than
   // snapping to 0, and "۱٫۵" passes through states that aren't numbers yet.
   const [value, setValue] = useState("");
+  // Non-null only when the catalog knows the plan's unit — that's what makes
+  // per-serving recomputation (and the unit dropdown) meaningful at all.
   const [unit, setUnit] = useState<ServingUnit | null>(null);
 
   useEffect(() => {
     if (!food) return;
 
     const parsed = parseAmount(food.amount);
-    const entry = findCatalogFood(food.id);
+    const entry = findCatalogFood(food.id, food.name);
 
     setValue(String(parsed.quantity));
     setUnit(
-      entry
-        ? (entry.servingUnits.find((u) => u.label === parsed.unitLabel) ??
-            entry.servingUnits[0])
-        : null,
+      entry?.servingUnits.find((u) => u.label === parsed.unitLabel) ?? null,
     );
   }, [food]);
 
@@ -67,44 +110,47 @@ export default function LogPlanFoodModal({
 
   const quantity = Number(value);
   const valid = value.trim() !== "" && Number.isFinite(quantity) && quantity > 0;
+  const effectiveQuantity = valid ? quantity : planned.quantity;
 
   const unitLabel = unit?.label ?? planned.unitLabel;
+  const ratio = effectiveQuantity / (planned.quantity || 1);
 
-  // Linear fallback from the plan's own numbers when there's no catalog
-  // entry — same shape of math the engine uses to rescale a logged entry.
-  const fallbackCalories = Math.round(
-    ((food.calories ?? 0) * (valid ? quantity : planned.quantity)) /
-      (planned.quantity || 1),
-  );
+  // The plan's own macros, or — for a plan copied out of the built-in ones
+  // before those carried any — the seed plan's, rescaled to whatever calorie
+  // figure this copy holds.
+  const fromPlan =
+    planMacros(food) ?? findSeedFoodMacros(food.id, food.calories ?? 0);
 
-  const macros =
+  const source: MacroSource =
     catalogFood && unit
-      ? macrosForServing(catalogFood, unit, valid ? quantity : planned.quantity)
-      : null;
+      ? "serving"
+      : fromPlan
+        ? "plan"
+        : catalogFood
+          ? "composition"
+          : "calories";
 
-  const previewCalories = macros
-    ? macros.calories
-    : fallbackCalories;
+  const macros: EntryMacros =
+    source === "serving"
+      ? macrosForServing(catalogFood!, unit!, effectiveQuantity)
+      : source === "plan"
+        ? scaleMacros(fromPlan!, ratio)
+        : source === "composition"
+          ? macrosFromCalories(catalogFood!, (food.calories ?? 0) * ratio)
+          : { calories: Math.round((food.calories ?? 0) * ratio) };
 
   function handleLog() {
     if (!valid || !food || !meal) return;
 
-    const amount = `${toFaDigits(quantity)} ${unitLabel}`;
-
-    const logged =
-      catalogFood && unit
-        ? macrosForServing(catalogFood, unit, quantity)
-        : { calories: fallbackCalories };
-
     addLoggedEntry(resolveLogSlotId(meal.id), {
       name: food.name,
-      amount,
+      amount: `${toFaDigits(quantity)} ${unitLabel}`,
       // Same fields the manual/AI add flows write, so the amount stays
       // editable from the daily-log card afterwards — see LoggedFoodEntry.
       quantity,
       unitLabel,
-      base: { quantity, ...logged },
-      ...logged,
+      base: { quantity, ...macros },
+      ...macros,
     });
 
     onLogged(food.name);
@@ -159,9 +205,19 @@ export default function LogPlanFoodModal({
         </div>
 
         <p className="text-center text-sm text-white/70">
-          {toFaDigits(previewCalories)} کالری
-          {macros ? ` · ${toFaDigits(macros.protein)} گرم پروتئین` : ""}
+          {toFaDigits(macros.calories ?? 0)} کالری
+          {macros.protein !== undefined &&
+            ` · ${toFaDigits(macros.protein)} گرم پروتئین`}
+          {macros.carbs !== undefined &&
+            ` · ${toFaDigits(macros.carbs)} گرم کربوهیدرات`}
+          {macros.fat !== undefined && ` · ${toFaDigits(macros.fat)} گرم چربی`}
         </p>
+
+        {source === "calories" && (
+          <p className="rounded-xl bg-amber-500/10 px-3 py-2 text-center text-xs text-amber-300">
+            ارزش غذایی این مورد ثبت نشده — فقط کالریش به آمار روز اضافه می‌شه.
+          </p>
+        )}
 
         <button
           onClick={handleLog}

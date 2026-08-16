@@ -8,8 +8,8 @@ import { getMealSlots } from "@/data/nutrition/foodCatalog";
 import {
   AUTO_SEARCH_MIN_LENGTH,
   SEARCH_DEBOUNCE_MS,
-  caloriesForServing,
   localFoods,
+  macrosForServing,
   searchFood,
   searchSupplements,
   supplementFoods,
@@ -342,7 +342,10 @@ export default function NutritionPlanDetailPage() {
                   id: entry.id,
                   name: entry.nameFa,
                   amount: `1 ${defaultUnit.label}`,
-                  calories: caloriesForServing(entry, defaultUnit, 1),
+                  // Every macro, not just calories — this is what a food
+                  // logged as eaten straight off the plan carries into the
+                  // daily log and its macro charts.
+                  ...macrosForServing(entry, defaultUnit, 1),
                 },
               ];
 
@@ -383,7 +386,7 @@ export default function NutritionPlanDetailPage() {
               return {
                 ...food,
                 amount: `${quantity} ${unit.label}`,
-                calories: caloriesForServing(entry, unit, quantity),
+                ...macrosForServing(entry, unit, quantity),
               };
             }),
           };
