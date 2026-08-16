@@ -15,8 +15,9 @@ import {
   formatWeekdayName,
   getTodayLocalDate,
   isoToLocalDate,
+  toLocalDateString,
 } from "@/utils/dateFormat";
-import { cycleDayDates, getActiveProgram, updateProgram } from "@/utils/programEngine";
+import { getActiveProgram, getCycleDayIndex, updateProgram } from "@/utils/programEngine";
 import { resetSession } from "@/utils/sessionEngine";
 import { generateId } from "@/utils/id";
 import type { WorkoutDay, WorkoutType } from "@/types/program";
@@ -34,9 +35,27 @@ function ProgramBuilderPage() {
   // an existing program being edited later.
   const isFirstTime = !program.startDate;
 
-  const [days, setDays] = useState<WorkoutDay[]>(() =>
-    program.workout.days.map((day) => ({ ...day }))
-  );
+  // Rotated so index 0 IS today, once, when the page opens.
+  //
+  // The list is shown from today forward, and it used to be reordered only
+  // for display while the array kept the cycle's own arbitrary starting
+  // point. Those two orders drifting apart is what broke adding a day: the
+  // new day was appended to the array's end, which is some position in the
+  // middle of what's on screen, and the mapping was computed from the
+  // *stored* cycle length while being applied to the *draft* — so after
+  // saving, the calendar and the weekly view disagreed about which day was
+  // which. With today at index 0 there is only one order: what you see is
+  // the array, appending lands at the end, and saving pins the anchor to
+  // match.
+  const [days, setDays] = useState<WorkoutDay[]>(() => {
+    const source = program.workout.days;
+
+    if (source.length === 0) return [];
+
+    const offset = getCycleDayIndex() % source.length;
+
+    return source.map((_, index) => ({ ...source[(offset + index) % source.length] }));
+  });
   // Which day's WorkoutPickerModal is open — index into `days`, or null
   // when closed.
   const [pickerDayIndex, setPickerDayIndex] = useState<number | null>(null);
@@ -128,7 +147,14 @@ function ProgramBuilderPage() {
       // actual resolved position now (see programEngine's
       // resolveCycleAnchor) and takes priority over startDate if left in
       // place, which would silently undo this reset.
-      cycleAnchor: startDate ? undefined : program.cycleAnchor,
+      //
+      // Otherwise it's pinned to today at index 0, because `days` was
+      // rotated to start at today when this page opened. Without pinning
+      // it, the old anchor would keep pointing at a position in the old
+      // ordering — and any change to the cycle's length would move it
+      // again under the modulo — so the day the user just arranged as
+      // "today" would come back as some other day everywhere else.
+      cycleAnchor: startDate ? undefined : { date: today(), dayIndex: 0 },
       workout: {
         ...program.workout,
         days,
@@ -158,25 +184,16 @@ function ProgramBuilderPage() {
   // rather than an abstract "روز اول/دوم/سوم" the user has to translate in
   // their head — translating it wrong is exactly how a plan meant for a
   // future day landed on one already finished.
-  const dayDates = cycleDayDates(days.length);
   const todayIso = getTodayLocalDate();
+  const dayDates = days.map((_, index) => {
+    const date = new Date();
 
-  // Rendered starting from today and running forward, not from the cycle's
-  // own "day 1". Nobody sets up or edits a program in the past: the days
-  // that matter are today (if it isn't already done) and the ones after
-  // it, so showing the cycle from an arbitrary position that may sit days
-  // behind just adds a step of "which of these is today?".
-  //
-  // Display order only — `days` itself still defines the cycle, and every
-  // handler below gets the real index into it, so reordering what's on
-  // screen can't reorder the program.
+    date.setDate(date.getDate() + index);
+
+    return toLocalDateString(date);
+  });
   // Today's own pick, if the workout page asked and got an answer.
   const todaysPick = getSession().selectedVariantId;
-  const todayIndex = dayDates.indexOf(todayIso);
-  const displayOrder =
-    todayIndex < 0
-      ? days.map((_, index) => index)
-      : days.map((_, offset) => (todayIndex + offset) % days.length);
 
   return (
     <div className="space-y-6 px-5 pb-5 pt-10">
@@ -191,8 +208,7 @@ function ProgramBuilderPage() {
           reads as a calendar you can take in at a glance instead of a
           scrolling form. */}
       <div className="grid grid-cols-2 gap-3">
-        {displayOrder.map((index) => {
-          const day = days[index];
+        {days.map((day, index) => {
           const iso = dayDates[index];
           const isToday = iso === todayIso;
           // A finished day is history. Editing it here used to rewrite what
