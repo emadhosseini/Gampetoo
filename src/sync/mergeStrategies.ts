@@ -93,19 +93,22 @@ export function mergeDailyLog(
 interface MetricEntry {
   date: string;
   value: number;
+  /** When this date's value was written — see DailyMetricEntry.at. */
+  at?: string;
 }
 
 /**
- * Merged per date rather than per blob: a day only one side knows about is
- * kept as-is, and a day both sides changed is settled by which side wrote
- * more recently. Days neither device touched today can no longer be lost
- * just because the other device pushed — which is the whole failure this
- * replaces.
+ * Merged per date: a day only one side knows about is kept as-is, and a day
+ * both sides carry is settled by which of the two ENTRIES was written more
+ * recently — each one's own `at`, not the key's.
  *
- * Without per-entry timestamps the recency test can only be the key's own
- * write time, so it's whole-key recency applied per date. That is strictly
- * better than whole-key replacement and enough for these logs, where two
- * devices rarely edit the same past day.
+ * The key's write time is only a fallback now, for entries old enough to
+ * predate `at`, and it was never a sound test: it decided nothing whenever
+ * the two sides agreed on it, and they agree constantly — a merge stamps
+ * both with the later of the two and pushes that, so every device sits at
+ * exactly the same key time until the next edit. On a tie the remote side
+ * won by construction, so logging a glass of water and reopening the app
+ * handed back the count from before it.
  */
 export function mergeMetricLog(
   localRaw: string | undefined,
@@ -115,21 +118,33 @@ export function mergeMetricLog(
   const local = parse<MetricEntry[]>(localRaw, []);
   const remote = parse<MetricEntry[]>(remoteRaw, []);
 
-  const localNewer = localTime !== undefined && (remoteTime === undefined || localTime > remoteTime);
+  const localNewer =
+    localTime !== undefined && (remoteTime === undefined || localTime > remoteTime);
 
-  const byDate = new Map<string, number>();
+  const byDate = new Map<string, MetricEntry>();
 
+  // Loser first, winner second: whichever side the key-level times favor
+  // still decides any date where neither entry carries its own timestamp.
   for (const entry of localNewer ? remote : local) {
-    if (entry?.date) byDate.set(entry.date, entry.value);
+    if (entry?.date) byDate.set(entry.date, entry);
   }
 
-  // The newer side written second, so it wins any date both of them carry.
   for (const entry of localNewer ? local : remote) {
-    if (entry?.date) byDate.set(entry.date, entry.value);
+    if (!entry?.date) continue;
+
+    const existing = byDate.get(entry.date);
+
+    // Both sides timestamped this date — the older one loses no matter
+    // which side it came from.
+    if (existing?.at !== undefined && entry.at !== undefined && entry.at < existing.at) {
+      continue;
+    }
+
+    byDate.set(entry.date, entry);
   }
 
   return JSON.stringify(
-    [...byDate].map(([date, value]) => ({ date, value })).sort((a, b) => (a.date < b.date ? -1 : 1)),
+    [...byDate.values()].sort((a, b) => (a.date < b.date ? -1 : 1)),
   );
 }
 
