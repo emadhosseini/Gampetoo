@@ -96,7 +96,12 @@ export default function CalorieGoalModal({ open, onClose, onSaved }: CalorieGoal
 
   const age = profileAge ?? FALLBACK_AGE;
   const heightCm = profileHeight ?? FALLBACK_HEIGHT_CM;
-  const weightKg = Math.round(profileWeight ?? FALLBACK_WEIGHT_KG);
+  // Not rounded. saveCalorieProfile writes this back as today's weigh-in
+  // (that's how filling this form in also fixes a missing one), so rounding
+  // it here quietly replaced a real 98.4 kg entry with 98 — moving the
+  // weight chart and the protein target with it. Rounding is for the
+  // display below only.
+  const weightKg = profileWeight ?? FALLBACK_WEIGHT_KG;
 
   const missing = [
     profileAge === null ? "تاریخ تولد" : null,
@@ -159,7 +164,7 @@ export default function CalorieGoalModal({ open, onClose, onSaved }: CalorieGoal
           <div>
             <p className="text-xs text-white/60">وزن</p>
             <p className="mt-0.5 font-bold text-white">
-              {toFaDigits(weightKg)}{" "}
+              {toFaDigits(Math.round(weightKg))}{" "}
               <span className="text-xs font-normal text-white/60">کیلوگرم</span>
             </p>
           </div>
