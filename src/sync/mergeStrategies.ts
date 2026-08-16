@@ -98,47 +98,55 @@ interface MetricEntry {
 }
 
 /**
- * Merged per date: a day only one side knows about is kept as-is, and a day
- * both sides carry is settled by which of the two ENTRIES was written more
- * recently — each one's own `at`, not the key's.
+ * Merged per date. A day only one side knows about is kept as-is; a day
+ * both sides carry goes to the entry that was written later, by its own
+ * `at` — never by the key's write time, which is not a fact about any
+ * single date and, worse, decides nothing at all whenever the two sides
+ * agree on it. They agree constantly: every merge stamps both sides with
+ * the later of the two times and pushes that, so all devices sit on an
+ * identical key time until the next edit.
  *
- * The key's write time is only a fallback now, for entries old enough to
- * predate `at`, and it was never a sound test: it decided nothing whenever
- * the two sides agreed on it, and they agree constantly — a merge stamps
- * both with the later of the two and pushes that, so every device sits at
- * exactly the same key time until the next edit. On a tie the remote side
- * won by construction, so logging a glass of water and reopening the app
- * handed back the count from before it.
+ * When `at` can't settle it — an entry written by a build from before it
+ * existed, on either side — LOCAL wins. That is the deliberate part. The
+ * old rule handed those ties to the remote copy, which is precisely how a
+ * glass of water logged on this phone came back as the count from before
+ * it: reopening the app pulls, the tie goes to the server, and the pull
+ * even reloads the page to show it. Between two values that cannot be
+ * ordered, the one the person is looking at is the better guess, and any
+ * genuinely newer value from another device carries an `at` to prove it.
+ *
+ * `localTime`/`remoteTime` are therefore unused here, kept only so the
+ * signature stays uniform with the other mergers.
  */
 export function mergeMetricLog(
   localRaw: string | undefined,
   remoteRaw: string | undefined,
-  { localTime, remoteTime }: MergeContext,
+  _context: MergeContext,
 ): string {
   const local = parse<MetricEntry[]>(localRaw, []);
   const remote = parse<MetricEntry[]>(remoteRaw, []);
 
-  const localNewer =
-    localTime !== undefined && (remoteTime === undefined || localTime > remoteTime);
-
   const byDate = new Map<string, MetricEntry>();
 
-  // Loser first, winner second: whichever side the key-level times favor
-  // still decides any date where neither entry carries its own timestamp.
-  for (const entry of localNewer ? remote : local) {
+  for (const entry of remote) {
     if (entry?.date) byDate.set(entry.date, entry);
   }
 
-  for (const entry of localNewer ? local : remote) {
+  // Local written second, so it takes every date it shares with the remote
+  // side unless that side's entry is provably newer.
+  for (const entry of local) {
     if (!entry?.date) continue;
 
     const existing = byDate.get(entry.date);
 
-    // Both sides timestamped this date — the older one loses no matter
-    // which side it came from.
-    if (existing?.at !== undefined && entry.at !== undefined && entry.at < existing.at) {
-      continue;
-    }
+    // Only a comparison between two real timestamps can take a date away
+    // from this device. One side missing its own is not evidence the other
+    // is newer — an entry logged here before the app updated has no `at`,
+    // and that must not be read as "the server knows better".
+    const remoteIsNewer =
+      existing?.at !== undefined && entry.at !== undefined && entry.at < existing.at;
+
+    if (remoteIsNewer) continue;
 
     byDate.set(entry.date, entry);
   }
