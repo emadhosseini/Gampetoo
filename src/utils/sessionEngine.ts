@@ -12,7 +12,12 @@ import {
   scopedKey,
 } from "./userEngine";
 import { getTodayLocalDate } from "./dateFormat";
-import { isCompletedOn, markCompleted, unmarkCompleted } from "./workoutCompletionLog";
+import {
+  isCompletedOn,
+  markCompleted,
+  unmarkCompleted,
+  type WorkoutCompletionEntry,
+} from "./workoutCompletionLog";
 
 const STORAGE_KEY = "emad-session";
 
@@ -242,22 +247,27 @@ export function setSelectedVariantId(variantId: string | null) {
 // session's own `completed` is wiped at the next day-rollover, so that log
 // is the only thing that can still answer "was this day done" afterwards
 // (see WeeklyScheduleModal's green/red days).
-export function completeWorkout() {
+// `done` records which workout and plan were actually performed — see
+// WorkoutCompletionEntry. Optional so a caller with nothing to say still
+// marks the day complete, exactly as before.
+export type CompletedWorkoutDetails = Omit<WorkoutCompletionEntry, "date">;
+
+export function completeWorkout(done: CompletedWorkoutDetails = {}) {
   const session = readTodaysSession();
 
   session.completed = true;
 
   saveSession(session);
-  markCompleted();
+  markCompleted(done);
 }
 
-export function completeWalk() {
+export function completeWalk(done: CompletedWorkoutDetails = {}) {
   const session = readTodaysSession();
 
   session.completed = true;
 
   saveSession(session);
-  markCompleted();
+  markCompleted(done);
 }
 
 export function resetSession() {

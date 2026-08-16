@@ -38,15 +38,18 @@ function PickerCard({ icon, title, disabled, onClick }: PickerCardProps) {
     <button
       onClick={onClick}
       disabled={disabled}
-      className="glass-panel relative flex aspect-square flex-col items-center justify-center gap-2 overflow-hidden rounded-3xl p-3 text-center"
+      // Wide and short, matching the day cards on the calendar this opens
+      // from — a square tile made every option as tall as the longest one
+      // and pushed the list off screen.
+      className="glass-panel glass-static relative flex items-center gap-2 overflow-hidden rounded-2xl p-3 text-right"
     >
-      <span className="text-3xl">{icon}</span>
-      <span className="text-sm leading-snug font-semibold text-white">
+      <span className="shrink-0 text-xl">{icon}</span>
+      <span className="min-w-0 flex-1 text-xs leading-snug font-semibold text-white">
         {title}
       </span>
 
       {disabled && (
-        <div className="absolute inset-0 flex items-center justify-center rounded-3xl bg-black/25 p-3 backdrop-blur-md">
+        <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-black/25 p-2 backdrop-blur-md">
           <p className="text-xs font-medium text-white">
             فعلاً تمرینی برای این وجود نداره
           </p>

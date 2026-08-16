@@ -24,6 +24,7 @@ import { getDefaultPlanName, getWorkout } from "@/store/workoutLibraryStore";
 import {
   DEFAULT_VARIANT_ID,
   getVariant,
+  getVariants,
   getWorkoutWithVariant,
 } from "@/store/workoutVariantStore";
 import { getSpecializedWarmup } from "@/store/warmupLibraryStore";
@@ -47,6 +48,8 @@ import { setTodayWorkoutCalories } from "@/utils/workoutCalorieEngine";
 import { logActivityCalories } from "@/utils/activityLogEngine";
 import { getCurrentUserGender, getCurrentUsername } from "@/utils/userEngine";
 import { flushPendingSync } from "@/sync/remoteSync";
+import { getCompletionFor } from "@/utils/workoutCompletionLog";
+import { getTodayLocalDate } from "@/utils/dateFormat";
 
 // Completing used to navigate home right after this, which is why it was
 // needed in the first place: a full page navigation tears down the JS
@@ -98,6 +101,10 @@ function WorkoutPage() {
   // things there are to edit here — today's exercise order (reorder mode,
   // below) or the workout's own exercises/sets (its library page).
   const [editChoiceOpen, setEditChoiceOpen] = useState(false);
+  // Set by "تغییر پلن امروز": forces the chooser open even on a day whose
+  // plan wasn't in question, and widens it to every plan the library has
+  // rather than just the ones the calendar assigned.
+  const [changingPlan, setChangingPlan] = useState(false);
 
   // Shared between WarmupBlock and SpecializedWarmupBlock — tapping either
   // one's header opens both lists together, side by side, rather than each
@@ -125,7 +132,7 @@ function WorkoutPage() {
       logActivityCalories(calories);
     }
 
-    completeWalk();
+    completeWalk({ title: "روز استراحت" });
     void flushAfterCompleting();
     // getSession() re-reads localStorage on every render but nothing
     // schedules a render on its own — this is what actually surfaces the
@@ -162,19 +169,65 @@ function WorkoutPage() {
     day.assignedVariantIds,
     (id) => getVariant(id) !== undefined,
   );
-  const needsVariantChoice = assignedVariantIds.length > 1;
-  const resolvedVariantId = needsVariantChoice
-    ? session.selectedVariantId
-    : (assignedVariantIds[0] ?? null);
+  // What today can actually be run as. Assigning plans in the calendar
+  // narrows it; assigning none doesn't mean "the base workout, silently" —
+  // it means the choice was never made, so every plan the library has for
+  // this workout is offered and the question gets asked on the day.
+  const libraryVariantIds = workoutType
+    ? getVariants(workoutType).map((variant) => variant.id)
+    : [];
+  const choosableVariantIds =
+    assignedVariantIds.length > 0
+      ? assignedVariantIds
+      : libraryVariantIds.length > 0
+        ? [DEFAULT_VARIANT_ID, ...libraryVariantIds]
+        : [];
 
-const workout = workoutType
-  ? getWorkoutWithVariant(workoutType, resolvedVariantId)
+  // Everything this workout could be run as, assigned or not — what
+  // "تغییر پلن امروز" offers, and the set an explicit pick is validated
+  // against.
+  const allPlanIds =
+    libraryVariantIds.length > 0 ? [DEFAULT_VARIANT_ID, ...libraryVariantIds] : [];
+
+  const needsVariantChoice = choosableVariantIds.length > 1;
+  const canChangePlan = allPlanIds.length > 1;
+
+  // An explicit pick always wins, even on a day with a single assigned
+  // plan — otherwise changing the plan from the edit menu would appear to
+  // do nothing. Validated against the library so a pick left over from a
+  // since-deleted plan falls back instead of resolving to nothing.
+  const explicitPick =
+    session.selectedVariantId !== null && allPlanIds.includes(session.selectedVariantId)
+      ? session.selectedVariantId
+      : null;
+
+  const resolvedVariantId =
+    explicitPick ?? (needsVariantChoice ? null : (choosableVariantIds[0] ?? null));
+
+  // What today was actually finished as, if it was. A completed day is
+  // history: the program it came from is a mutable repeating cycle, so
+  // re-deriving the day from it meant assigning a new plan to the same
+  // cycle position rewrote a workout that had already been done — پشت
+  // started showing as پا, with a 0-exercise summary because the checked
+  // exercises belonged to the plan actually performed. The record wins.
+  const todaysRecord = session.completed ? getCompletionFor(getTodayLocalDate()) : null;
+
+  const effectiveWorkoutType = todaysRecord?.workoutId ?? workoutType;
+  const effectiveVariantId = todaysRecord
+    ? (todaysRecord.variantId ?? null)
+    : resolvedVariantId;
+
+const workout = effectiveWorkoutType
+  ? getWorkoutWithVariant(effectiveWorkoutType, effectiveVariantId)
   : undefined;
 
   // Only a real (non-default) pick gets a label — پیش‌فرض reads as noise
-  // next to a workout title that already says what it is.
-  const resolvedVariantName =
-    resolvedVariantId && resolvedVariantId !== DEFAULT_VARIANT_ID
+  // next to a workout title that already says what it is. A recorded day
+  // uses the name saved with it, so renaming the plan later can't relabel
+  // a workout that is already in the past.
+  const resolvedVariantName = todaysRecord
+    ? todaysRecord.variantName
+    : resolvedVariantId && resolvedVariantId !== DEFAULT_VARIANT_ID
       ? getVariant(resolvedVariantId)?.name
       : undefined;
 
@@ -209,7 +262,11 @@ const workout = workoutType
   // A workout day with 2+ assigned plans and nothing picked yet blocks the
   // exercise list until one is chosen — asked once (see setSelectedVariantId,
   // which sticks for the rest of today).
-  if (isWorkout && needsVariantChoice && resolvedVariantId === null) {
+  const chooserOptions = changingPlan ? allPlanIds : choosableVariantIds;
+  const showChooser =
+    isWorkout && !session.completed && (changingPlan || resolvedVariantId === null);
+
+  if (showChooser && chooserOptions.length > 0) {
     return (
       <div className="space-y-4 px-5 pb-5 pt-4 text-center">
         <WorkoutHeader
@@ -221,7 +278,7 @@ const workout = workoutType
         <p className="text-white">امروز کدوم برنامه رو می‌خوای انجام بدی؟</p>
 
         <div className="space-y-2">
-          {assignedVariantIds.map((variantId) => {
+          {chooserOptions.map((variantId) => {
             // The default plan can be renamed (see getDefaultPlanName), so
             // its own name is read rather than hardcoded — a day whose
             // default is called "سینه" shouldn't offer "برنامه پیش‌فرض".
@@ -235,6 +292,7 @@ const workout = workoutType
                 key={variantId}
                 onClick={() => {
                   setSelectedVariantId(variantId);
+                  setChangingPlan(false);
                   forceRerender((n) => n + 1);
                 }}
                 className="glass-tap selector-pill w-full rounded-2xl py-4 font-bold text-white"
@@ -548,7 +606,12 @@ const workout = workoutType
           // sets rather than adds, so confirming twice in a day can't double
           // it (see workoutCalorieEngine).
           setTodayWorkoutCalories(addCaloriesToActivity ? checkedCalories : 0);
-          completeWorkout();
+          completeWorkout({
+            workoutId: workoutType ?? null,
+            variantId: resolvedVariantId,
+            title: workout.title,
+            variantName: resolvedVariantName,
+          });
           void flushAfterCompleting();
           // Same reason as finishWalk: nothing else schedules a re-render,
           // and this is what actually shows the "انجام دادی" summary in
@@ -591,11 +654,12 @@ const workout = workoutType
                 Clearing the day's pick and re-rendering is what puts the
                 page back on the same چند-حالت chooser screen it showed
                 the first time this day came up. */}
-            {needsVariantChoice && (
+            {canChangePlan && (
               <button
                 onClick={() => {
                   setEditChoiceOpen(false);
                   setSelectedVariantId(null);
+                  setChangingPlan(true);
                   forceRerender((n) => n + 1);
                 }}
                 className="glass-tap glass-static selector-pill w-full rounded-2xl py-3 font-bold text-white"

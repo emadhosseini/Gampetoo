@@ -1,11 +1,13 @@
 import {
+  CalendarDays,
+  ChevronDown,
   ChevronLeft,
-  ClipboardList,
   Dumbbell,
   Menu,
   UtensilsCrossed,
 } from "lucide-react";
 import {
+  AnimatePresence,
   animate,
   motion,
   useMotionTemplate,
@@ -28,9 +30,15 @@ import SettingsSidebar from "@/components/settings/SettingsSidebar";
 import { avatarCharacterIcon } from "@/data/characterIcons";
 import { getCurrentUserGender, getCurrentUserName } from "@/utils/userEngine";
 
-const menuLinks = [
+// The two training screens are one job split in two — building the
+// exercises and scheduling them — so they sit under one heading instead of
+// competing as siblings with the nutrition plan.
+const trainingLinks = [
   { to: "/settings/workouts", label: "کتابخانه تمرین‌ها", icon: Dumbbell },
-  { to: "/settings/program", label: "برنامه تمرینی", icon: ClipboardList },
+  { to: "/settings/program", label: "تقویم تمرینی", icon: CalendarDays },
+];
+
+const menuLinks = [
   { to: "/settings/nutrition", label: "برنامه غذایی", icon: UtensilsCrossed },
 ];
 
@@ -85,6 +93,7 @@ export default function SideMenu({ children }: SideMenuProps) {
   const isHomePage = pathname === "/";
   const userName = getCurrentUserName() ?? "";
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [trainingOpen, setTrainingOpen] = useState(false);
 
   // How far (in px) the drawer has entered from the right: 0 = fully closed
   // (off-screen), drawerWidth = fully open.
@@ -309,6 +318,60 @@ export default function SideMenu({ children }: SideMenuProps) {
                   <ChevronLeft size={20} />
                 </div>
               </button>
+
+              {/* Collapsed by default: the drawer's job is getting
+                  somewhere fast, and two rarely-used screens shouldn't
+                  cost two permanent rows. */}
+              <button
+                onClick={() => setTrainingOpen((prev) => !prev)}
+                aria-expanded={trainingOpen}
+                className="glass-panel flex w-full items-center gap-3 rounded-3xl p-4"
+              >
+                <span className="flex-1 text-right font-semibold text-white">
+                  برنامه‌ریزی تمرینی
+                </span>
+
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/10">
+                  <ChevronDown
+                    size={18}
+                    className={`transition-transform ${trainingOpen ? "rotate-180" : ""}`}
+                  />
+                </div>
+              </button>
+
+              <AnimatePresence initial={false}>
+                {trainingOpen && (
+                  <motion.div
+                    initial={{ height: 0 }}
+                    animate={{ height: "auto" }}
+                    exit={{ height: 0 }}
+                    transition={{ type: "spring", stiffness: 320, damping: 32 }}
+                    className="-mx-1 overflow-hidden px-1"
+                  >
+                    <div className="space-y-2 ps-4">
+                      {trainingLinks.map((item) => {
+                        const Icon = item.icon;
+
+                        return (
+                          <button
+                            key={item.to}
+                            onClick={() => goTo(item.to)}
+                            className="glass-chip glass-static flex w-full items-center gap-3 rounded-2xl p-3"
+                          >
+                            <span className="flex-1 text-right text-sm font-medium text-white">
+                              {item.label}
+                            </span>
+
+                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/10">
+                              <Icon size={16} />
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               {menuLinks.map((item) => {
                 const Icon = item.icon;

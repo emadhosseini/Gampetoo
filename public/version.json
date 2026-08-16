@@ -1,6 +1,36 @@
 {
-  "current": "1.0.30",
+  "current": "1.0.33",
   "history": [
+    {
+      "version": "1.0.33",
+      "date": "2026-08-16",
+      "description": "Uses one name for the training calendar in both the side menu and the page itself.",
+      "highlights": [
+        "🏷️ نام «تقویم تمرینی» در منو و داخل خود صفحه یکسان شد"
+      ]
+    },
+    {
+      "version": "1.0.32",
+      "date": "2026-08-16",
+      "description": "Fixes the default plan showing as unassigned in the calendar, makes the workout page ask which plan to run when a day has none assigned, and lets the plan be changed from the edit menu whenever the workout has more than one. Also groups the two training screens under one side-menu entry.",
+      "highlights": [
+        "🏷️ رفع باگ: پلن پیش‌فرض توی تقویم دیگه «انتخاب نشده» نشون داده نمی‌شه",
+        "❓ اگه برای روزی پلنی انتخاب نکرده باشی، روز تمرین ازت می‌پرسه کدوم رو می‌خوای",
+        "🔄 «تغییر پلن امروز» همیشه در دسترسه و تغییرش توی تقویم هم دیده می‌شه",
+        "📂 «کتابخانه تمرین‌ها» و «تقویم تمرینی» زیر یک دکمه‌ی «برنامه‌ریزی تمرینی» جمع شدن"
+      ]
+    },
+    {
+      "version": "1.0.31",
+      "date": "2026-08-15",
+      "description": "Records what was actually done each day and reads finished days from that record instead of re-deriving them from the program, and rebuilds the program editor around real dates starting from today.",
+      "highlights": [
+        "🗓️ «تغییر برنامه تمرینی» شد «تقویم تمرین» — با تاریخ واقعی هر روز به‌جای «روز اول/دوم»، و همیشه از امروز شروع می‌شه",
+        "🔒 روزی که تمرینش رو انجام دادی قفل می‌شه و تغییر برنامه دیگه گذشته رو بازنویسی نمی‌کنه",
+        "📝 تمرین و پلنی که واقعاً انجام دادی ثبت می‌شه — صفحه‌ی خانه، تقویم هفته و صفحه‌ی تمرین همه همون رو نشون می‌دن",
+        "🎨 کارت‌های روز دوتایی و فشرده‌تر، و پاپ‌آپ انتخاب تمرین با کادرهای مستطیلی"
+      ]
+    },
     {
       "version": "1.0.30",
       "date": "2026-08-15",

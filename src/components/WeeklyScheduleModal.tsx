@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 
 import ModalOverlay from "@/components/ModalOverlay";
 import { getProgramDay, hasProgramStarted } from "@/utils/programEngine";
-import { getCompletedDates } from "@/utils/workoutCompletionLog";
+import { getCompletionEntries } from "@/utils/workoutCompletionLog";
 import { getSession } from "@/utils/sessionEngine";
 import { DEFAULT_VARIANT_ID, getVariant } from "@/store/workoutVariantStore";
 import {
@@ -68,7 +68,13 @@ export default function WeeklyScheduleModal() {
   const dates = open ? buildWeekRange() : [];
   // Read once per open rather than per row — every row would otherwise
   // re-read and re-parse the same localStorage value.
-  const completedDates = open ? new Set(getCompletedDates()) : new Set<string>();
+  // Keyed records, not just dates: a finished day has to show what was
+  // actually done on it. Re-deriving it from the program means editing
+  // next week's plan silently rewrites last week's history — the same bug
+  // that made today's completed پشت display as پا.
+  const completedByDate = new Map(
+    (open ? getCompletionEntries() : []).map((entry) => [entry.date, entry]),
+  );
 
   return (
     <>
@@ -109,7 +115,8 @@ export default function WeeklyScheduleModal() {
                 // yet, so it stays neutral rather than reading as a
                 // failure. A day the program hadn't started on isn't
                 // scored either — there was nothing scheduled to miss.
-                const done = completedDates.has(iso);
+                const record = completedByDate.get(iso);
+                const done = record !== undefined;
                 const settled = isPast && started;
                 const missed = settled && !done;
 
@@ -149,15 +156,17 @@ export default function WeeklyScheduleModal() {
 
                     <div className="min-w-0 flex-1 text-right">
                       <p className="truncate text-sm font-semibold text-white">
-                        {!started
-                          ? "شروع نشده"
-                          : isWorkout
-                            ? (day?.title ?? "تمرین")
-                            : "استراحت"}
-                        {variantName && (
+                        {record?.title
+                          ? record.title
+                          : !started
+                            ? "شروع نشده"
+                            : isWorkout
+                              ? (day?.title ?? "تمرین")
+                              : "استراحت"}
+                        {(record?.variantName ?? variantName) && (
                           <span className="text-xs font-normal text-white/50">
                             {" "}
-                            ({variantName})
+                            ({record?.variantName ?? variantName})
                           </span>
                         )}
                       </p>
