@@ -8,6 +8,11 @@ export interface WeightEntry {
   id: string;
   date: string; // YYYY-MM-DD
   weight: number; // kg, rounded to 2 decimals
+  // When this date's weight was last written, ISO-8601. Optional because
+  // entries written before this existed have none. Lets a sync merge two
+  // devices' weight logs by which one actually wrote that date's entry
+  // last, instead of replacing the whole log wholesale — see mergeMetricLog.
+  at?: string;
 }
 
 function storageKey() {
@@ -56,7 +61,7 @@ export function getLatestWeight(): number | null {
 export function logWeight(weight: number, date: string = today()): WeightEntry[] {
   const entries = getWeightLog().filter((entry) => entry.date !== date);
 
-  entries.push({ id: date, date, weight: round2(weight) });
+  entries.push({ id: date, date, weight: round2(weight), at: new Date().toISOString() });
   entries.sort((a, b) => a.date.localeCompare(b.date));
 
   saveWeightLog(entries);
