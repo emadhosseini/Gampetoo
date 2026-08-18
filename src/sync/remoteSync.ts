@@ -5,6 +5,7 @@ import {
   mergeDailyLog,
   mergeIdList,
   mergeMetricLog,
+  mergeProgramsState,
 } from "./mergeStrategies";
 
 // Every localStorage base key that should follow the account across devices.
@@ -429,7 +430,16 @@ function mergeCollection(
     case "emad-activity-log":
     case "emad-workout-calorie-log":
     case "emad-daily-log-history":
+    // Date -> weight log, same shape and exposure as the metric logs above:
+    // an unrelated weigh-in on one device used to replace the whole array
+    // and could clobber a same-day entry logged on another device.
+    case "emad-weight-log":
       return mergeMetricLog(local, remote, { localTime: lt, remoteTime: rt });
+    // A device recomputing its own cycleAnchor just from opening the app
+    // must never be allowed to out-rank a real edit on the other side — see
+    // mergeProgramsState.
+    case "emad-programs":
+      return mergeProgramsState(local, remote);
     // Append-only id/date lists — a union is always right, and it's what
     // keeps a completion or a deletion recorded on one device from being
     // dropped by the other.

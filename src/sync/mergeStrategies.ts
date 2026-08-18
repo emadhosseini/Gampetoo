@@ -185,6 +185,100 @@ export function mergeCompletionLog(
   return JSON.stringify([...byDate.values()]);
 }
 
+// ---------------------------------------------------------------------
+// emad-programs — { activeProgramId, programs: [{ id, cycleAnchor, ... }] }
+// ---------------------------------------------------------------------
+
+interface ProgramLike {
+  id: string;
+  cycleAnchor?: { date: string; dayIndex: number };
+  [key: string]: unknown;
+}
+
+interface ProgramsStateLike {
+  activeProgramId: string;
+  programs: ProgramLike[];
+}
+
+function withoutCycleAnchor(program: ProgramLike): ProgramLike {
+  const { cycleAnchor: _cycleAnchor, ...rest } = program;
+
+  return rest;
+}
+
+/**
+ * Programs are otherwise last-writer-wins on the whole blob, which is right
+ * for a real edit (renaming a plan, adding an exercise) — exactly one device
+ * made that change. cycleAnchor is different: every device recomputes it
+ * for itself just from opening the app on a new day (see
+ * resolveCycleAnchor), and a device that has gone longest without opening
+ * the app recomputes from the least information, only ever advancing when
+ * it has local proof a workout day was completed. That makes a *lower*
+ * dayIndex the signature of a device that simply knows less, never of a
+ * more-current one — so when the two sides otherwise agree, the higher
+ * dayIndex is always at least as informed and never wins by accident over a
+ * real edit, because this only runs once the rest of the program has
+ * already been checked byte-for-byte identical.
+ *
+ * Returns undefined (letting the default timestamp/unconfirmed rule decide)
+ * whenever anything besides cycleAnchor differs, or the shape doesn't parse
+ * — this only ever narrows the ordinary case, never replaces it.
+ */
+export function mergeProgramsState(
+  localRaw: string | undefined,
+  remoteRaw: string | undefined,
+): string | undefined {
+  if (localRaw === undefined || remoteRaw === undefined) return undefined;
+
+  let local: ProgramsStateLike;
+  let remote: ProgramsStateLike;
+
+  try {
+    local = JSON.parse(localRaw) as ProgramsStateLike;
+    remote = JSON.parse(remoteRaw) as ProgramsStateLike;
+  } catch {
+    return undefined;
+  }
+
+  if (
+    !Array.isArray(local.programs) ||
+    !Array.isArray(remote.programs) ||
+    local.activeProgramId !== remote.activeProgramId ||
+    local.programs.length !== remote.programs.length
+  ) {
+    return undefined;
+  }
+
+  const remoteById = new Map(remote.programs.map((program) => [program.id, program]));
+  const merged: ProgramLike[] = [];
+
+  for (const localProgram of local.programs) {
+    const remoteProgram = remoteById.get(localProgram.id);
+
+    if (!remoteProgram) return undefined;
+
+    if (
+      JSON.stringify(withoutCycleAnchor(localProgram)) !==
+      JSON.stringify(withoutCycleAnchor(remoteProgram))
+    ) {
+      return undefined;
+    }
+
+    const localAnchor = localProgram.cycleAnchor;
+    const remoteAnchor = remoteProgram.cycleAnchor;
+
+    let cycleAnchor = localAnchor ?? remoteAnchor;
+
+    if (localAnchor && remoteAnchor) {
+      cycleAnchor = remoteAnchor.dayIndex > localAnchor.dayIndex ? remoteAnchor : localAnchor;
+    }
+
+    merged.push({ ...localProgram, cycleAnchor });
+  }
+
+  return JSON.stringify({ ...local, programs: merged });
+}
+
 /** Union of two id lists — used for the deleted-entry log. */
 export function mergeIdList(
   localRaw: string | undefined,
