@@ -1,6 +1,15 @@
 {
-  "current": "1.0.42",
+  "current": "1.0.43",
   "history": [
+    {
+      "version": "1.0.43",
+      "date": "2026-08-21",
+      "description": "Fix multi-device weight/program-day sync clobbering and add eaten-food indicator to nutrition list",
+      "highlights": [
+        "🔄 هم‌گام‌سازی: باز کردن اپ روی یه گوشی بعد از چند روز دیگه وزن امروز رو با وزن قدیمی و روز برنامه رو با روز اشتباه جایگزین نمی‌کنه",
+        "🍽️ توی برنامه غذایی، غذایی که ثبت کردید با تیک سبز مشخص می‌شه و می‌ره بالای لیست"
+      ]
+    },
     {
       "version": "1.0.42",
       "date": "2026-08-16",

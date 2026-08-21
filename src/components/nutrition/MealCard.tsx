@@ -4,6 +4,9 @@ import { useState } from "react";
 import MealItem from "./MealItem";
 import type { FoodItem, MealSection } from "../../types/nutrition";
 import { toFaDigits } from "@/utils/numberFormat";
+import { getLoggedEntries } from "@/utils/dailyLogEngine";
+import { resolveLogSlotId } from "@/domain/nutrition/planFoodLogging";
+import { normalizeFa } from "@/utils/persianSearch";
 
 interface MealCardProps {
   meal: MealSection;
@@ -14,6 +17,25 @@ interface MealCardProps {
 
 export default function MealCard({ meal, onSelectFood }: MealCardProps) {
   const [isOpen, setIsOpen] = useState(false);
+
+  // Foods already logged as eaten today, under the same slot a tap here
+  // would write into (see resolveLogSlotId) — matched by name, since a
+  // planned food's id and a logged entry's id are never the same thing
+  // (the log entry gets its own generateId() on write).
+  const loggedNames = new Set(
+    getLoggedEntries(resolveLogSlotId(meal.id)).map((entry) => normalizeFa(entry.name)),
+  );
+
+  // Eaten foods float to the top — same reasoning as
+  // NutritionPlanDetailPage's "selected items float to top": otherwise a
+  // food you already checked off scrolls out of view under everything
+  // else, with nothing marking where it went. Stable, so the order within
+  // "eaten" and within "not eaten" stays whatever the plan already had.
+  const foods = [...meal.foods].sort(
+    (a, b) =>
+      Number(loggedNames.has(normalizeFa(b.name))) -
+      Number(loggedNames.has(normalizeFa(a.name))),
+  );
 
   return (
     // p-2.5, same as the collapsed row's own text-sm size below: matches
@@ -45,10 +67,11 @@ export default function MealCard({ meal, onSelectFood }: MealCardProps) {
       {isOpen && (
         <div className="mt-4 space-y-4">
           <div className="space-y-2">
-            {meal.foods.map((food) => (
+            {foods.map((food) => (
               <MealItem
                 key={food.id}
                 item={food}
+                eaten={loggedNames.has(normalizeFa(food.name))}
                 onSelect={
                   onSelectFood ? (item) => onSelectFood(meal, item) : undefined
                 }
