@@ -6,9 +6,12 @@ function storageKey() {
   return scopedKey(STORAGE_KEY);
 }
 
-// workoutId -> the user's chosen exercise order for that workout's daily
+// Order key -> the user's chosen exercise order for that workout's daily
 // list (WorkoutPage), separate from the group structure edited on the
-// workout's own settings page.
+// workout's own settings page. The caller decides what the key is; for a
+// workout type run as multiple variants (a full-body split's پشت/سینه/پا
+// days, all sharing one workoutId) it must combine the type with the
+// variant, or every variant's reorder would overwrite the same entry.
 type OrderMap = Record<string, string[]>;
 
 function readMap(): OrderMap {
