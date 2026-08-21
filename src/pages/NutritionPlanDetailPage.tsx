@@ -15,13 +15,18 @@ import {
   supplementFoods,
 } from "@/domain/nutrition/foodSearch";
 import { sortFoodsForMeal } from "@/domain/nutrition/mealFoodSuggestions";
-import { parseAmount } from "@/domain/nutrition/planFoodLogging";
+import { findCatalogFood, parseAmount } from "@/domain/nutrition/planFoodLogging";
 import { toFaDigits } from "@/utils/numberFormat";
 
 const SUPPLEMENTS_MEAL_ID = "supplements";
 
 import type { FoodItem as FoodEntry, ServingUnit } from "@/types/food";
-import type { MealPlan, MealPlanType, MealSection } from "@/types/nutrition";
+import type {
+  FoodItem as PlanFoodItem,
+  MealPlan,
+  MealPlanType,
+  MealSection,
+} from "@/types/nutrition";
 
 const typeTitles: Record<MealPlanType, string> = {
   workout: "برنامه غذایی روزهای تمرین",
@@ -30,6 +35,41 @@ const typeTitles: Record<MealPlanType, string> = {
 
 function mealCalories(meal: MealSection): number {
   return meal.foods.reduce((sum, food) => sum + (food.calories ?? 0), 0);
+}
+
+// A selected plan food that isn't in the currently browsable list at all —
+// found via search (local or external), added, and then the search box was
+// cleared or retyped into something else. The browsable list is otherwise
+// built strictly from the catalog (localFoods, or whatever the live search
+// returned a moment ago), which never included it, so it simply vanished:
+// not failed to float to the top, just gone, with nothing to toggle back
+// off short of deleting the whole meal.
+//
+// Resolved back to a real catalog entry first (matched by id or by name —
+// see findCatalogFood, built for exactly this "plan food outlived its
+// catalog row" case) so quantity changes still scale off real per-100g
+// macros. Only when that fails is a synthetic one-serving entry built from
+// whatever macros the plan food already has, so it's at least visible and
+// removable.
+function resolveMissingSelectedFood(food: PlanFoodItem): FoodEntry {
+  const catalog = findCatalogFood(food.id, food.name);
+
+  if (catalog) return catalog;
+
+  const { unitLabel } = parseAmount(food.amount);
+
+  return {
+    id: food.id,
+    nameFa: food.name,
+    nameEn: food.name,
+    category: "main_dish",
+    servingUnits: [{ label: unitLabel, grams: 100 }],
+    caloriesPer100g: food.calories ?? 0,
+    proteinPer100g: food.protein ?? 0,
+    carbsPer100g: food.carbs ?? 0,
+    fatPer100g: food.fat ?? 0,
+    fiberPer100g: food.fiber,
+  };
 }
 
 function MealFoodList({
@@ -59,20 +99,28 @@ function MealFoodList({
     () => (isSupplementsMeal ? supplementFoods : sortFoodsForMeal(localFoods, meal.id)),
     [meal.id, isSupplementsMeal],
   );
-  const unsortedVisibleFoods = isFiltering ? results : suggestedFoods;
+  const baseVisibleFoods = isFiltering ? results : suggestedFoods;
+
+  // A selected food that isn't anywhere in baseVisibleFoods — found via
+  // search, added, and now the search box is cleared or holds a different
+  // query. Without this it doesn't fail to float to the top, it just isn't
+  // rendered at all — see resolveMissingSelectedFood.
+  const missingSelected = meal.foods
+    .filter((food) => !baseVisibleFoods.some((entry) => entry.id === food.id))
+    .map(resolveMissingSelectedFood);
+
+  const unsortedVisibleFoods = [...baseVisibleFoods, ...missingSelected];
 
   // Already-selected foods float to the top of the list (search results or
   // suggestions alike) — otherwise a food you picked can scroll out of
   // view under everything else, with nothing marking where it went.
   // A stable sort, so the relative order within "selected" and within
   // "not selected" stays whatever it already was.
-  const visibleFoods = useMemo(() => {
-    const selectedIds = new Set(meal.foods.map((food) => food.id));
+  const selectedIds = new Set(meal.foods.map((food) => food.id));
 
-    return [...unsortedVisibleFoods].sort(
-      (a, b) => Number(selectedIds.has(b.id)) - Number(selectedIds.has(a.id)),
-    );
-  }, [unsortedVisibleFoods, meal.foods]);
+  const visibleFoods = [...unsortedVisibleFoods].sort(
+    (a, b) => Number(selectedIds.has(b.id)) - Number(selectedIds.has(a.id)),
+  );
 
   return (
     <div className="mt-4 space-y-2">
