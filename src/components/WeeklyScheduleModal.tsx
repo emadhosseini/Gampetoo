@@ -7,6 +7,8 @@ import { getProgramDay, hasProgramStarted } from "@/utils/programEngine";
 import { getCompletionEntries } from "@/utils/workoutCompletionLog";
 import { getSession } from "@/utils/sessionEngine";
 import { DEFAULT_VARIANT_ID, getVariant } from "@/store/workoutVariantStore";
+import { getDefaultPlanName, hasCustomDefaultPlanName } from "@/store/workoutLibraryStore";
+import type { WorkoutType } from "@/types/program";
 import {
   formatDisplayDayNumber,
   formatWeekdayName,
@@ -20,7 +22,11 @@ import {
 // shown for any day (deterministic), while 2+ assigned variants only
 // resolve to a name on today, from the same session pick WorkoutPage itself
 // uses — other days with 2+ options are genuinely unknown and show nothing.
-function resolveVariantName(assignedVariantIds: string[], isToday: boolean): string | undefined {
+function resolveVariantName(
+  assignedVariantIds: string[],
+  isToday: boolean,
+  workoutId: WorkoutType | null,
+): string | undefined {
   let variantId: string | null = null;
 
   if (assignedVariantIds.length === 1) {
@@ -29,7 +35,19 @@ function resolveVariantName(assignedVariantIds: string[], isToday: boolean): str
     variantId = getSession().selectedVariantId;
   }
 
-  if (!variantId || variantId === DEFAULT_VARIANT_ID) return undefined;
+  if (!variantId) return undefined;
+
+  // The default plan is named too — it used to be treated as unnameable and
+  // fell through to no label at all, the same bug ProgramBuilderPage's own
+  // planNames derivation already fixed for itself (see its comment there).
+  // Still only once it's been renamed to something real, though — the
+  // generic "برنامه پیش‌فرض" fallback is exactly the noise this modal's own
+  // comment above already opted out of showing.
+  if (variantId === DEFAULT_VARIANT_ID) {
+    return workoutId && hasCustomDefaultPlanName(workoutId)
+      ? getDefaultPlanName(workoutId)
+      : undefined;
+  }
 
   return getVariant(variantId)?.name;
 }
@@ -107,7 +125,11 @@ export default function WeeklyScheduleModal() {
                 const isWorkout = day?.activity === "workout";
                 const variantName =
                   isWorkout && day
-                    ? resolveVariantName(day.assignedVariantIds ?? [], isToday)
+                    ? resolveVariantName(
+                        day.assignedVariantIds ?? [],
+                        isToday,
+                        day.workoutId,
+                      )
                     : undefined;
 
                 // Only days that are actually over get judged: a day still

@@ -20,7 +20,11 @@ import {
   resolvableVariantIds,
 } from "@/utils/programEngine";
 
-import { getDefaultPlanName, getWorkout } from "@/store/workoutLibraryStore";
+import {
+  getDefaultPlanName,
+  getWorkout,
+  hasCustomDefaultPlanName,
+} from "@/store/workoutLibraryStore";
 import {
   DEFAULT_VARIANT_ID,
   getVariant,
@@ -221,15 +225,21 @@ const workout = effectiveWorkoutType
   ? getWorkoutWithVariant(effectiveWorkoutType, effectiveVariantId)
   : undefined;
 
-  // Only a real (non-default) pick gets a label — پیش‌فرض reads as noise
-  // next to a workout title that already says what it is. A recorded day
-  // uses the name saved with it, so renaming the plan later can't relabel
-  // a workout that is already in the past.
+  // Only a real pick gets a label — the generic "برنامه پیش‌فرض" reads as
+  // noise next to a workout title that already says what it is, but once
+  // the user has actually renamed it (see WeeklyScheduleModal's identical
+  // fix) that name is exactly as real as any other variant's and belongs
+  // here too. A recorded day uses the name saved with it, so renaming the
+  // plan later can't relabel a workout that is already in the past.
   const resolvedVariantName = todaysRecord
     ? todaysRecord.variantName
-    : resolvedVariantId && resolvedVariantId !== DEFAULT_VARIANT_ID
-      ? getVariant(resolvedVariantId)?.name
-      : undefined;
+    : resolvedVariantId === DEFAULT_VARIANT_ID
+      ? (workoutType && hasCustomDefaultPlanName(workoutType)
+          ? getDefaultPlanName(workoutType)
+          : undefined)
+      : resolvedVariantId
+        ? getVariant(resolvedVariantId)?.name
+        : undefined;
 
   const isWorkout = day.activity === "workout";
 
@@ -429,12 +439,21 @@ const workout = effectiveWorkoutType
     0,
   );
 
+  // Keyed by workout type AND variant, not type alone — a "full_body" split
+  // runs a different variant (پشت/سینه/پا, ...) each occurrence, all under
+  // the same workoutId, and a plain type key would have every one of those
+  // days sharing (and overwriting) one saved order. See effectiveVariantId
+  // above.
+  const orderKey = effectiveWorkoutType
+    ? `${effectiveWorkoutType}:${effectiveVariantId ?? DEFAULT_VARIANT_ID}`
+    : undefined;
+
   // The user's own manually-saved order (if any) takes priority over the
   // exercises' natural group order — everything downstream (the checklist
   // and the reorder screen itself) builds on top of this.
   const orderedExercises = applyExerciseOrder(
     exercises,
-    workoutType ? getExerciseOrder(workoutType) : undefined,
+    orderKey ? getExerciseOrder(orderKey) : undefined,
   );
 
   const checkedExerciseIds = new Set(session.checkedExercises);
@@ -452,9 +471,9 @@ const workout = effectiveWorkoutType
   }
 
   function saveReorder() {
-    if (workoutType) {
+    if (orderKey) {
       setExerciseOrder(
-        workoutType,
+        orderKey,
         reorderList.map((exercise) => exercise.id),
       );
     }

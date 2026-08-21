@@ -299,6 +299,14 @@ export function getDefaultPlanName(workoutId: string): string {
   return readDefaultPlanNames()[workoutId] ?? DEFAULT_PLAN_NAME_FALLBACK;
 }
 
+// Whether the user has actually renamed the default plan away from the
+// generic fallback — for a caller that only wants to show a label once
+// there's something real to show, "برنامه پیش‌فرض" itself reading as noise
+// next to a title that already says what it is (see WorkoutPage.tsx).
+export function hasCustomDefaultPlanName(workoutId: string): boolean {
+  return readDefaultPlanNames()[workoutId] !== undefined;
+}
+
 export function setDefaultPlanName(workoutId: string, name: string) {
   const names = readDefaultPlanNames();
 
