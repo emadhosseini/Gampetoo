@@ -1,6 +1,14 @@
 {
-  "current": "1.0.43",
+  "current": "1.0.44",
   "history": [
+    {
+      "version": "1.0.44",
+      "date": "2026-08-21",
+      "description": "Fix selected foods disappearing from the meal-plan editor's browse list after search",
+      "highlights": [
+        "🥗 توی ویرایش برنامه غذایی، غذایی که از جستجو انتخاب می‌کنید دیگه بعد از پاک‌کردن جستجو گم نمی‌شه و بالای لیست می‌مونه"
+      ]
+    },
     {
       "version": "1.0.43",
       "date": "2026-08-21",
