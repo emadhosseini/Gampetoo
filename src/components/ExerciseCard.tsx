@@ -3,18 +3,27 @@ import { AnimatePresence, motion } from "framer-motion";
 
 import Toggle from "@/components/Toggle";
 import ExerciseSetLogger from "@/components/ExerciseSetLogger";
+import ExerciseNoteButton from "@/components/ExerciseNoteButton";
+import { getExerciseNote } from "@/store/exerciseNoteStore";
 import { confirmAllSets } from "@/utils/exerciseSetLogEngine";
 import type { Exercise } from "@/data/workoutLibrary";
 
 type ExerciseCardProps = {
   exercise: Exercise;
   checked: boolean;
+  // See exerciseNoteStore — which plan today is actually being run as, so
+  // this card's note button reads/writes the coach's note for THIS plan,
+  // not the exercise everywhere else it might be used.
+  workoutId: string;
+  variantId: string;
   onToggleChecked: () => void;
 };
 
 export default function ExerciseCard({
   exercise,
   checked,
+  workoutId,
+  variantId,
   onToggleChecked,
 }: ExerciseCardProps) {
   // Tapping anywhere on the card except the toggle opens the set-logging
@@ -42,6 +51,8 @@ export default function ExerciseCard({
 
     onToggleChecked();
   }
+
+  const note = getExerciseNote(workoutId, variantId, exercise.id);
 
   return (
     // `layout` animates the position shift when checking this off moves it
@@ -76,7 +87,20 @@ export default function ExerciseCard({
               </span>
             )}
           </h2>
+
+          {note && (
+            <p className="mt-0.5 truncate text-[11px] text-avocado-yellow/80">
+              📝 {note}
+            </p>
+          )}
         </button>
+
+        <ExerciseNoteButton
+          workoutId={workoutId}
+          variantId={variantId}
+          exerciseId={exercise.id}
+          exerciseName={exercise.name}
+        />
 
         <Toggle checked={checked} onChange={handleToggleChecked} />
       </div>

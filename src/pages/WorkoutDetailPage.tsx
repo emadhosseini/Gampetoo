@@ -6,6 +6,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import Toggle from "@/components/Toggle";
 import ModalOverlay from "@/components/ModalOverlay";
 import ExerciseSearchPicker from "@/components/ExerciseSearchPicker";
+import ExerciseNoteButton from "@/components/ExerciseNoteButton";
+import { movePlanNotes } from "@/store/exerciseNoteStore";
 import {
   getDefaultPlanName,
   getWorkout,
@@ -100,10 +102,17 @@ function VariantNameModal({
 function ExerciseEditRow({
   exercise,
   isWarmupWorkout,
+  workoutId,
+  variantId,
   onUpdate,
 }: {
   exercise: Exercise;
   isWarmupWorkout: boolean;
+  // See exerciseNoteStore — the plan this row belongs to right now, so its
+  // note button reads/writes the note for THIS plan specifically, not the
+  // exercise everywhere it's used.
+  workoutId: string;
+  variantId: string;
   onUpdate: (patch: Partial<Exercise>) => void;
 }) {
   // Collapsed by default, exactly like the daily workout page's own
@@ -183,6 +192,15 @@ function ExerciseEditRow({
             )}
           </h2>
         </button>
+
+        {!isWarmupWorkout && (
+          <ExerciseNoteButton
+            workoutId={workoutId}
+            variantId={variantId}
+            exerciseId={exercise.id}
+            exerciseName={exercise.name}
+          />
+        )}
 
         <Toggle
           checked={exercise.enabled}
@@ -599,6 +617,10 @@ export default function WorkoutDetailPage() {
       const created = createVariant(workout!.id, pending.name, drafts[pending.id] ?? []);
 
       idMap[pending.id] = created.id;
+      // Any note jotted down before this plan had a real id (see
+      // ExerciseNoteButton) was saved under the temp one — move it over now
+      // or it's unreachable the moment pendingVariants below is cleared.
+      movePlanNotes(workout!.id, pending.id, created.id);
     }
 
     if (specializedWarmup) {
@@ -887,6 +909,8 @@ export default function WorkoutDetailPage() {
                       <ExerciseEditRow
                         exercise={exercise}
                         isWarmupWorkout={isWarmupWorkout}
+                        workoutId={workout!.id}
+                        variantId={currentKey}
                         onUpdate={(patch) =>
                           updateExercise(group.id, exercise.id, patch)
                         }
@@ -976,6 +1000,8 @@ export default function WorkoutDetailPage() {
                         key={exercise.id}
                         exercise={exercise}
                         isWarmupWorkout={isWarmupWorkout}
+                        workoutId={workout!.id}
+                        variantId={currentKey}
                         onUpdate={(patch) =>
                           updateExercise(group.id, exercise.id, patch)
                         }
