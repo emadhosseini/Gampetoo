@@ -399,8 +399,10 @@ export default function WorkoutDetailPage() {
 
     return groups.flatMap((group) =>
       group.exercises
-        .filter((exercise) =>
-          matchesWordPrefix(normalizeFa(exercise.name), normalizedQuery),
+        .filter(
+          (exercise) =>
+            matchesWordPrefix(normalizeFa(exercise.name), normalizedQuery) ||
+            matchesWordPrefix(normalizeFa(exercise.nameEn ?? ""), normalizedQuery),
         )
         .map((exercise) => ({ group, exercise })),
     );
