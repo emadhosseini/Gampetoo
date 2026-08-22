@@ -1,6 +1,14 @@
 {
-  "current": "1.0.45",
+  "current": "1.0.46",
   "history": [
+    {
+      "version": "1.0.46",
+      "date": "2026-08-22",
+      "description": "Search exercises by English name too",
+      "highlights": [
+        "🔍 توی جست‌وجوی حرکت‌ها، حالا اسم انگلیسی هم جواب می‌ده، نه فقط فارسی"
+      ]
+    },
     {
       "version": "1.0.45",
       "date": "2026-08-21",
