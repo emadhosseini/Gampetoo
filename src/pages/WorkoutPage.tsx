@@ -519,6 +519,8 @@ const workout = effectiveWorkoutType
               key={exercise.id}
               exercise={exercise}
               checked={checkedExerciseIds.has(exercise.id)}
+              workoutId={effectiveWorkoutType ?? ""}
+              variantId={effectiveVariantId ?? DEFAULT_VARIANT_ID}
               onToggleChecked={() => handleToggleExercise(exercise)}
             />
           ))}

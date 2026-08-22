@@ -7,6 +7,7 @@ import {
   resetWorkoutExtras,
 } from "../../store/workoutLibraryStore";
 import { resetExerciseOrder } from "../../store/workoutOrderStore";
+import { resetExerciseNotes } from "../../store/exerciseNoteStore";
 import { resetWorkoutVariants } from "../../store/workoutVariantStore";
 import { resetExerciseSetLog } from "../../utils/exerciseSetLogEngine";
 import { resetCalendarPreference } from "../../utils/calendarPreferenceEngine";
@@ -47,6 +48,7 @@ function wipeLocalData(username: string | null) {
   resetDefaultPlanNames();
   resetWorkoutExtras();
   resetExerciseOrder();
+  resetExerciseNotes();
   resetWorkoutVariants();
   resetExerciseSetLog();
   resetCalendarPreference();
