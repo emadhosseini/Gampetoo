@@ -17,6 +17,7 @@ interface ExerciseOverride {
   sets?: number;
   reps?: number;
   enabled?: boolean;
+  repsPerSet?: number[];
 }
 
 type OverridesMap = Record<string, ExerciseOverride>;
@@ -264,6 +265,7 @@ export function saveWorkoutExercises(
         sets: exercise.sets,
         reps: exercise.reps,
         enabled: exercise.enabled,
+        repsPerSet: exercise.repsPerSet,
       };
     }
   }

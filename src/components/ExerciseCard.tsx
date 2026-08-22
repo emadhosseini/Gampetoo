@@ -102,6 +102,7 @@ export default function ExerciseCard({
               unit={exercise.unit}
               defaultSets={exercise.sets}
               defaultReps={exercise.reps}
+              repsPerSet={exercise.repsPerSet}
               description={exercise.description}
             />
           </motion.div>

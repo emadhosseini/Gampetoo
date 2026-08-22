@@ -113,6 +113,56 @@ function ExerciseEditRow({
   // rows never expand (nothing to reveal).
   const [expanded, setExpanded] = useState(false);
   const canExpand = !isWarmupWorkout;
+  const repsStep = exercise.unit === "seconds" ? 5 : 1;
+  const isPyramid = Boolean(exercise.repsPerSet && exercise.repsPerSet.length > 0);
+
+  // Turning پیرامید on seeds one rep-target per current set (all starting
+  // at the same reps count, so switching modes never silently changes what
+  // today's log would seed) instead of leaving it empty; turning it off
+  // drops the array entirely — {...exercise, ...patch} needs the key
+  // present-but-undefined to actually clear a previous value, not just
+  // omitted, which is exactly what an explicit `repsPerSet: undefined`
+  // patch does.
+  function togglePyramid() {
+    onUpdate(
+      isPyramid
+        ? { repsPerSet: undefined }
+        : { repsPerSet: Array.from({ length: exercise.sets }, () => exercise.reps) },
+    );
+  }
+
+  function updateRepAt(index: number, value: number) {
+    const next = [...(exercise.repsPerSet ?? [])];
+
+    next[index] = Math.max(1, value);
+
+    onUpdate({ repsPerSet: next });
+  }
+
+  // Changing the set count while پیرامید is on keeps the array the same
+  // length as `sets` — extending repeats the last set's own target rather
+  // than defaulting back to the flat `reps` value, shrinking just drops the
+  // trailing set(s).
+  function updateSetCount(nextSets: number) {
+    if (nextSets < 1) return;
+
+    const patch: Partial<Exercise> = { sets: nextSets };
+
+    if (exercise.repsPerSet) {
+      patch.repsPerSet =
+        nextSets > exercise.repsPerSet.length
+          ? [
+              ...exercise.repsPerSet,
+              ...Array.from(
+                { length: nextSets - exercise.repsPerSet.length },
+                () => exercise.repsPerSet![exercise.repsPerSet!.length - 1],
+              ),
+            ]
+          : exercise.repsPerSet.slice(0, nextSets);
+    }
+
+    onUpdate(patch);
+  }
 
   return (
     // Same shell as ExerciseCard: glass-panel + rounded-2xl + p-2.5, a
@@ -158,11 +208,7 @@ function ExerciseEditRow({
 
                 <div className="selector-pill flex items-center justify-between rounded-xl p-1.5">
                   <button
-                    onClick={() => {
-                      if (exercise.sets <= 1) return;
-
-                      onUpdate({ sets: exercise.sets - 1 });
-                    }}
+                    onClick={() => updateSetCount(exercise.sets - 1)}
                     aria-label="کم کردن ست"
                   >
                     <Minus size={16} />
@@ -173,7 +219,7 @@ function ExerciseEditRow({
                   </span>
 
                   <button
-                    onClick={() => onUpdate({ sets: exercise.sets + 1 })}
+                    onClick={() => updateSetCount(exercise.sets + 1)}
                     aria-label="زیاد کردن ست"
                   >
                     <Plus size={16} />
@@ -181,42 +227,82 @@ function ExerciseEditRow({
                 </div>
               </div>
 
-              <div>
-                <div className="mb-1.5 text-xs font-medium text-white/60">
-                  {exercise.unit === "seconds" ? "ثانیه" : "تکرار"}
+              {!isPyramid && (
+                <div>
+                  <div className="mb-1.5 text-xs font-medium text-white/60">
+                    {exercise.unit === "seconds" ? "ثانیه" : "تکرار"}
+                  </div>
+
+                  <div className="selector-pill flex items-center justify-between rounded-xl p-1.5">
+                    <button
+                      onClick={() => {
+                        if (exercise.reps <= repsStep) return;
+
+                        onUpdate({ reps: exercise.reps - repsStep });
+                      }}
+                      aria-label="کم کردن تکرار"
+                    >
+                      <Minus size={16} />
+                    </button>
+
+                    <span className="text-sm font-bold text-white">
+                      {toFaDigits(exercise.reps)}
+                    </span>
+
+                    <button
+                      onClick={() => onUpdate({ reps: exercise.reps + repsStep })}
+                      aria-label="زیاد کردن تکرار"
+                    >
+                      <Plus size={16} />
+                    </button>
+                  </div>
                 </div>
-
-                <div className="selector-pill flex items-center justify-between rounded-xl p-1.5">
-                  <button
-                    onClick={() => {
-                      const step = exercise.unit === "seconds" ? 5 : 1;
-
-                      if (exercise.reps <= step) return;
-
-                      onUpdate({ reps: exercise.reps - step });
-                    }}
-                    aria-label="کم کردن تکرار"
-                  >
-                    <Minus size={16} />
-                  </button>
-
-                  <span className="text-sm font-bold text-white">
-                    {toFaDigits(exercise.reps)}
-                  </span>
-
-                  <button
-                    onClick={() =>
-                      onUpdate({
-                        reps: exercise.reps + (exercise.unit === "seconds" ? 5 : 1),
-                      })
-                    }
-                    aria-label="زیاد کردن تکرار"
-                  >
-                    <Plus size={16} />
-                  </button>
-                </div>
-              </div>
+              )}
             </div>
+
+            {/* Off by default (see Exercise.repsPerSet) — most exercises
+                really do use the same rep count on every set, so this stays
+                a single opt-in switch rather than always showing a row of
+                steppers nobody asked for. */}
+            {exercise.unit !== "seconds" && (
+              <div className="mt-2.5 flex items-center justify-between border-t border-white/10 pt-2.5">
+                <span className="text-xs font-medium text-white/60">
+                  تکرار متغیر برای هر ست (هرمی)
+                </span>
+
+                <Toggle checked={isPyramid} onChange={togglePyramid} />
+              </div>
+            )}
+
+            {isPyramid && (
+              <div className="mt-2.5 grid grid-cols-3 gap-2">
+                {exercise.repsPerSet!.map((rep, index) => (
+                  <div key={index}>
+                    <div className="mb-1 text-center text-[10px] text-white/50">
+                      ست {toFaDigits(index + 1)}
+                    </div>
+
+                    <div className="selector-pill flex items-center justify-between rounded-lg p-1">
+                      <button
+                        onClick={() => updateRepAt(index, rep - 1)}
+                        aria-label={`کم کردن تکرار ست ${toFaDigits(index + 1)}`}
+                      >
+                        <Minus size={12} />
+                      </button>
+
+                      <span className="text-xs font-bold text-white">{toFaDigits(rep)}</span>
+
+                      <button
+                        onClick={() => updateRepAt(index, rep + 1)}
+                        aria-label={`زیاد کردن تکرار ست ${toFaDigits(index + 1)}`}
+                      >
+                        <Plus size={12} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

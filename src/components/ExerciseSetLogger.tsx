@@ -92,6 +92,10 @@ export interface ExerciseSetLoggerProps {
   // opened, see ensureTodaysSets).
   defaultSets: number;
   defaultReps: number;
+  // Per-set rep targets for a pyramid-style plan (see Exercise.repsPerSet)
+  // — when given, today's rows are seeded one-to-one from it instead of
+  // repeating defaultReps on every row.
+  repsPerSet?: number[];
   // The exercise's own "what this trains and why" text (see
   // Exercise.description). Absent for anything not yet documented, in which
   // case the note button simply isn't offered.
@@ -109,6 +113,7 @@ export default function ExerciseSetLogger({
   unit = "reps",
   defaultSets,
   defaultReps,
+  repsPerSet,
   description,
 }: ExerciseSetLoggerProps) {
   const isSeconds = unit === "seconds";
@@ -117,7 +122,7 @@ export default function ExerciseSetLogger({
   // for this exact distinction (ExerciseEditRow in WorkoutDetailPage).
   const repsStep = isSeconds ? 5 : REPS_STEP;
   const [sets, setSets] = useState<SetEntry[]>(() =>
-    ensureTodaysSets(exerciseId, defaultSets, defaultReps),
+    ensureTodaysSets(exerciseId, defaultSets, defaultReps, repsPerSet),
   );
   // The wall-clock moment rest actually ends, not a countable "seconds
   // left" — a plain setTimeout-decrements-a-number timer only ever ticks
