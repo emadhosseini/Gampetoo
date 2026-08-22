@@ -34,6 +34,14 @@ export interface Exercise {
   // person can do. Absent means repetitions, which is almost everything.
   unit?: "reps" | "seconds";
   reps: number;
+  // A per-set rep target (e.g. پیرامید ۱۲/۱۰/۸) for whoever's plan doesn't
+  // use the same rep count on every set. When present, its length is the
+  // real set count — `sets`/`reps` above stay in sync (sets === length,
+  // reps === its last value) purely so anything that hasn't been taught
+  // about this field yet still gets a sane single number. Absent — the
+  // default for every seed entry and for anyone who never turns this on —
+  // means "same reps on every set", exactly the old behavior.
+  repsPerSet?: number[];
   enabled: boolean;
   metValue: number;
   // Two or three plain-Persian sentences: which muscle the move is mainly

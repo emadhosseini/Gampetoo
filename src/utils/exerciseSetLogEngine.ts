@@ -110,10 +110,17 @@ export function ensureTodaysSets(
   exerciseId: string,
   defaultSets: number,
   defaultReps: number,
+  // A per-set rep target (see Exercise.repsPerSet) for a pyramid-style plan
+  // — set N is seeded with repsPerSet[N] instead of the flat defaultReps.
+  // Its own length wins over defaultSets when both are given, since it's
+  // the more specific source of truth; absent/empty falls straight back to
+  // the old flat-reps seeding untouched.
+  repsPerSet?: number[],
 ): SetEntry[] {
   const current = getTodaysSets(exerciseId);
+  const setCount = repsPerSet && repsPerSet.length > 0 ? repsPerSet.length : defaultSets;
 
-  if (current.length > 0 || defaultSets <= 0) return current;
+  if (current.length > 0 || setCount <= 0) return current;
 
   // Same "repeat the last real weight" seed addSet uses for a brand-new
   // row — reps come from the exercise's own default instead, since that's
@@ -122,10 +129,10 @@ export function ensureTodaysSets(
     getPastSessions(exerciseId, 1)[0]?.sets.filter((set) => set.confirmed).slice(-1)[0]
       ?.weight ?? 0;
 
-  const seeded: SetEntry[] = Array.from({ length: defaultSets }, () => ({
+  const seeded: SetEntry[] = Array.from({ length: setCount }, (_, index) => ({
     id: generateId(),
     weight: lastWeight,
-    reps: defaultReps,
+    reps: repsPerSet?.[index] ?? defaultReps,
     confirmed: false,
   }));
 
