@@ -4,7 +4,6 @@ import { AnimatePresence, motion } from "framer-motion";
 import Toggle from "@/components/Toggle";
 import ExerciseSetLogger from "@/components/ExerciseSetLogger";
 import ExerciseNoteButton from "@/components/ExerciseNoteButton";
-import { getExerciseNote } from "@/store/exerciseNoteStore";
 import { confirmAllSets } from "@/utils/exerciseSetLogEngine";
 import type { Exercise } from "@/data/workoutLibrary";
 
@@ -52,8 +51,6 @@ export default function ExerciseCard({
     onToggleChecked();
   }
 
-  const note = getExerciseNote(workoutId, variantId, exercise.id);
-
   return (
     // `layout` animates the position shift when checking this off moves it
     // past its still-to-do siblings in the parent's sorted list — a plain
@@ -87,12 +84,6 @@ export default function ExerciseCard({
               </span>
             )}
           </h2>
-
-          {note && (
-            <p className="mt-0.5 truncate text-[11px] text-avocado-yellow/80">
-              📝 {note}
-            </p>
-          )}
         </button>
 
         <ExerciseNoteButton
