@@ -1,6 +1,14 @@
 {
-  "current": "1.0.50",
+  "current": "1.0.51",
   "history": [
+    {
+      "version": "1.0.51",
+      "date": "2026-08-23",
+      "description": "Drop the note preview line from the daily workout card",
+      "highlights": [
+        "🧹 کارت‌های تمرین توی برنامه روزانه دیگه شلوغ نمی‌شن — یادداشت فقط با زرد شدن دکمه‌ش نشون داده می‌شه"
+      ]
+    },
     {
       "version": "1.0.50",
       "date": "2026-08-22",
