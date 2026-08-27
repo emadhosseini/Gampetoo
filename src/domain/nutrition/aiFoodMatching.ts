@@ -1,5 +1,6 @@
 import type { FoodItem, ServingUnit } from "@/types/food";
-import { localFoods, macrosForServing } from "./foodSearch";
+import { foodNamesFa, localFoods, macrosForServing } from "./foodSearch";
+import { normalizeText } from "./mealTextParser";
 import { searchExternalFoods } from "@/lib/openFoodFactsApi";
 import { addLearnedFood, getLearnedFoods } from "@/store/learnedFoodsStore";
 import type { AiExtractedFoodItem } from "./aiFoodParser";
@@ -31,9 +32,10 @@ export interface AiMatchResult {
   unmatched: UnmatchedAiFoodItem[];
 }
 
-function normalizeFa(value: string): string {
-  return value.replace(/ي/g, "ی").replace(/ك/g, "ک").trim().toLowerCase();
-}
+// Shared with the text-import parser so a name is compared the same way no
+// matter which flow produced it — that one also flattens the ZWNJ inside
+// "سیب‌زمینی", which the catalog writes as two plain words.
+const normalizeFa = normalizeText;
 
 // Whether `shorter`'s words appear as a contiguous run inside `longer`'s —
 // word-boundary-safe, unlike a raw substring check. A single generic word is
@@ -63,18 +65,24 @@ function isWordRunMatch(a: string[], b: string[]): boolean {
 // prefix, for a query still being typed) rather than matching a complete
 // extracted name that may carry extra words on either side, e.g. Gemini
 // saying "قرمه سبزی با گوشت گوسفندی" for a food logged as plain "قرمه سبزی".
-function findLocalMatch(name: string): FoodItem | null {
+export function findLocalMatch(name: string): FoodItem | null {
   const normalized = normalizeFa(name);
   const normalizedWords = normalized.split(/\s+/).filter(Boolean);
   const pool = [...localFoods, ...getLearnedFoods()];
 
-  const exact = pool.find((food) => normalizeFa(food.nameFa) === normalized);
+  // Aliases count as names here for the same reason they do in search: the
+  // catalog's chosen name is not always the one people write ("برنج پخته"
+  // vs "برنج سفید"). See FoodItem.aliases.
+  const exact = pool.find((food) =>
+    foodNamesFa(food).some((known) => normalizeFa(known) === normalized),
+  );
   if (exact) return exact;
 
-  const partial = pool.find((food) => {
-    const foodWords = normalizeFa(food.nameFa).split(/\s+/).filter(Boolean);
-    return isWordRunMatch(foodWords, normalizedWords);
-  });
+  const partial = pool.find((food) =>
+    foodNamesFa(food).some((known) =>
+      isWordRunMatch(normalizeFa(known).split(/\s+/).filter(Boolean), normalizedWords),
+    ),
+  );
 
   return partial ?? null;
 }
@@ -142,7 +150,7 @@ async function findBestFoodMatch(
   return null;
 }
 
-function findBestUnitMatch(food: FoodItem, unitLabel: string): ServingUnit {
+export function findBestUnitMatch(food: FoodItem, unitLabel: string): ServingUnit {
   const normalized = normalizeFa(unitLabel);
 
   const exact = food.servingUnits.find((u) => normalizeFa(u.label) === normalized);
@@ -198,6 +206,40 @@ export async function matchAiExtractedItems(
       ...macrosForServing(food, unit, quantity),
     });
   });
+
+  return { matched, unmatched };
+}
+
+/**
+ * The local-only half of the matcher above: no network, no AI estimate, no
+ * writes to the learned-foods store. What the text import runs first, so a
+ * day written in the ordinary "<number> <unit> <food>" way resolves offline
+ * and instantly, and only the leftovers cost an AI round trip.
+ */
+export function matchExtractedLocally(items: AiExtractedFoodItem[]): AiMatchResult {
+  const matched: MatchedAiFoodItem[] = [];
+  const unmatched: UnmatchedAiFoodItem[] = [];
+
+  for (const item of items) {
+    const food = findLocalMatch(item.name);
+
+    if (!food) {
+      unmatched.push({ extracted: item });
+      continue;
+    }
+
+    const unit = findBestUnitMatch(food, item.unit);
+    const quantity = item.quantity > 0 ? item.quantity : 1;
+
+    matched.push({
+      extracted: item,
+      food,
+      unit,
+      quantity,
+      estimated: false,
+      ...macrosForServing(food, unit, quantity),
+    });
+  }
 
   return { matched, unmatched };
 }

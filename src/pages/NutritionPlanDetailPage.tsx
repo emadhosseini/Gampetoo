@@ -1,7 +1,8 @@
-import { ChevronDown, Search } from "lucide-react";
+import { ChevronDown, FileText, Search } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 
+import PlanTextImportModal from "@/components/nutrition/PlanTextImportModal";
 import Toggle from "@/components/Toggle";
 import { getActiveProgram, updateProgram } from "@/utils/programEngine";
 import { getMealSlots } from "@/data/nutrition/foodCatalog";
@@ -267,6 +268,7 @@ export default function NutritionPlanDetailPage() {
 
   const [openMealId, setOpenMealId] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
 
   // Per-meal search text, and which meals have had a search explicitly
   // submitted (via the button) — once true, that meal keeps filtering live
@@ -464,6 +466,27 @@ export default function NutritionPlanDetailPage() {
       <h1 className="text-center text-2xl font-bold text-white">
         {typeTitles[type]}
       </h1>
+
+      {/* Writes straight to storage rather than into this page's own draft,
+          so the draft is rebuilt from what was written — otherwise pressing
+          ذخیره afterwards would put the pre-import plan back. */}
+      <button
+        onClick={() => setImportOpen(true)}
+        className="glass-tap flex w-full items-center justify-center gap-2 rounded-2xl py-3 font-semibold text-white"
+      >
+        <FileText size={18} />
+        نوشتن برنامه با متن
+      </button>
+
+      <PlanTextImportModal
+        open={importOpen}
+        planType={type}
+        onClose={() => setImportOpen(false)}
+        onApplied={() => {
+          setPlan(buildInitialPlan(type));
+          setSaved(true);
+        }}
+      />
 
       {/* Same handler and label as the button at the bottom — this page's
           list of meals/foods can run long, and scrolling all the way down

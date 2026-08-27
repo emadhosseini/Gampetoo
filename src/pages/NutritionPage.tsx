@@ -1,9 +1,11 @@
+import { FileText } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import MealCard from "../components/nutrition/MealCard";
 import FreeMealCard from "../components/nutrition/FreeMealCard";
 import LogPlanFoodModal from "../components/nutrition/LogPlanFoodModal";
+import PlanTextImportModal from "../components/nutrition/PlanTextImportModal";
 import SubstitutionsCard from "../components/nutrition/SubstitutionsCard";
 import WorkoutHeader from "../components/WorkoutHeader";
 import { mealPlans } from "../data/nutrition/mealPlans";
@@ -27,6 +29,10 @@ export default function NutritionPage() {
     food: FoodItem;
   } | null>(null);
   const [justLogged, setJustLogged] = useState<string | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
+  // The plan is read during render straight from storage, so a re-render is
+  // all it takes to show what an import just wrote.
+  const [, forceRerender] = useState(0);
 
   useEffect(() => {
     if (!justLogged) return;
@@ -66,6 +72,24 @@ export default function NutritionPage() {
           onEditWorkoutLabel="تغییر برنامه غذایی"
         />
 
+        {/* Same modal the plan-settings screen offers, reachable from the
+            day itself — writing today's eating out as text is a daily act,
+            and the settings screen is two taps away. */}
+        <button
+          onClick={() => setImportOpen(true)}
+          className="glass-tap flex w-full items-center justify-center gap-2 rounded-2xl py-3 font-semibold text-white"
+        >
+          <FileText size={18} />
+          نوشتن برنامه با متن
+        </button>
+
+        <PlanTextImportModal
+          open={importOpen}
+          planType={plan.type}
+          onClose={() => setImportOpen(false)}
+          onApplied={() => forceRerender((n) => n + 1)}
+        />
+
         <div className="glass-panel rounded-2xl p-6 text-center">
           <p className="text-white">
             شما برنامه غذایی انتخاب نکردین
@@ -88,6 +112,24 @@ export default function NutritionPage() {
         title={title}
         onEditWorkout={() => navigate(`/settings/nutrition/${plan.type}`)}
         onEditWorkoutLabel="تغییر برنامه غذایی"
+      />
+
+      {/* Same modal the plan-settings screen offers, reachable from the
+        day itself — writing today's eating out as text is a daily act,
+        and the settings screen is two taps away. */}
+      <button
+        onClick={() => setImportOpen(true)}
+        className="glass-tap flex w-full items-center justify-center gap-2 rounded-2xl py-3 font-semibold text-white"
+      >
+        <FileText size={18} />
+        نوشتن برنامه با متن
+      </button>
+
+      <PlanTextImportModal
+        open={importOpen}
+        planType={plan.type}
+        onClose={() => setImportOpen(false)}
+        onApplied={() => forceRerender((n) => n + 1)}
       />
 
       {justLogged && (
