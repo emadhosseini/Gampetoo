@@ -152,9 +152,9 @@ export interface CalorieEstimateInput {
   id: string;
   metValue: number;
   sets: number;
-  // Present for isometric holds, where `reps` is a duration in seconds
-  // rather than a count — see Exercise in data/workoutLibrary.
-  unit?: "reps" | "seconds";
+  // Present for isometric holds, where `reps` is a duration (seconds or
+  // minutes) rather than a count — see Exercise in data/workoutLibrary.
+  unit?: "reps" | "seconds" | "minutes";
   reps: number;
 }
 
@@ -172,9 +172,10 @@ export interface CalorieEstimateInput {
  * actually took; the number is lifting plus the rest that belongs to it.
  */
 function activityMinutes(exercise: CalorieEstimateInput): number {
-  return exercise.unit === "seconds"
-    ? (exercise.sets * exercise.reps) / 60
-    : exercise.sets * ASSUMED_MINUTES_PER_SET;
+  if (exercise.unit === "seconds") return (exercise.sets * exercise.reps) / 60;
+  if (exercise.unit === "minutes") return exercise.sets * exercise.reps;
+
+  return exercise.sets * ASSUMED_MINUTES_PER_SET;
 }
 
 // What the exercises checked off so far are estimated to have burned.

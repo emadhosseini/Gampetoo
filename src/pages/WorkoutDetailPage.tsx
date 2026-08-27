@@ -248,7 +248,11 @@ function ExerciseEditRow({
               {!isPyramid && (
                 <div>
                   <div className="mb-1.5 text-xs font-medium text-white/60">
-                    {exercise.unit === "seconds" ? "ثانیه" : "تکرار"}
+                    {exercise.unit === "seconds"
+                      ? "ثانیه"
+                      : exercise.unit === "minutes"
+                        ? "دقیقه"
+                        : "تکرار"}
                   </div>
 
                   <div className="selector-pill flex items-center justify-between rounded-xl p-1.5">
@@ -282,7 +286,7 @@ function ExerciseEditRow({
                 really do use the same rep count on every set, so this stays
                 a single opt-in switch rather than always showing a row of
                 steppers nobody asked for. */}
-            {exercise.unit !== "seconds" && (
+            {exercise.unit !== "seconds" && exercise.unit !== "minutes" && (
               <div className="mt-2.5 flex items-center justify-between border-t border-white/10 pt-2.5">
                 <span className="text-xs font-medium text-white/60">
                   تکرار متغیر برای هر ست (هرمی)
