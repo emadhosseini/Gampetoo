@@ -1,6 +1,14 @@
 {
-  "current": "1.0.51",
+  "current": "1.0.52",
   "history": [
+    {
+      "version": "1.0.52",
+      "date": "2026-08-27",
+      "description": "Add a minutes duration unit, use it for stationary bike",
+      "highlights": [
+        "⏱️ دوچرخه ثابت حالا بر اساس دقیقه ثبت می‌شه، نه ثانیه"
+      ]
+    },
     {
       "version": "1.0.51",
       "date": "2026-08-23",

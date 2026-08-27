@@ -85,7 +85,7 @@ export interface ExerciseSetLoggerProps {
   // Exercise.unit in data/workoutLibrary. Defaults to "reps" so every
   // existing call site (none of which passed this before) keeps behaving
   // exactly as it always did.
-  unit?: "reps" | "seconds";
+  unit?: "reps" | "seconds" | "minutes";
   // The exercise's own configured set/rep count (ExerciseCard no longer
   // shows these directly — this is where they end up instead: seeding
   // today's log with exactly this many real rows the first time it's
@@ -117,9 +117,15 @@ export default function ExerciseSetLogger({
   description,
 }: ExerciseSetLoggerProps) {
   const isSeconds = unit === "seconds";
-  const repsLabel = isSeconds ? "ثانیه" : "تکرار";
+  const isMinutes = unit === "minutes";
+  // Both are "duration, not reps" for PR-selection purposes — a continuous
+  // cardio stretch (دقیقه) scores the same way an isometric hold (ثانیه)
+  // does, just at a coarser grain.
+  const isDuration = isSeconds || isMinutes;
+  const repsLabel = isSeconds ? "ثانیه" : isMinutes ? "دقیقه" : "تکرار";
   // Same ±5s vs ±1 rep convention the workout-library editor already uses
-  // for this exact distinction (ExerciseEditRow in WorkoutDetailPage).
+  // for this exact distinction (ExerciseEditRow in WorkoutDetailPage) — a
+  // minute-scale duration steps by whole minutes, same as a rep count.
   const repsStep = isSeconds ? 5 : REPS_STEP;
   const [sets, setSets] = useState<SetEntry[]>(() =>
     ensureTodaysSets(exerciseId, defaultSets, defaultReps, repsPerSet),
@@ -168,7 +174,7 @@ export default function ExerciseSetLogger({
   const pastSessions = getPastSessions(exerciseId, 10);
   // Isometric holds record their PR by longest duration, not heaviest
   // weight (usually 0) — see getPersonalRecordByDuration.
-  const pr = isSeconds ? getPersonalRecordByDuration(exerciseId) : getPersonalRecord(exerciseId);
+  const pr = isDuration ? getPersonalRecordByDuration(exerciseId) : getPersonalRecord(exerciseId);
 
   function handleAddSet() {
     setSets(addSet(exerciseId));
@@ -301,7 +307,9 @@ export default function ExerciseSetLogger({
           🏆 رکورد شخصی (PR):{" "}
           {isSeconds
             ? `${toFaDigits(pr.reps)} ثانیه`
-            : `${toFaDigits(pr.weight)} کیلوگرم`}{" "}
+            : isMinutes
+              ? `${toFaDigits(pr.reps)} دقیقه`
+              : `${toFaDigits(pr.weight)} کیلوگرم`}{" "}
           (ثبت‌شده در {formatDisplayShort(isoToLocalDate(pr.date))})
         </div>
       )}

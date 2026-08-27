@@ -116,8 +116,9 @@ interface ExerciseStrengthMeta {
   category: StrengthCategory;
   // Isometric holds (پلانک and the like) score by duration, not weight ×
   // reps — see calculateIsometricScore. Absent/"reps" is every ordinary
-  // weighted exercise, unchanged.
-  unit: "reps" | "seconds";
+  // weighted exercise, unchanged. "minutes" scores the same way as
+  // "seconds" (both are just "duration, not reps") — see the check below.
+  unit: "reps" | "seconds" | "minutes";
 }
 
 // exerciseId -> which spoke it counts toward (+ how it should be scored),
@@ -173,7 +174,7 @@ function getStrengthCategoryLogs(): StrengthCategoryLog[] {
   const logs: StrengthCategoryLog[] = [];
 
   for (const [exerciseId, meta] of metaByExerciseId) {
-    if (meta.unit === "seconds") {
+    if (meta.unit !== "reps") {
       const pr = getPersonalRecordByDuration(exerciseId);
 
       if (!pr) continue;

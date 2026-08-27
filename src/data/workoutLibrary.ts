@@ -31,8 +31,11 @@ export interface Exercise {
   // What `reps` counts. Isometric holds (planks and the like) aren't
   // repeated, they're endured, so counting them in repetitions was
   // meaningless — "۳ ست × ۱۰ تکرار پلانک" doesn't describe anything a
-  // person can do. Absent means repetitions, which is almost everything.
-  unit?: "reps" | "seconds";
+  // person can do. "minutes" is the same idea at a coarser grain — a
+  // continuous cardio activity (دوچرخه ثابت) is realistically dialed in a
+  // minute at a time, not second by second. Absent means repetitions,
+  // which is almost everything.
+  unit?: "reps" | "seconds" | "minutes";
   reps: number;
   // A per-set rep target (e.g. پیرامید ۱۲/۱۰/۸) for whoever's plan doesn't
   // use the same rep count on every set. When present, its length is the
@@ -2537,8 +2540,8 @@ export const workoutLibrary: WorkoutDefinition[] = [
             equipment: "Cardio Machine",
             mechanic: "Compound",
             sets: 1,
-            unit: "seconds",
-            reps: 600,
+            unit: "minutes",
+            reps: 10,
             enabled: false,
             metValue: 5.5,
           },
