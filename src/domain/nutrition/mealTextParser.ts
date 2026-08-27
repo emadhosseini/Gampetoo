@@ -42,8 +42,32 @@ export function normalizeText(value: string): string {
 const SLOT_ALIASES: Record<string, string[]> = {
   "wake-up": ["بعد از بیدار شدن", "بعد بیدار شدن", "ناشتا", "صبح زود", "wake up"],
   breakfast: ["صبحانه", "صبحونه", "breakfast"],
-  "pre-workout": ["قبل از تمرین", "قبل تمرین", "پیش از تمرین", "پیش تمرین", "pre workout", "preworkout"],
-  "post-workout": ["بعد از تمرین", "بعد تمرین", "پس از تمرین", "post workout", "postworkout"],
+  // "باشگاه" and "ورزش" are as common as "تمرین" for the same two slots —
+  // a label the table doesn't know forces the user to route it by hand in
+  // the review, which is the worst outcome for the most ordinary wording.
+  "pre-workout": [
+    "قبل از تمرین",
+    "قبل تمرین",
+    "پیش از تمرین",
+    "پیش تمرین",
+    "قبل از باشگاه",
+    "قبل باشگاه",
+    "قبل از ورزش",
+    "قبل ورزش",
+    "pre workout",
+    "preworkout",
+  ],
+  "post-workout": [
+    "بعد از تمرین",
+    "بعد تمرین",
+    "پس از تمرین",
+    "بعد از باشگاه",
+    "بعد باشگاه",
+    "بعد از ورزش",
+    "بعد ورزش",
+    "post workout",
+    "postworkout",
+  ],
   lunch: ["ناهار", "نهار", "lunch"],
   snack: [
     "میان وعده صبح",

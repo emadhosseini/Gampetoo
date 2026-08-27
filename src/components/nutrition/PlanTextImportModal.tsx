@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Sparkles, Trash2 } from "lucide-react";
+import { AlertTriangle, Sparkles, Trash2 } from "lucide-react";
 
 import ModalOverlay from "@/components/ModalOverlay";
 import WaitingDots from "@/components/WaitingDots";
@@ -50,6 +50,10 @@ export default function PlanTextImportModal({
 }: PlanTextImportModalProps) {
   const [text, setText] = useState("");
   const [meals, setMeals] = useState<ImportedMeal[]>([]);
+  // Groups the user chose to drop rather than route to a meal. Kept apart
+  // from `meals` because it's a decision about the import, not something
+  // the text said.
+  const [skipped, setSkipped] = useState<number[]>([]);
   const [screen, setScreen] = useState<Screen>({ step: "input" });
 
   useEffect(() => {
@@ -57,6 +61,7 @@ export default function PlanTextImportModal({
 
     setText("");
     setMeals([]);
+    setSkipped([]);
     setScreen({ step: "input" });
   }, [open]);
 
@@ -131,9 +136,29 @@ export default function PlanTextImportModal({
     );
   }
 
-  const writable = meals.filter((meal) => meal.slotId !== null && meal.items.length > 0);
+  const isSkipped = (index: number) => skipped.includes(index);
+
+  const writable = meals.filter(
+    (meal, index) => meal.slotId !== null && meal.items.length > 0 && !isSkipped(index),
+  );
+
+  // A group whose label matched no meal and that hasn't been routed or
+  // dropped. Writing while one of these is outstanding would quietly lose
+  // whatever it holds — the user wrote it, so the choice is theirs to make
+  // rather than the import's to make silently.
+  const unrouted = meals.filter(
+    (meal, index) => meal.slotId === null && meal.items.length > 0 && !isSkipped(index),
+  );
+
+  function toggleSkip(index: number) {
+    setSkipped((prev) =>
+      prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index],
+    );
+  }
 
   function handleApply() {
+    if (unrouted.length > 0) return;
+
     applyImportToPlan(planType, writable);
     onApplied();
     onClose();
@@ -206,19 +231,37 @@ export default function PlanTextImportModal({
               </p>
             )}
 
-            {meals.map((meal, mealIndex) => (
-              <div key={`${meal.label}-${mealIndex}`} className="space-y-2">
-                <div className="flex items-center justify-between gap-2">
+            {meals.map((meal, mealIndex) => {
+              const needsRouting = meal.slotId === null && !isSkipped(mealIndex);
+
+              return (
+              <div
+                key={`${meal.label}-${mealIndex}`}
+                // An unrouted group is ringed and tinted rather than left
+                // to look like every other one — it's the single thing on
+                // this screen that stops the import, so it has to be the
+                // first thing seen.
+                className={`space-y-2 rounded-2xl ${
+                  needsRouting
+                    ? "border border-amber-400/40 bg-amber-500/5 p-3"
+                    : isSkipped(mealIndex)
+                      ? "opacity-40"
+                      : ""
+                }`}
+              >
+                <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="text-sm font-bold text-white">{meal.label}</span>
 
-                  {meal.slotId === null && (
+                  <div className="flex items-center gap-2">
                     <select
-                      value=""
+                      value={meal.slotId ?? ""}
                       onChange={(e) => assignSlot(mealIndex, e.target.value)}
                       aria-label="انتخاب وعده"
-                      className="glass-static glass-chip rounded-lg px-2 py-1 text-xs text-white"
+                      className={`glass-static rounded-lg px-2 py-1 text-xs text-white ${
+                        needsRouting ? "bg-amber-500/20" : "glass-chip"
+                      }`}
                     >
-                      <option value="">کدوم وعده‌ست؟</option>
+                      <option value="">انتخاب وعده...</option>
 
                       {slots.map((slot) => (
                         <option key={slot.id} value={slot.id}>
@@ -226,8 +269,22 @@ export default function PlanTextImportModal({
                         </option>
                       ))}
                     </select>
-                  )}
+
+                    <button
+                      onClick={() => toggleSkip(mealIndex)}
+                      className="glass-chip rounded-lg px-2 py-1 text-[11px] text-white/70"
+                    >
+                      {isSkipped(mealIndex) ? "برگردون" : "نادیده بگیر"}
+                    </button>
+                  </div>
                 </div>
+
+                {needsRouting && (
+                  <p className="flex items-center gap-1.5 text-[11px] text-amber-300">
+                    <AlertTriangle size={12} />
+                    این عنوان شناخته نشد — وعده‌اش رو انتخاب کن، وگرنه نوشته نمی‌شه.
+                  </p>
+                )}
 
                 {meal.items.map((item) => {
                   const macros = itemMacros(item);
@@ -306,11 +363,19 @@ export default function PlanTextImportModal({
                   </p>
                 )}
               </div>
-            ))}
+              );
+            })}
+
+            {unrouted.length > 0 && (
+              <p className="rounded-xl bg-amber-500/10 p-3 text-center text-xs text-amber-300">
+                {toFaDigits(unrouted.length)} وعده هنوز انتخاب نشده:{" "}
+                {unrouted.map((meal) => `«${meal.label}»`).join("، ")}
+              </p>
+            )}
 
             <button
               onClick={handleApply}
-              disabled={writable.length === 0}
+              disabled={writable.length === 0 || unrouted.length > 0}
               className="w-full glass-action rounded-2xl py-3 font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
             >
               نوشتن روی برنامه
