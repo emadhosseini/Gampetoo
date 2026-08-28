@@ -1,9 +1,9 @@
 import { Beef } from "lucide-react";
 
 import {
-  calculateProteinTarget,
   getCalorieGoal,
-  proteinStanding,
+  getEffectiveProteinTarget,
+  macroStanding,
   STANDING_COLOR,
 } from "@/utils/calorieEngine";
 import { getTodaysTotalProtein } from "@/utils/dailyLogEngine";
@@ -19,10 +19,7 @@ export default function ProteinProgressRow() {
   const weight = getLatestWeight();
   const consumed = getTodaysTotalProtein();
 
-  const target =
-    weight !== null
-      ? calculateProteinTarget(weight, getCalorieGoal() ?? "maintain")
-      : null;
+  const target = getEffectiveProteinTarget(weight, getCalorieGoal() ?? "maintain");
 
   if (target === null) {
     return (
@@ -35,13 +32,12 @@ export default function ProteinProgressRow() {
     );
   }
 
-  const standing = proteinStanding(consumed, target);
+  const standing = macroStanding(consumed, target.grams);
   const standingColor = STANDING_COLOR[standing];
 
   // Can't have negative "left" — once the target's covered, more protein
-  // isn't a problem (see proteinStanding's own headroom), so this reads
-  // ۰ گرم مانده rather than a number that would look like overshooting is
-  // being punished.
+  // isn't a problem, so this reads ۰ گرم مانده rather than a number that
+  // would look like overshooting is being punished.
   const remainingGrams = Math.max(0, target.grams - consumed);
 
   const barFraction = Math.min(1, target.grams > 0 ? consumed / target.grams : 0);

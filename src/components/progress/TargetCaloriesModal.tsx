@@ -11,25 +11,27 @@ import {
 } from "@/utils/calorieEngine";
 import {
   clearMacroTargets,
+  getCalorieTarget,
   getCalorieTargetMode,
   getDualCalorieTargets,
-  getCalorieTarget,
-  getMacroTargets,
+  getDualMacroTargets,
+  getSingleMacroTargets,
   setCalorieTarget,
   setCalorieTargetMode,
   setDualCalorieTargets,
-  setMacroTargets,
+  setDualMacroTargets,
+  setSingleMacroTargets,
   type CalorieTargetMode,
+  type MacroTargetInputs,
+  type MacroTargetValues,
 } from "@/utils/dailyLogEngine";
 import { getLatestWeight } from "@/utils/weightEngine";
 import { toFaDigits } from "@/utils/numberFormat";
 
-const STEP = 100;
+const STEP = 50;
 const MACRO_STEP = 5;
 const DEFAULT_CALORIES = 2000;
-const DEFAULT_CARBS = 200;
-const DEFAULT_FAT = 60;
-const DEFAULT_FIBER = 25;
+const DEFAULT_MACROS: MacroTargetInputs = { protein: 150, carbs: 200, fat: 60, fiber: 25 };
 
 const GOALS: CalorieGoal[] = ["lose", "maintain", "gain"];
 
@@ -37,6 +39,22 @@ const MODES: { value: CalorieTargetMode; label: string }[] = [
   { value: "single", label: "یک کالری هدف" },
   { value: "dual", label: "تمرین/استراحت جدا" },
 ];
+
+const MACRO_FIELDS: { key: keyof MacroTargetInputs; label: string }[] = [
+  { key: "protein", label: "پروتئین" },
+  { key: "carbs", label: "کربوهیدرات" },
+  { key: "fat", label: "چربی" },
+  { key: "fiber", label: "فیبر" },
+];
+
+function withDefaults(saved: MacroTargetValues): MacroTargetInputs {
+  return {
+    protein: saved.protein ?? DEFAULT_MACROS.protein,
+    carbs: saved.carbs ?? DEFAULT_MACROS.carbs,
+    fat: saved.fat ?? DEFAULT_MACROS.fat,
+    fiber: saved.fiber ?? DEFAULT_MACROS.fiber,
+  };
+}
 
 function Stepper({
   label,
@@ -72,18 +90,48 @@ function Stepper({
   );
 }
 
+// The four macro steppers for one target set (single, or one side of a
+// dual training/rest pair) — grouped so dual mode can render this same
+// block twice instead of duplicating four steppers by hand.
+function MacroFields({
+  title,
+  values,
+  onChange,
+}: {
+  title?: string;
+  values: MacroTargetInputs;
+  onChange: (next: MacroTargetInputs) => void;
+}) {
+  return (
+    <div className="space-y-3">
+      {title ? <p className="text-right text-sm text-white/60">{title}</p> : null}
+
+      {MACRO_FIELDS.map((field) => (
+        <Stepper
+          key={field.key}
+          label={field.label}
+          value={values[field.key]}
+          onChange={(next) => onChange({ ...values, [field.key]: next })}
+          step={MACRO_STEP}
+          unit="گرم"
+        />
+      ))}
+    </div>
+  );
+}
+
 // Stating the calorie target by hand, with no calculation behind it — in
 // either "single" mode (one number, every day) or "dual" mode (a training-
 // day number and a rest-day number). Dual is manual-only by design: it
 // exists for people who already know both numbers, so unlike single mode it
-// has no calculator branch to plug into.
+// has no calculator branch to plug into. Protein/carbs/fat/fiber follow the
+// same split when the macros toggle is on: one set in single mode, a
+// separate set per day-type in dual mode.
 //
-// The goal picker is here for one reason: the protein target is computed
-// from bodyweight and the goal (see calculateProteinTarget), never from the
-// calorie figure(s). Without it, this screen could set a cutting calorie
-// target while protein stayed on whatever the last calculation — or the
-// "maintain" default — had decided, and nothing on this screen even hinted
-// that a second number was involved.
+// The goal picker still matters even with a manual protein figure: it's
+// what the reference calculation below (and the auto-calculate flow
+// elsewhere) uses, so it stays in sync with whichever number the user
+// hasn't overridden yet.
 export default function TargetCaloriesModal({
   open,
   onClose,
@@ -97,22 +145,34 @@ export default function TargetCaloriesModal({
   const [rest, setRest] = useState(() => getDualCalorieTargets().rest ?? DEFAULT_CALORIES);
   const [goal, setGoal] = useState<CalorieGoal>(() => getCalorieGoal() ?? "maintain");
 
-  const savedMacroTargets = getMacroTargets();
+  const savedSingleMacros = getSingleMacroTargets();
+  const savedDualMacros = getDualMacroTargets();
   const [macrosEnabled, setMacrosEnabled] = useState(
-    () => savedMacroTargets.carbs !== null || savedMacroTargets.fat !== null,
+    () =>
+      Object.values(savedSingleMacros).some((v) => v !== null) ||
+      Object.values(savedDualMacros.training).some((v) => v !== null) ||
+      Object.values(savedDualMacros.rest).some((v) => v !== null),
   );
-  const [carbs, setCarbs] = useState(() => savedMacroTargets.carbs ?? DEFAULT_CARBS);
-  const [fat, setFat] = useState(() => savedMacroTargets.fat ?? DEFAULT_FAT);
-  const [fiber, setFiber] = useState(() => savedMacroTargets.fiber ?? DEFAULT_FIBER);
+  const [singleMacros, setSingleMacros] = useState<MacroTargetInputs>(() =>
+    withDefaults(savedSingleMacros),
+  );
+  const [trainingMacros, setTrainingMacros] = useState<MacroTargetInputs>(() =>
+    withDefaults(savedDualMacros.training),
+  );
+  const [restMacros, setRestMacros] = useState<MacroTargetInputs>(() =>
+    withDefaults(savedDualMacros.rest),
+  );
 
   if (!open) {
     return null;
   }
 
-  // Without a weigh-in there is no protein target to preview or to change —
-  // said plainly below rather than shown against a guessed weight.
+  // Without a weigh-in there is no calculated protein figure to show as a
+  // reference — said plainly below rather than shown against a guessed
+  // weight. Purely informational: it doesn't write anywhere on its own,
+  // it's just what the protein field above would default to.
   const weight = getLatestWeight();
-  const protein = weight !== null ? calculateProteinTarget(weight, goal) : null;
+  const calculatedProtein = weight !== null ? calculateProteinTarget(weight, goal) : null;
 
   function handleSave() {
     setCalorieTargetMode(mode);
@@ -124,7 +184,11 @@ export default function TargetCaloriesModal({
     }
 
     if (macrosEnabled) {
-      setMacroTargets({ carbs, fat, fiber });
+      if (mode === "dual") {
+        setDualMacroTargets(trainingMacros, restMacros);
+      } else {
+        setSingleMacroTargets(singleMacros);
+      }
     } else {
       clearMacroTargets();
     }
@@ -181,9 +245,9 @@ export default function TargetCaloriesModal({
         </div>
 
         <p className="glass-chip rounded-xl p-3 text-sm text-white/70">
-          {protein
-            ? `هدف پروتئین: ${toFaDigits(protein.grams)} گرم در روز`
-            : "برای هدف پروتئین، اول وزنت رو ثبت کن"}
+          {calculatedProtein
+            ? `پیشنهاد بر اساس وزن: ${toFaDigits(calculatedProtein.grams)} گرم پروتئین در روز`
+            : "برای پیشنهاد پروتئین بر اساس وزن، اول وزنت رو ثبت کن"}
         </p>
 
         <button
@@ -192,30 +256,29 @@ export default function TargetCaloriesModal({
             macrosEnabled ? "glass-selected" : ""
           }`}
         >
-          <span>هدف کربوهیدرات، چربی و فیبر</span>
+          <span>هدف پروتئین، کربوهیدرات، چربی و فیبر</span>
           <span className="text-xs font-normal text-white/60">
             {macrosEnabled ? "روشن" : "خاموش"}
           </span>
         </button>
 
         {macrosEnabled ? (
-          <div className="space-y-3">
-            <Stepper
-              label="کربوهیدرات"
-              value={carbs}
-              onChange={setCarbs}
-              step={MACRO_STEP}
-              unit="گرم"
-            />
-            <Stepper label="چربی" value={fat} onChange={setFat} step={MACRO_STEP} unit="گرم" />
-            <Stepper
-              label="فیبر"
-              value={fiber}
-              onChange={setFiber}
-              step={MACRO_STEP}
-              unit="گرم"
-            />
-          </div>
+          mode === "dual" ? (
+            <>
+              <MacroFields
+                title="ماکروهای روزهای تمرین"
+                values={trainingMacros}
+                onChange={setTrainingMacros}
+              />
+              <MacroFields
+                title="ماکروهای روزهای استراحت"
+                values={restMacros}
+                onChange={setRestMacros}
+              />
+            </>
+          ) : (
+            <MacroFields values={singleMacros} onChange={setSingleMacros} />
+          )
         ) : null}
 
         <button

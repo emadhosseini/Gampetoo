@@ -1,4 +1,4 @@
-import { setCalorieTarget, setCalorieTargetMode } from "./dailyLogEngine";
+import { getMacroTargets, setCalorieTarget, setCalorieTargetMode } from "./dailyLogEngine";
 import { scopedKey, setCurrentUserGender, type Gender } from "./userEngine";
 import { logWeight } from "./weightEngine";
 
@@ -71,6 +71,22 @@ export function calculateProteinTarget(
   return { grams: Math.round(weightKg * PROTEIN_G_PER_KG[goal]) };
 }
 
+// What actually governs the protein target shown around the app: a manual
+// figure from the "کالری هدف روزانه" form when the user set one (see
+// dailyLogEngine's getMacroTargets, day-aware in dual mode same as every
+// other macro there), falling back to the bodyweight/goal calculation only
+// when no manual value exists yet.
+export function getEffectiveProteinTarget(
+  weightKg: number | null,
+  goal: CalorieGoal,
+): ProteinTarget | null {
+  const manual = getMacroTargets().protein;
+
+  if (manual !== null) return { grams: manual };
+
+  return weightKg !== null ? calculateProteinTarget(weightKg, goal) : null;
+}
+
 // Three-tier read on "how close is today to its target": under 80% is red,
 // 80% up to the target is yellow (close but not there), the target and
 // beyond is green — once it's hit, going over isn't penalized the way
@@ -85,16 +101,10 @@ export function standingForRatio(ratio: number): ProteinStanding {
   return ratio >= NEAR_TARGET_RATIO ? "near" : "under";
 }
 
-export function proteinStanding(
-  grams: number,
-  target: ProteinTarget,
-): ProteinStanding {
-  return standingForRatio(target.grams > 0 ? grams / target.grams : 0);
-}
-
-// Same ratio-based judgment, used for calories and for carbs/fat/fiber
-// against their manual gram targets — the ratio math isn't specific to
-// protein, only the name proteinStanding is historical.
+// Same ratio-based judgment used for calories and every macro (protein
+// included — see getEffectiveProteinTarget, which always resolves to a
+// plain gram figure regardless of whether it came from the calculation or a
+// manual override).
 export function macroStanding(grams: number, targetGrams: number): ProteinStanding {
   return standingForRatio(targetGrams > 0 ? grams / targetGrams : 0);
 }

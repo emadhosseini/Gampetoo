@@ -2,10 +2,9 @@ import { useMemo } from "react";
 
 import type { MealSlot } from "@/data/nutrition/foodCatalog";
 import {
-  calculateProteinTarget,
   getCalorieGoal,
+  getEffectiveProteinTarget,
   macroStanding,
-  proteinStanding,
   STANDING_COLOR,
 } from "@/utils/calorieEngine";
 import { getCalorieTarget, getLoggedEntries, getMacroTargets } from "@/utils/dailyLogEngine";
@@ -56,25 +55,21 @@ export default function DailyTotalsCard({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slots, version, date]);
 
-  // Needs a logged weight to mean anything — without one there's no target,
-  // so the ring is left off rather than drawn against a guess.
+  // A manual protein target (see getMacroTargets) wins over the calculated
+  // one; without either — no manual figure and no logged weight — there's
+  // nothing to judge protein against, so its ring is left off.
   const weight = getLatestWeight();
-  const target =
-    weight !== null
-      ? calculateProteinTarget(weight, getCalorieGoal() ?? "maintain")
-      : null;
-
-  const standing = target ? proteinStanding(totals.protein, target) : null;
-
   const macroTargets = getMacroTargets();
+  const proteinTarget = getEffectiveProteinTarget(weight, getCalorieGoal() ?? "maintain");
+
   const standings = {
-    protein: standing,
+    protein: proteinTarget ? macroStanding(totals.protein, proteinTarget.grams) : null,
     carbs: macroTargets.carbs !== null ? macroStanding(totals.carbs, macroTargets.carbs) : null,
     fat: macroTargets.fat !== null ? macroStanding(totals.fat, macroTargets.fat) : null,
     fiber: macroTargets.fiber !== null ? macroStanding(totals.fiber, macroTargets.fiber) : null,
   };
   const targets = {
-    protein: target?.grams ?? null,
+    protein: proteinTarget?.grams ?? null,
     carbs: macroTargets.carbs,
     fat: macroTargets.fat,
     fiber: macroTargets.fiber,
