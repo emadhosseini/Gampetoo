@@ -1,6 +1,15 @@
 {
-  "current": "1.0.58",
+  "current": "1.0.59",
   "history": [
+    {
+      "version": "1.0.59",
+      "date": "2026-08-28",
+      "description": "Groups the bottom navigation into two pairs hugging each end of the bar, opening up the middle, and gives the quick-add button a complete circular surface.",
+      "highlights": [
+        "🎨 دکمه‌های نوار پایین دو‌به‌دو کنار هم جمع شدن و وسط نوار باز شد",
+        "⭕ دکمه‌ی «+» حالا یک دایره‌ی کامل و برجسته‌ست"
+      ]
+    },
     {
       "version": "1.0.58",
       "date": "2026-08-28",

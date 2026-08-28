@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from "react";
+import { Fragment, useLayoutEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { NavLink, useNavigate } from "react-router-dom";
 import {
@@ -285,21 +285,26 @@ export default function BottomNavigation({
                 </svg>
               )}
 
-              {/* Centred on the bar's top edge, inside the bump the path
-                  above already draws — this button carries only the icon
-                  and the hit area now, no surface of its own. */}
+              {/* A complete disc, centred on the bar's top edge inside the
+                  bump the path above draws. It used to be icon-and-hit-area
+                  only, so the circle read as half a shape — the bump's top
+                  arc above the bar, nothing below it. Its own surface
+                  closes the circle. No seam this time: the two rims are
+                  concentric and the same radius, so the bump's arc lands
+                  exactly on the disc's edge rather than crossing it. */}
               <button
                 onClick={() => setDrawerOpen((open) => !open)}
                 aria-label={drawerOpen ? "بستن ثبت سریع" : "ثبت سریع"}
                 style={{ position: "absolute", height: BUMP_RADIUS * 2, width: BUMP_RADIUS * 2 }}
-                className="left-1/2 top-0 z-20 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full text-white [-webkit-tap-highlight-color:transparent] touch-manipulation"
+                className="glass-action glass-action-static left-1/2 top-0 z-20 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full text-white [-webkit-tap-highlight-color:transparent] touch-manipulation"
               >
                 <motion.span
                   animate={{ rotate: drawerOpen ? 45 : 0 }}
                   transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                  // Nudged into the exposed upper half of the bump so it
-                  // doesn't straddle the bar's top edge.
-                  className="flex -translate-y-3"
+                  // Centred now that the disc is a complete circle — the
+                  // old upward nudge existed because only its top half was
+                  // visible.
+                  className="flex"
                 >
                   <Plus size={26} />
                 </motion.span>
@@ -312,16 +317,33 @@ export default function BottomNavigation({
                   active, via a shared framer-motion layoutId — the defining
                   trait of an iOS tab bar (it glides between tabs on switch
                   instead of just appearing). */}
-              <nav className="relative flex h-17 items-center justify-around overflow-hidden rounded-full">
-                {items.map((item) => {
+              {/* Two pairs hugging their own end of the bar rather than four
+                  items spread evenly across it — that spacing put a tab
+                  directly under the quick-add button on each side and left
+                  it crowded. The gap between the groups is the bump's own
+                  width, so the circle sits in clear space. */}
+              <nav className="relative flex h-17 items-center justify-between overflow-hidden rounded-full px-1">
+                {items.map((item, itemIndex) => {
                   const Icon = item.icon;
 
+                  // Half the items, then the gap, then the rest.
+                  const spacer =
+                    itemIndex === Math.ceil(items.length / 2) ? (
+                      <div
+                        key="quick-add-gap"
+                        aria-hidden="true"
+                        className="shrink-0"
+                        style={{ width: BUMP_RADIUS * 2 + 12 }}
+                      />
+                    ) : null;
+
                   return (
+                    <Fragment key={item.to}>
+                    {spacer}
                     <NavLink
-                      key={item.to}
                       to={item.to}
                       onClick={() => setDrawerOpen(false)}
-                      className="relative z-10 flex h-full flex-1 items-center justify-center [-webkit-tap-highlight-color:transparent] touch-manipulation"
+                      className="relative z-10 flex h-full w-[68px] shrink-0 items-center justify-center [-webkit-tap-highlight-color:transparent] touch-manipulation"
                     >
                       {({ isActive }) => (
                         <>
@@ -348,6 +370,7 @@ export default function BottomNavigation({
                         </>
                       )}
                     </NavLink>
+                    </Fragment>
                   );
                 })}
               </nav>
