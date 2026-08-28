@@ -11,6 +11,7 @@ import WorkoutHeader from "../components/WorkoutHeader";
 import { mealPlans } from "../data/nutrition/mealPlans";
 import type { FoodItem, MealSection } from "../types/nutrition";
 
+import { hiddenMealIdsFor } from "../domain/nutrition/mealVisibility";
 import {
   getActiveProgram,
   getCurrentMealPlan,
@@ -52,8 +53,18 @@ export default function NutritionPage() {
     ? plan.title
     : "تغذیه در روز بدون برنامه ورزشی";
 
+  // Hidden meals drop out here too, so a slot turned off in the daily log's
+  // display settings doesn't come back on the plan view — it's one answer
+  // to "which meals are part of my day", not a per-screen one. The plan's
+  // own settings screen still lists every slot, since that's where the
+  // hidden one's contents would be edited.
+  const hiddenMealIds = hiddenMealIdsFor();
+
   const enabledMeals = plan.meals.filter(
-    (meal) => (meal.enabled ?? true) && meal.foods.length > 0,
+    (meal) =>
+      (meal.enabled ?? true) &&
+      meal.foods.length > 0 &&
+      !hiddenMealIds.includes(meal.id),
   );
 
   const hasSelections = enabledMeals.length > 0;

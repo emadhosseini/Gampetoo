@@ -1,5 +1,13 @@
 import { useState } from "react";
-import { Activity, ChevronDown, Flame, Plus, Trash2, UtensilsCrossed } from "lucide-react";
+import {
+  Activity,
+  ChevronDown,
+  Flame,
+  Pencil,
+  Plus,
+  Trash2,
+  UtensilsCrossed,
+} from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
 import PillTabBar, { type PillTabBarItem } from "@/components/PillTabBar";
@@ -7,6 +15,7 @@ import MealLogCard from "@/components/nutrition/MealLogCard";
 import DailyTotalsCard from "@/components/nutrition/DailyTotalsCard";
 import WeeklyDatePicker from "@/components/nutrition/WeeklyDatePicker";
 import MealAddChoiceModal from "@/components/nutrition/MealAddChoiceModal";
+import MealDisplaySettingsModal from "@/components/nutrition/MealDisplaySettingsModal";
 import AddMealEntryModal from "@/components/nutrition/AddMealEntryModal";
 import AiMealEntryModal from "@/components/nutrition/AiMealEntryModal";
 import EditMealEntryModal from "@/components/nutrition/EditMealEntryModal";
@@ -16,6 +25,7 @@ import {
   getMealSlots,
   type MealSlot,
 } from "@/data/nutrition/foodCatalog";
+import { visibleMealSlots } from "@/domain/nutrition/mealVisibility";
 import {
   getCalorieTrackingMode,
   setCalorieTrackingMode,
@@ -34,7 +44,7 @@ import {
   type ActivityNoteEntry,
 } from "@/utils/activityLogEngine";
 import { getWorkoutCalories } from "@/utils/workoutCalorieEngine";
-import { getTodayLocalDate } from "@/utils/dateFormat";
+import { getTodayLocalDate, isoToLocalDate } from "@/utils/dateFormat";
 import { toFaDigits } from "@/utils/numberFormat";
 
 type Tab = "meal" | "activity";
@@ -232,19 +242,60 @@ function OtherActivitiesCard({
 function MealTabRoot() {
   const [mode, setMode] = useState(() => getCalorieTrackingMode());
   const [selectedDate, setSelectedDate] = useState(getTodayLocalDate);
+  const [displayOpen, setDisplayOpen] = useState(false);
+  // Bumped when the display settings are saved. Which meals show and how
+  // their cards open are both read during render straight from storage,
+  // and the slot list below is rebuilt from that read.
+  const [displayVersion, setDisplayVersion] = useState(0);
 
   if (mode === null) {
     return <CalorieModeChoicePrompt onChoose={setMode} />;
   }
 
+  // Daily mode has one pseudo-slot and nothing to hide — filtering only
+  // ever applies to the real per-meal list. Resolved against the selected
+  // date, not today, so looking back at a rest day shows that day's meals.
+  const slots =
+    mode === "daily"
+      ? [DAILY_MODE_SLOT]
+      : visibleMealSlots(isoToLocalDate(selectedDate));
+
   return (
     <>
-      <WeeklyDatePicker selectedDate={selectedDate} onSelectDate={setSelectedDate} />
+      <WeeklyDatePicker
+        selectedDate={selectedDate}
+        onSelectDate={setSelectedDate}
+        trailing={
+          // Same pencil, same size and shape as the workout page's own
+          // header action — the two pages' top rows should read as the
+          // same control, not two different ideas.
+          <button
+            onClick={() => setDisplayOpen(true)}
+            aria-label="تنظیم نمایش وعده‌های غذایی"
+            className="glass-chip glass-static flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white"
+          >
+            <Pencil size={15} />
+          </button>
+        }
+      />
 
       <MealLogTab
-        slots={mode === "daily" ? [DAILY_MODE_SLOT] : getMealSlots()}
+        key={displayVersion}
+        slots={slots}
+        // Totals are summed over every slot, hidden ones included: hiding
+        // is about what's on screen, and a day's calories must not change
+        // because a card was tidied away — the calorie orb on the progress
+        // page counts them regardless, and the two disagreeing would be
+        // worse than either.
+        totalSlots={mode === "daily" ? [DAILY_MODE_SLOT] : getMealSlots()}
         mode={mode}
         date={selectedDate}
+      />
+
+      <MealDisplaySettingsModal
+        open={displayOpen}
+        onClose={() => setDisplayOpen(false)}
+        onSaved={() => setDisplayVersion((v) => v + 1)}
       />
     </>
   );
@@ -307,10 +358,13 @@ type ModalScreen =
 // "I'm done", not "go back".
 function MealLogTab({
   slots,
+  totalSlots,
   mode,
   date,
 }: {
   slots: MealSlot[];
+  // Every slot, including any the user has hidden — see the call site.
+  totalSlots: MealSlot[];
   mode: CalorieTrackingMode;
   // The WeeklyDatePicker selection from MealTabRoot above — every read/
   // write in this tab now happens against this date instead of always
@@ -338,7 +392,7 @@ function MealLogTab({
           daily mode's single card below was already showing exactly these
           numbers — now that card's own totals are hidden (see hideTotals
           below), so this is the only place either mode shows them. */}
-      <DailyTotalsCard slots={slots} version={version} date={date} isToday={isToday} />
+      <DailyTotalsCard slots={totalSlots} version={version} date={date} isToday={isToday} />
 
       {slots.map((meal) => (
         <MealLogCard

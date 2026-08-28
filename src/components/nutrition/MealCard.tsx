@@ -3,6 +3,7 @@ import { useState } from "react";
 
 import MealItem from "./MealItem";
 import type { FoodItem, MealSection } from "../../types/nutrition";
+import { shouldMealCardStartOpen } from "@/utils/appSettingsEngine";
 import { toFaDigits } from "@/utils/numberFormat";
 import { getLoggedEntries } from "@/utils/dailyLogEngine";
 import { resolveLogSlotId } from "@/domain/nutrition/planFoodLogging";
@@ -16,7 +17,11 @@ interface MealCardProps {
 }
 
 export default function MealCard({ meal, onSelectFood }: MealCardProps) {
-  const [isOpen, setIsOpen] = useState(false);
+  // Same preference the daily log's cards follow — a plan meal always has
+  // foods in it (empty ones aren't rendered), so "auto" keeps the closed
+  // default this card has always had and only an explicit "همه باز" opens
+  // it.
+  const [isOpen, setIsOpen] = useState(() => shouldMealCardStartOpen(false));
 
   // Foods already logged as eaten today, under the same slot a tap here
   // would write into (see resolveLogSlotId) — matched by name, since a

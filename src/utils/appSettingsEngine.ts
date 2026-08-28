@@ -6,6 +6,10 @@ export type Theme = "dark" | "light";
 export type Language = "fa" | "en";
 export type WeightUnit = "kg" | "lb";
 export type WeekStart = "saturday" | "monday";
+// How a meal card starts out: "auto" is the behaviour that predates this
+// setting — open when the meal already has something in it, closed
+// otherwise — while the other two are the user overriding that outright.
+export type MealCardDefault = "auto" | "expanded" | "collapsed";
 
 export interface AppSettings {
   theme: Theme;
@@ -15,6 +19,18 @@ export interface AppSettings {
   // Default rest timer length, seconds — ExerciseSetLogger's own
   // REST_SECONDS constant is the fallback until this reads from here.
   restSeconds: number;
+  // Meal slots (by id — see foodCatalog's getMealSlots) the user doesn't
+  // want to see. Not everyone eats to a nine-slot day: "بعد از بیدار شدن"
+  // and "قبل تمرین" are noise for most, and scrolling past empty cards
+  // every day is what this removes. Hiding only affects what's displayed —
+  // anything already logged or planned under a hidden slot is kept, and
+  // reappears the moment it's shown again.
+  hiddenMealIds: string[];
+  mealCardDefault: MealCardDefault;
+  // Drop "قبل تمرین"/"بعد تمرین" on days the program says are rest days,
+  // and bring them back on training days — the one hiding rule that can't
+  // be expressed as a fixed list, because the answer changes with the day.
+  hideWorkoutMealsOnRestDays: boolean;
 }
 
 // Dark/فارسی/kg/شنبه/۹۰s — exactly what the app already behaved as before
@@ -26,6 +42,9 @@ const DEFAULT_SETTINGS: AppSettings = {
   weightUnit: "kg",
   weekStart: "monday",
   restSeconds: 90,
+  hiddenMealIds: [],
+  mealCardDefault: "auto",
+  hideWorkoutMealsOnRestDays: false,
 };
 
 // Date.getDay()'s own 0=Sunday..6=Saturday numbering — what every week-
@@ -57,6 +76,38 @@ export function getAppSettings(): AppSettings {
   } catch {
     return { ...DEFAULT_SETTINGS };
   }
+}
+
+// The two nutrition-display settings on their own, since every screen that
+// reads them wants exactly these and nothing else. Guarded against a saved
+// value of the wrong shape (an older build, a half-written sync) rather
+// than trusting the blob — a non-array here would break every meal list at
+// once.
+export function getMealDisplaySettings(): Pick<
+  AppSettings,
+  "hiddenMealIds" | "mealCardDefault" | "hideWorkoutMealsOnRestDays"
+> {
+  const { hiddenMealIds, mealCardDefault, hideWorkoutMealsOnRestDays } =
+    getAppSettings();
+
+  return {
+    hiddenMealIds: Array.isArray(hiddenMealIds) ? hiddenMealIds : [],
+    mealCardDefault:
+      mealCardDefault === "expanded" || mealCardDefault === "collapsed"
+        ? mealCardDefault
+        : "auto",
+    hideWorkoutMealsOnRestDays: hideWorkoutMealsOnRestDays === true,
+  };
+}
+
+/** Whether a meal card should start open, given what's already in it. */
+export function shouldMealCardStartOpen(hasContent: boolean): boolean {
+  const { mealCardDefault } = getMealDisplaySettings();
+
+  if (mealCardDefault === "expanded") return true;
+  if (mealCardDefault === "collapsed") return false;
+
+  return hasContent;
 }
 
 export function saveAppSettings(settings: AppSettings) {

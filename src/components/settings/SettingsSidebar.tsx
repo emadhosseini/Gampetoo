@@ -142,7 +142,18 @@ export default function SettingsSidebar({ open, onClose }: SettingsSidebarProps)
     }
 
     setCalorieTrackingMode(calorieMode);
-    saveAppSettings({ theme, language, weightUnit, weekStart, restSeconds });
+    // Spread over what's stored rather than writing a fresh object: this
+    // screen doesn't own every setting in the blob (the meal-display ones
+    // are set from the daily-log page), and listing only its own fields
+    // would silently clear the rest on every save.
+    saveAppSettings({
+      ...getAppSettings(),
+      theme,
+      language,
+      weightUnit,
+      weekStart,
+      restSeconds,
+    });
     setPreferredCalendar(calendar);
 
     setSaved(true);
