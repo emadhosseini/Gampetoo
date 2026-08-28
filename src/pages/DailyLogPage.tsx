@@ -25,7 +25,7 @@ import {
   getMealSlots,
   type MealSlot,
 } from "@/data/nutrition/foodCatalog";
-import { getMealDisplaySettings } from "@/utils/appSettingsEngine";
+import { visibleMealSlots } from "@/domain/nutrition/mealVisibility";
 import {
   getCalorieTrackingMode,
   setCalorieTrackingMode,
@@ -44,7 +44,7 @@ import {
   type ActivityNoteEntry,
 } from "@/utils/activityLogEngine";
 import { getWorkoutCalories } from "@/utils/workoutCalorieEngine";
-import { getTodayLocalDate } from "@/utils/dateFormat";
+import { getTodayLocalDate, isoToLocalDate } from "@/utils/dateFormat";
 import { toFaDigits } from "@/utils/numberFormat";
 
 type Tab = "meal" | "activity";
@@ -252,14 +252,13 @@ function MealTabRoot() {
     return <CalorieModeChoicePrompt onChoose={setMode} />;
   }
 
-  const { hiddenMealIds } = getMealDisplaySettings();
-
   // Daily mode has one pseudo-slot and nothing to hide — filtering only
-  // ever applies to the real per-meal list.
+  // ever applies to the real per-meal list. Resolved against the selected
+  // date, not today, so looking back at a rest day shows that day's meals.
   const slots =
     mode === "daily"
       ? [DAILY_MODE_SLOT]
-      : getMealSlots().filter((slot) => !hiddenMealIds.includes(slot.id));
+      : visibleMealSlots(isoToLocalDate(selectedDate));
 
   return (
     <>

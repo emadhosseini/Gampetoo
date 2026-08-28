@@ -11,7 +11,7 @@ import WorkoutHeader from "../components/WorkoutHeader";
 import { mealPlans } from "../data/nutrition/mealPlans";
 import type { FoodItem, MealSection } from "../types/nutrition";
 
-import { getMealDisplaySettings } from "../utils/appSettingsEngine";
+import { hiddenMealIdsFor } from "../domain/nutrition/mealVisibility";
 import {
   getActiveProgram,
   getCurrentMealPlan,
@@ -58,7 +58,7 @@ export default function NutritionPage() {
   // to "which meals are part of my day", not a per-screen one. The plan's
   // own settings screen still lists every slot, since that's where the
   // hidden one's contents would be edited.
-  const { hiddenMealIds } = getMealDisplaySettings();
+  const hiddenMealIds = hiddenMealIdsFor();
 
   const enabledMeals = plan.meals.filter(
     (meal) =>

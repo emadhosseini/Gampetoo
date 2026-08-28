@@ -93,19 +93,21 @@ export default function MealLogCard({
     // nothing above it ever moves — growth only ever pushes the bottom edge
     // down.
     <div className="glass-panel glass-static overflow-hidden rounded-2xl">
-      <div className="flex items-center justify-between gap-3 p-5">
+      {/* p-3.5, not p-5: with eight of these stacked down the page, the
+          padding was costing more screen than the content it framed. */}
+      <div className="flex items-center justify-between gap-3 p-3.5">
         <button
           onClick={toggle}
           aria-expanded={expanded}
           className="flex flex-1 items-center gap-3 text-right"
         >
-          <span className="text-2xl">{meal.icon}</span>
+          <span className="text-xl">{meal.icon}</span>
 
           <div>
-            <h2 className="text-lg font-semibold text-white">{title ?? meal.title}</h2>
+            <h2 className="text-base font-semibold text-white">{title ?? meal.title}</h2>
 
             {!hideTotals && (
-              <p className="text-sm text-white/70">
+              <p className="text-xs text-white/70">
                 {entries.length > 0
                   ? `${toFaDigits(totalCalories)} کالری ثبت‌شده`
                   : "چیزی ثبت نشده"}
@@ -117,9 +119,9 @@ export default function MealLogCard({
         <button
           onClick={() => onAdd(meal)}
           aria-label={`افزودن ${meal.title}`}
-          className="glass-action flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white"
+          className="glass-action flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white"
         >
-          <Plus size={20} />
+          <Plus size={18} />
         </button>
       </div>
 
@@ -133,7 +135,7 @@ export default function MealLogCard({
             className="overflow-hidden"
           >
             {!hideTotals && (
-              <div className="px-5">
+              <div className="px-3.5">
                 <MacroTotalsGrid totals={macroTotals} />
               </div>
             )}
@@ -143,13 +145,13 @@ export default function MealLogCard({
                 sums, so this list is the only place a mistake in them can
                 actually be corrected. */}
             {entries.length > 0 && (
-              <div className="mt-3 max-h-64 space-y-2 overflow-y-auto px-5">
+              <div className="mt-2 max-h-64 space-y-2 overflow-y-auto px-3.5">
                 {entries.map((entry) => (
                   <button
                     key={entry.id}
                     onClick={() => onEditEntry(meal, entry)}
                     aria-label={`ویرایش ${entry.name}`}
-                    className="glass-chip flex w-full items-center gap-2 rounded-xl p-3 text-right"
+                    className="glass-chip flex w-full items-center gap-2 rounded-xl p-2.5 text-right"
                   >
                     <Pencil size={14} className="shrink-0 text-white/50" />
 
@@ -172,7 +174,7 @@ export default function MealLogCard({
               </div>
             )}
 
-            <div className="h-4" />
+            <div className="h-3" />
           </motion.div>
         )}
       </AnimatePresence>

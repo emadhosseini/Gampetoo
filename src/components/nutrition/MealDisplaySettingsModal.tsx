@@ -46,6 +46,9 @@ export default function MealDisplaySettingsModal({
   const [cardDefault, setCardDefault] = useState<MealCardDefault>(
     () => getMealDisplaySettings().mealCardDefault,
   );
+  const [autoWorkoutMeals, setAutoWorkoutMeals] = useState(
+    () => getMealDisplaySettings().hideWorkoutMealsOnRestDays,
+  );
 
   if (!open) return null;
 
@@ -63,6 +66,7 @@ export default function MealDisplaySettingsModal({
       ...getAppSettings(),
       hiddenMealIds: hidden,
       mealCardDefault: cardDefault,
+      hideWorkoutMealsOnRestDays: autoWorkoutMeals,
     });
 
     onSaved();
@@ -110,6 +114,26 @@ export default function MealDisplaySettingsModal({
             همه‌ی وعده‌ها خاموشن — صفحه‌ی وعده‌ها خالی نشون داده می‌شه.
           </p>
         )}
+
+        {/* The one rule that can't be a switch in the list above: whether a
+            meal shows depends on the day, not on a fixed answer. */}
+        <div className="glass-chip glass-static flex items-start gap-3 rounded-xl p-3">
+          <Toggle
+            checked={autoWorkoutMeals}
+            onChange={() => setAutoWorkoutMeals((prev) => !prev)}
+          />
+
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-white">
+              وعده‌های تمرینی فقط روزهای تمرین
+            </p>
+
+            <p className="mt-0.5 text-[11px] leading-5 text-white/50">
+              «قبل تمرین» و «بعد تمرین» توی روزهای استراحت خودکار پنهان
+              می‌شن و روز تمرین برمی‌گردن.
+            </p>
+          </div>
+        </div>
 
         <div className="space-y-2">
           <p className="text-sm text-white/60">کارت وعده‌ها اولش</p>

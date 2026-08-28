@@ -27,6 +27,10 @@ export interface AppSettings {
   // reappears the moment it's shown again.
   hiddenMealIds: string[];
   mealCardDefault: MealCardDefault;
+  // Drop "قبل تمرین"/"بعد تمرین" on days the program says are rest days,
+  // and bring them back on training days — the one hiding rule that can't
+  // be expressed as a fixed list, because the answer changes with the day.
+  hideWorkoutMealsOnRestDays: boolean;
 }
 
 // Dark/فارسی/kg/شنبه/۹۰s — exactly what the app already behaved as before
@@ -40,6 +44,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   restSeconds: 90,
   hiddenMealIds: [],
   mealCardDefault: "auto",
+  hideWorkoutMealsOnRestDays: false,
 };
 
 // Date.getDay()'s own 0=Sunday..6=Saturday numbering — what every week-
@@ -78,11 +83,12 @@ export function getAppSettings(): AppSettings {
 // value of the wrong shape (an older build, a half-written sync) rather
 // than trusting the blob — a non-array here would break every meal list at
 // once.
-export function getMealDisplaySettings(): {
-  hiddenMealIds: string[];
-  mealCardDefault: MealCardDefault;
-} {
-  const { hiddenMealIds, mealCardDefault } = getAppSettings();
+export function getMealDisplaySettings(): Pick<
+  AppSettings,
+  "hiddenMealIds" | "mealCardDefault" | "hideWorkoutMealsOnRestDays"
+> {
+  const { hiddenMealIds, mealCardDefault, hideWorkoutMealsOnRestDays } =
+    getAppSettings();
 
   return {
     hiddenMealIds: Array.isArray(hiddenMealIds) ? hiddenMealIds : [],
@@ -90,6 +96,7 @@ export function getMealDisplaySettings(): {
       mealCardDefault === "expanded" || mealCardDefault === "collapsed"
         ? mealCardDefault
         : "auto",
+    hideWorkoutMealsOnRestDays: hideWorkoutMealsOnRestDays === true,
   };
 }
 
