@@ -1,4 +1,4 @@
-import { setCalorieTarget } from "./dailyLogEngine";
+import { setCalorieTarget, setCalorieTargetMode } from "./dailyLogEngine";
 import { scopedKey, setCurrentUserGender, type Gender } from "./userEngine";
 import { logWeight } from "./weightEngine";
 
@@ -244,6 +244,10 @@ export function saveCalorieProfile(profile: CalorieProfile): CalorieCalculation 
     String(profile.weeklyLossGrams),
   );
 
+  // The calculator only ever produces one number, so running it always
+  // switches back to "single" mode — otherwise a saved calculation could
+  // silently do nothing if the user had dual targets active.
+  setCalorieTargetMode("single");
   setCalorieTarget(calculation.target);
 
   return calculation;
