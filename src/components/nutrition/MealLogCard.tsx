@@ -3,6 +3,7 @@ import { Pencil, Plus } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
 import type { MealSlot } from "@/data/nutrition/foodCatalog";
+import { shouldMealCardStartOpen } from "@/utils/appSettingsEngine";
 import { getLoggedEntries, type LoggedFoodEntry } from "@/utils/dailyLogEngine";
 import { toFaDigits } from "@/utils/numberFormat";
 import MacroTotalsGrid from "@/components/nutrition/MacroTotalsGrid";
@@ -48,12 +49,16 @@ export default function MealLogCard({
   hideTotals = false,
   date,
 }: MealLogCardProps) {
-  // Opens by default when this meal already has something logged — reread
-  // only on mount (a lazy initializer, not derived from `entries` below),
-  // so leaving the page and coming back re-evaluates it fresh each time,
-  // but adding the first item during this same mount doesn't yank the
-  // panel open out from under whoever's mid-edit.
-  const [expanded, setExpanded] = useState(() => getLoggedEntries(meal.id, date).length > 0);
+  // Open by default when this meal already has something logged — unless
+  // the user has said every card should start open, or closed (see
+  // shouldMealCardStartOpen). Read only on mount (a lazy initializer, not
+  // derived from `entries` below), so leaving the page and coming back
+  // re-evaluates it fresh each time, but adding the first item during this
+  // same mount doesn't yank the panel open out from under whoever's
+  // mid-edit.
+  const [expanded, setExpanded] = useState(() =>
+    shouldMealCardStartOpen(getLoggedEntries(meal.id, date).length > 0),
+  );
   const entries = useMemo(
     () => getLoggedEntries(meal.id, date),
     // `version` looks unused to the linter and is the entire point: this

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { CalendarDays, TriangleAlert } from "lucide-react";
 
 import { Calendar, DateObject } from "react-multi-date-picker";
@@ -26,6 +26,11 @@ function dateToISO(date: Date): string {
 export interface WeeklyDatePickerProps {
   selectedDate: string;
   onSelectDate: (date: string) => void;
+  // Buttons to sit on the same row as the date, taking the width it
+  // doesn't — the daily log's meal-display pencil. Same arrangement the
+  // workout page's header uses for its own actions, so the two pages read
+  // the same way.
+  trailing?: ReactNode;
 }
 
 /**
@@ -40,6 +45,7 @@ export interface WeeklyDatePickerProps {
 export default function WeeklyDatePicker({
   selectedDate,
   onSelectDate,
+  trailing,
 }: WeeklyDatePickerProps) {
   const [open, setOpen] = useState(false);
 
@@ -51,14 +57,22 @@ export default function WeeklyDatePicker({
   return (
     <>
       <div className="space-y-2 px-5 pt-4">
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          className="glass-chip glass-static flex w-full items-center justify-center gap-2 rounded-2xl py-2.5 text-sm font-medium text-white"
-        >
-          <CalendarDays size={16} className="text-white/60" />
-          {isToday ? "امروز" : formatDisplayShort(isoToLocalDate(selectedDate))}
-        </button>
+        {/* One row: the date fills whatever the fixed-size actions beside
+            it leave. py-2/text-xs rather than py-2.5/text-sm — this is a
+            label you glance at, and at full size it was the loudest thing
+            on a page that's really about the meals below it. */}
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setOpen(true)}
+            className="glass-chip glass-static flex min-w-0 flex-1 items-center justify-center gap-2 rounded-xl py-2 text-xs font-medium text-white"
+          >
+            <CalendarDays size={14} className="text-white/60" />
+            {isToday ? "امروز" : formatDisplayShort(isoToLocalDate(selectedDate))}
+          </button>
+
+          {trailing}
+        </div>
 
         {/* Stays on screen (not just inside the calendar popup) for as long
             as a non-today date is selected — a reminder that everything
