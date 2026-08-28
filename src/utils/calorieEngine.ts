@@ -59,47 +59,54 @@ const PROTEIN_G_PER_KG: Record<CalorieGoal, number> = {
   gain: 1.8,
 };
 
-// How far above target still counts as "on target" rather than more than
-// there's any use for.
-const PROTEIN_RANGE_HEADROOM = 1.25;
-
 export interface ProteinTarget {
   /** Grams a day to aim for. */
   grams: number;
-  /** Above this, more protein isn't buying anything. */
-  upperGrams: number;
 }
 
 export function calculateProteinTarget(
   weightKg: number,
   goal: CalorieGoal,
 ): ProteinTarget {
-  const grams = Math.round(weightKg * PROTEIN_G_PER_KG[goal]);
-
-  return { grams, upperGrams: Math.round(grams * PROTEIN_RANGE_HEADROOM) };
+  return { grams: Math.round(weightKg * PROTEIN_G_PER_KG[goal]) };
 }
 
-export type ProteinStanding = "under" | "onTarget" | "over";
+// Three-tier read on "how close is today to its target": under 80% is red,
+// 80% up to the target is yellow (close but not there), the target and
+// beyond is green — once it's hit, going over isn't penalized the way
+// falling short is.
+export type ProteinStanding = "under" | "near" | "reached";
+
+const NEAR_TARGET_RATIO = 0.8;
+
+export function standingForRatio(ratio: number): ProteinStanding {
+  if (ratio >= 1) return "reached";
+
+  return ratio >= NEAR_TARGET_RATIO ? "near" : "under";
+}
 
 export function proteinStanding(
   grams: number,
   target: ProteinTarget,
 ): ProteinStanding {
-  if (grams < target.grams) return "under";
-
-  return grams > target.upperGrams ? "over" : "onTarget";
+  return standingForRatio(target.grams > 0 ? grams / target.grams : 0);
 }
 
-// Same under/onTarget/over judgment, used for carbs/fat/fiber against their
-// manual gram targets — the shape (grams + a headroom above it) isn't
-// specific to protein, only the name proteinStanding is historical.
-export function macroStanding(
-  grams: number,
-  targetGrams: number,
-  headroom: number = PROTEIN_RANGE_HEADROOM,
-): ProteinStanding {
-  return proteinStanding(grams, { grams: targetGrams, upperGrams: targetGrams * headroom });
+// Same ratio-based judgment, used for calories and for carbs/fat/fiber
+// against their manual gram targets — the ratio math isn't specific to
+// protein, only the name proteinStanding is historical.
+export function macroStanding(grams: number, targetGrams: number): ProteinStanding {
+  return standingForRatio(targetGrams > 0 ? grams / targetGrams : 0);
 }
+
+// The one place the red/yellow/green meaning of a standing is spelled out
+// as an actual color, so every screen that colors text or a ring by
+// standing agrees with the others.
+export const STANDING_COLOR: Record<ProteinStanding, string> = {
+  under: "#f87171",
+  near: "#fcd34d",
+  reached: "#4ade80",
+};
 
 export const ACTIVITY_LEVEL_LABELS: Record<ActivityLevel, string> = {
   sedentary: "بی‌تحرک",

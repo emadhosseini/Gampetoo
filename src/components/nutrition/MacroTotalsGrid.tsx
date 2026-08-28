@@ -7,8 +7,8 @@ import { toFaDigits } from "@/utils/numberFormat";
 // .protein-ring-* comment for why those render nothing on a .glass-chip.
 const PROTEIN_RING: Record<ProteinStanding, string> = {
   under: "protein-ring-under",
-  onTarget: "protein-ring-on-target",
-  over: "protein-ring-over",
+  near: "protein-ring-near",
+  reached: "protein-ring-reached",
 };
 
 const MACRO_FIELDS = [
@@ -32,6 +32,11 @@ export interface MacroTotalsGridProps {
   // calculation, carbs/fat/fiber's from the manual macro targets. Pass
   // null/undefined per-key while that macro has no target set.
   standings?: Partial<Record<keyof MacroTotals, ProteinStanding | null>>;
+  // The gram target behind each standing, shown under the consumed value so
+  // "how much so far" and "how much to aim for" sit in the same capsule
+  // instead of only the ring color hinting at the second number. Same
+  // per-key null/undefined-when-unset contract as `standings`.
+  targets?: Partial<Record<keyof MacroTotals, number | null>>;
   className?: string;
 }
 
@@ -41,6 +46,7 @@ export interface MacroTotalsGridProps {
 export default function MacroTotalsGrid({
   totals,
   standings,
+  targets,
   className = "",
 }: MacroTotalsGridProps) {
   return (
@@ -51,6 +57,7 @@ export default function MacroTotalsGrid({
     <div className={`grid grid-cols-4 gap-1 ${className}`}>
       {MACRO_FIELDS.map((field) => {
         const standing = standings?.[field.key];
+        const target = targets?.[field.key];
 
         return (
           <div
@@ -65,6 +72,11 @@ export default function MacroTotalsGrid({
             <span className="text-xs font-bold leading-tight text-white">
               {toFaDigits(totals[field.key])}
             </span>
+            {target ? (
+              <span className="max-w-full truncate text-[9px] leading-tight text-white/40">
+                از {toFaDigits(target)}
+              </span>
+            ) : null}
           </div>
         );
       })}
