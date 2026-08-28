@@ -1,8 +1,13 @@
 import { useMemo } from "react";
 
 import type { MealSlot } from "@/data/nutrition/foodCatalog";
-import { calculateProteinTarget, getCalorieGoal, proteinStanding } from "@/utils/calorieEngine";
-import { getLoggedEntries } from "@/utils/dailyLogEngine";
+import {
+  calculateProteinTarget,
+  getCalorieGoal,
+  macroStanding,
+  proteinStanding,
+} from "@/utils/calorieEngine";
+import { getLoggedEntries, getMacroTargets } from "@/utils/dailyLogEngine";
 import { getLatestWeight } from "@/utils/weightEngine";
 import { toFaDigits } from "@/utils/numberFormat";
 import MacroTotalsGrid from "@/components/nutrition/MacroTotalsGrid";
@@ -60,6 +65,14 @@ export default function DailyTotalsCard({
 
   const standing = target ? proteinStanding(totals.protein, target) : null;
 
+  const macroTargets = getMacroTargets();
+  const standings = {
+    protein: standing,
+    carbs: macroTargets.carbs !== null ? macroStanding(totals.carbs, macroTargets.carbs) : null,
+    fat: macroTargets.fat !== null ? macroStanding(totals.fat, macroTargets.fat) : null,
+    fiber: macroTargets.fiber !== null ? macroStanding(totals.fiber, macroTargets.fiber) : null,
+  };
+
   return (
     // Label, total and protein goal all share one line above the macro
     // capsules instead of stacking into three of their own — with the
@@ -87,7 +100,7 @@ export default function DailyTotalsCard({
       </div>
 
       <div className="mt-1.5">
-        <MacroTotalsGrid totals={totals} proteinStanding={standing} />
+        <MacroTotalsGrid totals={totals} standings={standings} />
       </div>
     </div>
   );

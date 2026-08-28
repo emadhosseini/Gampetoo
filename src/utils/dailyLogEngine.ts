@@ -10,6 +10,9 @@ const TARGET_KEY = "emad-daily-calorie-target";
 const TARGET_MODE_KEY = "emad-daily-calorie-target-mode";
 const TRAINING_TARGET_KEY = "emad-daily-calorie-target-training";
 const REST_TARGET_KEY = "emad-daily-calorie-target-rest";
+const CARB_TARGET_KEY = "emad-daily-carb-target";
+const FAT_TARGET_KEY = "emad-daily-fat-target";
+const FIBER_TARGET_KEY = "emad-daily-fiber-target";
 // Ids of food entries the user actually deleted. Needed because the daily
 // log is merged across devices by unioning entries (see
 // sync/mergeStrategies): without a record of a deletion, the other device
@@ -273,6 +276,9 @@ export function resetDailyLog() {
   localStorage.removeItem(scopedKey(TARGET_MODE_KEY));
   localStorage.removeItem(scopedKey(TRAINING_TARGET_KEY));
   localStorage.removeItem(scopedKey(REST_TARGET_KEY));
+  localStorage.removeItem(scopedKey(CARB_TARGET_KEY));
+  localStorage.removeItem(scopedKey(FAT_TARGET_KEY));
+  localStorage.removeItem(scopedKey(FIBER_TARGET_KEY));
   calorieHistory.reset();
 }
 
@@ -417,4 +423,34 @@ export function getCalorieTarget(): number | null {
 
 export function setCalorieTarget(calories: number) {
   localStorage.setItem(scopedKey(TARGET_KEY), String(Math.round(calories)));
+}
+
+export interface MacroTargets {
+  carbs: number | null;
+  fat: number | null;
+  fiber: number | null;
+}
+
+// Manual-only, unlike the calorie target: there's no BMR/TDEE-style
+// calculation for carbs/fat/fiber here, only what the "کالری هدف روزانه"
+// form lets the user state directly. Same day for training and rest — the
+// dual calorie split doesn't extend to these.
+export function getMacroTargets(): MacroTargets {
+  return {
+    carbs: readNumberKey(CARB_TARGET_KEY),
+    fat: readNumberKey(FAT_TARGET_KEY),
+    fiber: readNumberKey(FIBER_TARGET_KEY),
+  };
+}
+
+export function setMacroTargets(targets: { carbs: number; fat: number; fiber: number }) {
+  localStorage.setItem(scopedKey(CARB_TARGET_KEY), String(Math.round(targets.carbs)));
+  localStorage.setItem(scopedKey(FAT_TARGET_KEY), String(Math.round(targets.fat)));
+  localStorage.setItem(scopedKey(FIBER_TARGET_KEY), String(Math.round(targets.fiber)));
+}
+
+export function clearMacroTargets() {
+  localStorage.removeItem(scopedKey(CARB_TARGET_KEY));
+  localStorage.removeItem(scopedKey(FAT_TARGET_KEY));
+  localStorage.removeItem(scopedKey(FIBER_TARGET_KEY));
 }

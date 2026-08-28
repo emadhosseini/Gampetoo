@@ -90,6 +90,17 @@ export function proteinStanding(
   return grams > target.upperGrams ? "over" : "onTarget";
 }
 
+// Same under/onTarget/over judgment, used for carbs/fat/fiber against their
+// manual gram targets — the shape (grams + a headroom above it) isn't
+// specific to protein, only the name proteinStanding is historical.
+export function macroStanding(
+  grams: number,
+  targetGrams: number,
+  headroom: number = PROTEIN_RANGE_HEADROOM,
+): ProteinStanding {
+  return proteinStanding(grams, { grams: targetGrams, upperGrams: targetGrams * headroom });
+}
+
 export const ACTIVITY_LEVEL_LABELS: Record<ActivityLevel, string> = {
   sedentary: "بی‌تحرک",
   light: "فعالیت سبک",

@@ -10,19 +10,26 @@ import {
   type CalorieGoal,
 } from "@/utils/calorieEngine";
 import {
+  clearMacroTargets,
   getCalorieTargetMode,
   getDualCalorieTargets,
   getCalorieTarget,
+  getMacroTargets,
   setCalorieTarget,
   setCalorieTargetMode,
   setDualCalorieTargets,
+  setMacroTargets,
   type CalorieTargetMode,
 } from "@/utils/dailyLogEngine";
 import { getLatestWeight } from "@/utils/weightEngine";
 import { toFaDigits } from "@/utils/numberFormat";
 
 const STEP = 100;
+const MACRO_STEP = 5;
 const DEFAULT_CALORIES = 2000;
+const DEFAULT_CARBS = 200;
+const DEFAULT_FAT = 60;
+const DEFAULT_FIBER = 25;
 
 const GOALS: CalorieGoal[] = ["lose", "maintain", "gain"];
 
@@ -35,22 +42,29 @@ function Stepper({
   label,
   value,
   onChange,
+  step = STEP,
+  unit,
 }: {
   label: string;
   value: number;
   onChange: (next: number) => void;
+  step?: number;
+  unit?: string;
 }) {
   return (
     <div>
       <p className="mb-1 text-right text-sm text-white/60">{label}</p>
       <div className="selector-pill flex items-center justify-between rounded-xl p-3">
-        <button onClick={() => onChange(Math.max(0, value - STEP))} aria-label="کم کردن">
+        <button onClick={() => onChange(Math.max(0, value - step))} aria-label="کم کردن">
           <Minus size={20} />
         </button>
 
-        <span className="text-2xl font-bold text-white">{toFaDigits(value)}</span>
+        <span className="text-2xl font-bold text-white">
+          {toFaDigits(value)}
+          {unit ? <span className="mr-1 text-sm font-normal text-white/60">{unit}</span> : null}
+        </span>
 
-        <button onClick={() => onChange(value + STEP)} aria-label="زیاد کردن">
+        <button onClick={() => onChange(value + step)} aria-label="زیاد کردن">
           <Plus size={20} />
         </button>
       </div>
@@ -83,6 +97,14 @@ export default function TargetCaloriesModal({
   const [rest, setRest] = useState(() => getDualCalorieTargets().rest ?? DEFAULT_CALORIES);
   const [goal, setGoal] = useState<CalorieGoal>(() => getCalorieGoal() ?? "maintain");
 
+  const savedMacroTargets = getMacroTargets();
+  const [macrosEnabled, setMacrosEnabled] = useState(
+    () => savedMacroTargets.carbs !== null || savedMacroTargets.fat !== null,
+  );
+  const [carbs, setCarbs] = useState(() => savedMacroTargets.carbs ?? DEFAULT_CARBS);
+  const [fat, setFat] = useState(() => savedMacroTargets.fat ?? DEFAULT_FAT);
+  const [fiber, setFiber] = useState(() => savedMacroTargets.fiber ?? DEFAULT_FIBER);
+
   if (!open) {
     return null;
   }
@@ -99,6 +121,12 @@ export default function TargetCaloriesModal({
       setDualCalorieTargets({ training, rest });
     } else {
       setCalorieTarget(calories);
+    }
+
+    if (macrosEnabled) {
+      setMacroTargets({ carbs, fat, fiber });
+    } else {
+      clearMacroTargets();
     }
 
     setCalorieGoal(goal);
@@ -157,6 +185,38 @@ export default function TargetCaloriesModal({
             ? `هدف پروتئین: ${toFaDigits(protein.grams)} گرم در روز`
             : "برای هدف پروتئین، اول وزنت رو ثبت کن"}
         </p>
+
+        <button
+          onClick={() => setMacrosEnabled((v) => !v)}
+          className={`glass-tap selector-pill flex w-full items-center justify-between rounded-xl px-3 py-3 text-sm font-bold text-white ${
+            macrosEnabled ? "glass-selected" : ""
+          }`}
+        >
+          <span>هدف کربوهیدرات، چربی و فیبر</span>
+          <span className="text-xs font-normal text-white/60">
+            {macrosEnabled ? "روشن" : "خاموش"}
+          </span>
+        </button>
+
+        {macrosEnabled ? (
+          <div className="space-y-3">
+            <Stepper
+              label="کربوهیدرات"
+              value={carbs}
+              onChange={setCarbs}
+              step={MACRO_STEP}
+              unit="گرم"
+            />
+            <Stepper label="چربی" value={fat} onChange={setFat} step={MACRO_STEP} unit="گرم" />
+            <Stepper
+              label="فیبر"
+              value={fiber}
+              onChange={setFiber}
+              step={MACRO_STEP}
+              unit="گرم"
+            />
+          </div>
+        ) : null}
 
         <button
           onClick={handleSave}
