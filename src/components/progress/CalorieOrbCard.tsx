@@ -9,7 +9,7 @@ import {
 } from "@/utils/dailyLogEngine";
 import { getTodayActivityCalories } from "@/utils/activityLogEngine";
 import { getTodayWorkoutCalories } from "@/utils/workoutCalorieEngine";
-import { calculateProteinTarget, getCalorieGoal } from "@/utils/calorieEngine";
+import { getCalorieGoal, getEffectiveProteinTarget } from "@/utils/calorieEngine";
 import { getLatestWeight } from "@/utils/weightEngine";
 import { toFaDigits } from "@/utils/numberFormat";
 import CalorieGoalChoiceModal from "@/components/progress/CalorieGoalChoiceModal";
@@ -129,10 +129,7 @@ export default function CalorieOrbCard({ onGoalSaved }: CalorieOrbCardProps = {}
   const remaining = target !== null ? target - consumed + burned : null;
 
   const weight = getLatestWeight();
-  const proteinTarget =
-    weight !== null
-      ? calculateProteinTarget(weight, getCalorieGoal() ?? "maintain").grams
-      : null;
+  const proteinTarget = getEffectiveProteinTarget(weight, getCalorieGoal() ?? "maintain")?.grams ?? null;
 
   function openGoalFlow() {
     setGoalScreen(target !== null ? "summary" : "choice");

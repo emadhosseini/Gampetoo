@@ -10,9 +10,11 @@ const TARGET_KEY = "emad-daily-calorie-target";
 const TARGET_MODE_KEY = "emad-daily-calorie-target-mode";
 const TRAINING_TARGET_KEY = "emad-daily-calorie-target-training";
 const REST_TARGET_KEY = "emad-daily-calorie-target-rest";
-const CARB_TARGET_KEY = "emad-daily-carb-target";
-const FAT_TARGET_KEY = "emad-daily-fat-target";
-const FIBER_TARGET_KEY = "emad-daily-fiber-target";
+// One JSON blob for all the non-calorie macro targets, rather than a flat
+// key per macro per day-type (protein/carbs/fat/fiber × single/training/
+// rest would be ten keys) — see MacroTargetValues/setSingleMacroTargets/
+// setDualMacroTargets below.
+const MACRO_TARGETS_KEY = "emad-daily-macro-targets";
 // Ids of food entries the user actually deleted. Needed because the daily
 // log is merged across devices by unioning entries (see
 // sync/mergeStrategies): without a record of a deletion, the other device
@@ -276,9 +278,7 @@ export function resetDailyLog() {
   localStorage.removeItem(scopedKey(TARGET_MODE_KEY));
   localStorage.removeItem(scopedKey(TRAINING_TARGET_KEY));
   localStorage.removeItem(scopedKey(REST_TARGET_KEY));
-  localStorage.removeItem(scopedKey(CARB_TARGET_KEY));
-  localStorage.removeItem(scopedKey(FAT_TARGET_KEY));
-  localStorage.removeItem(scopedKey(FIBER_TARGET_KEY));
+  localStorage.removeItem(scopedKey(MACRO_TARGETS_KEY));
   calorieHistory.reset();
 }
 
@@ -425,32 +425,106 @@ export function setCalorieTarget(calories: number) {
   localStorage.setItem(scopedKey(TARGET_KEY), String(Math.round(calories)));
 }
 
-export interface MacroTargets {
+export interface MacroTargetValues {
+  protein: number | null;
   carbs: number | null;
   fat: number | null;
   fiber: number | null;
 }
 
-// Manual-only, unlike the calorie target: there's no BMR/TDEE-style
-// calculation for carbs/fat/fiber here, only what the "کالری هدف روزانه"
-// form lets the user state directly. Same day for training and rest — the
-// dual calorie split doesn't extend to these.
-export function getMacroTargets(): MacroTargets {
+export type MacroTargetInputs = Record<keyof MacroTargetValues, number>;
+
+type PartialMacroTargets = Partial<Record<keyof MacroTargetValues, number>>;
+
+interface MacroTargetsBlob {
+  single: PartialMacroTargets;
+  training: PartialMacroTargets;
+  rest: PartialMacroTargets;
+}
+
+function readMacroTargetsBlob(): MacroTargetsBlob {
+  const saved = localStorage.getItem(scopedKey(MACRO_TARGETS_KEY));
+
+  if (!saved) return { single: {}, training: {}, rest: {} };
+
+  try {
+    const parsed = JSON.parse(saved) as Partial<MacroTargetsBlob>;
+
+    return {
+      single: parsed.single ?? {},
+      training: parsed.training ?? {},
+      rest: parsed.rest ?? {},
+    };
+  } catch {
+    return { single: {}, training: {}, rest: {} };
+  }
+}
+
+function writeMacroTargetsBlob(blob: MacroTargetsBlob) {
+  localStorage.setItem(scopedKey(MACRO_TARGETS_KEY), JSON.stringify(blob));
+}
+
+function valuesFromPartial(saved: PartialMacroTargets): MacroTargetValues {
   return {
-    carbs: readNumberKey(CARB_TARGET_KEY),
-    fat: readNumberKey(FAT_TARGET_KEY),
-    fiber: readNumberKey(FIBER_TARGET_KEY),
+    protein: saved.protein ?? null,
+    carbs: saved.carbs ?? null,
+    fat: saved.fat ?? null,
+    fiber: saved.fiber ?? null,
   };
 }
 
-export function setMacroTargets(targets: { carbs: number; fat: number; fiber: number }) {
-  localStorage.setItem(scopedKey(CARB_TARGET_KEY), String(Math.round(targets.carbs)));
-  localStorage.setItem(scopedKey(FAT_TARGET_KEY), String(Math.round(targets.fat)));
-  localStorage.setItem(scopedKey(FIBER_TARGET_KEY), String(Math.round(targets.fiber)));
+// Manual-only, unlike the calorie target: there's no BMR/TDEE-style
+// calculation behind protein/carbs/fat/fiber here, only what the "کالری هدف
+// روزانه" form lets the user state directly. Each of "single"/"training"/
+// "rest" is its own independent set, mirroring the calorie target's own
+// single-vs-dual split — see getMacroTargets below for how they resolve for
+// "today".
+export function getSingleMacroTargets(): MacroTargetValues {
+  return valuesFromPartial(readMacroTargetsBlob().single);
+}
+
+export function getDualMacroTargets(): { training: MacroTargetValues; rest: MacroTargetValues } {
+  const blob = readMacroTargetsBlob();
+
+  return { training: valuesFromPartial(blob.training), rest: valuesFromPartial(blob.rest) };
+}
+
+export function setSingleMacroTargets(values: MacroTargetInputs) {
+  const blob = readMacroTargetsBlob();
+
+  blob.single = { ...values };
+  writeMacroTargetsBlob(blob);
+}
+
+export function setDualMacroTargets(training: MacroTargetInputs, rest: MacroTargetInputs) {
+  const blob = readMacroTargetsBlob();
+
+  blob.training = { ...training };
+  blob.rest = { ...rest };
+  writeMacroTargetsBlob(blob);
 }
 
 export function clearMacroTargets() {
-  localStorage.removeItem(scopedKey(CARB_TARGET_KEY));
-  localStorage.removeItem(scopedKey(FAT_TARGET_KEY));
-  localStorage.removeItem(scopedKey(FIBER_TARGET_KEY));
+  localStorage.removeItem(scopedKey(MACRO_TARGETS_KEY));
+}
+
+// Resolves to today's macro targets regardless of mode — same day-type
+// logic as getCalorieTarget: in "dual" mode, whichever set matches whether
+// today is a training day, falling back to the other set per-field when
+// only it has a value for that macro.
+export function getMacroTargets(): MacroTargetValues {
+  if (getCalorieTargetMode() === "dual") {
+    const { training, rest } = getDualMacroTargets();
+    const primary = isTrainingDay() ? training : rest;
+    const fallback = isTrainingDay() ? rest : training;
+
+    return {
+      protein: primary.protein ?? fallback.protein,
+      carbs: primary.carbs ?? fallback.carbs,
+      fat: primary.fat ?? fallback.fat,
+      fiber: primary.fiber ?? fallback.fiber,
+    };
+  }
+
+  return getSingleMacroTargets();
 }
