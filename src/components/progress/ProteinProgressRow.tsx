@@ -4,20 +4,11 @@ import {
   calculateProteinTarget,
   getCalorieGoal,
   proteinStanding,
-  type ProteinStanding,
+  STANDING_COLOR,
 } from "@/utils/calorieEngine";
 import { getTodaysTotalProtein } from "@/utils/dailyLogEngine";
 import { getLatestWeight } from "@/utils/weightEngine";
 import { toFaDigits } from "@/utils/numberFormat";
-
-// Same standing colors MealLogCard/DailyTotalsCard already use for the
-// protein ring — reused rather than picked fresh, so "کم/در محدوده/بیشتر
-// از حد" means the same color everywhere protein status shows up.
-const STANDING_COLOR: Record<ProteinStanding, string> = {
-  under: "#f87171",
-  onTarget: "#4ade80",
-  over: "#fcd34d",
-};
 
 // The bar's own fill — always this color regardless of standing, since
 // it's answering a different question than the colored numbers around it

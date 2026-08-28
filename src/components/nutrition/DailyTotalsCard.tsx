@@ -1,8 +1,14 @@
 import { useMemo } from "react";
 
 import type { MealSlot } from "@/data/nutrition/foodCatalog";
-import { calculateProteinTarget, getCalorieGoal, proteinStanding } from "@/utils/calorieEngine";
-import { getLoggedEntries } from "@/utils/dailyLogEngine";
+import {
+  calculateProteinTarget,
+  getCalorieGoal,
+  macroStanding,
+  proteinStanding,
+  STANDING_COLOR,
+} from "@/utils/calorieEngine";
+import { getCalorieTarget, getLoggedEntries, getMacroTargets } from "@/utils/dailyLogEngine";
 import { getLatestWeight } from "@/utils/weightEngine";
 import { toFaDigits } from "@/utils/numberFormat";
 import MacroTotalsGrid from "@/components/nutrition/MacroTotalsGrid";
@@ -60,8 +66,26 @@ export default function DailyTotalsCard({
 
   const standing = target ? proteinStanding(totals.protein, target) : null;
 
+  const macroTargets = getMacroTargets();
+  const standings = {
+    protein: standing,
+    carbs: macroTargets.carbs !== null ? macroStanding(totals.carbs, macroTargets.carbs) : null,
+    fat: macroTargets.fat !== null ? macroStanding(totals.fat, macroTargets.fat) : null,
+    fiber: macroTargets.fiber !== null ? macroStanding(totals.fiber, macroTargets.fiber) : null,
+  };
+  const targets = {
+    protein: target?.grams ?? null,
+    carbs: macroTargets.carbs,
+    fat: macroTargets.fat,
+    fiber: macroTargets.fiber,
+  };
+
+  const calorieTarget = getCalorieTarget();
+  const calorieStanding = calorieTarget ? macroStanding(totals.calories, calorieTarget) : null;
+  const calorieColor = calorieStanding ? STANDING_COLOR[calorieStanding] : undefined;
+
   return (
-    // Label, total and protein goal all share one line above the macro
+    // Label, total and calorie goal all share one line above the macro
     // capsules instead of stacking into three of their own — with the
     // capsules themselves down to a single line too, that's as short as
     // this card gets without dropping anything it shows.
@@ -76,18 +100,18 @@ export default function DailyTotalsCard({
           {isToday ? "مجموع امروز" : "مجموع این روز"}
         </p>
 
-        <p className="shrink-0 text-base font-bold leading-none text-white">
-          {toFaDigits(totals.calories)}{" "}
+        <p className="shrink-0 text-base font-bold leading-none">
+          <span style={{ color: calorieColor ?? "white" }}>{toFaDigits(totals.calories)}</span>{" "}
           <span className="text-xs font-normal text-white/60">کالری</span>
         </p>
 
         <p className="min-w-0 flex-1 truncate text-end text-[10px] text-white/50">
-          {target ? `هدف پروتئین: ${toFaDigits(target.grams)} گرم` : ""}
+          {calorieTarget ? `از ${toFaDigits(calorieTarget)}` : ""}
         </p>
       </div>
 
       <div className="mt-1.5">
-        <MacroTotalsGrid totals={totals} proteinStanding={standing} />
+        <MacroTotalsGrid totals={totals} standings={standings} targets={targets} />
       </div>
     </div>
   );
