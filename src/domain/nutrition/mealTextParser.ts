@@ -85,9 +85,18 @@ const SLOT_ALIASES: Record<string, string[]> = {
 
 // Longest first, so a label containing both "میان وعده صبح" and "صبح" can
 // only ever resolve to the more specific of the two.
+//
+// Supplements jump the queue regardless of length: "مکمل ناهار" names the
+// supplement slot, not lunch, but "ناهار" is the longer of the two words in
+// it and would otherwise win — which is exactly how a row of supplements
+// ended up replacing a meal.
 const ALIAS_INDEX: { slotId: string; alias: string }[] = Object.entries(SLOT_ALIASES)
   .flatMap(([slotId, aliases]) => aliases.map((alias) => ({ slotId, alias: normalizeText(alias) })))
-  .sort((a, b) => b.alias.length - a.alias.length);
+  .sort((a, b) => {
+    const priority = Number(b.slotId === "supplements") - Number(a.slotId === "supplements");
+
+    return priority !== 0 ? priority : b.alias.length - a.alias.length;
+  });
 
 /** The slot a written meal label refers to, or null when it's unrecognized. */
 export function resolveSlotId(label: string): string | null {
@@ -114,14 +123,33 @@ export interface TextSection {
 // short enough to be a label rather than a sentence with a colon in it.
 const HEADER = /^\s*([^:：]{1,40})\s*[:：]\s*(.*)$/;
 
-// Foods within one meal are separated by any of these. Deliberately not
-// " و " — plenty of single foods carry it in their own name.
-const ITEM_SEPARATOR = /[+،,؛;]+/;
+// How people actually separate the foods in one meal. " و " is in here
+// because that is overwhelmingly what real texts use ("۲ عدد تخم‌مرغ کامل و
+// ۳ عدد سفیده تخم‌مرغ به همراه یک بشقاب سالاد" is one line describing three
+// foods) — and it is safe to split on precisely because no food in the
+// catalog carries it in its own name.
+const ITEM_SEPARATOR = /[+،,؛;]+|\s+و\s+|\s*به\s+همراه\s*|\s*همراه\s+با\s*/;
+
+// "۱ عدد پرتقال یا هلو" offers a choice, not two foods. Taking the first
+// and dropping the alternative is the only reading that doesn't invent food
+// the user never said they'd eat.
+const CHOICE = /\s+یا\s+.*$/;
+
+// "کراتین با آب" is one supplement plus how it's taken. Only آب/شیر, and
+// only at the very end: " با " genuinely belongs inside catalog names like
+// "باقالی پلو با گوشت", so it can never be a general separator.
+const PREP_SUFFIX = /\s+با\s+(آب|شیر)\s*$/;
+
+// Notes in brackets ("(بدون روغن)", "(خام)") describe the food, they aren't
+// part of its name — left in, they push every catalog match off.
+const PARENTHETICAL = /[（(][^）)]*[）)]/g;
 
 function splitItems(text: string): string[] {
   return text
     .split(ITEM_SEPARATOR)
-    .map((item) => item.trim())
+    .map((item) =>
+      item.replace(PARENTHETICAL, " ").replace(CHOICE, "").replace(PREP_SUFFIX, "").trim(),
+    )
     .filter(Boolean);
 }
 
@@ -186,6 +214,14 @@ const UNIT_WORDS: Record<string, string> = {
   مشت: "مشت",
   سیخ: "سیخ",
   فیله: "فیله",
+  قوطی: "قوطی",
+  ظرف: "کاسه",
+  پیاله: "کاسه",
+  اسکوپ: "اسکوپ",
+  پیمانه‌: "پیمانه",
+  کپسول: "کپسول",
+  قرص: "قرص",
+  عددی: "عدد",
   "قاشق غذاخوری": "قاشق غذاخوری",
   "قاشق چایخوری": "قاشق چایخوری",
   "قاشق مرباخوری": "قاشق چایخوری",
@@ -230,6 +266,21 @@ function replaceLeadingWordNumber(text: string): string {
   return digit === undefined ? text : [digit, ...rest].join(" ");
 }
 
+// "۵۰ تا ۷۰ گرم برنج" — a range, read as its midpoint. Has to be tried
+// before anything else, because "تا" on its own is also a counting word
+// ("دو تا تخم مرغ") and would otherwise swallow the second number as a
+// unit. The review screen shows the original line, so the midpoint is
+// visible as a choice rather than passed off as what was written.
+const RANGE = /^(\d+(?:\.\d+)?)\s*تا\s*(\d+(?:\.\d+)?)\s+(.*)$/;
+
+// "ظرف سالاد بزرگ" is a salad in a big bowl — the size says how much, not
+// what, and no catalog name ends in one of these.
+const SIZE_WORDS = "بزرگ|کوچک|کوچیک|متوسط|کم|زیاد";
+const SIZE_SUFFIX = new RegExp(`\\s+(خیلی\\s+)?(${SIZE_WORDS})$`);
+// The same word can sit between the container and the food instead of
+// after it — "ظرف بزرگ سالاد".
+const SIZE_PREFIX = new RegExp(`^(خیلی\\s+)?(${SIZE_WORDS})\\s+`);
+
 const NUMBER_FIRST = /^(\d+(?:[.,٫]\d+)?)\s+(.*)$/;
 const NUMBER_LAST = /^(.*?)\s+(\d+(?:[.,٫]\d+)?)\s*([^\d]*)$/;
 
@@ -259,6 +310,15 @@ export function parseFoodLine(line: string): ParsedFoodLine | null {
     normalizeText(line).replace(/[٫,](\d)/g, ".$1"),
   );
 
+  const range = text.match(RANGE);
+
+  if (range) {
+    const midpoint = Math.round((Number(range[1]) + Number(range[2])) / 2);
+    const { unit, rest } = readUnitPrefix(range[3].trim());
+    const parsed = build(midpoint, unit, rest);
+    if (parsed) return parsed;
+  }
+
   const first = text.match(NUMBER_FIRST);
 
   if (first) {
@@ -279,11 +339,46 @@ export function parseFoodLine(line: string): ParsedFoodLine | null {
 }
 
 function build(quantity: number, unit: string, name: string): ParsedFoodLine | null {
-  if (!Number.isFinite(quantity) || quantity <= 0 || !name) return null;
+  const trimmed = name.replace(SIZE_SUFFIX, "").replace(SIZE_PREFIX, "").trim();
+
+  if (!Number.isFinite(quantity) || quantity <= 0 || !trimmed) return null;
+
+  name = trimmed;
+
+  // "۱ عدد کپسول امگا ۳" counts the same thing twice — the name still opens
+  // with a unit word once "عدد" has been read off. Left in, it's part of
+  // the name being looked up and no catalog entry can match it.
+  const stripped = readUnitPrefix(name);
+
+  // Only when a unit was genuinely taken off the front: readUnitPrefix
+  // hands the text straight back when it finds none, which recursing on
+  // would never terminate.
+  if (stripped.unit && stripped.rest) {
+    return build(quantity, unit || stripped.unit, stripped.rest);
+  }
 
   if (unit === "کیلوگرم") {
     return { name, quantity: quantity * 1000, unit: "گرم" };
   }
 
   return { name, quantity, unit };
+}
+
+/**
+ * A written food name reduced to just the food: the container it came in
+ * ("ظرف سالاد") and how big that was ("سالاد بزرگ") both describe the
+ * amount, not the thing, and either one stops the name matching anything in
+ * the catalog.
+ *
+ * Used on lines that carry no number at all, which never reach the
+ * quantity/unit parsing above and so would otherwise be looked up verbatim.
+ */
+export function stripDescriptors(name: string): string {
+  const { unit, rest } = readUnitPrefix(normalizeText(name));
+  const stripped = (unit && rest ? rest : normalizeText(name))
+    .replace(SIZE_SUFFIX, "")
+    .replace(SIZE_PREFIX, "")
+    .trim();
+
+  return stripped || normalizeText(name);
 }
