@@ -7,7 +7,7 @@ import {
   matchAiExtractedItems,
   matchExtractedLocally,
 } from "./aiFoodMatching";
-import { parseFoodLine, splitDayText } from "./mealTextParser";
+import { parseFoodLine, splitDayText, stripDescriptors } from "./mealTextParser";
 import { getActiveProgram, updateProgram } from "@/utils/programEngine";
 import type { FoodItem as CatalogFood, ServingUnit } from "@/types/food";
 import type { MealPlanType, MealSection } from "@/types/nutrition";
@@ -75,7 +75,7 @@ async function resolveSection(
     // unit — and sending it to an AI parse to be told the same thing would
     // be a round trip for nothing. The review screen shows the line it came
     // from, so a guessed amount is visible and editable before it lands.
-    const named = findLocalMatch(line);
+    const named = findLocalMatch(stripDescriptors(line));
 
     if (named) {
       parsed.push({ line, item: toExtracted(named.nameFa, 1, "") });

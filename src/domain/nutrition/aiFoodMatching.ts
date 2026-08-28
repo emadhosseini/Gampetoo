@@ -123,7 +123,13 @@ function buildEstimatedFood(item: AiExtractedFoodItem): FoodItem | null {
     nameFa: item.name,
     nameEn: item.name,
     category: "main_dish",
-    servingUnits: [{ label: item.unit, grams: item.unitGrams }],
+    // Grams alongside whatever unit the AI reported: its unit is often
+    // one-off ("ظرف", "بشقاب") and, left on its own, the food could only
+    // ever be counted in that one thing — no way to say 150g of it later.
+    servingUnits:
+      item.unit === "گرم"
+        ? [{ label: "گرم", grams: 1 }]
+        : [{ label: item.unit, grams: item.unitGrams }, { label: "گرم", grams: 1 }],
     caloriesPer100g: item.caloriesPer100g,
     proteinPer100g: item.proteinPer100g,
     carbsPer100g: item.carbsPer100g,

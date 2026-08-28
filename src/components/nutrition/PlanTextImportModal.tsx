@@ -211,7 +211,10 @@ export default function PlanTextImportModal({
               // stated here too so this field keeps its long-press paste no
               // matter what it's nested inside.
               style={{ WebkitUserSelect: "text", userSelect: "text", WebkitTouchCallout: "default" }}
-              className="glass-chip w-full select-text rounded-xl p-3 text-sm leading-7 text-white placeholder:text-white/35 outline-none"
+              // glass-static: .glass-chip presses in on :active, which is
+              // right for a chip you tap and wrong for a field you type
+              // into — every tap into the text made the whole box flinch.
+              className="glass-chip glass-static w-full select-text rounded-xl p-3 text-sm leading-7 text-white placeholder:text-white/35 outline-none"
             />
 
             <button

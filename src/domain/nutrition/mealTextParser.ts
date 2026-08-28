@@ -215,6 +215,8 @@ const UNIT_WORDS: Record<string, string> = {
   سیخ: "سیخ",
   فیله: "فیله",
   قوطی: "قوطی",
+  ظرف: "کاسه",
+  پیاله: "کاسه",
   اسکوپ: "اسکوپ",
   پیمانه‌: "پیمانه",
   کپسول: "کپسول",
@@ -270,6 +272,14 @@ function replaceLeadingWordNumber(text: string): string {
 // unit. The review screen shows the original line, so the midpoint is
 // visible as a choice rather than passed off as what was written.
 const RANGE = /^(\d+(?:\.\d+)?)\s*تا\s*(\d+(?:\.\d+)?)\s+(.*)$/;
+
+// "ظرف سالاد بزرگ" is a salad in a big bowl — the size says how much, not
+// what, and no catalog name ends in one of these.
+const SIZE_WORDS = "بزرگ|کوچک|کوچیک|متوسط|کم|زیاد";
+const SIZE_SUFFIX = new RegExp(`\\s+(خیلی\\s+)?(${SIZE_WORDS})$`);
+// The same word can sit between the container and the food instead of
+// after it — "ظرف بزرگ سالاد".
+const SIZE_PREFIX = new RegExp(`^(خیلی\\s+)?(${SIZE_WORDS})\\s+`);
 
 const NUMBER_FIRST = /^(\d+(?:[.,٫]\d+)?)\s+(.*)$/;
 const NUMBER_LAST = /^(.*?)\s+(\d+(?:[.,٫]\d+)?)\s*([^\d]*)$/;
@@ -329,7 +339,11 @@ export function parseFoodLine(line: string): ParsedFoodLine | null {
 }
 
 function build(quantity: number, unit: string, name: string): ParsedFoodLine | null {
-  if (!Number.isFinite(quantity) || quantity <= 0 || !name) return null;
+  const trimmed = name.replace(SIZE_SUFFIX, "").replace(SIZE_PREFIX, "").trim();
+
+  if (!Number.isFinite(quantity) || quantity <= 0 || !trimmed) return null;
+
+  name = trimmed;
 
   // "۱ عدد کپسول امگا ۳" counts the same thing twice — the name still opens
   // with a unit word once "عدد" has been read off. Left in, it's part of
@@ -348,4 +362,23 @@ function build(quantity: number, unit: string, name: string): ParsedFoodLine | n
   }
 
   return { name, quantity, unit };
+}
+
+/**
+ * A written food name reduced to just the food: the container it came in
+ * ("ظرف سالاد") and how big that was ("سالاد بزرگ") both describe the
+ * amount, not the thing, and either one stops the name matching anything in
+ * the catalog.
+ *
+ * Used on lines that carry no number at all, which never reach the
+ * quantity/unit parsing above and so would otherwise be looked up verbatim.
+ */
+export function stripDescriptors(name: string): string {
+  const { unit, rest } = readUnitPrefix(normalizeText(name));
+  const stripped = (unit && rest ? rest : normalizeText(name))
+    .replace(SIZE_SUFFIX, "")
+    .replace(SIZE_PREFIX, "")
+    .trim();
+
+  return stripped || normalizeText(name);
 }
