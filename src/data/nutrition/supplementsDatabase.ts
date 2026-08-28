@@ -12,6 +12,7 @@ export const supplementsDatabase: FoodItem[] = [
   {
     id: "creatine-monohydrate",
     nameFa: "کراتین مونوهیدرات",
+    aliases: ["کراتین", "کراتین منوهیدرات"],
     nameEn: "Creatine Monohydrate",
     category: "supplement",
     servingUnits: [
@@ -27,6 +28,7 @@ export const supplementsDatabase: FoodItem[] = [
   {
     id: "whey-protein-supplement",
     nameFa: "پودر پروتئین وی",
+    aliases: ["پروتئین وی", "وی پروتئین", "whey"],
     nameEn: "Whey Protein Powder",
     category: "supplement",
     servingUnits: [
@@ -54,6 +56,7 @@ export const supplementsDatabase: FoodItem[] = [
   {
     id: "multivitamin-mineral",
     nameFa: "مولتی ویتامین مینرال",
+    aliases: ["مولتی ویتامین مینرال", "مولتی‌ویتامین مینرال"],
     nameEn: "Multivitamin & Mineral",
     category: "supplement",
     servingUnits: [{ label: "قرص", grams: 1 }],
@@ -66,6 +69,7 @@ export const supplementsDatabase: FoodItem[] = [
   {
     id: "omega-3-fish-oil",
     nameFa: "امگا ۳ (روغن ماهی)",
+    aliases: ["امگا ۳", "امگا 3", "کپسول امگا ۳", "روغن ماهی"],
     nameEn: "Omega-3 Fish Oil",
     category: "supplement",
     servingUnits: [{ label: "کپسول", grams: 1 }],
@@ -102,6 +106,7 @@ export const supplementsDatabase: FoodItem[] = [
   {
     id: "bcaa",
     nameFa: "بی‌سی‌ای‌ای (BCAA)",
+    aliases: ["بی سی ای ای", "bcaa"],
     nameEn: "BCAA",
     category: "supplement",
     servingUnits: [

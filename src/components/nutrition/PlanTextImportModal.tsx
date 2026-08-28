@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { AlertTriangle, Sparkles, Trash2 } from "lucide-react";
+import { AlertTriangle, ClipboardPaste, Sparkles, Trash2 } from "lucide-react";
 
 import ModalOverlay from "@/components/ModalOverlay";
 import WaitingDots from "@/components/WaitingDots";
@@ -55,6 +55,10 @@ export default function PlanTextImportModal({
   // the text said.
   const [skipped, setSkipped] = useState<number[]>([]);
   const [screen, setScreen] = useState<Screen>({ step: "input" });
+  // Set when reading the clipboard isn't allowed (an older browser, or the
+  // permission prompt was declined) — the long-press paste still works, so
+  // this says so rather than leaving a button that does nothing.
+  const [pasteFailed, setPasteFailed] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -62,12 +66,32 @@ export default function PlanTextImportModal({
     setText("");
     setMeals([]);
     setSkipped([]);
+    setPasteFailed(false);
     setScreen({ step: "input" });
   }, [open]);
 
   if (!open) return null;
 
   const slots = getMealSlots();
+
+  // The keyboard's own paste needs a long-press on the field, which is
+  // fiddly on a phone and doesn't always raise the callout inside a popup.
+  // This is the same paste, one tap, straight from the clipboard.
+  async function handlePaste() {
+    try {
+      const clip = await navigator.clipboard.readText();
+
+      if (clip.trim()) {
+        setText((prev) => (prev.trim() ? `${prev.trim()}\n${clip.trim()}` : clip.trim()));
+        setPasteFailed(false);
+        return;
+      }
+    } catch {
+      // Falls through to the notice below.
+    }
+
+    setPasteFailed(true);
+  }
 
   async function handleRead() {
     const trimmed = text.trim();
@@ -182,8 +206,28 @@ export default function PlanTextImportModal({
               onChange={(e) => setText(e.target.value)}
               rows={8}
               placeholder={PLACEHOLDER}
-              className="glass-chip w-full rounded-xl p-3 text-sm leading-7 text-white placeholder:text-white/35 outline-none"
+              // The app-wide reset turns text selection and the iOS callout
+              // off on everything (see index.css) and opts inputs back in;
+              // stated here too so this field keeps its long-press paste no
+              // matter what it's nested inside.
+              style={{ WebkitUserSelect: "text", userSelect: "text", WebkitTouchCallout: "default" }}
+              className="glass-chip w-full select-text rounded-xl p-3 text-sm leading-7 text-white placeholder:text-white/35 outline-none"
             />
+
+            <button
+              onClick={() => void handlePaste()}
+              className="glass-chip flex items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold text-white"
+            >
+              <ClipboardPaste size={14} />
+              جایگذاری از کلیپ‌بورد
+            </button>
+
+            {pasteFailed && (
+              <p className="text-[11px] text-amber-300">
+                دسترسی به کلیپ‌بورد ممکن نشد — روی کادر بالا نگه دار و از منوی
+                خود گوشی «Paste» رو بزن.
+              </p>
+            )}
 
             <p className="text-xs leading-relaxed text-white/50">
               فقط وعده‌هایی که توی متن نوشتی جایگزین می‌شن؛ بقیه دست‌نخورده

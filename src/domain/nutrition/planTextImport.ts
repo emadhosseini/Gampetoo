@@ -208,11 +208,17 @@ export function applyImportToPlan(type: MealPlanType, meals: ImportedMeal[]) {
   const existing = program.nutrition[type];
   const existingById = new Map(existing.meals.map((meal) => [meal.id, meal]));
 
-  const imported = new Map(
-    meals
-      .filter((meal): meal is ImportedMeal & { slotId: string } => meal.slotId !== null)
-      .map((meal) => [meal.slotId, meal]),
-  );
+  // Several written groups can name the same meal — "مکمل صبح" and "مکمل
+  // ناهار" both belong to the one supplements slot — so their items are
+  // pooled. Keyed last-one-wins instead, the second group would silently
+  // replace the first.
+  const imported = new Map<string, ImportedFood[]>();
+
+  for (const meal of meals) {
+    if (meal.slotId === null) continue;
+
+    imported.set(meal.slotId, [...(imported.get(meal.slotId) ?? []), ...meal.items]);
+  }
 
   const next: MealSection[] = getMealSlots().map((slot) => {
     const current = existingById.get(slot.id) ?? {
@@ -227,7 +233,7 @@ export function applyImportToPlan(type: MealPlanType, meals: ImportedMeal[]) {
 
     if (!incoming) return current;
 
-    const foods = toPlanFoods(incoming.items);
+    const foods = toPlanFoods(incoming);
 
     // Same rule the plan editor applies when foods are picked by hand:
     // having foods is what makes a meal part of the plan.

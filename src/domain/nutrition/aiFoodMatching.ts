@@ -1,5 +1,10 @@
 import type { FoodItem, ServingUnit } from "@/types/food";
-import { foodNamesFa, localFoods, macrosForServing } from "./foodSearch";
+import {
+  foodNamesFa,
+  localFoods,
+  macrosForServing,
+  supplementFoods,
+} from "./foodSearch";
 import { normalizeText } from "./mealTextParser";
 import { searchExternalFoods } from "@/lib/openFoodFactsApi";
 import { addLearnedFood, getLearnedFoods } from "@/store/learnedFoodsStore";
@@ -65,22 +70,32 @@ function isWordRunMatch(a: string[], b: string[]): boolean {
 // prefix, for a query still being typed) rather than matching a complete
 // extracted name that may carry extra words on either side, e.g. Gemini
 // saying "قرمه سبزی با گوشت گوسفندی" for a food logged as plain "قرمه سبزی".
+// "امگا ۳ (روغن ماهی)" is the catalog's way of adding a note to a name, the
+// same way "(بدون روغن)" is the user's — neither belongs in the comparison.
+function withoutNotes(value: string): string {
+  return normalizeFa(value.replace(/[（(][^）)]*[）)]/g, " "));
+}
+
 export function findLocalMatch(name: string): FoodItem | null {
   const normalized = normalizeFa(name);
   const normalizedWords = normalized.split(/\s+/).filter(Boolean);
-  const pool = [...localFoods, ...getLearnedFoods()];
+  // Supplements included, unlike the browse/suggestion lists that
+  // deliberately leave them out: nobody wants creatine suggested for lunch,
+  // but a line that literally says "کراتین" must find it. Without this an
+  // entire "مکمل صبح" row could only ever be resolved by guessing.
+  const pool = [...localFoods, ...supplementFoods, ...getLearnedFoods()];
 
   // Aliases count as names here for the same reason they do in search: the
   // catalog's chosen name is not always the one people write ("برنج پخته"
   // vs "برنج سفید"). See FoodItem.aliases.
   const exact = pool.find((food) =>
-    foodNamesFa(food).some((known) => normalizeFa(known) === normalized),
+    foodNamesFa(food).some((known) => withoutNotes(known) === normalized),
   );
   if (exact) return exact;
 
   const partial = pool.find((food) =>
     foodNamesFa(food).some((known) =>
-      isWordRunMatch(normalizeFa(known).split(/\s+/).filter(Boolean), normalizedWords),
+      isWordRunMatch(withoutNotes(known).split(/\s+/).filter(Boolean), normalizedWords),
     ),
   );
 
