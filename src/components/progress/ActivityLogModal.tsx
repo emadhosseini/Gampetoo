@@ -54,6 +54,7 @@ export default function ActivityLogModal({ open, onClose, onLog }: ActivityLogMo
             min={0}
             value={calories}
             onChange={(e) => setCalories(Math.max(0, Number(e.target.value) || 0))}
+            onFocus={(e) => e.target.select()}
             className="w-20 bg-transparent text-center text-2xl font-bold text-white outline-none"
           />
 
@@ -69,7 +70,7 @@ export default function ActivityLogModal({ open, onClose, onLog }: ActivityLogMo
           onChange={(e) => setNote(e.target.value)}
           placeholder="چه فعالیتی بود؟ (اختیاری) — مثلاً دوچرخه‌سواری ۳۰ دقیقه"
           rows={3}
-          className="glass-chip w-full resize-none rounded-xl p-3 text-right text-sm text-white placeholder:text-white/40 outline-none"
+          className="glass-chip glass-static w-full resize-none rounded-xl p-3 text-right text-sm text-white placeholder:text-white/40 outline-none"
         />
 
         <button

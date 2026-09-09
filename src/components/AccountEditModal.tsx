@@ -107,7 +107,7 @@ export default function AccountEditModal({
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="اسم خودتو وارد کن"
-          className="glass-chip w-full rounded-xl p-4 text-center text-white"
+          className="glass-chip glass-static w-full rounded-xl p-4 text-center text-white"
         />
 
         <div className="flex gap-3">

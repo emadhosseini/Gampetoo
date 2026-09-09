@@ -62,11 +62,17 @@ export default function DailyTotalsCard({
   const macroTargets = getMacroTargets();
   const proteinTarget = getEffectiveProteinTarget(weight, getCalorieGoal() ?? "maintain");
 
+  // Protein and fiber have no real downside to overshooting, so they're
+  // judged without an upper limit (macroStanding's `over` state never
+  // triggers for them) — carbs and fat do, since too much of either works
+  // against a cut the same way too little protein works against a bulk.
   const standings = {
-    protein: proteinTarget ? macroStanding(totals.protein, proteinTarget.grams) : null,
-    carbs: macroTargets.carbs !== null ? macroStanding(totals.carbs, macroTargets.carbs) : null,
-    fat: macroTargets.fat !== null ? macroStanding(totals.fat, macroTargets.fat) : null,
-    fiber: macroTargets.fiber !== null ? macroStanding(totals.fiber, macroTargets.fiber) : null,
+    protein: proteinTarget ? macroStanding(totals.protein, proteinTarget.grams, false) : null,
+    carbs:
+      macroTargets.carbs !== null ? macroStanding(totals.carbs, macroTargets.carbs, true) : null,
+    fat: macroTargets.fat !== null ? macroStanding(totals.fat, macroTargets.fat, true) : null,
+    fiber:
+      macroTargets.fiber !== null ? macroStanding(totals.fiber, macroTargets.fiber, false) : null,
   };
   const targets = {
     protein: proteinTarget?.grams ?? null,
@@ -76,7 +82,9 @@ export default function DailyTotalsCard({
   };
 
   const calorieTarget = getCalorieTarget();
-  const calorieStanding = calorieTarget ? macroStanding(totals.calories, calorieTarget) : null;
+  const calorieStanding = calorieTarget
+    ? macroStanding(totals.calories, calorieTarget, true)
+    : null;
   const calorieColor = calorieStanding ? STANDING_COLOR[calorieStanding] : undefined;
 
   return (

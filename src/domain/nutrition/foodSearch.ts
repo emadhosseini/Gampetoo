@@ -59,6 +59,44 @@ export function macrosForServing(
   };
 }
 
+// The four macros AddMealEntryModal's "بر اساس ماکرو" mode lets someone
+// size a serving by — fiber is deliberately left out, same as the manual
+// macro-target form (TargetCaloriesModal), since it's rarely the number
+// someone's building a meal around.
+export type ReversibleMacro = "calories" | "protein" | "carbs" | "fat";
+
+// How much of one macro a single gram of this food carries — 0 for a food
+// that has none of it (a fish's carbsPer100g, a salad's proteinPer100g),
+// which is exactly the signal the UI uses to grey that macro's option out
+// rather than let it divide by zero.
+export function macroDensityPerGram(entry: FoodItem, macro: ReversibleMacro): number {
+  switch (macro) {
+    case "calories":
+      return entry.caloriesPer100g / 100;
+    case "protein":
+      return entry.proteinPer100g / 100;
+    case "carbs":
+      return entry.carbsPer100g / 100;
+    case "fat":
+      return entry.fatPer100g / 100;
+  }
+}
+
+// The inverse of macrosForServing: instead of "how much of each macro does
+// this serving have", "how big a serving hits this exact amount of one
+// macro" — the grams that amount of `macro` takes, in the food's own
+// density. Callers convert grams -> a chosen ServingUnit's quantity
+// themselves (divide by unit.grams), same as any other gram figure here.
+export function gramsForMacroTarget(
+  entry: FoodItem,
+  macro: ReversibleMacro,
+  targetValue: number,
+): number {
+  const density = macroDensityPerGram(entry, macro);
+
+  return density > 0 ? targetValue / density : 0;
+}
+
 // All three databases are bilingual (real Persian translations, not just the
 // English name reused) — the external API is only a fallback for foods none
 // of them cover. Exported so screens can show the full browsable list before

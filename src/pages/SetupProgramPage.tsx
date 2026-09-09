@@ -203,7 +203,7 @@ export default function SetupProgramPage() {
 
         <SetupBrand />
 
-        <div className="glass-panel rounded-2xl p-6 space-y-4 text-center">
+        <div className="glass-panel glass-static rounded-2xl p-6 space-y-4 text-center">
           {mode === "login" && (
             <>
               <input
@@ -222,7 +222,7 @@ export default function SetupProgramPage() {
                 autoCapitalize="none"
                 autoCorrect="off"
                 spellCheck={false}
-                className="glass-chip w-full rounded-xl p-4 text-center text-white"
+                className="glass-chip glass-static w-full rounded-xl p-4 text-center text-white"
               />
 
               <input
@@ -238,7 +238,7 @@ export default function SetupProgramPage() {
                 }}
                 placeholder="رمز عبورت رو وارد کن"
                 dir="ltr"
-                className="glass-chip w-full rounded-xl p-4 text-center text-white"
+                className="glass-chip glass-static w-full rounded-xl p-4 text-center text-white"
               />
 
               {error && (
@@ -278,7 +278,7 @@ export default function SetupProgramPage() {
                   if (e.key === "Enter") void submitSignup();
                 }}
                 placeholder="اسم خودت رو وارد کن"
-                className="glass-chip w-full rounded-xl p-4 text-center text-white"
+                className="glass-chip glass-static w-full rounded-xl p-4 text-center text-white"
               />
 
               <input
@@ -296,7 +296,7 @@ export default function SetupProgramPage() {
                 autoCapitalize="none"
                 autoCorrect="off"
                 spellCheck={false}
-                className="glass-chip w-full rounded-xl p-4 text-center text-white"
+                className="glass-chip glass-static w-full rounded-xl p-4 text-center text-white"
               />
 
               {syncEnabled && (
@@ -314,7 +314,7 @@ export default function SetupProgramPage() {
                     }}
                     placeholder={`رمز خودت رو وارد کن (حداقل ${MIN_PIN_LENGTH} کاراکتر)`}
                     dir="ltr"
-                    className="glass-chip w-full rounded-xl p-4 text-center text-white"
+                    className="glass-chip glass-static w-full rounded-xl p-4 text-center text-white"
                   />
 
                   <input
@@ -330,7 +330,7 @@ export default function SetupProgramPage() {
                     }}
                     placeholder="تکرار رمز عبور"
                     dir="ltr"
-                    className="glass-chip w-full rounded-xl p-4 text-center text-white"
+                    className="glass-chip glass-static w-full rounded-xl p-4 text-center text-white"
                   />
                 </>
               )}

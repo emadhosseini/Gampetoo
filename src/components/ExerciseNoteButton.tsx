@@ -71,7 +71,7 @@ export default function ExerciseNoteButton({
               placeholder="مثلاً: این حرکت رو با دست بسته انجام بده"
               rows={4}
               autoFocus
-              className="glass-chip w-full resize-none rounded-2xl p-4 text-sm text-white placeholder:text-white/40 outline-none"
+              className="glass-chip glass-static w-full resize-none rounded-2xl p-4 text-sm text-white placeholder:text-white/40 outline-none"
             />
 
             <button

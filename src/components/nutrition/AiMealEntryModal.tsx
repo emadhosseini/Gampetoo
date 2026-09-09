@@ -139,7 +139,7 @@ export default function AiMealEntryModal({
               placeholder="مثلاً: یک بشقاب چلوکباب با یک لیوان دوغ"
               rows={4}
               disabled={screen.step === "loading"}
-              className="glass-chip w-full resize-none rounded-xl p-3 text-sm text-white placeholder:text-white/50 outline-none disabled:opacity-60"
+              className="glass-chip glass-static w-full resize-none rounded-xl p-3 text-sm text-white placeholder:text-white/50 outline-none disabled:opacity-60"
             />
 
             <button

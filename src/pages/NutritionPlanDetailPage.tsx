@@ -1,4 +1,4 @@
-import { ChevronDown, FileText, Search } from "lucide-react";
+import { ChevronDown, FileText, Search, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 
@@ -125,7 +125,7 @@ function MealFoodList({
 
   return (
     <div className="mt-4 space-y-2">
-      <div className="glass-chip flex items-center gap-2 rounded-xl p-2">
+      <div className="glass-chip glass-static flex items-center gap-2 rounded-xl p-2">
         <input
           type="text"
           value={query}
@@ -136,6 +136,16 @@ function MealFoodList({
           placeholder="جستجوی غذا..."
           className="flex-1 bg-transparent px-2 py-2 text-sm text-white placeholder:text-white/50 outline-none"
         />
+
+        {query && (
+          <button
+            onClick={() => onQueryChange("")}
+            aria-label="پاک کردن"
+            className="shrink-0 text-white/60"
+          >
+            <X size={16} />
+          </button>
+        )}
 
         <button
           onClick={onSubmitSearch}
@@ -197,7 +207,8 @@ function MealFoodList({
                     onChange={(e) =>
                       onUpdateQuantity(entry, Number(e.target.value), selectedUnit)
                     }
-                    className="w-14 glass-chip rounded-lg px-2 py-1 text-center text-sm text-white"
+                    onFocus={(e) => e.target.select()}
+                    className="w-14 glass-chip glass-static rounded-lg px-2 py-1 text-center text-sm text-white"
                   />
 
                   <select

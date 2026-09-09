@@ -373,6 +373,7 @@ export default function PlanTextImportModal({
                               quantity: Number(e.target.value),
                             })
                           }
+                          onFocus={(e) => e.target.select()}
                           aria-label="مقدار"
                           className="w-16 glass-chip rounded-lg px-2 py-1 text-center text-sm text-white"
                         />

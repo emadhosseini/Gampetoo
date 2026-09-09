@@ -87,26 +87,37 @@ export function getEffectiveProteinTarget(
   return weightKg !== null ? calculateProteinTarget(weightKg, goal) : null;
 }
 
-// Three-tier read on "how close is today to its target": under 80% is red,
-// 80% up to the target is yellow (close but not there), the target and
-// beyond is green — once it's hit, going over isn't penalized the way
-// falling short is.
-export type ProteinStanding = "under" | "near" | "reached";
+// Read on "how close is today to its target": under 80% is red, 80% up to
+// the target is yellow (close but not there), the target itself is green.
+// What happens past the target depends on the macro: protein and fiber have
+// no real downside to overshooting, so they stay green no matter how far
+// over — but carbs, fat and calories do, so for those "hasUpperLimit"
+// macros more than OVER_TARGET_RATIO past the target flips to "over" as an
+// actual warning rather than reading as more of the same success color.
+export type ProteinStanding = "under" | "near" | "reached" | "over";
 
 const NEAR_TARGET_RATIO = 0.8;
+const OVER_TARGET_RATIO = 1.02;
 
-export function standingForRatio(ratio: number): ProteinStanding {
-  if (ratio >= 1) return "reached";
+export function standingForRatio(ratio: number, hasUpperLimit: boolean): ProteinStanding {
+  if (ratio < NEAR_TARGET_RATIO) return "under";
+  if (ratio < 1) return "near";
 
-  return ratio >= NEAR_TARGET_RATIO ? "near" : "under";
+  return hasUpperLimit && ratio > OVER_TARGET_RATIO ? "over" : "reached";
 }
 
 // Same ratio-based judgment used for calories and every macro (protein
 // included — see getEffectiveProteinTarget, which always resolves to a
 // plain gram figure regardless of whether it came from the calculation or a
-// manual override).
-export function macroStanding(grams: number, targetGrams: number): ProteinStanding {
-  return standingForRatio(targetGrams > 0 ? grams / targetGrams : 0);
+// manual override). `hasUpperLimit` decides whether overshooting keeps
+// counting as "reached" (protein, fiber) or eventually becomes "over"
+// (carbs, fat, calories) — see standingForRatio.
+export function macroStanding(
+  grams: number,
+  targetGrams: number,
+  hasUpperLimit: boolean,
+): ProteinStanding {
+  return standingForRatio(targetGrams > 0 ? grams / targetGrams : 0, hasUpperLimit);
 }
 
 // The one place the red/yellow/green meaning of a standing is spelled out
@@ -116,6 +127,7 @@ export const STANDING_COLOR: Record<ProteinStanding, string> = {
   under: "#f87171",
   near: "#fcd34d",
   reached: "#4ade80",
+  over: "#c084fc",
 };
 
 export const ACTIVITY_LEVEL_LABELS: Record<ActivityLevel, string> = {

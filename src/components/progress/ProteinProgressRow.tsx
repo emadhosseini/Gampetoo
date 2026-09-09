@@ -32,7 +32,7 @@ export default function ProteinProgressRow() {
     );
   }
 
-  const standing = macroStanding(consumed, target.grams);
+  const standing = macroStanding(consumed, target.grams, false);
   const standingColor = STANDING_COLOR[standing];
 
   // Can't have negative "left" — once the target's covered, more protein

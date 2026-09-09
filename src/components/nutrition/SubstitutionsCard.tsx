@@ -1,4 +1,4 @@
-import { ChevronDown, Search } from "lucide-react";
+import { ChevronDown, Search, X } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { matchesWordPrefix, normalizeFa } from "@/utils/persianSearch";
@@ -62,7 +62,7 @@ export default function SubstitutionsCard({
 
       {isOpen && (
         <div className="mt-4 space-y-3">
-          <div className="glass-chip flex items-center gap-2 rounded-xl p-2">
+          <div className="glass-chip glass-static flex items-center gap-2 rounded-xl p-2">
             <input
               type="text"
               value={query}
@@ -70,6 +70,16 @@ export default function SubstitutionsCard({
               placeholder="جستجوی غذا برای دیدن جایگزین‌هاش..."
               className="flex-1 bg-transparent px-2 py-2 text-sm text-white placeholder:text-white/50 outline-none"
             />
+
+            {query && (
+              <button
+                onClick={() => setQuery("")}
+                aria-label="پاک کردن"
+                className="shrink-0 text-white/60"
+              >
+                <X size={16} />
+              </button>
+            )}
 
             <Search size={16} className="ml-1 shrink-0 text-white/60" />
           </div>
