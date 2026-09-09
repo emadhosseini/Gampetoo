@@ -9,6 +9,7 @@ const PROTEIN_RING: Record<ProteinStanding, string> = {
   under: "protein-ring-under",
   near: "protein-ring-near",
   reached: "protein-ring-reached",
+  over: "protein-ring-over",
 };
 
 const MACRO_FIELDS = [

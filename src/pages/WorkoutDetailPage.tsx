@@ -1,4 +1,4 @@
-import { ChevronDown, Minus, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { ChevronDown, Minus, Pencil, Plus, Search, Trash2, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
@@ -69,7 +69,7 @@ function VariantNameModal({
           onChange={(e) => setName(e.target.value)}
           placeholder="مثلاً پوش B"
           autoFocus
-          className="glass-chip w-full rounded-xl p-4 text-center text-white placeholder:text-white/40 outline-none"
+          className="glass-chip glass-static w-full rounded-xl p-4 text-center text-white placeholder:text-white/40 outline-none"
         />
 
         <button
@@ -895,6 +895,16 @@ export default function WorkoutDetailPage() {
                 placeholder="جستجوی حرکت..."
                 className="w-full bg-transparent text-sm text-white placeholder:text-white/50 outline-none"
               />
+
+              {query && (
+                <button
+                  onClick={() => setQuery("")}
+                  aria-label="پاک کردن"
+                  className="shrink-0 text-white/60"
+                >
+                  <X size={16} />
+                </button>
+              )}
             </div>
 
             {query.trim() && (

@@ -55,6 +55,7 @@ function NumberStepper({
         value={value}
         disabled={disabled}
         onChange={(e) => onChange(Number(e.target.value) || 0)}
+        onFocus={(e) => e.target.select()}
         className="w-full bg-transparent text-center text-sm text-white outline-none disabled:opacity-70"
       />
 

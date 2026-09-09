@@ -64,7 +64,7 @@ export default function EditMealEntryModal({
 
         {editable ? (
           <>
-            <div className="glass-chip flex items-center gap-2 rounded-xl p-3">
+            <div className="glass-chip glass-static flex items-center gap-2 rounded-xl p-3">
               <input
                 type="number"
                 inputMode="decimal"
@@ -72,8 +72,9 @@ export default function EditMealEntryModal({
                 step="any"
                 value={value}
                 onChange={(e) => setValue(e.target.value)}
+                onFocus={(e) => e.target.select()}
                 aria-label="مقدار"
-                className="w-20 glass-chip rounded-lg px-2 py-2 text-center text-sm text-white"
+                className="w-20 glass-chip glass-static rounded-lg px-2 py-2 text-center text-sm text-white"
               />
 
               <span className="flex-1 text-sm text-white">

@@ -227,7 +227,7 @@ export default function SettingsSidebar({ open, onClose }: SettingsSidebarProps)
 
           <SettingsRow label="زمان استراحت پیش‌فرض">
             <div
-              className={`glass-chip flex items-center justify-center gap-1.5 rounded-full ${CONTROL}`}
+              className={`glass-chip glass-static flex items-center justify-center gap-1.5 rounded-full ${CONTROL}`}
             >
               <input
                 type="number"
@@ -235,6 +235,7 @@ export default function SettingsSidebar({ open, onClose }: SettingsSidebarProps)
                 min={0}
                 value={restSeconds}
                 onChange={(e) => setRestSeconds(Number(e.target.value) || 0)}
+                onFocus={(e) => e.target.select()}
                 className="w-12 bg-transparent text-center text-sm text-white outline-none"
               />
               <span className="text-xs text-white/50">ثانیه</span>

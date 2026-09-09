@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Check, Plus, Search } from "lucide-react";
+import { Check, Plus, Search, X } from "lucide-react";
 
 import ModalOverlay from "@/components/ModalOverlay";
 import { getLibrary } from "@/store/workoutLibraryStore";
@@ -89,6 +89,17 @@ export default function ExerciseSearchPicker({
                 autoFocus
                 className="w-full bg-transparent text-sm text-white placeholder:text-white/50 outline-none"
               />
+
+              {query && (
+                <button
+                  type="button"
+                  onClick={() => setQuery("")}
+                  aria-label="پاک کردن"
+                  className="shrink-0 text-white/60"
+                >
+                  <X size={16} />
+                </button>
+              )}
             </div>
 
             {/* Muscle-group chips — tapping the active one clears it, so
