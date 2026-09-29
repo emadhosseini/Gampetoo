@@ -93,10 +93,15 @@ Deno.serve(async (req: Request) => {
     if (!geminiResponse.ok) {
       const errBody = await geminiResponse.text();
       console.error("Gemini API error:", geminiResponse.status, errBody);
-      return new Response(JSON.stringify({ error: "خطا در ارتباط با سرویس هوش مصنوعی." }), {
-        status: 502,
-        headers: { ...corsResponseHeaders, "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify({
+          error: `خطا در ارتباط با سرویس هوش مصنوعی (Gemini ${geminiResponse.status}).`,
+        }),
+        {
+          status: 502,
+          headers: { ...corsResponseHeaders, "Content-Type": "application/json" },
+        },
+      );
     }
 
     const data = await geminiResponse.json();
