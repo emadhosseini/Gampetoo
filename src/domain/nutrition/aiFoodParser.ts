@@ -93,6 +93,28 @@ function normalizeEstimate(item: AiExtractedFoodItem): AiExtractedFoodItem {
   };
 }
 
+// supabase-js turns any non-2xx response from the function into `error`
+// (with `data` null), so the function's own Persian error message would
+// otherwise be lost and every failure — missing key, Gemini quota, a
+// retired model, the Supabase project being paused — would look the same.
+// A FunctionsHttpError carries the raw Response in `context`; read the
+// body's `error` field from it when there is one.
+async function describeInvokeError(error: unknown): Promise<string> {
+  const fallback = "ارتباط با سرویس هوش مصنوعی برقرار نشد.";
+  const context = (error as { context?: unknown }).context;
+
+  if (!(context instanceof Response)) return fallback;
+
+  try {
+    const body = (await context.json()) as { error?: unknown };
+    if (typeof body?.error === "string" && body.error) return body.error;
+  } catch {
+    // Not a JSON body (e.g. a gateway error page) — fall through.
+  }
+
+  return `${fallback} (کد ${context.status})`;
+}
+
 // Calls the parse-meal Supabase Edge Function, which holds the Gemini API
 // key server-side (as a Supabase secret — see
 // supabase/functions/parse-meal/index.ts). The client never sees the key;
@@ -120,7 +142,7 @@ export async function parseMealDescription(text: string): Promise<AiParseResult>
   );
 
   if (error) {
-    return { ok: false, items: [], error: "ارتباط با سرویس هوش مصنوعی برقرار نشد." };
+    return { ok: false, items: [], error: await describeInvokeError(error) };
   }
 
   if (data?.error) {
