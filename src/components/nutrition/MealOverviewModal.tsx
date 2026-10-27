@@ -1,4 +1,4 @@
-import { Sparkles } from "lucide-react";
+import { PenLine, Sparkles } from "lucide-react";
 
 import ModalOverlay from "@/components/ModalOverlay";
 import type { MealSlot } from "@/data/nutrition/foodCatalog";
@@ -10,6 +10,7 @@ export interface MealOverviewModalProps {
   onClose: () => void;
   onAdd: () => void;
   onAddAi: () => void;
+  onAddManual: () => void;
 }
 
 // Opened by tapping the whole meal card from the bottom-nav quick-add
@@ -25,6 +26,7 @@ export default function MealOverviewModal({
   onClose,
   onAdd,
   onAddAi,
+  onAddManual,
 }: MealOverviewModalProps) {
   if (!meal) {
     return null;
@@ -93,6 +95,14 @@ export default function MealOverviewModal({
         >
           <Sparkles size={18} className="text-avocado-yellow" />
           افزودن با هوش مصنوعی
+        </button>
+
+        <button
+          onClick={onAddManual}
+          className="glass-tap selector-pill flex w-full items-center justify-center gap-2 rounded-2xl py-3 font-bold text-white"
+        >
+          <PenLine size={18} className="text-avocado-yellow" />
+          ورود دستی ماکروها
         </button>
 
         <button

@@ -5,6 +5,7 @@ import MealPickerModal from "@/components/nutrition/MealPickerModal";
 import MealOverviewModal from "@/components/nutrition/MealOverviewModal";
 import AddMealEntryModal from "@/components/nutrition/AddMealEntryModal";
 import AiMealEntryModal from "@/components/nutrition/AiMealEntryModal";
+import ManualMacroEntryModal from "@/components/nutrition/ManualMacroEntryModal";
 import { getCalorieTrackingMode } from "@/utils/calorieModeEngine";
 import {
   DAILY_MODE_SLOT,
@@ -17,6 +18,7 @@ type FoodStep =
   | { step: "overview"; meal: MealSlot }
   | { step: "add"; meal: MealSlot }
   | { step: "ai"; meal: MealSlot }
+  | { step: "manual"; meal: MealSlot }
   | null;
 
 /**
@@ -78,6 +80,13 @@ export function useQuickAddMealFlow(onChange: () => void = () => {}) {
               : foodStep,
           )
         }
+        onAddManual={() =>
+          setFoodStep(
+            foodStep?.step === "overview"
+              ? { step: "manual", meal: foodStep.meal }
+              : foodStep,
+          )
+        }
       />
 
       <AddMealEntryModal
@@ -88,6 +97,12 @@ export function useQuickAddMealFlow(onChange: () => void = () => {}) {
 
       <AiMealEntryModal
         meal={foodStep?.step === "ai" ? foodStep.meal : null}
+        onClose={() => setFoodStep(null)}
+        onChange={onChange}
+      />
+
+      <ManualMacroEntryModal
+        meal={foodStep?.step === "manual" ? foodStep.meal : null}
         onClose={() => setFoodStep(null)}
         onChange={onChange}
       />

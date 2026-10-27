@@ -1,4 +1,4 @@
-import { Sparkles } from "lucide-react";
+import { PenLine, Sparkles } from "lucide-react";
 
 import ModalOverlay from "@/components/ModalOverlay";
 import type { MealSlot } from "@/data/nutrition/foodCatalog";
@@ -8,11 +8,13 @@ export interface MealAddChoiceModalProps {
   onClose: () => void;
   onAdd: () => void;
   onAddAi: () => void;
+  onAddManual: () => void;
 }
 
 // The fork the "+" on a meal card lands on: pick how to log the food, then
-// drill into either AddMealEntryModal (manual search, one item at a time) or
-// AiMealEntryModal (free-text description). "+" used to jump straight to the
+// drill into AddMealEntryModal (manual search, one item at a time),
+// AiMealEntryModal (free-text description) or ManualMacroEntryModal (a title
+// plus macros typed in by hand). "+" used to jump straight to the
 // manual screen, which made the AI route effectively invisible from the meal
 // list.
 //
@@ -24,6 +26,7 @@ export default function MealAddChoiceModal({
   onClose,
   onAdd,
   onAddAi,
+  onAddManual,
 }: MealAddChoiceModalProps) {
   if (!meal) {
     return null;
@@ -49,6 +52,14 @@ export default function MealAddChoiceModal({
         >
           <Sparkles size={18} className="text-avocado-yellow" />
           افزودن با هوش مصنوعی
+        </button>
+
+        <button
+          onClick={onAddManual}
+          className="glass-tap selector-pill flex w-full items-center justify-center gap-2 rounded-2xl py-3 font-bold text-white"
+        >
+          <PenLine size={18} className="text-avocado-yellow" />
+          ورود دستی ماکروها
         </button>
 
         <button

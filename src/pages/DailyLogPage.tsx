@@ -18,6 +18,7 @@ import MealAddChoiceModal from "@/components/nutrition/MealAddChoiceModal";
 import MealDisplaySettingsModal from "@/components/nutrition/MealDisplaySettingsModal";
 import AddMealEntryModal from "@/components/nutrition/AddMealEntryModal";
 import AiMealEntryModal from "@/components/nutrition/AiMealEntryModal";
+import ManualMacroEntryModal from "@/components/nutrition/ManualMacroEntryModal";
 import EditMealEntryModal from "@/components/nutrition/EditMealEntryModal";
 import ActivityLogModal from "@/components/progress/ActivityLogModal";
 import {
@@ -338,7 +339,7 @@ function CalorieModeChoicePrompt({
 }
 
 type ModalScreen =
-  | { meal: MealSlot; screen: "choice" | "add" | "ai" }
+  | { meal: MealSlot; screen: "choice" | "add" | "ai" | "manual" }
   | { meal: MealSlot; screen: "edit"; entry: LoggedFoodEntry }
   | null;
 
@@ -419,6 +420,7 @@ function MealLogTab({
         onClose={() => setModal(null)}
         onAdd={() => setModal(modal && { meal: modal.meal, screen: "add" })}
         onAddAi={() => setModal(modal && { meal: modal.meal, screen: "ai" })}
+        onAddManual={() => setModal(modal && { meal: modal.meal, screen: "manual" })}
       />
 
       <AddMealEntryModal
@@ -430,6 +432,13 @@ function MealLogTab({
 
       <AiMealEntryModal
         meal={modal?.screen === "ai" ? modal.meal : null}
+        onClose={() => setModal(null)}
+        onChange={refresh}
+        date={date}
+      />
+
+      <ManualMacroEntryModal
+        meal={modal?.screen === "manual" ? modal.meal : null}
         onClose={() => setModal(null)}
         onChange={refresh}
         date={date}
