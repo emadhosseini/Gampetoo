@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { createInterface } from "node:readline/promises";
 import { fileURLToPath, URL } from "node:url";
 import { stdin, stdout } from "node:process";
@@ -22,6 +22,7 @@ import { stdin, stdout } from "node:process";
 const path = (rel) => fileURLToPath(new URL(rel, import.meta.url));
 const PKG = path("../package.json");
 const VERSION_JSON = path("../public/version.json");
+const IOS_PBXPROJ = path("../ios/App/App.xcodeproj/project.pbxproj");
 
 const readJson = (file) => JSON.parse(readFileSync(file, "utf-8"));
 const writeJson = (file, data) =>
@@ -119,6 +120,21 @@ versionFile.history.unshift({
 });
 writeJson(VERSION_JSON, versionFile);
 
-console.log(`\n✓ ${version} written to package.json and public/version.json`);
+let iosSummary = "";
+if (existsSync(IOS_PBXPROJ)) {
+  let pbx = readFileSync(IOS_PBXPROJ, "utf-8");
+  const buildMatches = [...pbx.matchAll(/CURRENT_PROJECT_VERSION = (\d+);/g)];
+  const nextBuild =
+    buildMatches.length > 0 ? Math.max(...buildMatches.map((m) => Number(m[1]))) + 1 : 1;
+
+  pbx = pbx
+    .replace(/MARKETING_VERSION = [^;]+;/g, `MARKETING_VERSION = ${version};`)
+    .replace(/CURRENT_PROJECT_VERSION = \d+;/g, `CURRENT_PROJECT_VERSION = ${nextBuild};`);
+
+  writeFileSync(IOS_PBXPROJ, pbx, "utf-8");
+  iosSummary = `\n✓ iOS project.pbxproj updated: MARKETING_VERSION=${version}, CURRENT_PROJECT_VERSION=${nextBuild}`;
+}
+
+console.log(`\n✓ ${version} written to package.json and public/version.json${iosSummary}`);
 console.log(`  ${highlights.length} highlight(s), dated ${today()}`);
-console.log("\nNext: npm run build && git commit");
+console.log("\nNext: npm run ios:sync && git commit");

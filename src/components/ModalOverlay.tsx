@@ -1,6 +1,8 @@
 import { useEffect, useState, type MouseEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 
+import { isNativeIos } from "@/native/platform";
+
 // Computed once at module load, not per-render — this doesn't change during
 // a session. True on every browser this app has actually been tested
 // against (iOS Safari, Chrome). False is the signal for the bug this file
@@ -141,31 +143,18 @@ export default function ModalOverlay({
     e.stopPropagation();
   }
 
-  const blur = blurOn ? "blur(25px)" : "blur(0px)";
-  // A light dim on top of a working blur (the blur itself is what destroys
-  // the background's legibility); a near-opaque one standing in for the
-  // blur entirely on a browser that doesn't render it. Has to go this high
-  // in the fallback case specifically because the popup card sitting on
-  // top is itself only 10% black (.glass-panel) — it compounds with
-  // whatever base opacity is here, and anything under about 95% still let
-  // bold white background text (e.g. the setup page's own logo) show
-  // through as a faint but legible ghost.
-  const backdropTint = SUPPORTS_BACKDROP_FILTER ? "35%" : "97%";
+  const nativeIos = isNativeIos();
+  const blur = blurOn
+    ? nativeIos
+      ? "blur(28px) saturate(160%)"
+      : "blur(25px)"
+    : "blur(0px)";
+  const backdropTint = SUPPORTS_BACKDROP_FILTER ? (nativeIos ? "48%" : "35%") : "97%";
 
   return createPortal(
     <>
       <div
         className={`fixed inset-0 ${zIndexClass} touch-none`}
-        // translateZ(0)/will-change force a GPU compositing layer — the
-        // long-standing mitigation for iOS Safari intermittently not
-        // rendering backdrop-filter on position:fixed elements at all. The
-        // -webkit- prefixed property is set explicitly since not every
-        // WebKit version honors the unprefixed one.
-        //
-        // background-color is the fallback for browsers that silently don't
-        // support backdrop-filter at all (see SUPPORTS_BACKDROP_FILTER
-        // above) — a plain color has no support gaps, so it holds even when
-        // the blur itself doesn't render.
         style={{
           transform: "translateZ(0)",
           willChange: "backdrop-filter",
@@ -183,7 +172,17 @@ export default function ModalOverlay({
       >
         <div
           onClick={stopPropagation}
-          className="pointer-events-auto w-full max-w-sm"
+          className={`pointer-events-auto w-full max-w-sm ${nativeIos ? "ios-modal-card" : ""}`}
+          style={
+            nativeIos
+              ? {
+                  opacity: blurOn ? 1 : 0,
+                  transform: blurOn ? "scale(1) translateY(0)" : "scale(0.93) translateY(16px)",
+                  transition:
+                    "opacity 220ms ease, transform 340ms cubic-bezier(0.22, 1, 0.36, 1)",
+                }
+              : undefined
+          }
         >
           {children}
         </div>

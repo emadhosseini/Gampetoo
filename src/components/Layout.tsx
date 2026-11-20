@@ -1,8 +1,10 @@
 import { useState } from "react";
+import { motion } from "framer-motion";
 import { Outlet, useLocation } from "react-router-dom";
 import MobileContainer from "./MobileContainer";
 import BottomNavigation from "./BottomNavigation";
 import SideMenu from "./SideMenu";
+import { isNativeIos } from "@/native/platform";
 
 // Pages built around StatChartPage's full-bleed top panel — see the
 // bleedTop prop on MobileContainer.
@@ -10,6 +12,7 @@ const BLEED_TOP_ROUTES = ["/progress/weight", "/progress/calories", "/progress/a
 
 function Layout() {
   const { pathname } = useLocation();
+  const nativeIos = isNativeIos();
 
   // While the bottom nav's quick-add drawer is open, the page content
   // behind it gets a real CSS filter blur — applied here because <main>
@@ -30,7 +33,18 @@ function Layout() {
             transition: "filter 200ms ease",
           }}
         >
-          <Outlet />
+          {nativeIos ? (
+            <motion.div
+              key={pathname}
+              initial={{ opacity: 0, y: 6, scale: 0.994 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ type: "spring", stiffness: 480, damping: 36, mass: 0.7 }}
+            >
+              <Outlet />
+            </motion.div>
+          ) : (
+            <Outlet />
+          )}
         </main>
 
         <BottomNavigation onDrawerOpenChange={setQuickAddOpen} />

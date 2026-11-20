@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabaseClient";
+import { syncPushTokenToSupabase } from "@/native/notifications";
 import { getCurrentUsername } from "@/utils/userEngine";
 import {
   mergeCompletionLog,
@@ -41,6 +42,10 @@ const SYNCED_BASE_KEYS = [
   "emad-daily-log-deleted",
   "emad-daily-log-history",
   "emad-daily-calorie-target",
+  "emad-daily-calorie-target-mode",
+  "emad-daily-calorie-target-training",
+  "emad-daily-calorie-target-rest",
+  "emad-daily-macro-targets",
   "emad-calorie-mode",
   "emad-learned-foods",
   "emad-water-log",
@@ -48,6 +53,8 @@ const SYNCED_BASE_KEYS = [
   "emad-activity-log",
   "emad-activity-log-entries",
   "emad-workout-calorie-log",
+  "emad-exercise-notes",
+  "emad-body-measurements",
 ];
 
 const PUSH_DEBOUNCE_MS = 1000;
@@ -639,7 +646,16 @@ async function pushToServer(username: string): Promise<void> {
   for (const base of SYNCED_BASE_KEYS) {
     // Never touched on this device (no recorded change/deletion time for
     // it) — leave whatever the cached snapshot already has, untouched.
-    if (localTimes[base] === undefined) continue;
+    // Exception: if a key was just added to SYNCED_BASE_KEYS in a newer build
+    // and already has local data that the server doesn't know about yet,
+    // include it so it isn't left behind on the first push.
+    if (localTimes[base] === undefined) {
+      if (local[base] !== undefined && known.values[base] === undefined) {
+        values[base] = local[base];
+        times[base] = new Date().toISOString();
+      }
+      continue;
+    }
 
     if (local[base] !== undefined) {
       values[base] = local[base];
@@ -965,9 +981,49 @@ export function initSync() {
     const username = getCurrentUsername();
 
     if (cachedAuthUserId && username) {
-      void pullFromServer(username);
+      void pullFromServer(username).then((changed) => {
+        if (changed) window.location.reload();
+      });
     }
   });
+}
+
+/**
+ * Triggers an immediate push+pull against Supabase. Used by Capacitor's
+ * native `appStateChange` resume hook (since WKWebView doesn't reliably fire
+ * `document.visibilitychange` when switching back to the app) and by the
+ * manual "همگام‌سازی" button in Settings.
+ */
+export async function syncNow(force = false): Promise<{
+  ok: boolean;
+  changed: boolean;
+}> {
+  if (!supabase) return { ok: false, changed: false };
+
+  const username = getCurrentUsername();
+  if (!username) return { ok: false, changed: false };
+
+  if (!cachedAuthUserId) {
+    const { data } = await supabase.auth.getSession();
+    cachedAuthUserId = data.session?.user.id ?? null;
+  }
+  if (!cachedAuthUserId) return { ok: false, changed: false };
+
+  const now = Date.now();
+  if (!force && now - lastForegroundPullAt < FOREGROUND_PULL_MIN_INTERVAL_MS) {
+    return { ok: true, changed: false };
+  }
+  lastForegroundPullAt = now;
+
+  const changed = await pullFromServer(username);
+  if (changed) {
+    window.location.reload();
+  }
+  return { ok: true, changed };
+}
+
+export function flushPendingOnBackground(): void {
+  flushOnHide();
 }
 
 /**
@@ -983,6 +1039,7 @@ export async function syncAfterLogin(username: string): Promise<void> {
   cachedAuthUserId = data.session?.user.id ?? null;
 
   if (cachedAuthUserId) {
+    void syncPushTokenToSupabase();
     await pullFromServer(username);
   }
 }

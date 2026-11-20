@@ -27,16 +27,66 @@ import WeightDetailPage from "@/pages/WeightDetailPage";
 import CaloriesDetailPage from "@/pages/CaloriesDetailPage";
 import ActivityDetailPage from "@/pages/ActivityDetailPage";
 import CalorieBudgetDetailPage from "@/pages/CalorieBudgetDetailPage";
+import BodyMeasurementsPage from "@/pages/BodyMeasurementsPage";
+import BodyMeasurementDetailPage from "@/pages/BodyMeasurementDetailPage";
 
 import { hasCurrentUsername } from "@/utils/userEngine";
-import { initSync } from "@/sync/remoteSync";
+import { flushPendingOnBackground, initSync, syncNow } from "@/sync/remoteSync";
 import { mergeExerciseIds } from "@/domain/migrations/mergeExerciseIds";
+import { initNativeShell, isNativeApp } from "@/native/platform";
+import { isHealthKitEnabled, syncHealthKitFromAppleHealth } from "@/native/healthkit";
+import { pushCurrentWidgetSnapshot } from "@/native/nativeBridge";
+import { initWatchBridge, syncWatchContext } from "@/native/watchBridge";
+import {
+  getNotificationPrefs,
+  initNotificationListeners,
+  registerForPushNotifications,
+  syncDailyReminders,
+  syncPushTokenToSupabase,
+} from "@/native/notifications";
 
 // Before initSync, deliberately: the migration rewrites the very keys the
 // sync engine watches, so it has to finish while nothing is listening —
 // otherwise the rewrite itself would be pushed as a change mid-flight.
 mergeExerciseIds();
 initSync();
+
+if (isNativeApp()) {
+  void initNativeShell(
+    () => {
+      void syncNow();
+      pushCurrentWidgetSnapshot();
+      syncWatchContext();
+      void syncPushTokenToSupabase();
+      if (isHealthKitEnabled()) {
+        void syncHealthKitFromAppleHealth();
+      }
+    },
+    () => {
+      flushPendingOnBackground();
+      pushCurrentWidgetSnapshot();
+      syncWatchContext();
+    },
+  );
+  initNotificationListeners();
+  initWatchBridge();
+  const notifPrefs = getNotificationPrefs();
+  void syncDailyReminders(notifPrefs);
+  if (notifPrefs.pushEnabled) {
+    void registerForPushNotifications();
+  }
+  if (isHealthKitEnabled()) {
+    void syncHealthKitFromAppleHealth();
+  }
+  pushCurrentWidgetSnapshot();
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") {
+      pushCurrentWidgetSnapshot();
+      syncWatchContext();
+    }
+  });
+}
 
 export default function App() {
   return (
@@ -146,6 +196,16 @@ function AppRoutes() {
         <Route
           path="/progress/calorie-budget"
           element={<CalorieBudgetDetailPage />}
+        />
+
+        <Route
+          path="/progress/body-measurements"
+          element={<BodyMeasurementsPage />}
+        />
+
+        <Route
+          path="/progress/body-measurements/:type"
+          element={<BodyMeasurementDetailPage />}
         />
       </Route>
 

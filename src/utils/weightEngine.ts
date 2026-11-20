@@ -1,3 +1,5 @@
+import { pushWeightToHealthKit } from "@/native/healthkit";
+
 import { scopedKey } from "./userEngine";
 import { getTodayLocalDate } from "./dateFormat";
 
@@ -65,6 +67,7 @@ export function logWeight(weight: number, date: string = today()): WeightEntry[]
   entries.sort((a, b) => a.date.localeCompare(b.date));
 
   saveWeightLog(entries);
+  pushWeightToHealthKit(round2(weight));
 
   return entries;
 }

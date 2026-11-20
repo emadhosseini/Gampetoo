@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import MeshGradientBackground from "@/components/background/MeshGradientBackground";
+import { isNativeIos } from "@/native/platform";
 
 type MobileContainerProps = {
   children: React.ReactNode;
@@ -34,7 +35,10 @@ function measureViewportHeight(): number {
   // iOS). Deliberately NOT the display-mode:standalone media query — that
   // also matches Android, where the status bar sits outside the webview
   // and screen.height would overshoot.
+  // Native iOS Capacitor WKWebView covers the full screen cleanly just like a
+  // home-screen standalone PWA, even though navigator.standalone is undefined.
   const iosStandalone =
+    isNativeIos() ||
     (navigator as Navigator & { standalone?: boolean }).standalone === true;
 
   // Browser tab: innerHeight alone — the long-stable behavior. The extra
@@ -95,10 +99,13 @@ function useViewportHeight() {
 
 function MobileContainer({ children, bleedTop = false }: MobileContainerProps) {
   const viewportHeight = useViewportHeight();
+  const nativeIos = isNativeIos();
 
   return (
     <div
-      className="app-gradient-bg pt-safe relative mx-auto max-w-md overflow-hidden shadow-2xl"
+      className={`app-gradient-bg pt-safe relative mx-auto overflow-hidden ${
+        nativeIos ? "w-full" : "max-w-md shadow-2xl"
+      }`}
       style={{ height: viewportHeight }}
     >
       <MeshGradientBackground />

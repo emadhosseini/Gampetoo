@@ -1,5 +1,6 @@
 import { registerSW } from "virtual:pwa-register";
 
+import { isNativeApp } from "@/native/platform";
 import { getCurrentUsername } from "@/utils/userEngine";
 import { flushPendingSync } from "@/sync/remoteSync";
 
@@ -63,7 +64,7 @@ let dismissedVersion: string | null = null;
  * more than once (e.g. React StrictMode double-invoke) — only registers once.
  */
 function init() {
-  if (initialized) return;
+  if (initialized || isNativeApp()) return;
 
   initialized = true;
 

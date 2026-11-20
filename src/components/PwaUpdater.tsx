@@ -1,4 +1,5 @@
 import UpdateModal from "./UpdateModal";
+import { isNativeApp } from "@/native/platform";
 import { usePwaUpdate } from "@/pwa/usePwaUpdate";
 
 // Wires the update logic (usePwaUpdate/updateManager) to the presentational
@@ -6,6 +7,10 @@ import { usePwaUpdate } from "@/pwa/usePwaUpdate";
 export default function PwaUpdater() {
   const { status, currentVersion, newVersion, applyUpdate, dismissUpdate } =
     usePwaUpdate();
+
+  if (isNativeApp()) {
+    return null;
+  }
 
   return (
     <UpdateModal

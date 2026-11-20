@@ -100,6 +100,38 @@ export function logActivityEntry(
   return logActivityCalories(calories, date);
 }
 
+/**
+ * Inserts or updates a deterministic synced activity entry (e.g. from Apple
+ * Health / Apple Watch) and adjusts that day's calorie total by the delta so
+ * repeated syncs never create duplicates.
+ */
+export function upsertSyncedActivityEntry(
+  id: string,
+  calories: number,
+  note: string,
+  date: string = today(),
+): DailyMetricEntry[] {
+  const rounded = Math.max(0, Math.round(calories));
+  const entries = readEntries();
+  const idx = entries.findIndex((entry) => entry.id === id);
+  const previousCalories = idx >= 0 ? entries[idx].calories : 0;
+
+  if (idx >= 0) {
+    entries[idx] = { id, date, calories: rounded, note: note.trim() };
+  } else {
+    entries.push({ id, date, calories: rounded, note: note.trim() });
+  }
+
+  writeEntries(entries);
+
+  const delta = rounded - previousCalories;
+  if (delta !== 0) {
+    store.setEntry(date, Math.max(0, getActivityCalories(date) + delta));
+  }
+
+  return store.getHistory();
+}
+
 // Removes one logged activity and backs its calories out of that day's
 // running total — the activity-tab equivalent of dailyLogEngine's
 // removeLoggedEntry, once entries became listable/expandable there.

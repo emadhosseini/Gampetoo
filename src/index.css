@@ -505,3 +505,185 @@ textarea {
 [data-theme="light"] .divide-white\/10 > :not([hidden]) ~ :not([hidden]) {
   border-color: rgb(0 0 0 / 10%);
 }
+
+/* ==========================================================================
+   iOS 27 Apple Liquid Glass Design System (Native iOS app only)
+   Activated via html[data-platform="ios"].
+   Follows Apple's Liquid Glass separation between:
+     1) Content Layer (.glass-panel, .glass-chip): crystal-clear dark glass
+        with razor-sharp optical specular rims (ZERO milky white haze).
+     2) Control & Navigation Layer (.ios-glass-dock, .ios-glass-orb,
+        .ios-glass-popover, .ios-glass-sidebar): refractive blurred dark
+        Liquid Glass with directional optical edge highlights and Apple
+        spring physics.
+   ========================================================================== */
+
+[data-platform="ios"] body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Content Layer: Crystal-clear dark optical glass (no milky interior fill) */
+[data-platform="ios"] .glass-panel {
+  background-color: rgb(0 0 0 / 16%);
+  box-shadow:
+    inset 0 0.75px 0 0 rgb(255 255 255 / 24%),
+    inset 0 -0.5px 0 0 rgb(255 255 255 / 6%),
+    0 0 0 0.5px rgb(255 255 255 / 14%),
+    0 12px 32px -14px rgb(0 0 0 / 52%);
+  transition:
+    transform 300ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 200ms ease,
+    background-color 200ms ease;
+}
+
+[data-platform="ios"] .glass-panel-flush-top {
+  box-shadow:
+    inset 0 -0.5px 0 0 rgb(255 255 255 / 8%),
+    0.75px 0 0 -0.25px rgb(255 255 255 / 14%),
+    -0.75px 0 0 -0.25px rgb(255 255 255 / 14%),
+    0 12px 32px -14px rgb(0 0 0 / 52%);
+}
+
+[data-platform="ios"] .glass-panel:active,
+[data-platform="ios"] .glass-tap:active {
+  transform: scale(0.974);
+  background-color: rgb(0 0 0 / 22%);
+  box-shadow:
+    inset 0 0.75px 0 0 rgb(255 255 255 / 34%),
+    inset 0 -0.5px 0 0 rgb(255 255 255 / 9%),
+    0 0 0 0.5px rgb(255 255 255 / 22%),
+    0 6px 18px -10px rgb(0 0 0 / 52%);
+}
+
+[data-platform="ios"] .glass-chip {
+  background-color: rgb(0 0 0 / 18%);
+  box-shadow:
+    inset 0 0.5px 0 0 rgb(255 255 255 / 18%),
+    0 0 0 0.5px rgb(255 255 255 / 12%);
+  transition:
+    transform 260ms cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 180ms ease;
+}
+
+[data-platform="ios"] .glass-chip:active {
+  transform: scale(0.965);
+  background-color: rgb(255 255 255 / 9%);
+}
+
+[data-platform="ios"] .glass-action {
+  background-color: rgb(255 255 255 / 11%);
+  box-shadow:
+    inset 0 0.75px 0 0 rgb(255 255 255 / 36%),
+    inset 0 -0.5px 0 0 rgb(255 255 255 / 10%),
+    0 0 0 0.5px rgb(255 255 255 / 22%),
+    0 10px 24px -12px rgb(0 0 0 / 58%);
+  transition:
+    transform 280ms cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 180ms ease;
+}
+
+[data-platform="ios"] .glass-action:active {
+  transform: scale(0.968);
+  background-color: rgb(255 255 255 / 18%);
+}
+
+[data-platform="ios"] .glass-static:active {
+  transform: none;
+}
+
+[data-platform="ios"] .glass-action-static:active {
+  transform: none;
+  background-color: rgb(255 255 255 / 11%);
+}
+
+[data-platform="ios"] .selector-pill {
+  background-color: rgb(0 0 0 / 22%);
+  box-shadow:
+    inset 0 0.5px 0 0 rgb(255 255 255 / 20%),
+    0 0 0 0.5px rgb(255 255 255 / 14%);
+}
+
+/* Control & Navigation Layer: True Apple iOS 27 Refractive Liquid Glass */
+.ios-glass-dock {
+  background-color: rgb(8 20 11 / 52%);
+  backdrop-filter: blur(26px) saturate(190%);
+  -webkit-backdrop-filter: blur(26px) saturate(190%);
+  box-shadow:
+    inset 0 1px 0 0 rgb(255 255 255 / 30%),
+    inset 0 -0.75px 0 0 rgb(255 255 255 / 10%),
+    0 0 0 0.5px rgb(255 255 255 / 20%),
+    0 16px 36px -10px rgb(0 0 0 / 68%);
+  transform: translateZ(0);
+}
+
+.ios-glass-lens {
+  background-color: rgb(255 255 255 / 13%);
+  box-shadow:
+    inset 0 0.75px 0 0 rgb(255 255 255 / 36%),
+    inset 0 -0.5px 0 0 rgb(255 255 255 / 10%),
+    0 2px 10px -2px rgb(0 0 0 / 32%);
+}
+
+.ios-glass-orb {
+  background-color: rgb(10 26 14 / 58%);
+  backdrop-filter: blur(26px) saturate(195%);
+  -webkit-backdrop-filter: blur(26px) saturate(195%);
+  box-shadow:
+    inset 0 1px 0 0 rgb(255 255 255 / 38%),
+    inset 0 -0.75px 0 0 rgb(255 255 255 / 12%),
+    0 0 0 0.5px rgb(255 255 255 / 24%),
+    0 14px 30px -8px rgb(0 0 0 / 66%);
+  transform: translateZ(0);
+  transition:
+    transform 260ms cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 180ms ease;
+}
+
+.ios-glass-orb:active {
+  transform: scale(0.92) translateZ(0);
+  background-color: rgb(20 46 25 / 72%);
+}
+
+.ios-glass-popover {
+  background-color: rgb(10 24 13 / 76%);
+  backdrop-filter: blur(36px) saturate(185%);
+  -webkit-backdrop-filter: blur(36px) saturate(185%);
+  box-shadow:
+    inset 0 1px 0 0 rgb(255 255 255 / 28%),
+    inset 0 -0.5px 0 0 rgb(255 255 255 / 8%),
+    0 0 0 0.5px rgb(255 255 255 / 18%),
+    0 24px 56px -12px rgb(0 0 0 / 74%);
+  transform: translateZ(0);
+}
+
+.ios-glass-sidebar {
+  background-color: rgb(9 22 12 / 72%);
+  backdrop-filter: blur(38px) saturate(190%);
+  -webkit-backdrop-filter: blur(38px) saturate(190%);
+  box-shadow:
+    inset 0 1px 0 0 rgb(255 255 255 / 28%),
+    inset 0 -0.75px 0 0 rgb(255 255 255 / 8%),
+    0 0 0 0.5px rgb(255 255 255 / 20%),
+    -12px 0 48px -8px rgb(0 0 0 / 65%);
+}
+
+.ios-inset-group {
+  background-color: rgb(0 0 0 / 26%);
+  box-shadow:
+    inset 0 0.5px 0 0 rgb(255 255 255 / 14%),
+    0 0 0 0.5px rgb(255 255 255 / 11%);
+}
+
+/* Automatically give every ModalOverlay card refractive dark Liquid Glass on iOS */
+[data-platform="ios"] .ios-modal-card > .glass-panel {
+  background-color: rgb(10 24 13 / 78%);
+  backdrop-filter: blur(36px) saturate(185%);
+  -webkit-backdrop-filter: blur(36px) saturate(185%);
+  box-shadow:
+    inset 0 1px 0 0 rgb(255 255 255 / 28%),
+    inset 0 -0.5px 0 0 rgb(255 255 255 / 8%),
+    0 0 0 0.5px rgb(255 255 255 / 18%),
+    0 24px 56px -12px rgb(0 0 0 / 74%);
+}

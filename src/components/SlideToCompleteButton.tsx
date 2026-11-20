@@ -8,6 +8,10 @@ import {
 } from "framer-motion";
 import { ArrowRight, Check } from "lucide-react";
 
+import { hapticSuccess } from "@/native/haptics";
+import { pushCurrentWidgetSnapshot } from "@/native/nativeBridge";
+import { syncWatchContext } from "@/native/watchBridge";
+
 interface SlideToCompleteButtonProps {
   label: string;
   // Fires once the handle is dragged all the way to the end (not a
@@ -74,11 +78,16 @@ export default function SlideToCompleteButton({
 
     if (reachedEnd) {
       setCompleted(true);
+      hapticSuccess();
 
       animate(x, maxDrag, {
         ...snapTransition,
         onComplete: () => {
-          window.setTimeout(onReachEnd, 250);
+          window.setTimeout(() => {
+            onReachEnd();
+            pushCurrentWidgetSnapshot();
+            syncWatchContext();
+          }, 250);
         },
       });
     } else {

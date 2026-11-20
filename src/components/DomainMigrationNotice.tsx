@@ -1,5 +1,7 @@
 import { useState } from "react";
 
+import { isNativeApp } from "@/native/platform";
+
 // The app moved from gampetoo.com to pwa.gampetoo.com — this old domain will
 // be shut down soon, so anyone still landing on it (an old bookmark, an
 // already-installed PWA icon, a stale link) needs to be told to switch.
@@ -8,6 +10,10 @@ const NEW_URL = "https://pwa.gampetoo.com";
 
 export default function DomainMigrationNotice() {
   const [dismissed, setDismissed] = useState(false);
+
+  if (isNativeApp()) {
+    return null;
+  }
 
   const onOldDomain = OLD_HOSTNAMES.includes(window.location.hostname);
 

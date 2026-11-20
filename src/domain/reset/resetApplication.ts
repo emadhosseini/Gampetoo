@@ -21,6 +21,7 @@ import {
 } from "../../utils/userEngine";
 import { resetFreeMeal } from "../../utils/freeMealEngine";
 import { resetWeightLog } from "../../utils/weightEngine";
+import { resetBodyMeasurementsLog } from "../../utils/bodyMeasurementsEngine";
 import { resetDailyLog, resetDeletedEntryIds } from "../../utils/dailyLogEngine";
 import { resetCalorieTrackingMode } from "../../utils/calorieModeEngine";
 import { resetCalorieProfile } from "../../utils/calorieEngine";
@@ -56,6 +57,7 @@ function wipeLocalData(username: string | null) {
   resetWarmupLibraryOverrides();
   resetFreeMeal();
   resetWeightLog();
+  resetBodyMeasurementsLog();
   resetDailyLog();
   resetDeletedEntryIds();
   resetCalorieTrackingMode();

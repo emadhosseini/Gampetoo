@@ -8,6 +8,7 @@ import { createRoot } from "react-dom/client";
 import "./index.css";
 import App from "./App";
 import ErrorBoundary from "./components/ErrorBoundary";
+import { isNativeIos } from "./native/platform";
 import { getAppSettings } from "./utils/appSettingsEngine";
 
 // iOS Safari only applies the :active pseudo-class to elements that aren't a
@@ -22,6 +23,9 @@ document.addEventListener("touchstart", () => {}, { passive: true });
 // trying to flip this live, which is what actually picks the change up.
 const settings = getAppSettings();
 document.documentElement.dataset.theme = settings.theme;
+if (isNativeIos()) {
+  document.documentElement.dataset.platform = "ios";
+}
 
 // lang/dir likewise have to land before first paint — index.html's own
 // lang="fa" dir="rtl" is only the pre-JS fallback for the split second

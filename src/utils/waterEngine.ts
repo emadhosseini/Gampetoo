@@ -1,3 +1,5 @@
+import { pushWaterToHealthKit } from "@/native/healthkit";
+
 import { createDailyMetricLog, type DailyMetricEntry } from "./dailyMetricLog";
 import { scopedKey } from "./userEngine";
 import { getTodayLocalDate } from "./dateFormat";
@@ -23,7 +25,12 @@ export function getTodayGlasses(): number {
 }
 
 export function logGlasses(count: number): DailyMetricEntry[] {
-  return store.addToday(Math.max(0, Math.round(count)));
+  const added = Math.max(0, Math.round(count));
+  const result = store.addToday(added);
+  if (added > 0) {
+    pushWaterToHealthKit(added);
+  }
+  return result;
 }
 
 /**
@@ -32,7 +39,12 @@ export function logGlasses(count: number): DailyMetricEntry[] {
  * that number (in either direction) instead of adding one at a time.
  */
 export function setTodayGlasses(count: number): DailyMetricEntry[] {
-  store.setEntry(getTodayLocalDate(), Math.max(0, Math.round(count)));
+  const prev = store.getToday();
+  const next = Math.max(0, Math.round(count));
+  store.setEntry(getTodayLocalDate(), next);
+  if (next > prev) {
+    pushWaterToHealthKit(next - prev);
+  }
 
   return store.getHistory();
 }

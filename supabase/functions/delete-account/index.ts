@@ -20,6 +20,7 @@ const ALLOWED_ORIGINS = new Set([
   "https://pwa.gampetoo.com",
   "https://dev.gampetoo.com",
   "http://localhost:5173",
+  "capacitor://localhost",
 ]);
 
 function corsHeaders(origin: string | null) {

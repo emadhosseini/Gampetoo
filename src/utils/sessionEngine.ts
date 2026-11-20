@@ -2,6 +2,7 @@ import {
   calculateBurnedCalories,
   calculateBurnedCaloriesFromBmr,
 } from "@/domain/services/calorieCalculator";
+import { pushWorkoutToHealthKit } from "@/native/healthkit";
 import { getCurrentProgramDay } from "./programEngine";
 import { getLatestWeight } from "./weightEngine";
 import { calculateBmr } from "./calorieEngine";
@@ -260,6 +261,7 @@ export function completeWorkout(done: CompletedWorkoutDetails = {}) {
 
   saveSession(session);
   markCompleted(done);
+  pushWorkoutToHealthKit("workout", 45, 0, done.title ?? "تمرین گمپتو");
 }
 
 export function completeWalk(done: CompletedWorkoutDetails = {}) {
@@ -269,6 +271,7 @@ export function completeWalk(done: CompletedWorkoutDetails = {}) {
 
   saveSession(session);
   markCompleted(done);
+  pushWorkoutToHealthKit("walk", 30, 0, done.title ?? "پیاده‌روی گمپتو");
 }
 
 export function resetSession() {

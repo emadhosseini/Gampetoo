@@ -1,6 +1,9 @@
 import { motion } from "framer-motion";
 import type { LucideIcon } from "lucide-react";
 
+import { hapticSelection } from "@/native/haptics";
+import { isNativeIos } from "@/native/platform";
+
 export interface PillTabBarItem<T extends string> {
   id: T;
   label: string;
@@ -26,10 +29,20 @@ export default function PillTabBar<T extends string>({
   onChange,
   layoutId,
 }: PillTabBarProps<T>) {
+  const nativeIos = isNativeIos();
+
   return (
     <div className="px-5.25 pt-10">
-      <div className="glass-panel mx-auto max-w-md rounded-full">
-        <nav className="relative flex h-17 items-center justify-around overflow-hidden rounded-full">
+      <div
+        className={`mx-auto max-w-md rounded-full ${
+          nativeIos ? "ios-glass-dock" : "glass-panel"
+        }`}
+      >
+        <nav
+          className={`relative flex items-center justify-around overflow-hidden rounded-full ${
+            nativeIos ? "h-14 px-1" : "h-17"
+          }`}
+        >
           {items.map((item) => {
             const Icon = item.icon;
             const isActive = active === item.id;
@@ -37,27 +50,33 @@ export default function PillTabBar<T extends string>({
             return (
               <button
                 key={item.id}
-                onClick={() => onChange(item.id)}
+                onClick={() => {
+                  hapticSelection();
+                  onChange(item.id);
+                }}
                 className="relative z-10 flex h-full flex-1 items-center justify-center [-webkit-tap-highlight-color:transparent] touch-manipulation"
               >
                 {isActive && (
                   <motion.div
                     layoutId={layoutId}
-                    className="absolute inset-1 rounded-full bg-white/10"
+                    className={`absolute inset-1 rounded-full ${
+                      nativeIos ? "ios-glass-lens" : "bg-white/10"
+                    }`}
                     transition={{
                       type: "spring",
-                      stiffness: 380,
+                      stiffness: 440,
                       damping: 32,
+                      mass: 0.9,
                     }}
                   />
                 )}
 
                 <span
-                  className={`relative flex flex-col items-center gap-1 text-xs transition-[color,transform] duration-150 active:scale-95 ${
-                    isActive ? "text-avocado-yellow" : "text-white"
-                  }`}
+                  className={`relative flex items-center gap-1.5 transition-[color,transform] duration-150 active:scale-95 ${
+                    nativeIos ? "flex-row text-xs font-semibold" : "flex-col gap-1 text-xs"
+                  } ${isActive ? "text-avocado-yellow" : "text-white/80"}`}
                 >
-                  <Icon size={22} />
+                  <Icon size={nativeIos ? 18 : 22} />
                   <span>{item.label}</span>
                 </span>
               </button>

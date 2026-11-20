@@ -2,11 +2,13 @@ import { useState } from "react";
 import { Share, SquarePlus } from "lucide-react";
 
 import ModalOverlay from "@/components/ModalOverlay";
+import { isNativeApp } from "@/native/platform";
 
 const DISMISS_KEY = "gampetoo-install-hint-dismissed";
 
 function isStandalone() {
   return (
+    isNativeApp() ||
     window.matchMedia("(display-mode: standalone)").matches ||
     // iOS Safari exposes this non-standard flag when launched from the home screen.
     (window.navigator as unknown as { standalone?: boolean }).standalone === true

@@ -28,6 +28,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import SettingsButton from "@/components/settings/SettingsButton";
 import SettingsSidebar from "@/components/settings/SettingsSidebar";
 import { avatarCharacterIcon } from "@/data/characterIcons";
+import { hapticLight } from "@/native/haptics";
+import { isNativeIos } from "@/native/platform";
 import { getCurrentUserGender, getCurrentUserName } from "@/utils/userEngine";
 
 // The two training screens are one job split in two — building the
@@ -94,6 +96,7 @@ export default function SideMenu({ children }: SideMenuProps) {
   const userName = getCurrentUserName() ?? "";
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [trainingOpen, setTrainingOpen] = useState(false);
+  const nativeIos = isNativeIos();
 
   // How far (in px) the drawer has entered from the right: 0 = fully closed
   // (off-screen), drawerWidth = fully open.
@@ -107,7 +110,8 @@ export default function SideMenu({ children }: SideMenuProps) {
   useLayoutEffect(() => {
     function measure() {
       const width = containerRef.current?.getBoundingClientRect().width ?? 0;
-      setDrawerWidth(Math.round(width * DRAWER_FRACTION));
+      const computed = Math.round(width * DRAWER_FRACTION);
+      setDrawerWidth(nativeIos ? Math.min(computed, 320) : computed);
     }
 
     measure();
@@ -116,7 +120,7 @@ export default function SideMenu({ children }: SideMenuProps) {
     if (containerRef.current) observer.observe(containerRef.current);
 
     return () => observer.disconnect();
-  }, []);
+  }, [nativeIos]);
 
   // Re-snaps (no animation) if the measured width changes while the drawer
   // is already settled — e.g. an orientation change. The actual open/close
@@ -140,6 +144,19 @@ export default function SideMenu({ children }: SideMenuProps) {
     if (prefersReducedMotion) {
       openPx.set(target);
       if (!nextOpen) setFilterActive(false);
+      return;
+    }
+
+    if (nativeIos) {
+      animate(openPx, target, {
+        type: "spring",
+        stiffness: 360,
+        damping: 34,
+        mass: 0.9,
+        onComplete: () => {
+          if (!nextOpen) setFilterActive(false);
+        },
+      });
       return;
     }
 
@@ -220,12 +237,18 @@ export default function SideMenu({ children }: SideMenuProps) {
     onPointerCancel: handlePointerUp,
   };
 
-  const asideX = useTransform(openPx, (value) => drawerWidth - value);
+  const asideX = useTransform(
+    openPx,
+    [0, drawerWidth || 1],
+    [drawerWidth, 0],
+  );
   const contentBlurPx = useTransform(
     openPx,
     [0, drawerWidth || 1],
-    [0, CONTENT_BLUR_MAX_PX],
+    [0, nativeIos ? 7 : CONTENT_BLUR_MAX_PX],
   );
+  const contentScale = useTransform(openPx, [0, drawerWidth || 1], [1, 0.95]);
+  const contentRadius = useTransform(openPx, [0, drawerWidth || 1], [0, 28]);
   const contentFilter = useMotionTemplate`blur(${contentBlurPx}px)`;
 
   return (
@@ -234,6 +257,18 @@ export default function SideMenu({ children }: SideMenuProps) {
         style={{
           filter:
             !prefersReducedMotion && filterActive ? contentFilter : undefined,
+          scale:
+            nativeIos && !prefersReducedMotion && filterActive
+              ? contentScale
+              : undefined,
+          borderRadius:
+            nativeIos && !prefersReducedMotion && filterActive
+              ? contentRadius
+              : undefined,
+          overflow:
+            nativeIos && !prefersReducedMotion && filterActive
+              ? "hidden"
+              : undefined,
         }}
         className="relative z-10 h-full"
       >
@@ -241,173 +276,302 @@ export default function SideMenu({ children }: SideMenuProps) {
       </motion.div>
 
       <div
-        className={`absolute inset-0 z-40 ${
-          open ? "pointer-events-auto" : "pointer-events-none"
+        className={`absolute inset-0 z-40 transition-colors duration-200 ${
+          open
+            ? nativeIos
+              ? "pointer-events-auto bg-black/30"
+              : "pointer-events-auto"
+            : "pointer-events-none"
         }`}
         aria-hidden={!open}
         onClick={() => snapTo(false)}
       />
 
-      <motion.aside
-        style={{
-          x: asideX,
-          width: `${DRAWER_FRACTION * 100}%`,
-          boxShadow:
-            "1.25px 0px 1px -0.75px rgba(219, 219, 219, 0.35), -1.25px 0px 1px -0.75px rgba(219, 219, 219, 0.35), 0px 0px 0.5px 0.5px rgba(219, 219, 219, 0.3), 0px 8px 48px 0px rgba(0, 0, 0, 0.25)",
-        }}
-        className="absolute inset-y-0 right-0 z-50 touch-none rounded-l-[34px]"
-        aria-hidden={!open}
-        {...dragHandlers}
-      >
-        {/* Same fill as every popup/card in the app (.glass-panel's flat
-            rgb(0 0 0 / 10%) tint, no saturate boost) instead of the old
-            iOS-Action-Sheet recipe (a lighter white veil + saturate(160%))
-            that made this drawer read as a visibly different, more vividly
-            green surface than everything else. The blur still has to live
-            here rather than on a separate backdrop layer like ModalOverlay
-            — the drawer covers the page itself rather than sitting over a
-            dedicated full-screen scrim — but now matches ModalOverlay's own
-            25px so the two feel like the same material. */}
-        <div
-          className="relative h-full overflow-hidden rounded-l-[34px]"
+      {nativeIos ? (
+        <motion.aside
           style={{
-            backgroundColor: "rgb(0 0 0 / 10%)",
-            backdropFilter: "blur(25px)",
-            WebkitBackdropFilter: "blur(25px)",
+            x: asideX,
+            width: drawerWidth || `${DRAWER_FRACTION * 100}%`,
           }}
+          className="ios-glass-sidebar absolute inset-y-0 right-0 z-50 touch-none overflow-hidden rounded-l-[34px]"
+          aria-hidden={!open}
+          {...dragHandlers}
         >
           <div
-            className="relative flex h-full flex-col overflow-y-auto px-5 pb-6"
-            style={{ paddingTop: "env(safe-area-inset-top)" }}
+            className="relative flex h-full flex-col overflow-y-auto px-4"
+            style={{
+              paddingTop: "calc(env(safe-area-inset-top) + 12px)",
+              paddingBottom: "calc(env(safe-area-inset-bottom) + 16px)",
+            }}
           >
-            <div className="flex-1 space-y-3">
-              {/* Profile row + the 3 menu rows below, ported from Figma
-                  (node-id=0-1's loose "Notification - Collapsed"/"Toolbar"
-                  instances) — same glass-panel treatment as every other card
-                  (index.css), 24px corners per that component's own radius.
-                  Top gap matches space-y-3 (the gap between rows) instead of
-                  being its own much larger, disproportionate margin. */}
+            <div className="flex-1 space-y-4">
               <button
-                onClick={() => goTo("/profile")}
+                onClick={() => {
+                  hapticLight();
+                  goTo("/profile");
+                }}
                 aria-label="رفتن به پروفایل"
-                className="glass-panel flex w-full items-center justify-between rounded-3xl p-7"
+                className="ios-inset-group flex w-full items-center justify-between rounded-[24px] p-4 transition-transform active:scale-[0.98]"
               >
                 <div className="flex items-center gap-3">
-                  {/* Same avatar the profile page shows: the neutral
-                      portrait until a gender is picked, then that gender's.
-                      Read live from userEngine, so it follows a change made
-                      in the account popup without anything to invalidate. */}
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden glass-chip rounded-full">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/10 ring-1 ring-white/20">
                     <img
                       src={avatarCharacterIcon(getCurrentUserGender())}
                       alt=""
                       aria-hidden="true"
-                      width={44}
-                      height={44}
+                      width={48}
+                      height={48}
                       className="h-full w-full object-contain"
                     />
                   </div>
-
-                  <span className="font-semibold text-white">{userName}</span>
+                  <div className="text-right">
+                    <p className="text-base font-bold text-white">{userName}</p>
+                    <p className="text-xs text-white/55">مشاهده پروفایل</p>
+                  </div>
                 </div>
-
-                <div
-                  aria-hidden="true"
-                  className="glass-chip flex h-11 w-11 shrink-0 items-center justify-center rounded-3xl"
-                >
-                  <ChevronLeft size={20} />
-                </div>
+                <ChevronLeft size={18} className="text-white/50" />
               </button>
 
-              {/* Collapsed by default: the drawer's job is getting
-                  somewhere fast, and two rarely-used screens shouldn't
-                  cost two permanent rows. */}
-              <button
-                onClick={() => setTrainingOpen((prev) => !prev)}
-                aria-expanded={trainingOpen}
-                className="glass-panel flex w-full items-center gap-3 rounded-3xl p-4"
+              <div>
+                <p className="mb-1.5 px-3 text-[11px] font-semibold text-white/45">
+                  برنامه‌ریزی
+                </p>
+                <div className="ios-inset-group overflow-hidden rounded-[24px] divide-y divide-white/8">
+                  <div>
+                    <button
+                      onClick={() => {
+                        hapticLight();
+                        setTrainingOpen((prev) => !prev);
+                      }}
+                      aria-expanded={trainingOpen}
+                      className="flex w-full items-center gap-3 px-4 py-3.5 transition-colors active:bg-white/6"
+                    >
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-avocado-lime/20 text-avocado-lime">
+                        <Dumbbell size={16} />
+                      </div>
+                      <span className="flex-1 text-right text-sm font-semibold text-white">
+                        برنامه‌ریزی تمرینی
+                      </span>
+                      <ChevronDown
+                        size={16}
+                        className={`text-white/50 transition-transform duration-200 ${
+                          trainingOpen ? "rotate-180" : ""
+                        }`}
+                      />
+                    </button>
+
+                    <AnimatePresence initial={false}>
+                      {trainingOpen && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ type: "spring", stiffness: 400, damping: 34 }}
+                          className="overflow-hidden border-t border-white/6 bg-black/15"
+                        >
+                          <div className="divide-y divide-white/6">
+                            {trainingLinks.map((item) => {
+                              const Icon = item.icon;
+                              return (
+                                <button
+                                  key={item.to}
+                                  onClick={() => {
+                                    hapticLight();
+                                    goTo(item.to);
+                                  }}
+                                  className="flex w-full items-center gap-3 py-3 pe-4 ps-12 transition-colors active:bg-white/6"
+                                >
+                                  <Icon size={15} className="text-white/60" />
+                                  <span className="flex-1 text-right text-xs font-medium text-white/90">
+                                    {item.label}
+                                  </span>
+                                  <ChevronLeft size={14} className="text-white/35" />
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+
+                  {menuLinks.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <button
+                        key={item.to}
+                        onClick={() => {
+                          hapticLight();
+                          goTo(item.to);
+                        }}
+                        className="flex w-full items-center gap-3 px-4 py-3.5 transition-colors active:bg-white/6"
+                      >
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-avocado-yellow/18 text-avocado-yellow">
+                          <Icon size={16} />
+                        </div>
+                        <span className="flex-1 text-right text-sm font-semibold text-white">
+                          {item.label}
+                        </span>
+                        <ChevronLeft size={16} className="text-white/50" />
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-4 flex items-center justify-between border-t border-white/10 pt-3">
+              <SettingsButton
+                onClick={() => {
+                  hapticLight();
+                  setSettingsOpen(true);
+                }}
+              />
+              <span
+                dir="ltr"
+                className="rounded-full bg-white/8 px-2.5 py-1 text-[11px] font-medium text-white/45"
               >
-                <span className="flex-1 text-right font-semibold text-white">
-                  برنامه‌ریزی تمرینی
-                </span>
-
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/10">
-                  <ChevronDown
-                    size={18}
-                    className={`transition-transform ${trainingOpen ? "rotate-180" : ""}`}
-                  />
-                </div>
-              </button>
-
-              <AnimatePresence initial={false}>
-                {trainingOpen && (
-                  <motion.div
-                    initial={{ height: 0 }}
-                    animate={{ height: "auto" }}
-                    exit={{ height: 0 }}
-                    transition={{ type: "spring", stiffness: 320, damping: 32 }}
-                    className="-mx-1 overflow-hidden px-1"
-                  >
-                    <div className="space-y-2 ps-4">
-                      {trainingLinks.map((item) => {
-                        const Icon = item.icon;
-
-                        return (
-                          <button
-                            key={item.to}
-                            onClick={() => goTo(item.to)}
-                            className="glass-chip glass-static flex w-full items-center gap-3 rounded-2xl p-3"
-                          >
-                            <span className="flex-1 text-right text-sm font-medium text-white">
-                              {item.label}
-                            </span>
-
-                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/10">
-                              <Icon size={16} />
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {menuLinks.map((item) => {
-                const Icon = item.icon;
-
-                return (
-                  <button
-                    key={item.to}
-                    onClick={() => goTo(item.to)}
-                    className="glass-panel flex w-full items-center gap-3 rounded-3xl p-4"
-                  >
-                    <span className="flex-1 text-right font-semibold text-white">
-                      {item.label}
-                    </span>
-
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/10">
-                      <Icon size={18} />
-                    </div>
-                  </button>
-                );
-              })}
+                v{__APP_VERSION__}
+              </span>
             </div>
-
-            {/* Moved down from the top of the drawer — a settings gear
-                reads as a low-priority, "if you need it" action, so it
-                sits at the bottom near the version number rather than
-                above the profile row where it competed for attention. */}
-            <div className="flex justify-start pt-3">
-              <SettingsButton onClick={() => setSettingsOpen(true)} />
-            </div>
-
-            <p dir="ltr" className="pt-4 text-center text-xs text-white/40">
-              {__APP_VERSION__}
-            </p>
           </div>
-        </div>
-      </motion.aside>
+        </motion.aside>
+      ) : (
+        <motion.aside
+          style={{
+            x: asideX,
+            width: `${DRAWER_FRACTION * 100}%`,
+            boxShadow:
+              "1.25px 0px 1px -0.75px rgba(219, 219, 219, 0.35), -1.25px 0px 1px -0.75px rgba(219, 219, 219, 0.35), 0px 0px 0.5px 0.5px rgba(219, 219, 219, 0.3), 0px 8px 48px 0px rgba(0, 0, 0, 0.25)",
+          }}
+          className="absolute inset-y-0 right-0 z-50 touch-none rounded-l-[34px]"
+          aria-hidden={!open}
+          {...dragHandlers}
+        >
+          <div
+            className="relative h-full overflow-hidden rounded-l-[34px]"
+            style={{
+              backgroundColor: "rgb(0 0 0 / 10%)",
+              backdropFilter: "blur(25px)",
+              WebkitBackdropFilter: "blur(25px)",
+            }}
+          >
+            <div
+              className="relative flex h-full flex-col overflow-y-auto px-5 pb-6"
+              style={{ paddingTop: "env(safe-area-inset-top)" }}
+            >
+              <div className="flex-1 space-y-3">
+                <button
+                  onClick={() => goTo("/profile")}
+                  aria-label="رفتن به پروفایل"
+                  className="glass-panel flex w-full items-center justify-between rounded-3xl p-7"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden glass-chip rounded-full">
+                      <img
+                        src={avatarCharacterIcon(getCurrentUserGender())}
+                        alt=""
+                        aria-hidden="true"
+                        width={44}
+                        height={44}
+                        className="h-full w-full object-contain"
+                      />
+                    </div>
+
+                    <span className="font-semibold text-white">{userName}</span>
+                  </div>
+
+                  <div
+                    aria-hidden="true"
+                    className="glass-chip flex h-11 w-11 shrink-0 items-center justify-center rounded-3xl"
+                  >
+                    <ChevronLeft size={20} />
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => setTrainingOpen((prev) => !prev)}
+                  aria-expanded={trainingOpen}
+                  className="glass-panel flex w-full items-center gap-3 rounded-3xl p-4"
+                >
+                  <span className="flex-1 text-right font-semibold text-white">
+                    برنامه‌ریزی تمرینی
+                  </span>
+
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/10">
+                    <ChevronDown
+                      size={18}
+                      className={`transition-transform ${trainingOpen ? "rotate-180" : ""}`}
+                    />
+                  </div>
+                </button>
+
+                <AnimatePresence initial={false}>
+                  {trainingOpen && (
+                    <motion.div
+                      initial={{ height: 0 }}
+                      animate={{ height: "auto" }}
+                      exit={{ height: 0 }}
+                      transition={{ type: "spring", stiffness: 320, damping: 32 }}
+                      className="-mx-1 overflow-hidden px-1"
+                    >
+                      <div className="space-y-2 ps-4">
+                        {trainingLinks.map((item) => {
+                          const Icon = item.icon;
+
+                          return (
+                            <button
+                              key={item.to}
+                              onClick={() => goTo(item.to)}
+                              className="glass-chip glass-static flex w-full items-center gap-3 rounded-2xl p-3"
+                            >
+                              <span className="flex-1 text-right text-sm font-medium text-white">
+                                {item.label}
+                              </span>
+
+                              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/10">
+                                <Icon size={16} />
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {menuLinks.map((item) => {
+                  const Icon = item.icon;
+
+                  return (
+                    <button
+                      key={item.to}
+                      onClick={() => goTo(item.to)}
+                      className="glass-panel flex w-full items-center gap-3 rounded-3xl p-4"
+                    >
+                      <span className="flex-1 text-right font-semibold text-white">
+                        {item.label}
+                      </span>
+
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/10">
+                        <Icon size={18} />
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="flex justify-start pt-3">
+                <SettingsButton onClick={() => setSettingsOpen(true)} />
+              </div>
+
+              <p dir="ltr" className="pt-4 text-center text-xs text-white/40">
+                {__APP_VERSION__}
+              </p>
+            </div>
+          </div>
+        </motion.aside>
+      )}
 
 
       <SettingsSidebar open={settingsOpen} onClose={() => setSettingsOpen(false)} />
@@ -428,9 +592,14 @@ export default function SideMenu({ children }: SideMenuProps) {
         <div className="pointer-events-none fixed inset-x-0 top-0 z-50">
           <div className="pointer-events-auto relative mx-auto max-w-md">
             <button
-              onClick={() => snapTo(true)}
+              onClick={() => {
+                hapticLight();
+                snapTo(true);
+              }}
               aria-label="باز کردن منو"
-              className="glass-chip absolute right-4 flex h-10 w-10 items-center justify-center rounded-full"
+              className={`absolute right-4 flex items-center justify-center rounded-full ${
+                nativeIos ? "ios-glass-orb h-11 w-11" : "glass-chip h-10 w-10"
+              }`}
               style={{ top: "calc(env(safe-area-inset-top) + 0.75rem)" }}
             >
               <Menu size={20} />

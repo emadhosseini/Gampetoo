@@ -13,6 +13,10 @@ import ActivityLogModal from "@/components/progress/ActivityLogModal";
 import WeightModal from "@/components/WeightModal";
 import WaterLogModal from "@/components/WaterLogModal";
 import { useQuickAddMealFlow } from "@/hooks/useQuickAddMealFlow";
+import { hapticLight, hapticSelection } from "@/native/haptics";
+import { pushCurrentWidgetSnapshot } from "@/native/nativeBridge";
+import { isNativeIos } from "@/native/platform";
+import { syncWatchContext } from "@/native/watchBridge";
 import { logGlasses } from "@/utils/waterEngine";
 import { logActivityEntry } from "@/utils/activityLogEngine";
 
@@ -69,21 +73,25 @@ const items = [
   {
     to: "/",
     label: "خانه",
+    shortLabel: "خانه",
     icon: Home,
   },
   {
     to: "/daily-program",
     label: "برنامه روزانه",
+    shortLabel: "برنامه",
     icon: CalendarDays,
   },
   {
     to: "/daily-log",
     label: "ثبت روزانه",
+    shortLabel: "ثبت",
     icon: NotebookPen,
   },
   {
     to: "/progress",
     label: "پیشرفت",
+    shortLabel: "پیشرفت",
     icon: TrendingUp,
   },
 ];
@@ -99,6 +107,7 @@ export default function BottomNavigation({
   onDrawerOpenChange,
 }: BottomNavigationProps) {
   const navigate = useNavigate();
+  const nativeIos = isNativeIos();
   const [drawerOpen, setDrawerOpenState] = useState(false);
   const [activityModalOpen, setActivityModalOpen] = useState(false);
   const [weightModalOpen, setWeightModalOpen] = useState(false);
@@ -184,200 +193,276 @@ export default function BottomNavigation({
       {drawerOpen && (
         <div
           onClick={() => setDrawerOpen(false)}
-          className="fixed inset-0 z-30"
+          className={`fixed inset-0 z-30 ${nativeIos ? "bg-black/25" : ""}`}
         />
       )}
 
-      <div
-        className="pointer-events-none fixed inset-x-0 z-40"
-        style={{ bottom: "calc(env(safe-area-inset-bottom) + 24px)" }}
-      >
-        <div className="pointer-events-auto mx-auto max-w-md px-5.25">
-          <div className="relative">
-            {/* Grows upward from directly behind the nav pill — bottom edge
-                pinned 2px below the pill's own bottom edge (rather than at
-                its top, where the bump would leave a gap showing the pill
-                underneath) so animating height alone produces a "rises from
-                behind the bar" motion with no visible seam: the pill sits
-                at z-20, above this drawer's z-10, so the 2px overlap tucks
-                cleanly out of sight instead of poking past the pill's edge. */}
-            <AnimatePresence>
-              {drawerOpen && (
-                <motion.div
-                  key="quick-add-drawer"
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ type: "spring", stiffness: 320, damping: 32 }}
-                  // .glass-panel sets position: relative in index.css, which
-                  // (same specificity, later in source order) beats the
-                  // "absolute" utility class — an explicit inline style is
-                  // needed to actually win the cascade. Bottom corners are
-                  // set to the pill's own radius (BAR_HEIGHT / 2) rather than
-                  // Tailwind's rounded-3xl, so where the drawer overlaps the
-                  // bar underneath (see the -2px anchor) the two curves are
-                  // literally the same one instead of a tighter corner
-                  // sitting inside a wider pill end.
-                  style={{
-                    position: "absolute",
-                    bottom: -2,
-                    borderBottomLeftRadius: BAR_HEIGHT / 2,
-                    borderBottomRightRadius: BAR_HEIGHT / 2,
-                  }}
-                  className="glass-panel inset-x-0 z-10 overflow-hidden rounded-t-3xl"
-                >
-                  {/* The panel's own box now reaches all the way down past
-                      the pill (see the bottom: -2 anchor above), but the
-                      actual buttons still need to stay clear of the pill's
-                      clickable nav area sitting on top of them at z-20 — so
-                      this bottom padding grows by exactly the same amount
-                      the anchor moved (the pill's full height, 68px, plus
-                      the 2px overlap) to keep the grid's own bottom edge at
-                      the same spot it always was, just with more (blank,
-                      now-hidden-behind-the-pill) card below it. */}
-                  <div className="grid grid-cols-2 gap-3 p-4 pb-26.5">
-                    {quickActions.map((action) => (
-                      <button
-                        key={action.label}
-                        onClick={() => handleQuickAction(action.onSelect)}
-                        className="glass-chip flex flex-col items-center gap-2 rounded-2xl py-4 text-sm font-medium text-white"
-                      >
-                        <span className="text-2xl">{action.icon}</span>
-                        {action.label}
-                      </button>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Bar + bump as one shape, above the drawer so the bump reads
-                as part of the bar rather than something the drawer slides
-                over. The glass surface and hairline come from the SVG path
-                (matching .glass-panel's own background/rim values), not
-                from .glass-panel itself — two overlapping .glass-panel
-                elements each drew their own rim, which is exactly what
-                made the bump look detached. */}
-            <div ref={barRef} className="relative z-20">
-              {barWidth > 0 && (
-                <svg
-                  aria-hidden="true"
-                  width={barWidth}
-                  height={BAR_HEIGHT + BUMP_RADIUS}
-                  viewBox={`0 0 ${barWidth} ${BAR_HEIGHT + BUMP_RADIUS}`}
-                  // overflow visible so the 1px stroke isn't clipped at the
-                  // silhouette's extremes; drop-shadow follows the path's
-                  // alpha, so the bump gets the same lift as the bar.
-                  style={{
-                    position: "absolute",
-                    bottom: 0,
-                    left: 0,
-                    overflow: "visible",
-                    filter: "drop-shadow(0 8px 16px rgb(0 0 0 / 40%))",
-                  }}
-                >
-                  <path
-                    d={barSilhouettePath(barWidth)}
-                    fill="rgb(0 0 0 / 10%)"
-                    stroke="rgb(219 219 219 / 30%)"
-                    strokeWidth={1}
-                  />
-                </svg>
-              )}
-
-              {/* A complete disc, centred on the bar's top edge inside the
-                  bump the path above draws. It used to be icon-and-hit-area
-                  only, so the circle read as half a shape — the bump's top
-                  arc above the bar, nothing below it. Its own surface
-                  closes the circle. No seam this time: the two rims are
-                  concentric and the same radius, so the bump's arc lands
-                  exactly on the disc's edge rather than crossing it. */}
-              <button
-                onClick={() => setDrawerOpen((open) => !open)}
-                aria-label={drawerOpen ? "بستن ثبت سریع" : "ثبت سریع"}
-                style={{ position: "absolute", height: BUMP_RADIUS * 2, width: BUMP_RADIUS * 2 }}
-                className="glass-action glass-action-static left-1/2 top-0 z-20 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full text-white [-webkit-tap-highlight-color:transparent] touch-manipulation"
-              >
-                <motion.span
-                  animate={{ rotate: drawerOpen ? 45 : 0 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                  // Centred now that the disc is a complete circle — the
-                  // old upward nudge existed because only its top half was
-                  // visible.
-                  className="flex"
-                >
-                  <Plus size={26} />
-                </motion.span>
-              </button>
-
-              {/* Tab selection is ported from Figma's "Tab Bar - iPhone"
-                  component (node 38:906, Apple's own iOS tab-bar pattern —
-                  https://developer.apple.com/design/human-interface-guidelines/tab-bars):
-                  each tab gets a sliding "Selection" pill behind it when
-                  active, via a shared framer-motion layoutId — the defining
-                  trait of an iOS tab bar (it glides between tabs on switch
-                  instead of just appearing). */}
-              {/* Two pairs hugging their own end of the bar rather than four
-                  items spread evenly across it — that spacing put a tab
-                  directly under the quick-add button on each side and left
-                  it crowded. The gap between the groups is the bump's own
-                  width, so the circle sits in clear space. */}
-              <nav className="relative flex h-17 items-center justify-between overflow-hidden rounded-full px-1">
-                {items.map((item, itemIndex) => {
-                  const Icon = item.icon;
-
-                  // Half the items, then the gap, then the rest.
-                  const spacer =
-                    itemIndex === Math.ceil(items.length / 2) ? (
-                      <div
-                        key="quick-add-gap"
-                        aria-hidden="true"
-                        className="shrink-0"
-                        style={{ width: BUMP_RADIUS * 2 + 12 }}
-                      />
-                    ) : null;
-
-                  return (
-                    <Fragment key={item.to}>
-                    {spacer}
-                    <NavLink
-                      to={item.to}
-                      onClick={() => setDrawerOpen(false)}
-                      className="relative z-10 flex h-full w-[68px] shrink-0 items-center justify-center [-webkit-tap-highlight-color:transparent] touch-manipulation"
-                    >
-                      {({ isActive }) => (
-                        <>
-                          {isActive && (
-                            <motion.div
-                              layoutId="bottom-nav-selection"
-                              className="absolute inset-1 rounded-full bg-white/10"
-                              transition={{
-                                type: "spring",
-                                stiffness: 380,
-                                damping: 32,
-                              }}
-                            />
-                          )}
-
-                          <span
-                            className={`relative flex flex-col items-center gap-1 text-xs transition-[color,transform] duration-150 active:scale-95 ${
-                              isActive ? "text-avocado-yellow" : "text-white"
-                            }`}
-                          >
-                            <Icon size={22} />
-                            <span>{item.label}</span>
+      {nativeIos ? (
+        /* Apple iOS 26/27 Liquid Glass Two-Piece Floating Dock:
+           1. Compact refractive Liquid Glass Tab Pill (4 tabs + sliding optical lens)
+           2. Detached circular Liquid Glass (+) orb beside the pill (matching
+              Apple's iOS 26/27 detached floating action/search orb pattern)
+           3. Floating Liquid Glass Quick-Add Popover springing upward from the orb */
+        <div
+          className="pointer-events-none fixed inset-x-0 z-40"
+          style={{ bottom: "calc(max(env(safe-area-inset-bottom), 14px) + 6px)" }}
+        >
+          <div className="pointer-events-auto mx-auto max-w-md px-4">
+            <div className="relative">
+              <AnimatePresence>
+                {drawerOpen && (
+                  <motion.div
+                    key="ios-quick-add-popover"
+                    initial={{ opacity: 0, scale: 0.88, y: 16 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.9, y: 12 }}
+                    transition={{ type: "spring", stiffness: 440, damping: 32, mass: 0.85 }}
+                    style={{ transformOrigin: "bottom left" }}
+                    className="ios-glass-popover mb-3 overflow-hidden rounded-[28px] p-3"
+                  >
+                    <div className="mb-2 flex items-center justify-between px-2 pt-0.5">
+                      <span className="text-xs font-semibold text-white/60">ثبت سریع</span>
+                      <span className="h-1 w-8 rounded-full bg-white/20" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-2.5">
+                      {quickActions.map((action, idx) => (
+                        <motion.button
+                          key={action.label}
+                          initial={{ opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{
+                            type: "spring",
+                            stiffness: 460,
+                            damping: 32,
+                            delay: idx * 0.03,
+                          }}
+                          onClick={() => {
+                            hapticLight();
+                            handleQuickAction(action.onSelect);
+                          }}
+                          className="glass-chip flex flex-col items-center gap-2 rounded-[20px] py-3.5 text-sm font-medium text-white"
+                        >
+                          <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white/8 text-2xl">
+                            {action.icon}
                           </span>
-                        </>
-                      )}
-                    </NavLink>
-                    </Fragment>
-                  );
-                })}
-              </nav>
+                          <span>{action.label}</span>
+                        </motion.button>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              <div className="flex items-center gap-2.5">
+                <nav
+                  aria-label="ناوبری اصلی"
+                  className="ios-glass-dock relative flex h-[62px] flex-1 items-center justify-between overflow-hidden rounded-full p-1"
+                >
+                  {items.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <NavLink
+                        key={item.to}
+                        to={item.to}
+                        onClick={() => {
+                          hapticSelection();
+                          setDrawerOpen(false);
+                        }}
+                        className="relative z-10 flex h-full flex-1 items-center justify-center [-webkit-tap-highlight-color:transparent] touch-manipulation"
+                      >
+                        {({ isActive }) => (
+                          <>
+                            {isActive && (
+                              <motion.div
+                                layoutId="bottom-nav-selection"
+                                className="ios-glass-lens absolute inset-0.5 rounded-full"
+                                transition={{
+                                  type: "spring",
+                                  stiffness: 440,
+                                  damping: 32,
+                                  mass: 0.88,
+                                }}
+                              />
+                            )}
+                            <motion.span
+                              animate={isActive ? { scale: 1.04 } : { scale: 1 }}
+                              transition={{ type: "spring", stiffness: 500, damping: 28 }}
+                              className={`relative flex flex-col items-center gap-0.5 whitespace-nowrap text-[10.5px] font-medium transition-colors duration-150 ${
+                                isActive ? "text-avocado-yellow" : "text-white/80"
+                              }`}
+                            >
+                              <Icon size={20} strokeWidth={isActive ? 2.25 : 1.9} />
+                              <span>{item.shortLabel}</span>
+                            </motion.span>
+                          </>
+                        )}
+                      </NavLink>
+                    );
+                  })}
+                </nav>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    hapticLight();
+                    setDrawerOpen((open) => !open);
+                  }}
+                  aria-label={drawerOpen ? "بستن ثبت سریع" : "ثبت سریع"}
+                  className="ios-glass-orb flex h-[60px] w-[60px] shrink-0 items-center justify-center rounded-full text-white [-webkit-tap-highlight-color:transparent] touch-manipulation"
+                >
+                  <motion.span
+                    animate={{ rotate: drawerOpen ? 45 : 0 }}
+                    transition={{ type: "spring", stiffness: 420, damping: 26 }}
+                    className="flex"
+                  >
+                    <Plus size={25} strokeWidth={2.2} />
+                  </motion.span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      ) : (
+        <div
+          className="pointer-events-none fixed inset-x-0 z-40"
+          style={{ bottom: "calc(env(safe-area-inset-bottom) + 24px)" }}
+        >
+          <div className="pointer-events-auto mx-auto max-w-md px-5.25">
+            <div className="relative">
+              <AnimatePresence>
+                {drawerOpen && (
+                  <motion.div
+                    key="quick-add-drawer"
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ type: "spring", stiffness: 320, damping: 32 }}
+                    style={{
+                      position: "absolute",
+                      bottom: -2,
+                      borderBottomLeftRadius: BAR_HEIGHT / 2,
+                      borderBottomRightRadius: BAR_HEIGHT / 2,
+                    }}
+                    className="glass-panel inset-x-0 z-10 overflow-hidden rounded-t-3xl"
+                  >
+                    <div className="grid grid-cols-2 gap-3 p-4 pb-26.5">
+                      {quickActions.map((action) => (
+                        <button
+                          key={action.label}
+                          onClick={() => handleQuickAction(action.onSelect)}
+                          className="glass-chip flex flex-col items-center gap-2 rounded-2xl py-4 text-sm font-medium text-white"
+                        >
+                          <span className="text-2xl">{action.icon}</span>
+                          {action.label}
+                        </button>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              <div ref={barRef} className="relative z-20">
+                {barWidth > 0 && (
+                  <svg
+                    aria-hidden="true"
+                    width={barWidth}
+                    height={BAR_HEIGHT + BUMP_RADIUS}
+                    viewBox={`0 0 ${barWidth} ${BAR_HEIGHT + BUMP_RADIUS}`}
+                    style={{
+                      position: "absolute",
+                      bottom: 0,
+                      left: 0,
+                      overflow: "visible",
+                      filter: "drop-shadow(0 8px 16px rgb(0 0 0 / 40%))",
+                    }}
+                  >
+                    <path
+                      d={barSilhouettePath(barWidth)}
+                      fill="rgb(0 0 0 / 10%)"
+                      stroke="rgb(219 219 219 / 30%)"
+                      strokeWidth={1}
+                    />
+                  </svg>
+                )}
+
+                <button
+                  onClick={() => {
+                    hapticLight();
+                    setDrawerOpen((open) => !open);
+                  }}
+                  aria-label={drawerOpen ? "بستن ثبت سریع" : "ثبت سریع"}
+                  style={{ position: "absolute", height: BUMP_RADIUS * 2, width: BUMP_RADIUS * 2 }}
+                  className="glass-action glass-action-static left-1/2 top-0 z-20 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full text-white [-webkit-tap-highlight-color:transparent] touch-manipulation"
+                >
+                  <motion.span
+                    animate={{ rotate: drawerOpen ? 45 : 0 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                    className="flex"
+                  >
+                    <Plus size={26} />
+                  </motion.span>
+                </button>
+
+                <nav className="relative flex h-17 items-center justify-between overflow-hidden rounded-full px-1">
+                  {items.map((item, itemIndex) => {
+                    const Icon = item.icon;
+
+                    // Half the items, then the gap, then the rest.
+                    const spacer =
+                      itemIndex === Math.ceil(items.length / 2) ? (
+                        <div
+                          key="quick-add-gap"
+                          aria-hidden="true"
+                          className="shrink-0"
+                          style={{ width: BUMP_RADIUS * 2 + 12 }}
+                        />
+                      ) : null;
+
+                    return (
+                      <Fragment key={item.to}>
+                      {spacer}
+                      <NavLink
+                        to={item.to}
+                        onClick={() => {
+                          hapticSelection();
+                          setDrawerOpen(false);
+                        }}
+                        className="relative z-10 flex h-full w-[68px] shrink-0 items-center justify-center [-webkit-tap-highlight-color:transparent] touch-manipulation"
+                      >
+                        {({ isActive }) => (
+                          <>
+                            {isActive && (
+                              <motion.div
+                                layoutId="bottom-nav-selection"
+                                className="absolute inset-1 rounded-full bg-white/10"
+                                transition={{
+                                  type: "spring",
+                                  stiffness: 380,
+                                  damping: 32,
+                                }}
+                              />
+                            )}
+
+                            <span
+                              className={`relative flex flex-col items-center gap-1 text-xs transition-[color,transform] duration-150 active:scale-95 ${
+                                isActive ? "text-avocado-yellow" : "text-white"
+                              }`}
+                            >
+                              <Icon size={22} />
+                              <span>{item.label}</span>
+                            </span>
+                          </>
+                        )}
+                      </NavLink>
+                      </Fragment>
+                    );
+                  })}
+                </nav>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <WeightModal
         open={weightModalOpen}
@@ -399,6 +484,9 @@ export default function BottomNavigation({
         onClose={() => setWaterModalOpen(false)}
         onLog={(glasses) => {
           logGlasses(glasses);
+          hapticLight();
+          pushCurrentWidgetSnapshot();
+          syncWatchContext();
           // No standalone water page anymore — today's count now lives in
           // the "آب" row on ProgressPage's dashboard card.
           navigate("/progress");

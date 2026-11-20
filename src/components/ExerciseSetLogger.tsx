@@ -1,8 +1,14 @@
 import { useEffect, useState } from "react";
-import { BarChart3, Check, Minus, NotebookText, Plus, Timer, Trash2 } from "lucide-react";
+import { BarChart3, Check, Minus, NotebookText, Plus, Timer, Trash2, X } from "lucide-react";
 
 import ExerciseProgressChartModal from "@/components/progress/ExerciseProgressChartModal";
 import ModalOverlay from "@/components/ModalOverlay";
+import { hapticLight, hapticMedium, hapticSuccess } from "@/native/haptics";
+import { endRestLiveActivity, startRestLiveActivity } from "@/native/nativeBridge";
+import {
+  cancelRestFinishedNotification,
+  scheduleRestFinishedNotification,
+} from "@/native/notifications";
 import {
   addSet,
   confirmSet,
@@ -155,6 +161,8 @@ export default function ExerciseSetLogger({
     function tick() {
       if (Date.now() >= restEndAt!) {
         setRestEndAt(null);
+        hapticSuccess();
+        void endRestLiveActivity();
       } else {
         forceTick((n) => n + 1);
       }
@@ -187,10 +195,24 @@ export default function ExerciseSetLogger({
 
   function handleConfirmSet(setId: string) {
     setSets(confirmSet(exerciseId, setId));
+    hapticMedium();
     // Read fresh on every confirm rather than once — the settings popup's
     // own "ذخیره" reloads the page after saving, but reading it live here
     // costs nothing and needs no invalidation either way.
-    setRestEndAt(Date.now() + getAppSettings().restSeconds * 1000);
+    const restSeconds = getAppSettings().restSeconds;
+    if (restSeconds > 0) {
+      const endAt = Date.now() + restSeconds * 1000;
+      setRestEndAt(endAt);
+      void scheduleRestFinishedNotification(endAt, exerciseName);
+      void startRestLiveActivity(exerciseName, endAt, restSeconds);
+    }
+  }
+
+  function handleCancelRest() {
+    hapticLight();
+    setRestEndAt(null);
+    void cancelRestFinishedNotification();
+    void endRestLiveActivity();
   }
 
   function handleRemoveSet(setId: string) {
@@ -225,9 +247,19 @@ export default function ExerciseSetLogger({
         </div>
 
         {restSecondsLeft !== null && (
-          <div className="mb-3 glass-chip glass-static flex items-center justify-center gap-2 rounded-xl p-2 text-sm font-semibold text-avocado-yellow">
-            <Timer size={14} />
-            استراحت: {toFaDigits(formatMMSS(restSecondsLeft))}
+          <div className="mb-3 glass-chip glass-static flex items-center justify-between gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-avocado-yellow">
+            <span className="flex items-center gap-2">
+              <Timer size={14} />
+              استراحت: {toFaDigits(formatMMSS(restSecondsLeft))}
+            </span>
+            <button
+              type="button"
+              onClick={handleCancelRest}
+              aria-label="لغو تایمر استراحت"
+              className="flex h-6 w-6 items-center justify-center rounded-full bg-white/10 text-white/80"
+            >
+              <X size={12} />
+            </button>
           </div>
         )}
 

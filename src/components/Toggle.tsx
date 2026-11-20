@@ -1,3 +1,5 @@
+import { hapticLight } from "@/native/haptics";
+
 export interface ToggleProps {
   checked: boolean;
   onChange: () => void;
@@ -16,7 +18,10 @@ export default function Toggle({ checked, onChange, className = "" }: ToggleProp
       type="button"
       role="switch"
       aria-checked={checked}
-      onClick={onChange}
+      onClick={() => {
+        hapticLight();
+        onChange();
+      }}
       // On-state used to be avocado-yellow; with every button fill in the
       // app now glass, that would have been the last yellow fill left and
       // read as a leftover. Lime is the palette's existing "affirmative"

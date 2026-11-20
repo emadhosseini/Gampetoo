@@ -1,8 +1,32 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { motion } from "framer-motion";
 import { X } from "lucide-react";
 
 import ModalOverlay from "@/components/ModalOverlay";
+import Toggle from "@/components/Toggle";
+import { hapticSelection } from "@/native/haptics";
+import {
+  enableHealthKit,
+  getCachedHealthSummary,
+  isHealthKitEnabled,
+  setHealthKitEnabled,
+  syncHealthKitFromAppleHealth,
+  type CachedHealthSummary,
+} from "@/native/healthkit";
+import { isNativeApp } from "@/native/platform";
+import { getWatchStatus, syncWatchContext } from "@/native/watchBridge";
+import type { WatchStatus } from "@/native/nativePlugin";
+import { syncNow } from "@/sync/remoteSync";
+import { toFaDigits } from "@/utils/numberFormat";
+import {
+  getNotificationPrefs,
+  getSavedApnsToken,
+  registerForPushNotifications,
+  saveNotificationPrefs,
+  sendTestPushNotification,
+  syncDailyReminders,
+  type NotificationPrefs,
+} from "@/native/notifications";
 import {
   getCalorieTrackingMode,
   setCalorieTrackingMode,
@@ -64,7 +88,10 @@ function SegmentedControl<T extends string>({
           key={option.value}
           type="button"
           disabled={disabled}
-          onClick={() => onChange(option.value)}
+          onClick={() => {
+            hapticSelection();
+            onChange(option.value);
+          }}
           className="relative z-10 h-full flex-1 rounded-full text-xs font-medium text-white [-webkit-tap-highlight-color:transparent] disabled:pointer-events-none"
         >
           {value === option.value && (
@@ -115,13 +142,34 @@ export default function SettingsSidebar({ open, onClose }: SettingsSidebarProps)
   const [calorieMode, setCalorieMode] = useState<CalorieTrackingMode>(
     () => getCalorieTrackingMode() ?? "perMeal",
   );
+  const [notifPrefs, setNotifPrefs] = useState<NotificationPrefs>(getNotificationPrefs);
+  const [notifFeedback, setNotifFeedback] = useState<string | null>(null);
+  const [testingPush, setTestingPush] = useState(false);
+  const [healthEnabled, setHealthEnabled] = useState<boolean>(isHealthKitEnabled);
+  const [healthSummary, setHealthSummary] = useState<CachedHealthSummary | null>(
+    getCachedHealthSummary,
+  );
+  const [syncingHealth, setSyncingHealth] = useState(false);
+  const [syncingCloud, setSyncingCloud] = useState(false);
+  const [watchStatus, setWatchStatus] = useState<WatchStatus | null>(null);
   const [saved, setSaved] = useState(false);
+  const nativeApp = isNativeApp();
+  const hasPushToken = nativeApp && getSavedApnsToken() !== null;
+
+  useEffect(() => {
+    if (!open || !nativeApp) return;
+    void getWatchStatus().then(setWatchStatus);
+  }, [open, nativeApp]);
 
   if (!open) {
     return null;
   }
 
-  function handleSave() {
+  function formatTimeValue(hour: number, minute: number): string {
+    return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+  }
+
+  async function handleSave() {
     // Switching how calories are tracked invalidates today's food log —
     // the two modes store it in incompatible shapes — so it's the one
     // setting here that has to ask before it can be saved, and that
@@ -156,6 +204,22 @@ export default function SettingsSidebar({ open, onClose }: SettingsSidebarProps)
     });
     setPreferredCalendar(calendar);
 
+    if (nativeApp) {
+      saveNotificationPrefs(notifPrefs);
+      const { granted } = await syncDailyReminders(notifPrefs);
+      if (
+        !granted &&
+        (notifPrefs.workoutReminderEnabled || notifPrefs.waterRemindersEnabled)
+      ) {
+        setNotifFeedback("اجازه اعلان در تنظیمات آیفون فعال نیست.");
+      } else if (notifPrefs.pushEnabled) {
+        const pushRes = await registerForPushNotifications();
+        if (!pushRes.ok && pushRes.error) {
+          setNotifFeedback(pushRes.error);
+        }
+      }
+    }
+
     setSaved(true);
 
     // A reload (like WorkoutHeader's "فراموش کردم" flow, the app's
@@ -170,7 +234,10 @@ export default function SettingsSidebar({ open, onClose }: SettingsSidebarProps)
 
   return (
     <ModalOverlay onClose={onClose}>
-      <div className="glass-panel glass-static max-h-[85vh] overflow-y-auto rounded-3xl p-6">
+      <div className="glass-panel glass-static max-h-[85vh] overflow-y-auto rounded-[30px] p-6">
+        {nativeApp && (
+          <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-white/25" aria-hidden="true" />
+        )}
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold text-white">تنظیمات</h2>
 
@@ -241,6 +308,206 @@ export default function SettingsSidebar({ open, onClose }: SettingsSidebarProps)
               <span className="text-xs text-white/50">ثانیه</span>
             </div>
           </SettingsRow>
+
+          {nativeApp && (
+            <>
+              <SettingsRow label="اعلان اتمام استراحت">
+                <Toggle
+                  checked={notifPrefs.restTimerAlert}
+                  onChange={() =>
+                    setNotifPrefs((prev) => ({
+                      ...prev,
+                      restTimerAlert: !prev.restTimerAlert,
+                    }))
+                  }
+                />
+              </SettingsRow>
+
+              <SettingsRow label="یادآور تمرین روزانه">
+                <div className="flex items-center gap-2">
+                  {notifPrefs.workoutReminderEnabled && (
+                    <input
+                      type="time"
+                      dir="ltr"
+                      value={formatTimeValue(
+                        notifPrefs.workoutReminderHour,
+                        notifPrefs.workoutReminderMinute,
+                      )}
+                      onChange={(e) => {
+                        const [h, m] = e.target.value.split(":").map(Number);
+                        if (Number.isFinite(h) && Number.isFinite(m)) {
+                          setNotifPrefs((prev) => ({
+                            ...prev,
+                            workoutReminderHour: h,
+                            workoutReminderMinute: m,
+                          }));
+                        }
+                      }}
+                      className="glass-chip glass-static h-8 rounded-full px-2.5 text-xs text-white outline-none"
+                    />
+                  )}
+                  <Toggle
+                    checked={notifPrefs.workoutReminderEnabled}
+                    onChange={() =>
+                      setNotifPrefs((prev) => ({
+                        ...prev,
+                        workoutReminderEnabled: !prev.workoutReminderEnabled,
+                      }))
+                    }
+                  />
+                </div>
+              </SettingsRow>
+
+              <SettingsRow label="یادآور نوشیدن آب">
+                <Toggle
+                  checked={notifPrefs.waterRemindersEnabled}
+                  onChange={() =>
+                    setNotifPrefs((prev) => ({
+                      ...prev,
+                      waterRemindersEnabled: !prev.waterRemindersEnabled,
+                    }))
+                  }
+                />
+              </SettingsRow>
+
+              <SettingsRow label="اعلان‌های سرور (Push)">
+                <div className="flex items-center gap-2">
+                  {notifPrefs.pushEnabled && hasPushToken && (
+                    <button
+                      type="button"
+                      disabled={testingPush}
+                      onClick={async () => {
+                        setTestingPush(true);
+                        setNotifFeedback(null);
+                        const res = await sendTestPushNotification();
+                        setNotifFeedback(res.message);
+                        setTestingPush(false);
+                      }}
+                      className="glass-chip rounded-full px-3 py-1.5 text-xs font-medium text-avocado-yellow disabled:opacity-50"
+                    >
+                      {testingPush ? "در حال ارسال..." : "تست پوش"}
+                    </button>
+                  )}
+                  <Toggle
+                    checked={notifPrefs.pushEnabled}
+                    onChange={() =>
+                      setNotifPrefs((prev) => ({
+                        ...prev,
+                        pushEnabled: !prev.pushEnabled,
+                      }))
+                    }
+                  />
+                </div>
+              </SettingsRow>
+
+              <SettingsRow label="همگام‌سازی Apple Health">
+                <div className="flex items-center gap-2">
+                  {healthEnabled && (
+                    <button
+                      type="button"
+                      disabled={syncingHealth}
+                      onClick={async () => {
+                        setSyncingHealth(true);
+                        setNotifFeedback(null);
+                        const next = await syncHealthKitFromAppleHealth();
+                        if (next) {
+                          setHealthSummary(next);
+                          setNotifFeedback(
+                            `همگام شد: ${toFaDigits(next.steps)} قدم · ${toFaDigits(next.activeCalories)} کالری فعال`,
+                          );
+                        } else {
+                          setNotifFeedback("داده‌ای از Apple Health دریافت نشد.");
+                        }
+                        setSyncingHealth(false);
+                      }}
+                      className="glass-chip rounded-full px-3 py-1.5 text-xs font-medium text-avocado-lime disabled:opacity-50"
+                    >
+                      {syncingHealth ? "در حال دریافت..." : "بروزرسانی"}
+                    </button>
+                  )}
+                  <Toggle
+                    checked={healthEnabled}
+                    onChange={async () => {
+                      if (!healthEnabled) {
+                        setSyncingHealth(true);
+                        const res = await enableHealthKit();
+                        setHealthEnabled(res.ok);
+                        if (res.summary) setHealthSummary(res.summary);
+                        if (!res.ok && res.error) {
+                          setNotifFeedback(res.error);
+                        } else if (res.ok) {
+                          setNotifFeedback("Apple Health متصل شد ✅");
+                        }
+                        setSyncingHealth(false);
+                      } else {
+                        setHealthKitEnabled(false);
+                        setHealthEnabled(false);
+                      }
+                    }}
+                  />
+                </div>
+              </SettingsRow>
+
+              {healthEnabled && healthSummary && (
+                <div className="flex items-center justify-between py-2 text-xs text-white/60">
+                  <span>امروز در Apple Health</span>
+                  <span>
+                    {toFaDigits(healthSummary.steps)} قدم · {toFaDigits(healthSummary.activeCalories)}{" "}
+                    کالری
+                  </span>
+                </div>
+              )}
+
+              <SettingsRow label="اتصال Apple Watch">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-white/60">
+                    {watchStatus?.watchAppInstalled
+                      ? watchStatus.reachable
+                        ? "متصل ✓"
+                        : "جفت‌شده"
+                      : watchStatus?.paired
+                        ? "نصب نشده"
+                        : "جفت نشده"}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      syncWatchContext();
+                      setNotifFeedback("اطلاعات امروز به اپل واچ ارسال شد ⌚");
+                    }}
+                    className="glass-chip rounded-full px-3 py-1.5 text-xs font-medium text-white"
+                  >
+                    ارسال
+                  </button>
+                </div>
+              </SettingsRow>
+
+              <SettingsRow label="همگام‌سازی ابری">
+                <button
+                  type="button"
+                  disabled={syncingCloud}
+                  onClick={async () => {
+                    setSyncingCloud(true);
+                    setNotifFeedback(null);
+                    const res = await syncNow(true);
+                    if (!res.ok) {
+                      setNotifFeedback("اتصال به سرور برقرار نشد.");
+                    } else if (!res.changed) {
+                      setNotifFeedback("اطلاعات کاملاً به‌روز است ✅");
+                    }
+                    setSyncingCloud(false);
+                  }}
+                  className="glass-chip rounded-full px-3.5 py-1.5 text-xs font-medium text-avocado-yellow disabled:opacity-50"
+                >
+                  {syncingCloud ? "در حال همگام‌سازی..." : "همگام‌سازی الان"}
+                </button>
+              </SettingsRow>
+            </>
+          )}
+
+          {notifFeedback && (
+            <p className="py-2 text-center text-xs text-avocado-yellow">{notifFeedback}</p>
+          )}
 
           <SettingsRow label="تم" disabled>
             <SegmentedControl
