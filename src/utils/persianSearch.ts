@@ -6,7 +6,13 @@
 // module into an unrelated one just to reuse a string matcher.
 
 export function normalizeFa(value: string): string {
-  return value.replace(/ي/g, "ی").replace(/ك/g, "ک").trim().toLowerCase();
+  return value
+    .replace(/ي/g, "ی")
+    .replace(/ك/g, "ک")
+    .replace(/\u200c/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
 }
 
 // Matches only at the start of a word (never mid-word) — e.g. querying "بز"

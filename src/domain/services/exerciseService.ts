@@ -1,6 +1,7 @@
-import type {
-  Exercise,
-  WorkoutDefinition,
+import {
+  getExerciseAliases,
+  type Exercise,
+  type WorkoutDefinition,
 } from "../../data/workoutLibrary";
 
 /**
@@ -107,15 +108,29 @@ function normalize(value: string): string {
     .trim();
 }
 
+function matchesCandidate(candidate: string, normalizedQuery: string, tokens: string[]): boolean {
+  const norm = normalize(candidate);
+  if (!norm) return false;
+  if (norm.includes(normalizedQuery)) return true;
+  return tokens.length > 1 && tokens.every((token) => norm.includes(token));
+}
+
 export function matchesSearch(exercise: Exercise, query: string): boolean {
   const q = normalize(query);
 
   if (!q) return true;
 
-  return (
-    normalize(exercise.name).includes(q) ||
-    normalize(exercise.nameEn ?? "").includes(q)
-  );
+  const tokens = q.split(" ").filter(Boolean);
+
+  if (matchesCandidate(exercise.name, q, tokens)) return true;
+  if (exercise.nameEn && matchesCandidate(exercise.nameEn, q, tokens)) return true;
+
+  const aliases = [
+    ...(exercise.aliases ?? []),
+    ...getExerciseAliases(exercise.id),
+  ];
+
+  return aliases.some((alias) => matchesCandidate(alias, q, tokens));
 }
 
 export function filterExercises(

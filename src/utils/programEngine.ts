@@ -67,7 +67,10 @@ export function getPrograms(): ProgramsState {
 
   const state = createProgramsState();
 
-  savePrograms(state);
+  // Seeding an empty default fallback is never a user edit — keep sync
+  // tracking off so a fresh device never stamps/pushes an empty program over
+  // the user's real calendar on Supabase.
+  withoutSyncTracking(() => savePrograms(state));
 
   return state;
 }
@@ -85,7 +88,7 @@ export function getActiveProgram(): Program {
 
   const fallback = createProgramsState();
 
-  savePrograms(fallback);
+  withoutSyncTracking(() => savePrograms(fallback));
 
   return fallback.programs[0];
 }

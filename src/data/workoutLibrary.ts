@@ -27,6 +27,9 @@ export interface Exercise {
   // field rather than appended into `name` so the UI can render it smaller
   // and quieter beside the Persian name instead of as one long string.
   nameEn?: string;
+  // Common alternate Persian gym names used by search (e.g. "هیزم شکن" for
+  // "وود چاپر", "دیپ پارالل" for "دیپ سینه").
+  aliases?: string[];
   sets: number;
   // What `reps` counts. Isometric holds (planks and the like) aren't
   // repeated, they're endured, so counting them in repetitions was
@@ -2741,6 +2744,60 @@ export const workoutLibrary: WorkoutDefinition[] = [
   { id: "home-workout", title: "تمرین در خانه", groups: [] },
   { id: "express-15min", title: "تمرین فشرده ۱۵ دقیقه‌ای", groups: [] },
 ];
+
+// Alternate Persian gym names keyed by canonical exercise id, so searching
+// common Iranian trainer phrasings ("هیزم شکن", "دیپ پارالل", "شکم روسی",
+// "شراگز", "پک دک"...) always finds the matching exercise — including inside
+// previously saved user variants.
+export const EXERCISE_SEARCH_ALIASES: Record<string, string[]> = {
+  "wood-chop": [
+    "هیزم شکن",
+    "هیزم شکن سیم کش",
+    "هیزم شکن سیم کش رو به رو",
+    "چوب شکن",
+  ],
+  "chest-dip": ["دیپ پارالل", "پارالل", "دیپ پارالل سینه"],
+  "triceps-dip": ["دیپ پارالل", "پارالل", "دیپ پارالل پشت بازو"],
+  "russian-twist": ["شکم روسی", "شکم روسی روی زمین", "چرخش روسی"],
+  "dumbbell-shrug": ["شراگز دمبل", "شراگز دمبل از بغل", "شراگز ایستاده"],
+  "barbell-shrug": ["شراگز هالتر"],
+  "pec-deck-fly": ["پک دک", "قفسه سینه دستگاه", "باترفلای دستگاه"],
+  "lever-seated-reverse-fly": [
+    "پک دک معکوس",
+    "نشر خم دستگاه",
+    "نشر خم دستگاه پک دک معکوس",
+  ],
+  "close-grip-bench-press": [
+    "پشت بازو پرسی",
+    "پشت بازو پرسی هالتر",
+    "پشت بازو پرسی اسمیت",
+  ],
+  "lying-barbell-extension": ["اسکال کراشر", "جمجمه شکن"],
+  "dumbbell-sumo-squat": ["اسکوات سومو دمبل", "پلیه اسکوات", "داخل پا دمبل"],
+  "straight-arm-cable-pulldown": [
+    "پلاور سیم کش",
+    "زیر بغل سیم کش دست صاف",
+    "زیر بغل هلالی تک دست",
+  ],
+  "cable-chest-press": [
+    "پرس زیر سینه سیم کش",
+    "پرس زیر سینه سیم کش ایستاده",
+    "پرس بالا سینه سیم کش",
+  ],
+  "decline-bench-press": ["پرس زیر سینه", "پرس زیر سینه هالتر"],
+  "dumbbell-fly": ["قفسه سینه دمبل"],
+  "cable-crossover": ["قفسه سینه سیم کش", "کراس اور سیم کش"],
+  "seated-row-machine": ["زیر بغل دستگاه H", "زیر بغل دستگاه اچ", "اچ ماشین"],
+  "seated-row": ["قایقی دست جمع", "زیر بغل قایقی تک دست چرخشی"],
+  "side-lying-straight-leg-raise-arm": ["پهلو خوابیده بالا آوردن دست و پا"],
+  "bicycle-crunch-floor": ["زیر شکم خوابیده روی زمین دوچرخه", "زیر شکم دوچرخه"],
+  "hyperextension": ["هایپراکستنشن", "بک اکستنشن دستگاه"],
+  "ab-wheel": ["چرخ شکم", "غلتک شکم"],
+};
+
+export function getExerciseAliases(exerciseId: string): string[] {
+  return EXERCISE_SEARCH_ALIASES[exerciseId] ?? [];
+}
 // The rule this file has to keep, checked once at module load in dev:
 // an exercise is identified by its id, so the same id appearing in several
 // workouts (deliberate — see the reuse notes above) must always carry the

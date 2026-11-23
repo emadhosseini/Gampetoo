@@ -19,7 +19,7 @@ import {
   setDefaultPlanName,
   syncWorkoutExtras,
 } from "@/store/workoutLibraryStore";
-import { flattenExercises } from "@/domain/services/exerciseService";
+import { flattenExercises, matchesSearch } from "@/domain/services/exerciseService";
 import {
   getSpecializedWarmup,
   saveWarmupGroups,
@@ -34,9 +34,12 @@ import {
 
 import type { Exercise, ExerciseGroup } from "@/data/workoutLibrary";
 import type { WarmupGroup } from "@/data/warmupLibrary";
-import { matchesWordPrefix, normalizeFa } from "@/utils/persianSearch";
 import { toFaDigits } from "@/utils/numberFormat";
 import { generateId } from "@/utils/id";
+import { getCurrentUsername } from "@/utils/userEngine";
+import { flushPendingSync } from "@/sync/remoteSync";
+import { pushCurrentWidgetSnapshot } from "@/native/nativeBridge";
+import { syncWatchContext } from "@/native/watchBridge";
 
 // The library-workout tab's key in `drafts` below — every real plan is
 // keyed by its own id already, so this just needs to not collide with one
@@ -544,20 +547,14 @@ export default function WorkoutDetailPage() {
   }, [allCatalogueExercises, isWarmupWorkout, presentExerciseIds]);
 
   // Searches both this workout's own groups AND the rest of the entire
-  // exercise catalogue, so typing "جلو بازو" inside "پوش" immediately finds
-  // every biceps movement and lets you toggle it straight into the plan.
+  // exercise catalogue (including Persian gym aliases like "هیزم شکن" and
+  // "دیپ پارالل"), so typing any common name finds the exercise immediately.
   const searchResults = useMemo(() => {
-    const normalizedQuery = normalizeFa(query);
-
-    if (!normalizedQuery) return [];
+    if (!query.trim()) return [];
 
     const localMatches = groups.flatMap((group) =>
       group.exercises
-        .filter(
-          (exercise) =>
-            matchesWordPrefix(normalizeFa(exercise.name), normalizedQuery) ||
-            matchesWordPrefix(normalizeFa(exercise.nameEn ?? ""), normalizedQuery),
-        )
+        .filter((exercise) => matchesSearch(exercise, query))
         .map((exercise) => ({ group, exercise, fromCatalogue: false })),
     );
 
@@ -569,8 +566,7 @@ export default function WorkoutDetailPage() {
         (exercise) =>
           !presentExerciseIds.has(exercise.id) &&
           !localIds.has(exercise.id) &&
-          (matchesWordPrefix(normalizeFa(exercise.name), normalizedQuery) ||
-            matchesWordPrefix(normalizeFa(exercise.nameEn ?? ""), normalizedQuery)),
+          matchesSearch(exercise, query),
       )
       .map((exercise) => {
         const meta = resolveExerciseGroupMeta(exercise);
@@ -731,6 +727,13 @@ export default function WorkoutDetailPage() {
 
     if (editingVariantId && idMap[editingVariantId]) {
       setEditingVariantId(idMap[editingVariantId]);
+    }
+
+    pushCurrentWidgetSnapshot();
+    syncWatchContext();
+    const username = getCurrentUsername();
+    if (username) {
+      void flushPendingSync(username);
     }
 
     setSaved(true);

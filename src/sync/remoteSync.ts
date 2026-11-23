@@ -73,6 +73,8 @@ let suppressing = false;
 let cachedAuthUserId: string | null = null;
 let pushTimer: ReturnType<typeof setTimeout> | null = null;
 let lastForegroundPullAt = 0;
+let activeSync: Promise<boolean> | null = null;
+let queuedSyncUsername: string | null = null;
 
 function pendingKey(username: string) {
   return `gampetoo-sync-pending:${username}`;
@@ -152,16 +154,6 @@ function fingerprint(value: string): string {
   return `${value.length}:${(hash >>> 0).toString(36)}`;
 }
 
-function readLastPushed(username: string): Record<string, string> {
-  try {
-    const raw = localStorage.getItem(lastPushedKey(username));
-
-    return raw ? (JSON.parse(raw) as Record<string, string>) : {};
-  } catch {
-    return {};
-  }
-}
-
 function writeLastPushed(username: string, values: Record<string, string>) {
   const prints: Record<string, string> = {};
 
@@ -172,39 +164,8 @@ function writeLastPushed(username: string, values: Record<string, string>) {
   originalSetItem(lastPushedKey(username), JSON.stringify(prints));
 }
 
-/**
- * The full account snapshot (every key's value + time) as of the last time
- * this device actually confirmed the server holds it — via a successful
- * push, or a pull that found local already matching. This is what plugs a
- * real data-loss bug: pushToServer used to send nothing but
- * readLocalSnapshot(), which only contains keys THIS device has ever
- * written locally. A key it has simply never touched — a feature added
- * after this device last used the app, already pushed from elsewhere —
- * was silently absent from that payload, and Supabase's JSONB upsert
- * REPLACES the whole `data` column rather than deep-merging it. The very
- * next push from this device (for any reason at all — an unrelated
- * setting, a stray pending flag) would erase every key it had no opinion
- * on, permanently, on the server. Filling gaps in the outgoing payload
- * from this cache instead means a push only ever changes the keys this
- * device actually has something to say about.
- */
 function lastKnownFullKey(username: string) {
   return `gampetoo-last-known-full:${username}`;
-}
-
-interface FullSnapshot {
-  values: Record<string, string>;
-  times: Record<string, string>;
-}
-
-function readLastKnownFull(username: string): FullSnapshot {
-  try {
-    const raw = localStorage.getItem(lastKnownFullKey(username));
-
-    return raw ? (JSON.parse(raw) as FullSnapshot) : { values: {}, times: {} };
-  } catch {
-    return { values: {}, times: {} };
-  }
 }
 
 function writeLastKnownFull(username: string, values: Record<string, string>, times: Record<string, string>) {
@@ -212,24 +173,61 @@ function writeLastKnownFull(username: string, values: Record<string, string>, ti
 }
 
 /**
- * Keys whose current local value isn't what this device last got onto the
- * server. Includes a key deleted locally that the server still has.
+ * Explicit set of synced base keys modified by REAL user actions on this
+ * device that haven't been confirmed on Supabase yet.
+ *
+ * Unlike comparing localStorage fingerprints against `lastPushed`, this set is
+ * ONLY populated by `onLocalWrite` (which `withoutSyncTracking` suppresses), so
+ * derived writes like `resolveCycleAnchor` or seeding a default empty program
+ * can NEVER impersonate an unconfirmed user edit and overwrite a newer program
+ * from another device.
  */
-function unconfirmedKeys(username: string): Set<string> {
-  const local = readLocalSnapshot(username);
-  const pushed = readLastPushed(username);
-  const unconfirmed = new Set<string>();
+function dirtyKeysKey(username: string) {
+  return `gampetoo-dirty-keys:${username}`;
+}
 
-  for (const base of SYNCED_BASE_KEYS) {
-    const value = local[base];
-    const print = pushed[base];
+function readDirtyKeys(username: string): Set<string> {
+  try {
+    const raw = localStorage.getItem(dirtyKeysKey(username));
+    if (!raw) return new Set();
+    const parsed: unknown = JSON.parse(raw);
+    return Array.isArray(parsed)
+      ? new Set(parsed.filter((item): item is string => typeof item === "string"))
+      : new Set();
+  } catch {
+    return new Set();
+  }
+}
 
-    if (value === undefined ? print !== undefined : fingerprint(value) !== print) {
-      unconfirmed.add(base);
+function writeDirtyKeys(username: string, keys: Set<string>) {
+  if (keys.size === 0) {
+    originalRemoveItem(dirtyKeysKey(username));
+  } else {
+    originalSetItem(dirtyKeysKey(username), JSON.stringify([...keys]));
+  }
+}
+
+function markKeyDirty(username: string, base: string) {
+  const dirty = readDirtyKeys(username);
+  dirty.add(base);
+  writeDirtyKeys(username, dirty);
+}
+
+function clearConfirmedDirtyKeys(
+  username: string,
+  confirmedValues: Record<string, string>,
+): Set<string> {
+  const dirty = readDirtyKeys(username);
+  if (dirty.size === 0) return dirty;
+
+  const currentLocal = readLocalSnapshot(username);
+  for (const base of [...dirty]) {
+    if (currentLocal[base] === confirmedValues[base]) {
+      dirty.delete(base);
     }
   }
-
-  return unconfirmed;
+  writeDirtyKeys(username, dirty);
+  return dirty;
 }
 
 function recordLocalChange(username: string, base: string) {
@@ -238,6 +236,7 @@ function recordLocalChange(username: string, base: string) {
   times[base] = new Date().toISOString();
 
   writeKeyTimes(username, times);
+  markKeyDirty(username, base);
 }
 
 /**
@@ -424,8 +423,7 @@ function mergeCollection(
   rt: string | undefined,
   deletedIds: Set<string>,
 ): string | undefined {
-  if (local === undefined) return remote;
-  if (remote === undefined) return local;
+  if (local === undefined || remote === undefined) return undefined;
 
   switch (base) {
     case "emad-daily-log":
@@ -484,9 +482,16 @@ function mergeByKey(
     let value: string | undefined;
     let time: string | undefined;
 
-    const combined = mergeCollection(base, local[base], remote[base], lt, rt, deletedIds);
+    const isDirtyDeletion = unconfirmed.has(base) && local[base] === undefined;
+    const combined = isDirtyDeletion
+      ? undefined
+      : mergeCollection(base, local[base], remote[base], lt, rt, deletedIds);
 
-    if (combined !== undefined) {
+    if (isDirtyDeletion) {
+      // Explicit local deletion (e.g. factory reset) — never resurrect remote.
+      value = undefined;
+      time = lt ?? new Date().toISOString();
+    } else if (combined !== undefined) {
       value = combined;
       // The later of the two, so a device that has merged both sides is not
       // mistaken for one holding stale data on the next comparison.
@@ -494,19 +499,15 @@ function mergeByKey(
     } else if (DAY_SCOPED_KEYS.has(base) && isAboutToday(remote[base]) !== isAboutToday(local[base])) {
       // Exactly one side is about today — it wins, and the other is simply
       // yesterday's leftovers. Checked before everything below, because
-      // both the unconfirmed rule and the timestamps would happily let
+      // both the dirty-key rule and the timestamps would happily let
       // those leftovers through.
       const preferRemote = isAboutToday(remote[base]);
 
       value = preferRemote ? remote[base] : local[base];
       time = preferRemote ? rt : lt;
     } else if (unconfirmed.has(base)) {
-      // Holding a change the server hasn't taken. Nothing coming back from
-      // it can be newer than something it has never seen, so this wins
-      // outright — no timestamp is consulted, because every source of
-      // timestamps has a way of being wrong and this doesn't.
+      // Holding a real user edit this device hasn't confirmed on the server yet.
       value = local[base];
-      // Stamped now if it somehow never was, so it also wins on the way out.
       time = lt ?? new Date().toISOString();
     } else if (lt !== undefined && (rt === undefined || lt > rt)) {
       // ISO-8601 UTC strings, so lexicographic order is chronological order.
@@ -545,12 +546,11 @@ async function writeRemote(
     if (error) throw error;
 
     originalSetItem(lastSyncedKey(username), updatedAt);
-    originalRemoveItem(pendingKey(username));
-    // Only after the server confirmed it. Anything that differs from this
-    // from now on is a change it hasn't seen — see unconfirmedKeys.
+    const remainingDirty = clearConfirmedDirtyKeys(username, values);
+    if (remainingDirty.size === 0) {
+      originalRemoveItem(pendingKey(username));
+    }
     writeLastPushed(username, values);
-    // This is now, by definition, the full account state the server holds
-    // — see readLastKnownFull's own comment for why the next push needs it.
     writeLastKnownFull(username, values, times);
   } catch {
     // Offline or transient failure — flag it so the next reconnect retries.
@@ -559,152 +559,16 @@ async function writeRemote(
 }
 
 /**
- * Sends this device's values along with the times it believes they carry,
- * without reading the server first — the cheap path, for the moment the app
- * is being closed and there may not be time for two round trips.
+ * Unified, serialized read-merge-write sync against Supabase.
  *
- * Safe despite overwriting the row wholesale, because the times go with it.
- * If this clobbers a key another device changed more recently, that device
- * still holds its own newer time for it, sees the row is behind on its next
- * reconcile, and puts it back. The overwrite corrects itself.
- *
- * Crucially, this does NOT send bare readLocalSnapshot()/readKeyTimes() —
- * those only cover keys this device has ever written locally. A key added
- * by a newer app version (or just never touched on this particular device)
- * would be silently missing from that payload, and since the upsert
- * replaces the whole `data` column rather than deep-merging it, sending it
- * bare would erase that key from the server outright — the account's other
- * devices simply lose it. Layering local's own values/times over the last
- * full snapshot this device actually knows the server holds (see
- * readLastKnownFull) means a push only ever changes the keys this device
- * has something real to say about — an explicit local edit or deletion
- * (recorded in localTimes) — and leaves every other key exactly as this
- * device last saw it.
+ * Always reads the current server row FIRST before merging and writing back:
+ * - Real local edits (`dirtyKeys`) win their own keys without ever clobbering
+ *   unrelated keys (like `emad-programs`) edited more recently on another device.
+ * - Derived writes (`withoutSyncTracking`) are NOT in `dirtyKeys`, so opening
+ *   a stale web tab can never overwrite a newer calendar from iOS.
  */
-async function pushToServer(username: string): Promise<void> {
-  const local = readLocalSnapshot(username);
-  const localTimes = readKeyTimes(username);
-  const known = readLastKnownFull(username);
-
-  // No cached picture of the server's full state yet — this device's very
-  // first push this session (or since a factory reset), before it's ever
-  // completed a pull. The cache-fill below has nothing to fill gaps FROM
-  // in that case, which is exactly the situation that used to wipe every
-  // key this device had never touched: an account that's synced for weeks
-  // updates to a build with a brand-new feature, and the very first local
-  // edit after opening the app — for any reason, not necessarily related
-  // to the new feature — pushes before the boot pull finishes, erasing it
-  // from the server. Reading the server for real this one time (instead of
-  // the fast cached-merge path below) is the only way to know what's
-  // actually there before deciding what a bare upsert would destroy.
-  // Every push after this one has a cache to work from and skips this.
-  if (Object.keys(known.values).length === 0 && supabase && cachedAuthUserId) {
-    const { data } = await supabase
-      .from("user_data")
-      .select("data, updated_at")
-      .eq("user_id", cachedAuthUserId)
-      .maybeSingle();
-
-    if (data) {
-      const remote = readRemote(data.data as Record<string, unknown>, data.updated_at);
-      // Same in-flight-edit guard the pull path uses — this branch is a
-      // round trip to the server too, and writes its result over local.
-      const merged = keepConcurrentLocalEdits(
-        username,
-        local,
-        mergeByKey(local, localTimes, remote.values, remote.times, unconfirmedKeys(username)),
-      );
-
-      // Not just an upload: this device just learned about every key it
-      // never had (including possibly this one's own history from before
-      // it existed on this device at all). Writing it into local storage
-      // too — not just the server — matters beyond simply catching this
-      // device up: without it, the next unconfirmedKeys() check sees a
-      // fingerprint for a key readLocalSnapshot() still can't find (from
-      // writeRemote's own writeLastPushed below) and reads that as "this
-      // device deleted it locally, defend the deletion" — silently
-      // discarding the very data this push just went out of its way to
-      // save, on the very next pull.
-      suppressing = true;
-
-      try {
-        writeLocalSnapshot(username, merged.values);
-      } finally {
-        suppressing = false;
-      }
-
-      writeKeyTimes(username, merged.times);
-
-      await writeRemote(username, merged.values, merged.times);
-      return;
-    }
-  }
-
-  const values: Record<string, string> = { ...known.values };
-  const times: Record<string, string> = { ...known.times };
-
-  for (const base of SYNCED_BASE_KEYS) {
-    // Never touched on this device (no recorded change/deletion time for
-    // it) — leave whatever the cached snapshot already has, untouched.
-    // Exception: if a key was just added to SYNCED_BASE_KEYS in a newer build
-    // and already has local data that the server doesn't know about yet,
-    // include it so it isn't left behind on the first push.
-    if (localTimes[base] === undefined) {
-      if (local[base] !== undefined && known.values[base] === undefined) {
-        values[base] = local[base];
-        times[base] = new Date().toISOString();
-      }
-      continue;
-    }
-
-    if (local[base] !== undefined) {
-      values[base] = local[base];
-    } else {
-      // Recorded a time but has no value: an explicit local deletion.
-      delete values[base];
-    }
-
-    times[base] = localTimes[base];
-  }
-
-  await writeRemote(username, values, times);
-}
-
-/**
- * Pulls the account's remote data down over local. If no remote row exists
- * yet, this is the account's first-ever sync — bootstrap the server from
- * whatever's already stored locally instead.
- *
- * Whether local is safe to overwrite is decided by whether this device has
- * anything unpushed, NOT by comparing timestamps. `updated_at` is written by
- * whichever device pushed, from its own clock, so a phone running even a few
- * minutes fast would stamp the row into the future and then refuse every
- * later pull — `lastSyncedAt >= updated_at` would hold forever, and that
- * device would silently stop receiving the other's changes for good. With
- * nothing pending, local is by definition what this device last pushed, so
- * any difference in content means some other device has written since, which
- * is exactly the question worth asking.
- *
- * Returns whether anything on this device actually changed, so a caller that
- * pulls into an already-rendered app knows whether the screen it's looking at
- * has gone stale.
- */
-async function pullFromServer(username: string): Promise<boolean> {
+async function syncWithServerOnce(username: string): Promise<boolean> {
   if (!supabase || !cachedAuthUserId) return false;
-
-  // Local edits that haven't reached the server outrank anything here —
-  // send them first, or the pull below would overwrite writes that were
-  // never even offered. If that push fails we're offline; leave local alone.
-  if (hasUnpushedChanges(username)) {
-    if (pushTimer) {
-      clearTimeout(pushTimer);
-      pushTimer = null;
-    }
-
-    await pushToServer(username);
-
-    if (hasUnpushedChanges(username)) return false;
-  }
 
   const { data, error } = await supabase
     .from("user_data")
@@ -712,30 +576,31 @@ async function pullFromServer(username: string): Promise<boolean> {
     .eq("user_id", cachedAuthUserId)
     .maybeSingle();
 
-  if (error) return false;
-
-  if (!data) {
-    await pushToServer(username);
+  if (error) {
+    if (readDirtyKeys(username).size > 0) {
+      originalSetItem(pendingKey(username), "1");
+    }
     return false;
   }
 
   const local = readLocalSnapshot(username);
   const localTimes = readKeyTimes(username);
+
+  if (!data) {
+    await writeRemote(username, local, localTimes);
+    return false;
+  }
+
   const remote = readRemote(
     data.data as Record<string, unknown>,
-    data.updated_at
+    data.updated_at,
   );
 
+  const dirty = readDirtyKeys(username);
   const merged = keepConcurrentLocalEdits(
     username,
     local,
-    mergeByKey(
-      local,
-      localTimes,
-      remote.values,
-      remote.times,
-      unconfirmedKeys(username)
-    )
+    mergeByKey(local, localTimes, remote.values, remote.times, dirty),
   );
 
   const localChanged = snapshotsDiffer(local, merged.values);
@@ -752,31 +617,66 @@ async function pullFromServer(username: string): Promise<boolean> {
 
   writeKeyTimes(username, merged.times);
 
-  // Push back whenever the server isn't already holding the merged result —
-  // including when it holds the same values but no times yet, since that row
-  // is the old format and nothing else will upgrade it.
   if (
     snapshotsDiffer(remote.values, merged.values) ||
     (data.data as Record<string, unknown>)[META_KEY] === undefined
   ) {
-    // writeRemote records the confirmed baseline itself, and only if the
-    // server actually took it.
     await writeRemote(username, merged.values, merged.times);
   } else {
     originalSetItem(lastSyncedKey(username), data.updated_at);
-    // The server already holds exactly this, so it is confirmed. Without
-    // recording it, everything that arrived by pull would look like an
-    // unsent local change forever — which, among other things, made a
-    // deletion from another device come straight back, since this device
-    // would keep "defending" the value it had just been given.
+    const remainingDirty = clearConfirmedDirtyKeys(username, merged.values);
+    if (remainingDirty.size === 0) {
+      originalRemoveItem(pendingKey(username));
+    }
     writeLastPushed(username, merged.values);
-    // Same reason as writeRemote's own call — this is the full state the
-    // server holds right now, and the next push needs it to avoid wiping
-    // any key this device hasn't itself touched.
     writeLastKnownFull(username, merged.values, merged.times);
   }
 
   return localChanged;
+}
+
+async function syncWithServer(username: string): Promise<boolean> {
+  if (activeSync) {
+    queuedSyncUsername = username;
+    return activeSync;
+  }
+
+  const run = (async () => {
+    let anyLocalChange = false;
+    let target: string | null = username;
+
+    while (target) {
+      const current = target;
+      queuedSyncUsername = null;
+      const changed = await syncWithServerOnce(current);
+      if (changed) anyLocalChange = true;
+      target = queuedSyncUsername;
+    }
+
+    return anyLocalChange;
+  })();
+
+  activeSync = run;
+  try {
+    return await run;
+  } finally {
+    if (activeSync === run) {
+      activeSync = null;
+    }
+  }
+}
+
+async function pushToServer(username: string): Promise<void> {
+  await syncWithServer(username);
+}
+
+async function pullFromServer(username: string): Promise<boolean> {
+  if (pushTimer) {
+    clearTimeout(pushTimer);
+    pushTimer = null;
+  }
+
+  return syncWithServer(username);
 }
 
 /**
@@ -815,7 +715,11 @@ function pullOnForeground() {
 }
 
 function hasUnpushedChanges(username: string): boolean {
-  return pushTimer !== null || localStorage.getItem(pendingKey(username)) === "1";
+  return (
+    pushTimer !== null ||
+    localStorage.getItem(pendingKey(username)) === "1" ||
+    readDirtyKeys(username).size > 0
+  );
 }
 
 function schedulePush(username: string) {
@@ -1078,6 +982,7 @@ export function resetSyncMarkers(username: string) {
   // username look like it had already edited every key, so the merge would
   // prefer its empty values over whatever the server holds.
   originalRemoveItem(keyTimesKey(username));
+  originalRemoveItem(dirtyKeysKey(username));
   originalRemoveItem(lastPushedKey(username));
   // Same reasoning — a stale cached "full account state" from before the
   // reset would let the very next push resurrect keys the reset just wiped.

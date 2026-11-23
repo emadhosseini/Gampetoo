@@ -22,6 +22,10 @@ import {
 } from "@/utils/dateFormat";
 import { getActiveProgram, getCycleDayIndex, updateProgram } from "@/utils/programEngine";
 import { resetSession } from "@/utils/sessionEngine";
+import { getCurrentUsername } from "@/utils/userEngine";
+import { flushPendingSync } from "@/sync/remoteSync";
+import { pushCurrentWidgetSnapshot } from "@/native/nativeBridge";
+import { syncWatchContext } from "@/native/watchBridge";
 import { generateId } from "@/utils/id";
 import type { WorkoutDay, WorkoutType } from "@/types/program";
 import { toFaDigits } from "@/utils/numberFormat";
@@ -169,6 +173,13 @@ function ProgramBuilderPage() {
     // already did today just because they tweaked a day's exercise.
     if (isFirstTime) {
       resetSession();
+    }
+
+    pushCurrentWidgetSnapshot();
+    syncWatchContext();
+    const username = getCurrentUsername();
+    if (username) {
+      void flushPendingSync(username);
     }
 
     navigate("/");

@@ -191,13 +191,29 @@ export function mergeCompletionLog(
 
 interface ProgramLike {
   id: string;
+  startDate?: string;
   cycleAnchor?: { date: string; dayIndex: number };
+  workout?: { days?: unknown[] };
   [key: string]: unknown;
 }
 
 interface ProgramsStateLike {
   activeProgramId: string;
   programs: ProgramLike[];
+}
+
+function isUninitializedDefaultState(state: ProgramsStateLike): boolean {
+  if (!Array.isArray(state.programs) || state.programs.length !== 1) return false;
+  const only = state.programs[0];
+  const days = only?.workout?.days;
+  return (only?.startDate ?? "") === "" && Array.isArray(days) && days.length === 0;
+}
+
+function hasConfiguredDays(state: ProgramsStateLike): boolean {
+  if (!Array.isArray(state.programs)) return false;
+  return state.programs.some(
+    (p) => Array.isArray(p?.workout?.days) && p.workout.days.length > 0,
+  );
 }
 
 function withoutCycleAnchor(program: ProgramLike): ProgramLike {
@@ -209,20 +225,15 @@ function withoutCycleAnchor(program: ProgramLike): ProgramLike {
 /**
  * Programs are otherwise last-writer-wins on the whole blob, which is right
  * for a real edit (renaming a plan, adding an exercise) — exactly one device
- * made that change. cycleAnchor is different: every device recomputes it
- * for itself just from opening the app on a new day (see
- * resolveCycleAnchor), and a device that has gone longest without opening
- * the app recomputes from the least information, only ever advancing when
- * it has local proof a workout day was completed. That makes a *lower*
- * dayIndex the signature of a device that simply knows less, never of a
- * more-current one — so when the two sides otherwise agree, the higher
- * dayIndex is always at least as informed and never wins by accident over a
- * real edit, because this only runs once the rest of the program has
- * already been checked byte-for-byte identical.
+ * made that change. Two special cases are resolved here first:
  *
- * Returns undefined (letting the default timestamp/unconfirmed rule decide)
- * whenever anything besides cycleAnchor differs, or the shape doesn't parse
- * — this only ever narrows the ordinary case, never replaces it.
+ * 1. An uninitialized empty fallback (`startDate: ""`, `days: []`) seeded by a
+ *    device before its first pull must never beat a configured program.
+ * 2. When the two sides differ ONLY in `cycleAnchor` (derived lazily by each
+ *    device on day rollover), the higher `dayIndex` wins.
+ *
+ * Returns undefined (letting the default dirty-key/timestamp rule decide)
+ * whenever both sides hold genuinely different configured programs.
  */
 export function mergeProgramsState(
   localRaw: string | undefined,
@@ -238,6 +249,14 @@ export function mergeProgramsState(
     remote = JSON.parse(remoteRaw) as ProgramsStateLike;
   } catch {
     return undefined;
+  }
+
+  if (isUninitializedDefaultState(local) && hasConfiguredDays(remote)) {
+    return remoteRaw;
+  }
+
+  if (isUninitializedDefaultState(remote) && hasConfiguredDays(local)) {
+    return localRaw;
   }
 
   if (
