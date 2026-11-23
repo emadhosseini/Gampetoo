@@ -109,6 +109,51 @@ function findExercise(
 
 const EXTRAS_KEY = "emad-workout-extras";
 
+export interface CanonicalGroupMeta {
+  id: string;
+  title: string;
+  muscles: string[];
+}
+
+// Granular muscle groups used when pulling exercises from elsewhere in the
+// catalogue into any workout (e.g. adding "جلو بازو" exercises inside "پوش"),
+// so an extra movement lands in its own proper muscle section rather than
+// being dumped under an unrelated group like "سینه".
+export const CANONICAL_EXERCISE_GROUPS: CanonicalGroupMeta[] = [
+  { id: "chest", title: "سینه", muscles: ["Chest", "Upper Chest", "Lower Chest"] },
+  { id: "back", title: "پشت", muscles: ["Lats", "Middle Back", "Lower Back", "Traps"] },
+  {
+    id: "shoulders",
+    title: "سرشانه",
+    muscles: ["Shoulders", "Front Deltoids", "Side Deltoids", "Rear Deltoids"],
+  },
+  { id: "biceps", title: "جلو بازو", muscles: ["Biceps"] },
+  { id: "triceps", title: "پشت بازو", muscles: ["Triceps"] },
+  { id: "forearms", title: "ساعد", muscles: ["Forearms", "Brachioradialis"] },
+  {
+    id: "legs",
+    title: "پا",
+    muscles: ["Quads", "Hamstrings", "Glutes", "Calves", "Adductors", "Abductors"],
+  },
+  { id: "abs", title: "شکم", muscles: ["Abdominals", "Obliques"] },
+  { id: "cardio", title: "هوازی", muscles: ["Cardio"] },
+];
+
+const EXTRA_GROUP_TITLES: Record<string, string> = Object.fromEntries(
+  CANONICAL_EXERCISE_GROUPS.map((g) => [g.id, g.title]),
+);
+
+const GROUP_BY_MUSCLE = new Map<string, CanonicalGroupMeta>(
+  CANONICAL_EXERCISE_GROUPS.flatMap((group) =>
+    group.muscles.map((muscle) => [muscle, group] as const),
+  ),
+);
+
+export function resolveExerciseGroupMeta(exercise: Exercise): { id: string; title: string } {
+  const matched = exercise.primaryMuscle ? GROUP_BY_MUSCLE.get(exercise.primaryMuscle) : undefined;
+  return matched ? { id: matched.id, title: matched.title } : { id: "other", title: "سایر حرکات" };
+}
+
 // "workoutId:groupId" -> exercise ids pulled in from elsewhere in the
 // catalogue via the search picker. Stored as ids only, never as copies of
 // the exercise: the definition still lives in exactly one place
@@ -163,14 +208,43 @@ export function removeExerciseFromGroup(
   localStorage.setItem(extrasStorageKey(), JSON.stringify(extras));
 }
 
+export function syncWorkoutExtras(workoutId: string, groups: ExerciseGroup[]) {
+  const seedWorkout = workoutLibrary.find((w) => w.id === workoutId);
+  const seedIdsByGroup = new Map<string, Set<string>>();
+
+  for (const group of seedWorkout?.groups ?? []) {
+    seedIdsByGroup.set(group.id, new Set(group.exercises.map((e) => e.id)));
+  }
+
+  const extras = readExtras();
+  const prefix = `${workoutId}:`;
+
+  for (const group of groups) {
+    const seedIds = seedIdsByGroup.get(group.id) ?? new Set<string>();
+    const nonSeedIds = group.exercises
+      .filter((exercise) => !seedIds.has(exercise.id))
+      .map((exercise) => exercise.id);
+
+    const key = `${prefix}${group.id}`;
+    if (nonSeedIds.length > 0) {
+      extras[key] = nonSeedIds;
+    } else if (key in extras) {
+      delete extras[key];
+    }
+  }
+
+  localStorage.setItem(extrasStorageKey(), JSON.stringify(extras));
+}
+
 export function resetWorkoutExtras() {
   localStorage.removeItem(extrasStorageKey());
 }
 
 // Resolves each stored id back to its one canonical definition and appends
-// it to the group it was added to. Anything that no longer exists in the
-// catalogue is skipped rather than crashing — an id can outlive the entry
-// it pointed at if the seed data is edited.
+// it to the group it was added to — including creating extra muscle groups
+// (e.g. "جلو بازو" added inside "پوش") that aren't in the static seed.
+// Anything that no longer exists in the catalogue is skipped rather than
+// crashing — an id can outlive the entry it pointed at if seed data changes.
 function applyExtras(
   library: WorkoutDefinition[],
   extras: ExtrasMap,
@@ -187,10 +261,12 @@ function applyExtras(
     }
   }
 
-  return library.map((workout) => ({
-    ...workout,
-    groups: workout.groups.map((group) => {
-      const added = extras[`${workout.id}:${group.id}`] ?? [];
+  return library.map((workout) => {
+    const existingGroupIds = new Set(workout.groups.map((g) => g.id));
+    const prefix = `${workout.id}:`;
+
+    const updatedGroups = workout.groups.map((group) => {
+      const added = extras[`${prefix}${group.id}`] ?? [];
 
       if (added.length === 0) return group;
 
@@ -201,8 +277,38 @@ function applyExtras(
         .filter((exercise): exercise is Exercise => exercise !== undefined);
 
       return { ...group, exercises: [...group.exercises, ...resolved] };
-    }),
-  }));
+    });
+
+    const allPresentIds = new Set(
+      updatedGroups.flatMap((g) => g.exercises.map((e) => e.id)),
+    );
+
+    const extraGroups: ExerciseGroup[] = [];
+    for (const [key, addedIds] of Object.entries(extras)) {
+      if (!key.startsWith(prefix) || addedIds.length === 0) continue;
+      const groupId = key.slice(prefix.length);
+      if (existingGroupIds.has(groupId)) continue;
+
+      const resolved = addedIds
+        .filter((id) => !allPresentIds.has(id))
+        .map((id) => canonical.get(id))
+        .filter((exercise): exercise is Exercise => exercise !== undefined);
+
+      if (resolved.length === 0) continue;
+
+      for (const ex of resolved) allPresentIds.add(ex.id);
+      extraGroups.push({
+        id: groupId,
+        title: EXTRA_GROUP_TITLES[groupId] ?? "سایر حرکات",
+        exercises: resolved,
+      });
+    }
+
+    return {
+      ...workout,
+      groups: [...updatedGroups, ...extraGroups],
+    };
+  });
 }
 
 export function getLibrary(): WorkoutDefinition[] {

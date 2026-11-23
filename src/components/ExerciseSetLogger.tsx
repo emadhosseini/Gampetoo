@@ -4,11 +4,21 @@ import { BarChart3, Check, Minus, NotebookText, Plus, Timer, Trash2, X } from "l
 import ExerciseProgressChartModal from "@/components/progress/ExerciseProgressChartModal";
 import ModalOverlay from "@/components/ModalOverlay";
 import { hapticLight, hapticMedium, hapticSuccess } from "@/native/haptics";
-import { endRestLiveActivity, startRestLiveActivity } from "@/native/nativeBridge";
+import {
+  pushCurrentWidgetSnapshot,
+  startRestLiveActivity,
+  syncWorkoutLiveActivity,
+} from "@/native/nativeBridge";
 import {
   cancelRestFinishedNotification,
   scheduleRestFinishedNotification,
 } from "@/native/notifications";
+import {
+  REST_TIMER_EVENT,
+  getActiveRestTimer,
+  setActiveRestTimer,
+} from "@/native/restTimerStore";
+import { WATCH_UPDATED_EVENT, syncWatchContext } from "@/native/watchBridge";
 import {
   addSet,
   confirmSet,
@@ -16,6 +26,7 @@ import {
   getPastSessions,
   getPersonalRecord,
   getPersonalRecordByDuration,
+  getTodaysSets,
   removeSet,
   updateSet,
   type SetEntry,
@@ -147,7 +158,12 @@ export default function ExerciseSetLogger({
   // rather than waiting for the next tick — means the moment the screen
   // unlocks the display jumps straight to the correct value (or finishes
   // outright if rest was already over while the phone was locked).
-  const [restEndAt, setRestEndAt] = useState<number | null>(null);
+  const [restEndAt, setRestEndAt] = useState<number | null>(() => {
+    const active = getActiveRestTimer();
+    return active && (!active.exerciseId || active.exerciseId === exerciseId)
+      ? active.endAt
+      : null;
+  });
   // Forces a re-render on every tick/visibility-change so the render-time
   // Math.ceil below recomputes against the current real time — nothing is
   // actually stored in this counter itself.
@@ -155,14 +171,45 @@ export default function ExerciseSetLogger({
   const [chartOpen, setChartOpen] = useState(false);
   const [noteOpen, setNoteOpen] = useState(false);
 
+  // Keep sets and rest countdown synced live when Apple Watch logs/edits a set
+  // or modifies the rest timer while this exercise drawer is open.
+  useEffect(() => {
+    function syncFromStore() {
+      const latest = getTodaysSets(exerciseId);
+      if (latest.length > 0) {
+        setSets(latest);
+      }
+      const active = getActiveRestTimer();
+      setRestEndAt(
+        active && (!active.exerciseId || active.exerciseId === exerciseId)
+          ? active.endAt
+          : null,
+      );
+    }
+
+    window.addEventListener(WATCH_UPDATED_EVENT, syncFromStore);
+    window.addEventListener(REST_TIMER_EVENT, syncFromStore);
+    return () => {
+      window.removeEventListener(WATCH_UPDATED_EVENT, syncFromStore);
+      window.removeEventListener(REST_TIMER_EVENT, syncFromStore);
+    };
+  }, [exerciseId]);
+
   useEffect(() => {
     if (restEndAt === null) return;
 
     function tick() {
       if (Date.now() >= restEndAt!) {
         setRestEndAt(null);
+        setActiveRestTimer(null);
         hapticSuccess();
-        void endRestLiveActivity();
+        void syncWorkoutLiveActivity({
+          exerciseId,
+          exerciseName,
+          isResting: false,
+          notifyRestFinished: true,
+        });
+        syncWatchContext();
       } else {
         forceTick((n) => n + 1);
       }
@@ -175,7 +222,7 @@ export default function ExerciseSetLogger({
       clearInterval(interval);
       document.removeEventListener("visibilitychange", tick);
     };
-  }, [restEndAt]);
+  }, [restEndAt, exerciseId, exerciseName]);
 
   const restSecondsLeft =
     restEndAt === null ? null : Math.max(0, Math.ceil((restEndAt - Date.now()) / 1000));
@@ -187,15 +234,20 @@ export default function ExerciseSetLogger({
 
   function handleAddSet() {
     setSets(addSet(exerciseId));
+    syncWatchContext();
   }
 
   function handleUpdateSet(setId: string, patch: Partial<Pick<SetEntry, "weight" | "reps">>) {
     setSets(updateSet(exerciseId, setId, patch));
+    syncWatchContext();
   }
 
   function handleConfirmSet(setId: string) {
-    setSets(confirmSet(exerciseId, setId));
+    const updated = confirmSet(exerciseId, setId);
+    setSets(updated);
     hapticMedium();
+    const completedSets = updated.filter((s) => s.confirmed).length;
+    const totalSets = updated.length;
     // Read fresh on every confirm rather than once — the settings popup's
     // own "ذخیره" reloads the page after saving, but reading it live here
     // costs nothing and needs no invalidation either way.
@@ -203,20 +255,47 @@ export default function ExerciseSetLogger({
     if (restSeconds > 0) {
       const endAt = Date.now() + restSeconds * 1000;
       setRestEndAt(endAt);
+      setActiveRestTimer({
+        exerciseId,
+        exerciseName,
+        endAt,
+        totalSeconds: restSeconds,
+      });
       void scheduleRestFinishedNotification(endAt, exerciseName);
-      void startRestLiveActivity(exerciseName, endAt, restSeconds);
+      void startRestLiveActivity(exerciseName, endAt, restSeconds, {
+        exerciseId,
+        completedSets,
+        totalSets,
+      });
+    } else {
+      void syncWorkoutLiveActivity({
+        exerciseId,
+        exerciseName,
+        completedSets,
+        totalSets,
+        isResting: false,
+      });
     }
+    pushCurrentWidgetSnapshot();
+    syncWatchContext();
   }
 
   function handleCancelRest() {
     hapticLight();
     setRestEndAt(null);
+    setActiveRestTimer(null);
     void cancelRestFinishedNotification();
-    void endRestLiveActivity();
+    void syncWorkoutLiveActivity({
+      exerciseId,
+      exerciseName,
+      isResting: false,
+    });
+    syncWatchContext();
   }
 
   function handleRemoveSet(setId: string) {
     setSets(removeSet(exerciseId, setId));
+    syncWatchContext();
   }
 
   return (

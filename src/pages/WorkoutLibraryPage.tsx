@@ -1,6 +1,8 @@
+import { ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import WorkoutTaxonomyGrid from "@/components/WorkoutTaxonomyGrid";
+import { navigateBackSafely } from "@/utils/navigationBack";
 import { workoutTaxonomy } from "@/data/workoutTaxonomy";
 import type { WorkoutTaxonomyNode } from "@/data/workoutTaxonomy";
 
@@ -16,7 +18,17 @@ export default function WorkoutLibraryPage() {
 
   return (
     <div className="space-y-4 px-5 pb-5 pt-10">
-      <h1 className="text-center text-2xl font-bold">کتابخانه تمرین‌ها</h1>
+      <div className="relative flex items-center justify-center">
+        <button
+          onClick={() => navigateBackSafely(navigate, "/settings/workouts")}
+          aria-label="بازگشت"
+          className="glass-chip absolute right-0 flex h-9 w-9 items-center justify-center rounded-full"
+        >
+          <ChevronRight size={18} />
+        </button>
+
+        <h1 className="text-center text-2xl font-bold">کتابخانه تمرین‌ها</h1>
+      </div>
 
       <WorkoutTaxonomyGrid nodes={workoutTaxonomy} onSelect={handleSelect} />
     </div>

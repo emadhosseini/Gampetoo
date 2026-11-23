@@ -54,6 +54,13 @@ import { getCurrentUserGender, getCurrentUsername } from "@/utils/userEngine";
 import { flushPendingSync } from "@/sync/remoteSync";
 import { getCompletionFor } from "@/utils/workoutCompletionLog";
 import { getTodayLocalDate } from "@/utils/dateFormat";
+import {
+  endRestLiveActivity,
+  pushCurrentWidgetSnapshot,
+  syncWorkoutLiveActivity,
+} from "@/native/nativeBridge";
+import { setActiveRestTimer } from "@/native/restTimerStore";
+import { syncWatchContext } from "@/native/watchBridge";
 
 // Completing used to navigate home right after this, which is why it was
 // needed in the first place: a full page navigation tears down the JS
@@ -137,6 +144,10 @@ function WorkoutPage() {
     }
 
     completeWalk({ title: "روز استراحت" });
+    setActiveRestTimer(null);
+    void endRestLiveActivity();
+    pushCurrentWidgetSnapshot();
+    syncWatchContext();
     void flushAfterCompleting();
     // getSession() re-reads localStorage on every render but nothing
     // schedules a render on its own — this is what actually surfaces the
@@ -154,6 +165,9 @@ function WorkoutPage() {
 
   function handleToggleExercise(exercise: Exercise) {
     toggleExerciseChecked(exercise.id);
+    pushCurrentWidgetSnapshot();
+    syncWatchContext();
+    void syncWorkoutLiveActivity({ exerciseId: exercise.id });
     forceRerender((n) => n + 1);
   }
 
@@ -303,6 +317,8 @@ const workout = effectiveWorkoutType
                 onClick={() => {
                   setSelectedVariantId(variantId);
                   setChangingPlan(false);
+                  pushCurrentWidgetSnapshot();
+                  syncWatchContext();
                   forceRerender((n) => n + 1);
                 }}
                 className="glass-tap selector-pill w-full rounded-2xl py-4 font-bold text-white"
@@ -476,6 +492,7 @@ const workout = effectiveWorkoutType
         orderKey,
         reorderList.map((exercise) => exercise.id),
       );
+      syncWatchContext();
     }
 
     setReorderMode(false);
@@ -633,6 +650,10 @@ const workout = effectiveWorkoutType
             title: workout.title,
             variantName: resolvedVariantName,
           });
+          setActiveRestTimer(null);
+          void endRestLiveActivity();
+          pushCurrentWidgetSnapshot();
+          syncWatchContext();
           void flushAfterCompleting();
           // Same reason as finishWalk: nothing else schedules a re-render,
           // and this is what actually shows the "انجام دادی" summary in

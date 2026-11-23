@@ -1,8 +1,10 @@
 import { useState } from "react";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 import AccountEditModal from "@/components/AccountEditModal";
 import BmiCard from "@/components/BmiCard";
+import { navigateBackSafely } from "@/utils/navigationBack";
 import WeightModal from "@/components/WeightModal";
 import HeightModal from "@/components/HeightModal";
 import BirthDateModal from "@/components/BirthDateModal";
@@ -19,6 +21,7 @@ import { formatDisplayFull } from "@/utils/dateFormat";
 import { toFaDigits } from "@/utils/numberFormat";
 
 export default function ProfilePage() {
+  const navigate = useNavigate();
   const [accountModalOpen, setAccountModalOpen] = useState(false);
   const [heightModalOpen, setHeightModalOpen] = useState(false);
   const [weightModalOpen, setWeightModalOpen] = useState(false);
@@ -34,9 +37,19 @@ export default function ProfilePage() {
 
   return (
     <div className="space-y-4 px-5 pb-5 pt-10">
-      <h1 className="text-center text-2xl font-bold text-white">
-        حساب کاربری
-      </h1>
+      <div className="relative flex items-center justify-center">
+        <button
+          onClick={() => navigateBackSafely(navigate, "/profile")}
+          aria-label="بازگشت"
+          className="glass-chip absolute right-0 flex h-9 w-9 items-center justify-center rounded-full"
+        >
+          <ChevronRight size={18} />
+        </button>
+
+        <h1 className="text-center text-2xl font-bold text-white">
+          حساب کاربری
+        </h1>
+      </div>
 
       <button
         onClick={() => setAccountModalOpen(true)}

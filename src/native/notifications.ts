@@ -3,7 +3,8 @@ import { PushNotifications, type Token } from "@capacitor/push-notifications";
 
 import { supabase } from "@/lib/supabaseClient";
 
-import { isNativeApp } from "./platform";
+import { GampetooNative } from "./nativePlugin";
+import { isNativeApp, isNativeIos } from "./platform";
 
 const PREFS_KEY = "gampetoo-ios-notification-prefs";
 const PUSH_TOKEN_KEY = "gampetoo-ios-apns-token";
@@ -97,6 +98,18 @@ export async function scheduleRestFinishedNotification(
   const delayMs = endAtMs - Date.now();
   if (delayMs < 1500) return;
 
+  if (isNativeIos()) {
+    try {
+      await GampetooNative.scheduleRestNotification({
+        endAtUnixSeconds: endAtMs / 1000,
+        exerciseName,
+      });
+      return;
+    } catch {
+      // Fall back to Capacitor LocalNotifications if native method is unavailable.
+    }
+  }
+
   const granted = await ensureLocalNotificationPermission();
   if (!granted) return;
 
@@ -122,6 +135,14 @@ export async function scheduleRestFinishedNotification(
 
 export async function cancelRestFinishedNotification(): Promise<void> {
   if (!isNativeApp()) return;
+
+  if (isNativeIos()) {
+    try {
+      await GampetooNative.cancelRestNotification();
+    } catch {
+      // Ignore cancel errors.
+    }
+  }
 
   try {
     await LocalNotifications.cancel({

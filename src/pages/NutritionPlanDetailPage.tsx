@@ -1,8 +1,9 @@
-import { ChevronDown, FileText, Search, X } from "lucide-react";
+import { ChevronDown, ChevronRight, FileText, Search, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 import PlanTextImportModal from "@/components/nutrition/PlanTextImportModal";
+import { navigateBackSafely } from "@/utils/navigationBack";
 import Toggle from "@/components/Toggle";
 import { getActiveProgram, updateProgram } from "@/utils/programEngine";
 import { getMealSlots } from "@/data/nutrition/foodCatalog";
@@ -269,6 +270,7 @@ function buildInitialPlan(type: MealPlanType): MealPlan {
 
 export default function NutritionPlanDetailPage() {
   const { type: rawType } = useParams();
+  const navigate = useNavigate();
 
   const type: MealPlanType | null =
     rawType === "workout" || rawType === "rest" ? rawType : null;
@@ -474,9 +476,21 @@ export default function NutritionPlanDetailPage() {
 
   return (
     <div className="space-y-6 px-5 pb-5 pt-10">
-      <h1 className="text-center text-2xl font-bold text-white">
-        {typeTitles[type]}
-      </h1>
+      <div className="relative flex items-center justify-center">
+        <button
+          onClick={() =>
+            navigateBackSafely(navigate, `/settings/nutrition/${type}`)
+          }
+          aria-label="بازگشت"
+          className="glass-chip absolute right-0 flex h-9 w-9 items-center justify-center rounded-full"
+        >
+          <ChevronRight size={18} />
+        </button>
+
+        <h1 className="px-11 text-center text-xl font-bold text-white">
+          {typeTitles[type]}
+        </h1>
+      </div>
 
       {/* Writes straight to storage rather than into this page's own draft,
           so the draft is rebuilt from what was written — otherwise pressing

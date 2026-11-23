@@ -1,34 +1,56 @@
 import { useState } from "react";
-import { Dumbbell, UtensilsCrossed } from "lucide-react";
+import { Activity, Dumbbell, UtensilsCrossed } from "lucide-react";
 
 import PillTabBar, { type PillTabBarItem } from "@/components/PillTabBar";
+import ActivityTabRoot from "@/components/progress/ActivityTabRoot";
+import { isNativeIos } from "@/native/platform";
 
 import WorkoutPage from "./WorkoutPage";
 import NutritionPage from "./NutritionPage";
 
-type Tab = "workout" | "nutrition";
+type WebTab = "workout" | "nutrition";
+type IosTab = "workout" | "activity";
 
-const tabs: PillTabBarItem<Tab>[] = [
+const webTabs: PillTabBarItem<WebTab>[] = [
   { id: "workout", label: "برنامه تمرینی", icon: Dumbbell },
   { id: "nutrition", label: "برنامه غذایی", icon: UtensilsCrossed },
 ];
 
+const iosTabs: PillTabBarItem<IosTab>[] = [
+  { id: "workout", label: "برنامه تمرینی", icon: Dumbbell },
+  { id: "activity", label: "فعالیت", icon: Activity },
+];
+
 export default function DailyProgramPage() {
-  const [tab, setTab] = useState<Tab>("workout");
+  const nativeIos = isNativeIos();
+  const [webTab, setWebTab] = useState<WebTab>("workout");
+  const [iosTab, setIosTab] = useState<IosTab>("workout");
+
+  if (nativeIos) {
+    return (
+      <div>
+        <PillTabBar
+          items={iosTabs}
+          active={iosTab}
+          onChange={setIosTab}
+          layoutId="daily-program-tab-selection"
+        />
+
+        {iosTab === "workout" ? <WorkoutPage /> : <ActivityTabRoot />}
+      </div>
+    );
+  }
 
   return (
     <div>
       <PillTabBar
-        items={tabs}
-        active={tab}
-        onChange={setTab}
+        items={webTabs}
+        active={webTab}
+        onChange={setWebTab}
         layoutId="daily-program-tab-selection"
       />
 
-      {/* "تقویم هفته" used to sit in its own row here — it's now part of
-          WorkoutHeader's own action row inside WorkoutPage, sharing one
-          line with the forgot/edit buttons. */}
-      {tab === "workout" ? <WorkoutPage /> : <NutritionPage />}
+      {webTab === "workout" ? <WorkoutPage /> : <NutritionPage />}
     </div>
   );
 }

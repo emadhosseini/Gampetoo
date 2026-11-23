@@ -10,20 +10,31 @@ struct GampetooSnapshot: Codable {
     var workoutTitle: String
     var workoutActivity: String
     var workoutCompleted: Bool
+    var completedExercises: Int?
+    var totalExercises: Int?
     var caloriesConsumed: Int
     var caloriesTarget: Int
     var proteinGrams: Int
+    var proteinTarget: Int?
     var waterGlasses: Int
     var waterGoal: Int
+
+    var effectiveProteinTarget: Int {
+        let pt = proteinTarget ?? 0
+        return pt > 0 ? pt : 150
+    }
 
     static let placeholder = GampetooSnapshot(
         date: "",
         workoutTitle: "تمرین بالاتنه",
         workoutActivity: "workout",
         workoutCompleted: false,
-        caloriesConsumed: 1250,
+        completedExercises: 2,
+        totalExercises: 6,
+        caloriesConsumed: 1420,
         caloriesTarget: 2100,
-        proteinGrams: 95,
+        proteinGrams: 112,
+        proteinTarget: 150,
         waterGlasses: 5,
         waterGoal: 8
     )
@@ -60,11 +71,19 @@ struct GampetooTimelineProvider: TimelineProvider {
 }
 
 private struct ForestWidgetBackground: View {
-    private let bgTop = Color(red: 29 / 255, green: 71 / 255, blue: 36 / 255)
-    private let bgBottom = Color(red: 19 / 255, green: 47 / 255, blue: 24 / 255)
+    private let bgTop = Color(red: 28 / 255, green: 68 / 255, blue: 35 / 255)
+    private let bgBottom = Color(red: 14 / 255, green: 36 / 255, blue: 19 / 255)
 
     var body: some View {
-        LinearGradient(colors: [bgTop, bgBottom], startPoint: .topLeading, endPoint: .bottomTrailing)
+        ZStack {
+            LinearGradient(colors: [bgTop, bgBottom], startPoint: .topLeading, endPoint: .bottomTrailing)
+            RadialGradient(
+                colors: [Color(red: 157 / 255, green: 199 / 255, blue: 48 / 255).opacity(0.14), .clear],
+                center: .topTrailing,
+                startRadius: 8,
+                endRadius: 170
+            )
+        }
     }
 }
 
@@ -79,6 +98,71 @@ private extension View {
             self.background(ForestWidgetBackground())
         }
     }
+
+    @ViewBuilder
+    func gampetooLegacyWidgetPadding(horizontal: CGFloat, vertical: CGFloat) -> some View {
+        if #available(iOSApplicationExtension 17.0, *) {
+            // iOS 17+ containerBackground already provides native widget margins.
+            self
+        } else {
+            self.padding(.horizontal, horizontal).padding(.vertical, vertical)
+        }
+    }
+}
+
+private struct WidgetMetricRing: View {
+    let valueText: String
+    let label: String
+    let progress: Double
+    let ringColor: Color
+    let size: CGFloat
+    let lineWidth: CGFloat
+    let valueFontSize: CGFloat
+    var iconName: String? = nil
+
+    private var clampedProgress: Double {
+        min(1.0, max(0.0, progress))
+    }
+
+    var body: some View {
+        VStack(spacing: 5) {
+            ZStack {
+                Circle()
+                    .stroke(.white.opacity(0.12), lineWidth: lineWidth)
+
+                if clampedProgress > 0 {
+                    Circle()
+                        .trim(from: 0, to: clampedProgress)
+                        .stroke(
+                            ringColor,
+                            style: StrokeStyle(lineWidth: lineWidth, lineCap: .round)
+                        )
+                        .rotationEffect(.degrees(-90))
+                }
+
+                VStack(spacing: 1) {
+                    if let iconName {
+                        Image(systemName: iconName)
+                            .font(.system(size: size * 0.16, weight: .semibold))
+                            .foregroundStyle(ringColor)
+                    }
+                    Text(verbatim: valueText)
+                        .font(.system(size: valueFontSize, weight: .bold, design: .rounded))
+                        .monospacedDigit()
+                        .foregroundStyle(.white)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.6)
+                        .padding(.horizontal, lineWidth + 3)
+                }
+            }
+            .frame(width: size, height: size)
+
+            Text(label)
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(.white.opacity(0.75))
+                .lineLimit(1)
+        }
+    }
 }
 
 struct GampetooDailyWidgetView: View {
@@ -87,63 +171,191 @@ struct GampetooDailyWidgetView: View {
 
     private let accentYellow = Color(red: 250 / 255, green: 234 / 255, blue: 92 / 255)
     private let accentLime = Color(red: 157 / 255, green: 199 / 255, blue: 48 / 255)
+    private let calorieEmerald = Color(red: 74 / 255, green: 222 / 255, blue: 128 / 255)
+    private let waterSky = Color(red: 56 / 255, green: 189 / 255, blue: 248 / 255)
+
+    private var snapshot: GampetooSnapshot { entry.snapshot }
+
+    private var calorieProgress: Double {
+        guard snapshot.caloriesTarget > 0 else { return 0 }
+        return Double(snapshot.caloriesConsumed) / Double(snapshot.caloriesTarget)
+    }
+
+    private var proteinProgress: Double {
+        let target = snapshot.effectiveProteinTarget
+        guard target > 0 else { return 0 }
+        return Double(snapshot.proteinGrams) / Double(target)
+    }
+
+    private var waterProgress: Double {
+        guard snapshot.waterGoal > 0 else { return 0 }
+        return Double(snapshot.waterGlasses) / Double(snapshot.waterGoal)
+    }
+
+    private var statusIconName: String {
+        if snapshot.workoutCompleted {
+            return "checkmark.circle.fill"
+        }
+        return snapshot.workoutActivity == "workout"
+            ? "figure.strengthtraining.traditional"
+            : "figure.walk"
+    }
+
+    private var workoutTitleText: String {
+        snapshot.workoutTitle.isEmpty ? "برنامه امروز" : snapshot.workoutTitle
+    }
 
     var body: some View {
-        let s = entry.snapshot
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Text("Gampetoo")
-                    .font(.caption.bold())
-                    .foregroundStyle(accentYellow)
-                Spacer()
-                Image(systemName: s.workoutCompleted ? "checkmark.circle.fill" : "figure.strengthtraining.traditional")
-                    .foregroundStyle(s.workoutCompleted ? accentLime : .white)
-            }
-
-            Text(s.workoutTitle.isEmpty ? "برنامه امروز" : s.workoutTitle)
-                .font(.headline.bold())
-                .foregroundStyle(.white)
-                .lineLimit(1)
-
-            Spacer(minLength: 0)
-
-            HStack(spacing: 12) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("کالری")
-                        .font(.caption2)
-                        .foregroundStyle(.white.opacity(0.65))
-                    Text(s.caloriesTarget > 0 ? "\(s.caloriesConsumed)/\(s.caloriesTarget)" : "\(s.caloriesConsumed)")
-                        .font(.caption.bold())
-                        .monospacedDigit()
-                        .foregroundStyle(.white)
-                }
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("آب")
-                        .font(.caption2)
-                        .foregroundStyle(.white.opacity(0.65))
-                    Text("\(s.waterGlasses)/\(s.waterGoal) 💧")
-                        .font(.caption.bold())
-                        .monospacedDigit()
-                        .foregroundStyle(.white)
-                }
-
-                if family == .systemMedium {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("پروتئین")
-                            .font(.caption2)
-                            .foregroundStyle(.white.opacity(0.65))
-                        Text("\(s.proteinGrams)g")
-                            .font(.caption.bold())
-                            .monospacedDigit()
-                            .foregroundStyle(accentLime)
-                    }
-                }
+        Group {
+            if family == .systemSmall {
+                smallLayout
+            } else {
+                mediumLayout
             }
         }
         .environment(\.layoutDirection, .rightToLeft)
-        .padding()
         .gampetooWidgetBackground()
+    }
+
+    private var smallLayout: some View {
+        VStack(spacing: 6) {
+            HStack(spacing: 6) {
+                Text(workoutTitleText)
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundStyle(.white)
+                    .lineLimit(1)
+
+                Spacer(minLength: 4)
+
+                ZStack {
+                    Circle()
+                        .fill(.white.opacity(0.10))
+                    Image(systemName: statusIconName)
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(snapshot.workoutCompleted ? accentLime : accentYellow)
+                }
+                .frame(width: 22, height: 22)
+            }
+
+            Rectangle()
+                .fill(.white.opacity(0.10))
+                .frame(height: 0.75)
+
+            Spacer(minLength: 0)
+
+            HStack(spacing: 8) {
+                WidgetMetricRing(
+                    valueText: "\(snapshot.caloriesConsumed)",
+                    label: "کالری",
+                    progress: calorieProgress,
+                    ringColor: calorieEmerald,
+                    size: 52,
+                    lineWidth: 5,
+                    valueFontSize: 12.5
+                )
+                .frame(maxWidth: .infinity)
+
+                WidgetMetricRing(
+                    valueText: "\(snapshot.proteinGrams)g",
+                    label: "پروتئین",
+                    progress: proteinProgress,
+                    ringColor: accentYellow,
+                    size: 52,
+                    lineWidth: 5,
+                    valueFontSize: 12.5
+                )
+                .frame(maxWidth: .infinity)
+            }
+
+            Spacer(minLength: 0)
+        }
+        .gampetooLegacyWidgetPadding(horizontal: 12, vertical: 12)
+    }
+
+    private var mediumLayout: some View {
+        VStack(spacing: 7) {
+            HStack(spacing: 8) {
+                ZStack {
+                    Circle()
+                        .fill(.white.opacity(0.10))
+                    Image(systemName: statusIconName)
+                        .font(.system(size: 11.5, weight: .semibold))
+                        .foregroundStyle(snapshot.workoutCompleted ? accentLime : accentYellow)
+                }
+                .frame(width: 24, height: 24)
+
+                Text(workoutTitleText)
+                    .font(.system(size: 15, weight: .bold))
+                    .foregroundStyle(.white)
+                    .lineLimit(1)
+
+                if snapshot.workoutActivity == "workout",
+                   let total = snapshot.totalExercises, total > 0 {
+                    let done = snapshot.completedExercises ?? 0
+                    Text(verbatim: "\(done)/\(total)")
+                        .font(.system(size: 11, weight: .bold, design: .rounded))
+                        .monospacedDigit()
+                        .foregroundStyle(done >= total ? accentLime : .white.opacity(0.85))
+                        .padding(.horizontal, 7)
+                        .padding(.vertical, 2)
+                        .background(.white.opacity(0.10), in: Capsule())
+                }
+
+                Spacer(minLength: 8)
+
+                Text("Gampetoo")
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundStyle(accentYellow.opacity(0.92))
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+                    .background(.white.opacity(0.08), in: Capsule())
+            }
+
+            Rectangle()
+                .fill(.white.opacity(0.10))
+                .frame(height: 0.75)
+
+            Spacer(minLength: 0)
+
+            HStack(spacing: 0) {
+                WidgetMetricRing(
+                    valueText: "\(snapshot.caloriesConsumed)",
+                    label: "کالری",
+                    progress: calorieProgress,
+                    ringColor: calorieEmerald,
+                    size: 58,
+                    lineWidth: 5.5,
+                    valueFontSize: 13.5
+                )
+                .frame(maxWidth: .infinity)
+
+                WidgetMetricRing(
+                    valueText: "\(snapshot.proteinGrams)g",
+                    label: "پروتئین",
+                    progress: proteinProgress,
+                    ringColor: accentYellow,
+                    size: 58,
+                    lineWidth: 5.5,
+                    valueFontSize: 13.5
+                )
+                .frame(maxWidth: .infinity)
+
+                WidgetMetricRing(
+                    valueText: "\(snapshot.waterGlasses)",
+                    label: "آب",
+                    progress: waterProgress,
+                    ringColor: waterSky,
+                    size: 58,
+                    lineWidth: 5.5,
+                    valueFontSize: 13.5,
+                    iconName: "drop.fill"
+                )
+                .frame(maxWidth: .infinity)
+            }
+
+            Spacer(minLength: 0)
+        }
+        .gampetooLegacyWidgetPadding(horizontal: 14, vertical: 12)
     }
 }
 
@@ -155,7 +367,7 @@ struct GampetooDailyWidget: Widget {
             GampetooDailyWidgetView(entry: entry)
         }
         .configurationDisplayName("برنامه امروز گمپتو")
-        .description("خلاصه تمرین امروز، کالری و مصرف آب")
+        .description("خلاصه تمرین امروز، کالری، پروتئین و آب")
         .supportedFamilies([.systemSmall, .systemMedium])
     }
 }
@@ -163,57 +375,174 @@ struct GampetooDailyWidget: Widget {
 @available(iOS 16.2, *)
 struct GampetooRestLiveActivity: Widget {
     private let accentYellow = Color(red: 250 / 255, green: 234 / 255, blue: 92 / 255)
+    private let accentLime = Color(red: 157 / 255, green: 199 / 255, blue: 48 / 255)
     private let bgForest = Color(red: 19 / 255, green: 47 / 255, blue: 24 / 255)
 
+    private func activeRestRange(for state: GampetooRestTimerAttributes.ContentState) -> ClosedRange<Date>? {
+        guard state.isResting else { return nil }
+        let now = Date()
+        guard state.endAt > now else { return nil }
+        let start = state.endAt.addingTimeInterval(-TimeInterval(max(1, state.totalSeconds)))
+        return min(start, now)...state.endAt
+    }
+
     var body: some WidgetConfiguration {
-        ActivityConfiguration(for: GampetooRestTimerAttributes.self) { context in
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("استراحت بین ست‌ها")
-                        .font(.caption)
-                        .foregroundStyle(.white.opacity(0.75))
-                    Text(context.attributes.exerciseName)
-                        .font(.headline.bold())
-                        .foregroundStyle(.white)
-                        .lineLimit(1)
+        let config = ActivityConfiguration(for: GampetooRestTimerAttributes.self) { context in
+            let state = context.state
+            let restRange = activeRestRange(for: state)
+
+            VStack(spacing: 8) {
+                HStack(spacing: 10) {
+                    VStack(alignment: .leading, spacing: 3) {
+                        HStack(spacing: 6) {
+                            Text(state.workoutTitle.isEmpty ? "تمرین امروز" : state.workoutTitle)
+                                .font(.caption2.bold())
+                                .foregroundStyle(accentYellow)
+                                .lineLimit(1)
+
+                            if state.totalSets > 0 {
+                                Text(verbatim: "ست \(state.completedSets)/\(state.totalSets)")
+                                    .font(.caption2.bold())
+                                    .monospacedDigit()
+                                    .foregroundStyle(.white.opacity(0.85))
+                                    .padding(.horizontal, 6)
+                                    .padding(.vertical, 2)
+                                    .background(.white.opacity(0.12), in: Capsule())
+                            }
+                        }
+
+                        Text(state.exerciseName)
+                            .font(.headline.bold())
+                            .foregroundStyle(.white)
+                            .lineLimit(1)
+                    }
+
+                    Spacer(minLength: 6)
+
+                    if let restRange {
+                        VStack(alignment: .trailing, spacing: 1) {
+                            Text("استراحت")
+                                .font(.system(size: 10, weight: .semibold))
+                                .foregroundStyle(.white.opacity(0.7))
+                            Text(timerInterval: restRange, countsDown: true)
+                                .font(.title2.monospacedDigit().bold())
+                                .foregroundStyle(accentYellow)
+                                .multilineTextAlignment(.trailing)
+                                .frame(minWidth: 56, alignment: .trailing)
+                        }
+                    } else {
+                        VStack(alignment: .trailing, spacing: 2) {
+                            Text("آماده ست بعدی")
+                                .font(.caption2.bold())
+                                .foregroundStyle(accentLime)
+                            if state.totalExercises > 0 {
+                                Text(verbatim: "\(state.completedExercises)/\(state.totalExercises) حرکت")
+                                    .font(.caption2.monospacedDigit())
+                                    .foregroundStyle(.white.opacity(0.75))
+                            }
+                        }
+                    }
                 }
-                Spacer()
-                Text(timerInterval: Date()...context.state.endAt, countsDown: true)
-                    .font(.title2.monospacedDigit().bold())
-                    .foregroundStyle(accentYellow)
+
+                if let restRange {
+                    ProgressView(timerInterval: restRange, countsDown: true) {
+                        EmptyView()
+                    } currentValueLabel: {
+                        EmptyView()
+                    }
+                    .tint(accentYellow)
+                } else if state.totalExercises > 0 {
+                    ProgressView(
+                        value: Double(min(state.completedExercises, state.totalExercises)),
+                        total: Double(max(1, state.totalExercises))
+                    )
+                    .tint(accentLime)
+                }
             }
             .environment(\.layoutDirection, .rightToLeft)
-            .padding()
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
             .activityBackgroundTint(bgForest)
         } dynamicIsland: { context in
-            DynamicIsland {
+            let state = context.state
+            let restRange = activeRestRange(for: state)
+
+            return DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
-                    Text(context.attributes.exerciseName)
-                        .font(.caption.bold())
-                        .lineLimit(1)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(state.exerciseName)
+                            .font(.caption.bold())
+                            .foregroundStyle(.white)
+                            .lineLimit(1)
+                        if state.totalSets > 0 {
+                            Text(verbatim: "ست \(state.completedSets) از \(state.totalSets)")
+                                .font(.caption2)
+                                .foregroundStyle(.white.opacity(0.7))
+                        }
+                    }
                 }
                 DynamicIslandExpandedRegion(.trailing) {
-                    Text(timerInterval: Date()...context.state.endAt, countsDown: true)
-                        .font(.headline.monospacedDigit().bold())
-                        .foregroundStyle(accentYellow)
+                    if let restRange {
+                        Text(timerInterval: restRange, countsDown: true)
+                            .font(.headline.monospacedDigit().bold())
+                            .foregroundStyle(accentYellow)
+                            .frame(minWidth: 48, alignment: .trailing)
+                    } else if state.totalExercises > 0 {
+                        Text(verbatim: "\(state.completedExercises)/\(state.totalExercises)")
+                            .font(.headline.monospacedDigit().bold())
+                            .foregroundStyle(accentLime)
+                    } else {
+                        Image(systemName: "figure.strengthtraining.traditional")
+                            .foregroundStyle(accentLime)
+                    }
                 }
                 DynamicIslandExpandedRegion(.bottom) {
-                    Text("زمان استراحت تا ست بعدی ⏱️")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
+                    if let restRange {
+                        VStack(spacing: 4) {
+                            ProgressView(timerInterval: restRange, countsDown: true) {
+                                EmptyView()
+                            } currentValueLabel: {
+                                EmptyView()
+                            }
+                            .tint(accentYellow)
+                            Text("استراحت تا ست بعدی ⏱️")
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                        }
+                    } else {
+                        Text("\(state.workoutTitle) · آماده ست بعدی 💪")
+                            .font(.caption2.bold())
+                            .foregroundStyle(accentLime)
+                            .lineLimit(1)
+                    }
                 }
             } compactLeading: {
-                Image(systemName: "timer")
-                    .foregroundStyle(accentYellow)
+                Image(systemName: restRange != nil ? "timer" : "figure.strengthtraining.traditional")
+                    .foregroundStyle(restRange != nil ? accentYellow : accentLime)
             } compactTrailing: {
-                Text(timerInterval: Date()...context.state.endAt, countsDown: true)
-                    .font(.caption.monospacedDigit().bold())
-                    .foregroundStyle(accentYellow)
-                    .frame(width: 44)
+                if let restRange {
+                    Text(timerInterval: restRange, countsDown: true)
+                        .font(.caption.monospacedDigit().bold())
+                        .foregroundStyle(accentYellow)
+                        .frame(width: 44)
+                } else if state.totalExercises > 0 {
+                    Text(verbatim: "\(state.completedExercises)/\(state.totalExercises)")
+                        .font(.caption.monospacedDigit().bold())
+                        .foregroundStyle(accentLime)
+                } else {
+                    Text("💪")
+                        .font(.caption)
+                }
             } minimal: {
-                Image(systemName: "timer")
-                    .foregroundStyle(accentYellow)
+                Image(systemName: restRange != nil ? "timer" : "figure.strengthtraining.traditional")
+                    .foregroundStyle(restRange != nil ? accentYellow : accentLime)
             }
+        }
+
+        if #available(iOSApplicationExtension 18.0, *) {
+            return config.supplementalActivityFamilies([.small])
+        } else {
+            return config
         }
     }
 }

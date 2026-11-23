@@ -1,7 +1,9 @@
+import { ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import BodyMeasurementsOverviewChart from "@/components/progress/BodyMeasurementsOverviewChart";
 import BodySilhouette from "@/components/progress/BodySilhouette";
+import { navigateBackSafely } from "@/utils/navigationBack";
 import {
   MEASUREMENT_LABELS,
   MEASUREMENT_TYPES,
@@ -36,7 +38,17 @@ export default function BodyMeasurementsPage() {
 
   return (
     <div className="space-y-4 px-5 pb-5 pt-10">
-      <h1 className="text-center text-lg font-bold text-white">اندازه‌ها</h1>
+      <div className="relative flex items-center justify-center">
+        <button
+          onClick={() => navigateBackSafely(navigate, "/progress/body-measurements")}
+          aria-label="بازگشت"
+          className="glass-chip absolute right-0 flex h-9 w-9 items-center justify-center rounded-full"
+        >
+          <ChevronRight size={18} />
+        </button>
+
+        <h1 className="text-center text-lg font-bold text-white">اندازه‌ها</h1>
+      </div>
 
       <div className="glass-panel glass-static space-y-1 rounded-2xl p-4">
         <h2 className="text-center text-sm font-semibold text-white/70">شکل بدن</h2>

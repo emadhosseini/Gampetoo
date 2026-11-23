@@ -37,6 +37,8 @@
 	<string>گمپتو برای ثبت تمرین‌های انجام‌شده، پیاده‌روی، آب مصرفی و وزن در Apple Health به این دسترسی نیاز دارد.</string>
 	<key>NSSupportsLiveActivities</key>
 	<true/>
+	<key>NSSupportsLiveActivitiesFrequentUpdates</key>
+	<true/>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

@@ -1,5 +1,8 @@
+import { ChevronRight } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+
+import { navigateBackSafely } from "@/utils/navigationBack";
 
 import WorkoutPickerModal from "@/components/WorkoutPickerModal";
 import StartDateModal from "@/components/StartDateModal";
@@ -197,8 +200,18 @@ function ProgramBuilderPage() {
 
   return (
     <div className="space-y-6 px-5 pb-5 pt-10">
-      <div className="mb-6 mt-4 text-center">
-        <h1 className="text-3xl font-bold">
+      <div className="relative mb-6 mt-4 flex items-center justify-center">
+        {!isFirstTime && (
+          <button
+            onClick={() => navigateBackSafely(navigate, "/settings/program")}
+            aria-label="بازگشت"
+            className="glass-chip absolute right-0 flex h-9 w-9 items-center justify-center rounded-full"
+          >
+            <ChevronRight size={18} />
+          </button>
+        )}
+
+        <h1 className="text-2xl font-bold">
           {isFirstTime ? "برنامه تمرینی روزانه رو بساز" : "تقویم تمرینی"}
         </h1>
       </div>

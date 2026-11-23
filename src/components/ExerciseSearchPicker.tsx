@@ -2,38 +2,39 @@ import { useMemo, useState } from "react";
 import { Check, Plus, Search, X } from "lucide-react";
 
 import ModalOverlay from "@/components/ModalOverlay";
-import { getLibrary } from "@/store/workoutLibraryStore";
 import {
-  MUSCLE_CATEGORIES,
-  categoryOf,
-  filterExercises,
+  CANONICAL_EXERCISE_GROUPS,
+  getLibrary,
+  resolveExerciseGroupMeta,
+} from "@/store/workoutLibraryStore";
+import {
   flattenExercises,
-  type MuscleCategoryId,
+  matchesSearch,
 } from "@/domain/services/exerciseService";
 import type { Exercise } from "@/data/workoutLibrary";
 
 export interface ExerciseSearchPickerProps {
-  // Ids already in the group being edited — shown as "اضافه شده" rather
-  // than offered again, so the same exercise can't be added twice.
+  // Ids already in the group/workout being edited — shown as "اضافه شده"
+  // rather than offered again, so the same exercise can't be added twice.
   existingIds: string[];
   onPick: (exercise: Exercise) => void;
+  label?: string;
 }
 
 /**
- * "جست‌و‌جو از تمرین‌های دیگه" — searches the entire exercise catalogue,
- * not just the workout currently open, so building a whole-body (or any
- * custom) day doesn't mean the movement has to have been listed under that
- * day in the seed data. Picking one adds it to the group being edited; the
- * exercise itself is still defined in exactly one place, this only records
- * that it was added (see workoutLibraryStore's extras).
+ * Searches the entire exercise catalogue across all muscle groups (chest,
+ * back, shoulders, biceps, triceps, forearms, legs, abs, cardio) so any
+ * workout day (e.g. Push) can freely include movements from any other
+ * muscle group (e.g. Biceps or Abs).
  */
 export default function ExerciseSearchPicker({
   existingIds,
   onPick,
+  label = "جست‌وجو از تمرین‌های دیگه",
 }: ExerciseSearchPickerProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const [category, setCategory] = useState<MuscleCategoryId | null>(null);
+  const [groupFilter, setGroupFilter] = useState<string | null>(null);
   // Ids added during this session, so a picked row can flip to a
   // confirmation immediately without the parent having to re-render the
   // whole page first.
@@ -42,8 +43,14 @@ export default function ExerciseSearchPicker({
   const all = useMemo(() => (open ? flattenExercises(getLibrary()) : []), [open]);
 
   const results = useMemo(
-    () => filterExercises(all, { category, searchQuery: query }),
-    [all, category, query],
+    () =>
+      all.filter((exercise) => {
+        if (groupFilter && resolveExerciseGroupMeta(exercise).id !== groupFilter) {
+          return false;
+        }
+        return matchesSearch(exercise, query);
+      }),
+    [all, groupFilter, query],
   );
 
   const taken = new Set([...existingIds, ...justAdded]);
@@ -58,10 +65,10 @@ export default function ExerciseSearchPicker({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="glass-chip glass-static flex w-full items-center justify-center gap-2 rounded-full px-3 py-2 text-sm font-medium text-white"
+        className="glass-chip glass-static flex w-full items-center justify-center gap-2 rounded-full px-3 py-2.5 text-sm font-medium text-white"
       >
         <Search size={14} className="text-white/60" />
-        جست‌و‌جو از تمرین‌های دیگه
+        {label}
       </button>
 
       {open && (
@@ -69,13 +76,13 @@ export default function ExerciseSearchPicker({
           onClose={() => {
             setOpen(false);
             setQuery("");
-            setCategory(null);
+            setGroupFilter(null);
             setJustAdded([]);
           }}
         >
           <div className="glass-panel glass-static flex max-h-[85vh] w-full flex-col gap-3 rounded-3xl p-4">
             <h2 className="text-center text-base font-bold text-white">
-              جست‌و‌جو از تمرین‌های دیگه
+              {label}
             </h2>
 
             <div className="glass-chip glass-static flex items-center gap-2 rounded-full px-3 py-2">
@@ -102,19 +109,20 @@ export default function ExerciseSearchPicker({
               )}
             </div>
 
-            {/* Muscle-group chips — tapping the active one clears it, so
-                there's no separate "همه" state to keep in sync. */}
+            {/* Granular muscle-group chips (سینه، پشت، سرشانه، جلو بازو، پشت بازو، ساعد، پا، شکم، هوازی) */}
             <div className="no-scrollbar -mx-1 flex gap-1.5 overflow-x-auto px-1">
-              {MUSCLE_CATEGORIES.map((item) => (
+              {CANONICAL_EXERCISE_GROUPS.map((item) => (
                 <button
                   key={item.id}
                   type="button"
-                  onClick={() => setCategory((prev) => (prev === item.id ? null : item.id))}
+                  onClick={() =>
+                    setGroupFilter((prev) => (prev === item.id ? null : item.id))
+                  }
                   className={`glass-chip glass-static shrink-0 rounded-full px-3 py-1.5 text-xs font-medium text-white ${
-                    category === item.id ? "glass-chip-selected" : ""
+                    groupFilter === item.id ? "glass-chip-selected" : ""
                   }`}
                 >
-                  {item.label}
+                  {item.title}
                 </button>
               ))}
             </div>
@@ -125,9 +133,7 @@ export default function ExerciseSearchPicker({
               ) : (
                 results.map((exercise) => {
                   const added = taken.has(exercise.id);
-                  const label = MUSCLE_CATEGORIES.find(
-                    (item) => item.id === categoryOf(exercise),
-                  )?.label;
+                  const groupTitle = resolveExerciseGroupMeta(exercise).title;
 
                   return (
                     <button
@@ -150,7 +156,7 @@ export default function ExerciseSearchPicker({
                         </span>
 
                         <span className="block text-[10px] text-white/40">
-                          {[label, exercise.equipment].filter(Boolean).join(" · ")}
+                          {[groupTitle, exercise.equipment].filter(Boolean).join(" · ")}
                         </span>
                       </span>
 
@@ -174,7 +180,7 @@ export default function ExerciseSearchPicker({
               onClick={() => {
                 setOpen(false);
                 setQuery("");
-                setCategory(null);
+                setGroupFilter(null);
                 setJustAdded([]);
               }}
               className="ghost-action ghost-action-static w-full shrink-0 rounded-2xl py-3 font-medium text-white"

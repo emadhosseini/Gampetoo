@@ -3,6 +3,8 @@ import { Droplet, Pencil } from "lucide-react";
 
 import WaterLogModal from "@/components/WaterLogModal";
 import WaterGoalModal from "@/components/progress/WaterGoalModal";
+import { pushCurrentWidgetSnapshot } from "@/native/nativeBridge";
+import { syncWatchContext } from "@/native/watchBridge";
 import { getTodayGlasses, getWaterGoal, logGlasses } from "@/utils/waterEngine";
 import { toFaDigits } from "@/utils/numberFormat";
 
@@ -91,6 +93,8 @@ export default function WaterProgressRow() {
         onClose={() => setAddOpen(false)}
         onLog={(count) => {
           logGlasses(count);
+          pushCurrentWidgetSnapshot();
+          syncWatchContext();
           forceRerender((n) => n + 1);
         }}
       />
@@ -100,6 +104,8 @@ export default function WaterProgressRow() {
         onClose={() => setGoalOpen(false)}
         onSaved={() => {
           setGoalOpen(false);
+          pushCurrentWidgetSnapshot();
+          syncWatchContext();
           forceRerender((n) => n + 1);
         }}
       />

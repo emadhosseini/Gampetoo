@@ -1,5 +1,6 @@
 import Foundation
 import UIKit
+import UserNotifications
 import Capacitor
 
 #if canImport(ActivityKit)
@@ -52,6 +53,8 @@ public class GampetooNativePlugin: CAPPlugin, CAPBridgedPlugin {
     public let pluginMethods: [CAPPluginMethod] = [
         CAPPluginMethod(name: "startRestTimerActivity", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "endRestTimerActivity", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "scheduleRestNotification", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "cancelRestNotification", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "updateWidgetSnapshot", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "getCapabilities", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "requestHealthKitAuth", returnType: CAPPluginReturnPromise),
@@ -70,51 +73,80 @@ public class GampetooNativePlugin: CAPPlugin, CAPBridgedPlugin {
         }
     }
 
-    // MARK: - Live Activities (Dynamic Island)
+    // MARK: - Live Activities (Dynamic Island & Watch Smart Stack)
 
     @objc func startRestTimerActivity(_ call: CAPPluginCall) {
+        let workoutTitle = call.getString("workoutTitle") ?? "تمرین امروز"
         let exerciseName = call.getString("exerciseName") ?? "تمرین"
+        let completedSets = call.getInt("completedSets") ?? 0
+        let totalSets = call.getInt("totalSets") ?? 0
+        let completedExercises = call.getInt("completedExercises") ?? 0
+        let totalExercises = call.getInt("totalExercises") ?? 0
         let endAtUnix = call.getDouble("endAtUnixSeconds") ?? 0
-        let totalSeconds = call.getInt("totalSeconds") ?? 90
-
-        guard endAtUnix > Date().timeIntervalSince1970 else {
-            call.resolve(["started": false])
-            return
-        }
+        let totalSeconds = max(0, call.getInt("totalSeconds") ?? 0)
+        let notifyRestFinished = call.getBool("notifyRestFinished") ?? false
+        let nowUnix = Date().timeIntervalSince1970
+        let isResting = (call.getBool("isResting") ?? (endAtUnix > nowUnix)) && endAtUnix > nowUnix
 
         #if canImport(ActivityKit)
         if #available(iOS 16.2, *) {
             let authInfo = ActivityAuthorizationInfo()
             guard authInfo.areActivitiesEnabled else {
-                call.resolve(["started": false])
+                call.resolve(["started": false, "reason": "live_activities_disabled"])
                 return
             }
 
+            let endDate = isResting ? Date(timeIntervalSince1970: endAtUnix) : Date()
+            let state = GampetooRestTimerAttributes.ContentState(
+                workoutTitle: workoutTitle,
+                exerciseName: exerciseName,
+                completedSets: completedSets,
+                totalSets: totalSets,
+                completedExercises: completedExercises,
+                totalExercises: totalExercises,
+                isResting: isResting,
+                endAt: endDate,
+                totalSeconds: isResting ? max(1, totalSeconds) : 0
+            )
+            // Keep staleDate well beyond rest completion so the Live Activity stays
+            // alive cleanly on Dynamic Island across the full workout session.
+            let staleDate = isResting
+                ? endDate.addingTimeInterval(3600)
+                : Date().addingTimeInterval(7200)
+            let content = ActivityContent(state: state, staleDate: staleDate)
+
             Task {
-                for existing in Activity<GampetooRestTimerAttributes>.activities {
-                    await existing.end(nil, dismissalPolicy: .immediate)
+                if let existing = Activity<GampetooRestTimerAttributes>.activities.first {
+                    if !isResting && notifyRestFinished {
+                        // AlertConfiguration triggers a haptic tap + banner on
+                        // iPhone AND Apple Watch Smart Stack (watchOS 11+) even
+                        // when iPhone is unlocked or the Watch app isn't open.
+                        let alert = AlertConfiguration(
+                            title: "زمان استراحت تمام شد ⏱️",
+                            body: "آماده برای ست بعدی «\(exerciseName)»",
+                            sound: .default
+                        )
+                        await existing.update(content, alertConfiguration: alert)
+                    } else {
+                        await existing.update(content)
+                    }
+                    call.resolve(["started": true])
+                    return
                 }
 
-                let attributes = GampetooRestTimerAttributes(exerciseName: exerciseName)
-                let endDate = Date(timeIntervalSince1970: endAtUnix)
-                let state = GampetooRestTimerAttributes.ContentState(
-                    endAt: endDate,
-                    totalSeconds: totalSeconds
-                )
-                let content = ActivityContent(state: state, staleDate: endDate)
-
+                let attributes = GampetooRestTimerAttributes(sessionId: "today")
                 do {
                     _ = try Activity.request(attributes: attributes, content: content, pushType: nil)
                     call.resolve(["started": true])
                 } catch {
-                    call.resolve(["started": false])
+                    call.resolve(["started": false, "reason": error.localizedDescription])
                 }
             }
             return
         }
         #endif
 
-        call.resolve(["started": false])
+        call.resolve(["started": false, "reason": "unsupported"])
     }
 
     @objc func endRestTimerActivity(_ call: CAPPluginCall) {
@@ -133,6 +165,68 @@ public class GampetooNativePlugin: CAPPlugin, CAPBridgedPlugin {
         call.resolve()
     }
 
+    // MARK: - Native Rest Finished Notification (Real UNNotificationSound.default + Time-Sensitive)
+
+    @objc func scheduleRestNotification(_ call: CAPPluginCall) {
+        let endAtUnix = call.getDouble("endAtUnixSeconds") ?? 0
+        let exerciseName = call.getString("exerciseName") ?? "تمرین"
+        let interval = endAtUnix - Date().timeIntervalSince1970
+
+        guard interval > 1.0 else {
+            call.resolve(["scheduled": false])
+            return
+        }
+
+        let center = UNUserNotificationCenter.current()
+        let scheduleBlock = {
+            let identifier = "gampetoo_ios_rest_done"
+            center.removePendingNotificationRequests(withIdentifiers: [identifier])
+            center.removeDeliveredNotifications(withIdentifiers: [identifier])
+
+            let content = UNMutableNotificationContent()
+            content.title = "زمان استراحت تمام شد ⏱️"
+            content.body = "آماده برای ست بعدی «\(exerciseName)»"
+            // Use the real system UNNotificationSound.default (Capacitor's
+            // LocalNotifications plugin maps "default" to UNNotificationSoundName("default")
+            // which looks up a non-existent bundle file and breaks Watch haptics).
+            content.sound = .default
+            if #available(iOS 15.0, *) {
+                content.interruptionLevel = .timeSensitive
+            }
+
+            let trigger = UNTimeIntervalNotificationTrigger(timeInterval: interval, repeats: false)
+            let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
+            center.add(request) { error in
+                call.resolve(["scheduled": error == nil])
+            }
+        }
+
+        center.getNotificationSettings { settings in
+            switch settings.authorizationStatus {
+            case .authorized, .provisional, .ephemeral:
+                scheduleBlock()
+            case .notDetermined:
+                center.requestAuthorization(options: [.alert, .sound]) { granted, _ in
+                    if granted {
+                        scheduleBlock()
+                    } else {
+                        call.resolve(["scheduled": false])
+                    }
+                }
+            default:
+                call.resolve(["scheduled": false])
+            }
+        }
+    }
+
+    @objc func cancelRestNotification(_ call: CAPPluginCall) {
+        let identifier = "gampetoo_ios_rest_done"
+        let center = UNUserNotificationCenter.current()
+        center.removePendingNotificationRequests(withIdentifiers: [identifier])
+        center.removeDeliveredNotifications(withIdentifiers: [identifier])
+        call.resolve()
+    }
+
     // MARK: - Widget Snapshot & Capabilities
 
     @objc func updateWidgetSnapshot(_ call: CAPPluginCall) {
@@ -141,9 +235,12 @@ public class GampetooNativePlugin: CAPPlugin, CAPBridgedPlugin {
             "workoutTitle": call.getString("workoutTitle") ?? "",
             "workoutActivity": call.getString("workoutActivity") ?? "rest",
             "workoutCompleted": call.getBool("workoutCompleted") ?? false,
+            "completedExercises": call.getInt("completedExercises") ?? 0,
+            "totalExercises": call.getInt("totalExercises") ?? 0,
             "caloriesConsumed": call.getInt("caloriesConsumed") ?? 0,
             "caloriesTarget": call.getInt("caloriesTarget") ?? 0,
             "proteinGrams": call.getInt("proteinGrams") ?? 0,
+            "proteinTarget": call.getInt("proteinTarget") ?? 0,
             "waterGlasses": call.getInt("waterGlasses") ?? 0,
             "waterGoal": call.getInt("waterGoal") ?? 8,
             "updatedAt": call.getString("updatedAt") ?? "",
@@ -237,6 +334,8 @@ public class GampetooNativePlugin: CAPPlugin, CAPBridgedPlugin {
             "workoutTitle": call.getString("workoutTitle") ?? "",
             "workoutActivity": call.getString("workoutActivity") ?? "rest",
             "workoutCompleted": call.getBool("workoutCompleted") ?? false,
+            "completedExercises": call.getInt("completedExercises") ?? 0,
+            "totalExercises": call.getInt("totalExercises") ?? 0,
             "caloriesConsumed": call.getInt("caloriesConsumed") ?? 0,
             "caloriesTarget": call.getInt("caloriesTarget") ?? 0,
             "proteinGrams": call.getInt("proteinGrams") ?? 0,
@@ -244,6 +343,9 @@ public class GampetooNativePlugin: CAPPlugin, CAPBridgedPlugin {
             "waterGlasses": call.getInt("waterGlasses") ?? 0,
             "waterGoal": call.getInt("waterGoal") ?? 8,
             "restSeconds": call.getInt("restSeconds") ?? 90,
+            "restEndAtUnix": call.getDouble("restEndAtUnix") ?? 0,
+            "restTotalSeconds": call.getInt("restTotalSeconds") ?? 0,
+            "restExerciseName": call.getString("restExerciseName") ?? "",
             "updatedAt": call.getString("updatedAt") ?? "",
         ]
 
@@ -256,6 +358,7 @@ public class GampetooNativePlugin: CAPPlugin, CAPBridgedPlugin {
     }
 
     @objc func drainWatchActions(_ call: CAPPluginCall) {
+        GampetooWatchSessionManager.shared.markBridgeReady()
         let actions = GampetooWatchSessionManager.shared.drainPendingActions()
         call.resolve(["actions": actions])
     }

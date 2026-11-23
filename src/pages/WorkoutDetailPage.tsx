@@ -1,20 +1,25 @@
-import { ChevronDown, Minus, Pencil, Plus, Search, Trash2, X } from "lucide-react";
+import { ChevronDown, ChevronRight, Minus, Pencil, Plus, Search, Trash2, X } from "lucide-react";
 import { useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 
 import Toggle from "@/components/Toggle";
 import ModalOverlay from "@/components/ModalOverlay";
 import ExerciseSearchPicker from "@/components/ExerciseSearchPicker";
 import ExerciseNoteButton from "@/components/ExerciseNoteButton";
+import { navigateBackSafely } from "@/utils/navigationBack";
 import { movePlanNotes } from "@/store/exerciseNoteStore";
 import {
+  CANONICAL_EXERCISE_GROUPS,
   getDefaultPlanName,
+  getLibrary,
   getWorkout,
-  addExerciseToGroup,
+  resolveExerciseGroupMeta,
   saveWorkoutExercises,
   setDefaultPlanName,
+  syncWorkoutExtras,
 } from "@/store/workoutLibraryStore";
+import { flattenExercises } from "@/domain/services/exerciseService";
 import {
   getSpecializedWarmup,
   saveWarmupGroups,
@@ -388,6 +393,7 @@ function WarmupGroupRow({
 
 export default function WorkoutDetailPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
 
   const workout = id ? getWorkout(id) : undefined;
   const specializedWarmup = id ? getSpecializedWarmup(id) : undefined;
@@ -397,6 +403,8 @@ export default function WorkoutDetailPage() {
   );
 
   const [openGroupId, setOpenGroupId] = useState<string | null>(null);
+  const [otherGroupsOpen, setOtherGroupsOpen] = useState(false);
+  const [openOtherGroupId, setOpenOtherGroupId] = useState<string | null>(null);
 
   const [warmupSectionOpen, setWarmupSectionOpen] = useState(false);
 
@@ -495,26 +503,86 @@ export default function WorkoutDetailPage() {
       null)
     : null;
 
-  // Flattened across every group rather than searched per-group, since the
-  // whole point is finding a move without knowing (or opening) which group
-  // it's filed under first — that's the actual friction this replaces, on
-  // a page like Push where "سینه"/"شانه"/"پشت بازو" each hide their own
-  // exercises behind a collapsed header.
+  const isWarmupWorkout = workout?.id === "warmup";
+
+  const allCatalogueExercises = useMemo(() => flattenExercises(getLibrary()), []);
+
+  const presentExerciseIds = useMemo(
+    () => new Set(groups.flatMap((group) => group.exercises.map((exercise) => exercise.id))),
+    [groups],
+  );
+
+  // Remaining exercises from across the entire catalogue grouped by their
+  // canonical muscle group (e.g. "جلو بازو", "پشت", "شکم" while editing
+  // "پوش") so any workout can freely pull in movements from any muscle group.
+  const otherMuscleGroups = useMemo(() => {
+    if (isWarmupWorkout) return [];
+
+    const byGroup = new Map<string, Exercise[]>();
+    for (const exercise of allCatalogueExercises) {
+      if (presentExerciseIds.has(exercise.id)) continue;
+      const meta = resolveExerciseGroupMeta(exercise);
+      const list = byGroup.get(meta.id) ?? [];
+      list.push(exercise);
+      byGroup.set(meta.id, list);
+    }
+
+    const ordered: ExerciseGroup[] = [];
+    for (const meta of CANONICAL_EXERCISE_GROUPS) {
+      const list = byGroup.get(meta.id);
+      if (list && list.length > 0) {
+        ordered.push({ id: meta.id, title: meta.title, exercises: list });
+        byGroup.delete(meta.id);
+      }
+    }
+    for (const [groupId, list] of byGroup.entries()) {
+      if (list.length > 0) {
+        ordered.push({ id: groupId, title: "سایر حرکات", exercises: list });
+      }
+    }
+    return ordered;
+  }, [allCatalogueExercises, isWarmupWorkout, presentExerciseIds]);
+
+  // Searches both this workout's own groups AND the rest of the entire
+  // exercise catalogue, so typing "جلو بازو" inside "پوش" immediately finds
+  // every biceps movement and lets you toggle it straight into the plan.
   const searchResults = useMemo(() => {
     const normalizedQuery = normalizeFa(query);
 
     if (!normalizedQuery) return [];
 
-    return groups.flatMap((group) =>
+    const localMatches = groups.flatMap((group) =>
       group.exercises
         .filter(
           (exercise) =>
             matchesWordPrefix(normalizeFa(exercise.name), normalizedQuery) ||
             matchesWordPrefix(normalizeFa(exercise.nameEn ?? ""), normalizedQuery),
         )
-        .map((exercise) => ({ group, exercise })),
+        .map((exercise) => ({ group, exercise, fromCatalogue: false })),
     );
-  }, [groups, query]);
+
+    if (isWarmupWorkout) return localMatches;
+
+    const localIds = new Set(localMatches.map((m) => m.exercise.id));
+    const catalogueMatches = allCatalogueExercises
+      .filter(
+        (exercise) =>
+          !presentExerciseIds.has(exercise.id) &&
+          !localIds.has(exercise.id) &&
+          (matchesWordPrefix(normalizeFa(exercise.name), normalizedQuery) ||
+            matchesWordPrefix(normalizeFa(exercise.nameEn ?? ""), normalizedQuery)),
+      )
+      .map((exercise) => {
+        const meta = resolveExerciseGroupMeta(exercise);
+        return {
+          group: { id: meta.id, title: meta.title, exercises: [] } as ExerciseGroup,
+          exercise: { ...exercise, enabled: false },
+          fromCatalogue: true,
+        };
+      });
+
+    return [...localMatches, ...catalogueMatches];
+  }, [allCatalogueExercises, groups, isWarmupWorkout, presentExerciseIds, query]);
 
   if (!workout) {
     return (
@@ -565,37 +633,61 @@ export default function WorkoutDetailPage() {
     });
   }
 
-  // Pulls an exercise in from elsewhere in the catalogue (see
-  // ExerciseSearchPicker). It lands in the draft straight away so it shows
-  // up in the list immediately, enabled — nobody searches out a movement
-  // in order to leave it switched off. Where it's persisted depends on the
-  // plan: a variant stores its whole group list wholesale
-  // (updateVariantGroups), while the base library workout has no such
-  // list, so the addition is recorded separately by id (addExerciseToGroup)
-  // and re-applied by getLibrary on the next read.
-  function handleAddExercise(groupId: string, exercise: Exercise) {
+  // Pulls an exercise in from elsewhere in the catalogue (either into a
+  // specific group or automatically into its canonical muscle group, e.g.
+  // adding "جلو بازو دمبل" into "پوش" creates a "جلو بازو" section). Persisted
+  // atomically on handleSave via syncWorkoutExtras (default plan) or
+  // updateVariantGroups / createVariant (variants).
+  function handleAddExercise(
+    targetGroupId: string | null,
+    exercise: Exercise,
+    patch: Partial<Exercise> = { enabled: true },
+  ) {
     setSaved(false);
 
     setDrafts((prev) => {
       const base = prev[currentKey] ?? sourceGroupsFor(currentKey);
+      const alreadyExists = base.some((g) =>
+        g.exercises.some((existing) => existing.id === exercise.id),
+      );
+
+      if (alreadyExists) {
+        return {
+          ...prev,
+          [currentKey]: base.map((group) => ({
+            ...group,
+            exercises: group.exercises.map((existing) =>
+              existing.id === exercise.id ? { ...existing, ...patch } : existing,
+            ),
+          })),
+        };
+      }
+
+      const meta = resolveExerciseGroupMeta(exercise);
+      const resolvedGroupId = targetGroupId ?? meta.id;
+      const nextExercise: Exercise = { ...exercise, enabled: true, ...patch };
+      const hasGroup = base.some((g) => g.id === resolvedGroupId);
+
+      const nextGroups = hasGroup
+        ? base.map((group) =>
+            group.id !== resolvedGroupId
+              ? group
+              : { ...group, exercises: [...group.exercises, nextExercise] },
+          )
+        : [
+            ...base,
+            {
+              id: resolvedGroupId,
+              title: meta.title,
+              exercises: [nextExercise],
+            },
+          ];
 
       return {
         ...prev,
-        [currentKey]: base.map((group) =>
-          group.id !== groupId ||
-          group.exercises.some((existing) => existing.id === exercise.id)
-            ? group
-            : {
-                ...group,
-                exercises: [...group.exercises, { ...exercise, enabled: true }],
-              },
-        ),
+        [currentKey]: nextGroups,
       };
     });
-
-    if (currentKey === DEFAULT_KEY) {
-      addExerciseToGroup(workout!.id, groupId, exercise.id);
-    }
   }
 
   // Writes every plan that has an unsaved draft — not just the one on
@@ -606,6 +698,7 @@ export default function WorkoutDetailPage() {
   // it from its temporary id to the real one it gets once persisted.
   function handleSave() {
     if (DEFAULT_KEY in drafts) {
+      syncWorkoutExtras(workout!.id, drafts[DEFAULT_KEY]);
       saveWorkoutExercises(workout!.id, drafts[DEFAULT_KEY]);
     }
 
@@ -729,7 +822,6 @@ export default function WorkoutDetailPage() {
     switchTo(null);
   }
 
-  const isWarmupWorkout = workout.id === "warmup";
   // Only the workouts a program day can actually be assigned to (see
   // ProgramBuilderPage/WorkoutPickerModal) benefit from multiple plans —
   // گرم کردن عمومی has no plan concept of its own, and an empty workout has
@@ -738,15 +830,16 @@ export default function WorkoutDetailPage() {
 
   return (
     <div className="space-y-6 px-5 pb-5 pt-2">
-      {/* Title and the "ذخیره" pill share one sticky row now instead of
-          the title sitting on its own further down — centered title, save
-          button pinned to one side (only rendered once there's actually
-          something unsaved), the whole row staying on screen while
-          scrolling so a change made further down never needs a trip back
-          up just to save it. Sticky rather than fixed: MobileContainer's
-          phone-shaped frame is narrower than the real viewport on desktop,
-          and fixed positions relative to the viewport, not that frame. */}
+      {/* Title, back button, and "ذخیره" pill share one sticky row */}
       <div className="sticky top-2 z-30 flex items-center justify-center">
+        <button
+          onClick={() => navigateBackSafely(navigate, `/settings/workouts/${workout.id}`)}
+          aria-label="بازگشت"
+          className="glass-chip absolute inset-s-0 flex h-9 w-9 items-center justify-center rounded-full"
+        >
+          <ChevronRight size={18} />
+        </button>
+
         <h1 className="text-2xl font-bold">تمرین {workout.title}</h1>
 
         {dirty && (groups.length > 0 || specializedWarmup) && (
@@ -914,10 +1007,10 @@ export default function WorkoutDetailPage() {
                     حرکتی پیدا نشد.
                   </p>
                 ) : (
-                  searchResults.map(({ group, exercise }) => (
-                    <div key={exercise.id}>
+                  searchResults.map(({ group, exercise, fromCatalogue }) => (
+                    <div key={`${group.id}:${exercise.id}`}>
                       <p className="mb-1 px-1 text-xs text-white/50">
-                        {group.title}
+                        {fromCatalogue ? `${group.title} · از کل کتابخانه` : group.title}
                       </p>
 
                       <ExerciseEditRow
@@ -926,7 +1019,9 @@ export default function WorkoutDetailPage() {
                         workoutId={workout!.id}
                         variantId={currentKey}
                         onUpdate={(patch) =>
-                          updateExercise(group.id, exercise.id, patch)
+                          fromCatalogue
+                            ? handleAddExercise(null, exercise, patch)
+                            : updateExercise(group.id, exercise.id, patch)
                         }
                       />
                     </div>
@@ -978,6 +1073,7 @@ export default function WorkoutDetailPage() {
 
         {groups.map((group) => {
           const isOpen = openGroupId === group.id;
+          const enabledCount = group.exercises.filter((e) => e.enabled).length;
 
           return (
             <div
@@ -988,11 +1084,18 @@ export default function WorkoutDetailPage() {
                 onClick={() =>
                   setOpenGroupId(isOpen ? null : group.id)
                 }
-                className="flex w-full items-center justify-between"
+                className="flex w-full items-center justify-between gap-2"
               >
-                <h2 className="text-lg font-semibold">
-                  {group.title}
-                </h2>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-lg font-semibold">
+                    {group.title}
+                  </h2>
+                  {enabledCount > 0 && (
+                    <span className="rounded-full bg-avocado-lime/20 px-2 py-0.5 text-[11px] font-semibold text-avocado-lime">
+                      {toFaDigits(enabledCount)} فعال
+                    </span>
+                  )}
+                </div>
 
                 <ChevronDown
                   className={`h-5 w-5 text-zinc-200 transition-transform ${
@@ -1025,7 +1128,7 @@ export default function WorkoutDetailPage() {
                   {/* Anything in the catalogue, not just what this day was
                       seeded with — see ExerciseSearchPicker. */}
                   <ExerciseSearchPicker
-                    existingIds={group.exercises.map((exercise) => exercise.id)}
+                    existingIds={[...presentExerciseIds]}
                     onPick={(exercise) => handleAddExercise(group.id, exercise)}
                   />
                 </div>
@@ -1033,6 +1136,90 @@ export default function WorkoutDetailPage() {
             </div>
           );
         })}
+
+        {/* Comprehensive access to every other muscle group from the entire
+            catalogue (e.g. picking Biceps or Abs inside Push) without being
+            limited to this workout's default subgroups. */}
+        {!isWarmupWorkout && groups.length > 0 && otherMuscleGroups.length > 0 && (
+          <div className="glass-panel glass-static rounded-2xl p-4">
+            <button
+              onClick={() => setOtherGroupsOpen((prev) => !prev)}
+              className="flex w-full items-center justify-between gap-2"
+            >
+              <div className="text-right">
+                <h2 className="text-lg font-semibold">سایر دسته‌های عضلانی</h2>
+                <p className="text-xs text-white/50">
+                  انتخاب آزاد از تمام حرکات (جلو بازو، پشت، پا، شکم و...)
+                </p>
+              </div>
+
+              <ChevronDown
+                className={`h-5 w-5 shrink-0 text-zinc-200 transition-transform ${
+                  otherGroupsOpen ? "rotate-180" : ""
+                }`}
+              />
+            </button>
+
+            {otherGroupsOpen && (
+              <div className="mt-4 space-y-3">
+                {otherMuscleGroups.map((otherGroup) => {
+                  const isSubOpen = openOtherGroupId === otherGroup.id;
+                  return (
+                    <div
+                      key={otherGroup.id}
+                      className="rounded-2xl border border-white/10 bg-white/5 p-3"
+                    >
+                      <button
+                        onClick={() =>
+                          setOpenOtherGroupId(isSubOpen ? null : otherGroup.id)
+                        }
+                        className="flex w-full items-center justify-between gap-2"
+                      >
+                        <span className="text-sm font-semibold text-white">
+                          {otherGroup.title}
+                          <span className="ms-1.5 text-xs font-normal text-white/45">
+                            ({toFaDigits(otherGroup.exercises.length)})
+                          </span>
+                        </span>
+
+                        <ChevronDown
+                          className={`h-4 w-4 text-zinc-300 transition-transform ${
+                            isSubOpen ? "rotate-180" : ""
+                          }`}
+                        />
+                      </button>
+
+                      {isSubOpen && (
+                        <div className="mt-3 space-y-3">
+                          {otherGroup.exercises.map((exercise) => (
+                            <ExerciseEditRow
+                              key={exercise.id}
+                              exercise={{ ...exercise, enabled: false }}
+                              isWarmupWorkout={false}
+                              workoutId={workout!.id}
+                              variantId={currentKey}
+                              onUpdate={(patch) =>
+                                handleAddExercise(null, exercise, patch)
+                              }
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {!isWarmupWorkout && groups.length > 0 && (
+          <ExerciseSearchPicker
+            label="افزودن سریع از همه دسته‌های عضلانی"
+            existingIds={[...presentExerciseIds]}
+            onPick={(exercise) => handleAddExercise(null, exercise)}
+          />
+        )}
       </div>
 
       {(groups.length > 0 || specializedWarmup) && (

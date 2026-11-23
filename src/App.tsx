@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import {
   BrowserRouter,
   Navigate,
@@ -36,7 +37,12 @@ import { mergeExerciseIds } from "@/domain/migrations/mergeExerciseIds";
 import { initNativeShell, isNativeApp } from "@/native/platform";
 import { isHealthKitEnabled, syncHealthKitFromAppleHealth } from "@/native/healthkit";
 import { pushCurrentWidgetSnapshot } from "@/native/nativeBridge";
-import { initWatchBridge, syncWatchContext } from "@/native/watchBridge";
+import {
+  WATCH_UPDATED_EVENT,
+  drainPendingWatchActions,
+  initWatchBridge,
+  syncWatchContext,
+} from "@/native/watchBridge";
 import {
   getNotificationPrefs,
   initNotificationListeners,
@@ -54,9 +60,11 @@ initSync();
 if (isNativeApp()) {
   void initNativeShell(
     () => {
-      void syncNow();
-      pushCurrentWidgetSnapshot();
-      syncWatchContext();
+      void drainPendingWatchActions().finally(() => {
+        void syncNow();
+        pushCurrentWidgetSnapshot();
+        syncWatchContext();
+      });
       void syncPushTokenToSupabase();
       if (isHealthKitEnabled()) {
         void syncHealthKitFromAppleHealth();
@@ -101,6 +109,13 @@ export default function App() {
 
 function AppRoutes() {
   useLocation();
+  const [, setWatchTick] = useState(0);
+
+  useEffect(() => {
+    const handleWatchUpdate = () => setWatchTick((n) => n + 1);
+    window.addEventListener(WATCH_UPDATED_EVENT, handleWatchUpdate);
+    return () => window.removeEventListener(WATCH_UPDATED_EVENT, handleWatchUpdate);
+  }, []);
 
   const initialized = hasCurrentUsername();
 

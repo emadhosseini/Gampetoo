@@ -4,6 +4,7 @@ import { Outlet, useLocation } from "react-router-dom";
 import MobileContainer from "./MobileContainer";
 import BottomNavigation from "./BottomNavigation";
 import SideMenu from "./SideMenu";
+import SwipeBackGesture from "./SwipeBackGesture";
 import { isNativeIos } from "@/native/platform";
 
 // Pages built around StatChartPage's full-bleed top panel — see the
@@ -48,6 +49,7 @@ function Layout() {
         </main>
 
         <BottomNavigation onDrawerOpenChange={setQuickAddOpen} />
+        <SwipeBackGesture />
       </SideMenu>
     </MobileContainer>
   );

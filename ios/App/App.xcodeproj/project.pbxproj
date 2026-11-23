@@ -30,6 +30,9 @@
 		C30000002FE996230072D4E8 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = C30000002FE996150072D4E8 /* PrivacyInfo.xcprivacy */; };
 		C30000002FE996240072D4E8 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C30000002FE996160072D4E8 /* Assets.xcassets */; };
 		C30000002FE996250072D4E8 /* GampetooWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = C30000002FE996100072D4E8 /* GampetooWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		D40000002FE997110072D4E8 /* GampetooWatchWidgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = D40000002FE997020072D4E8 /* GampetooWatchWidgets.swift */; };
+		D40000002FE997120072D4E8 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = D40000002FE997050072D4E8 /* PrivacyInfo.xcprivacy */; };
+		D40000002FE997130072D4E8 /* GampetooWatchWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = D40000002FE997010072D4E8 /* GampetooWatchWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -46,6 +49,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = C30000002FE996400072D4E8;
 			remoteInfo = GampetooWatch;
+		};
+		D40000002FE997400072D4E8 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 504EC2FC1FED79650016851F /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D40000002FE997300072D4E8;
+			remoteInfo = GampetooWatchWidgets;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -70,6 +80,17 @@
 				C30000002FE996250072D4E8 /* GampetooWatch.app in Embed Watch Content */,
 			);
 			name = "Embed Watch Content";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D40000002FE997340072D4E8 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				D40000002FE997130072D4E8 /* GampetooWatchWidgets.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
@@ -104,6 +125,11 @@
 		C30000002FE996140072D4E8 /* GampetooWatch.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = GampetooWatch.entitlements; sourceTree = "<group>"; };
 		C30000002FE996150072D4E8 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		C30000002FE996160072D4E8 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		D40000002FE997010072D4E8 /* GampetooWatchWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = GampetooWatchWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		D40000002FE997020072D4E8 /* GampetooWatchWidgets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GampetooWatchWidgets.swift; sourceTree = "<group>"; };
+		D40000002FE997030072D4E8 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		D40000002FE997040072D4E8 /* GampetooWatchWidgets.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = GampetooWatchWidgets.entitlements; sourceTree = "<group>"; };
+		D40000002FE997050072D4E8 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -129,6 +155,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		D40000002FE997320072D4E8 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -139,6 +172,7 @@
 				504EC3061FED79650016851F /* App */,
 				B20000002FE995200072D4E8 /* GampetooWidgets */,
 				C30000002FE996300072D4E8 /* GampetooWatch */,
+				D40000002FE997200072D4E8 /* GampetooWatchWidgets */,
 				504EC3051FED79650016851F /* Products */,
 			);
 			sourceTree = "<group>";
@@ -149,8 +183,20 @@
 				504EC3041FED79650016851F /* App.app */,
 				B20000002FE995010072D4E8 /* GampetooWidgets.appex */,
 				C30000002FE996100072D4E8 /* GampetooWatch.app */,
+				D40000002FE997010072D4E8 /* GampetooWatchWidgets.appex */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		D40000002FE997200072D4E8 /* GampetooWatchWidgets */ = {
+			isa = PBXGroup;
+			children = (
+				D40000002FE997040072D4E8 /* GampetooWatchWidgets.entitlements */,
+				D40000002FE997020072D4E8 /* GampetooWatchWidgets.swift */,
+				D40000002FE997050072D4E8 /* PrivacyInfo.xcprivacy */,
+				D40000002FE997030072D4E8 /* Info.plist */,
+			);
+			path = GampetooWatchWidgets;
 			sourceTree = "<group>";
 		};
 		C30000002FE996300072D4E8 /* GampetooWatch */ = {
@@ -250,15 +296,34 @@
 				C30000002FE996410072D4E8 /* Sources */,
 				C30000002FE996420072D4E8 /* Frameworks */,
 				C30000002FE996430072D4E8 /* Resources */,
+				D40000002FE997340072D4E8 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				D40000002FE997410072D4E8 /* PBXTargetDependency */,
 			);
 			name = GampetooWatch;
 			productName = GampetooWatch;
 			productReference = C30000002FE996100072D4E8 /* GampetooWatch.app */;
 			productType = "com.apple.product-type.application";
+		};
+		D40000002FE997300072D4E8 /* GampetooWatchWidgets */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D40000002FE997500072D4E8 /* Build configuration list for PBXNativeTarget "GampetooWatchWidgets" */;
+			buildPhases = (
+				D40000002FE997310072D4E8 /* Sources */,
+				D40000002FE997320072D4E8 /* Frameworks */,
+				D40000002FE997330072D4E8 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = GampetooWatchWidgets;
+			productName = GampetooWatchWidgets;
+			productReference = D40000002FE997010072D4E8 /* GampetooWatchWidgets.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -279,6 +344,10 @@
 						ProvisioningStyle = Automatic;
 					};
 					C30000002FE996400072D4E8 = {
+						CreatedOnToolsVersion = 16.0;
+						ProvisioningStyle = Automatic;
+					};
+					D40000002FE997300072D4E8 = {
 						CreatedOnToolsVersion = 16.0;
 						ProvisioningStyle = Automatic;
 					};
@@ -303,6 +372,7 @@
 				504EC3031FED79650016851F /* App */,
 				B20000002FE995300072D4E8 /* GampetooWidgets */,
 				C30000002FE996400072D4E8 /* GampetooWatch */,
+				D40000002FE997300072D4E8 /* GampetooWatchWidgets */,
 			);
 		};
 /* End PBXProject section */
@@ -336,6 +406,14 @@
 			files = (
 				C30000002FE996230072D4E8 /* PrivacyInfo.xcprivacy in Resources */,
 				C30000002FE996240072D4E8 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D40000002FE997330072D4E8 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D40000002FE997120072D4E8 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -373,6 +451,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		D40000002FE997310072D4E8 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D40000002FE997110072D4E8 /* GampetooWatchWidgets.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -385,6 +471,11 @@
 			isa = PBXTargetDependency;
 			target = C30000002FE996400072D4E8 /* GampetooWatch */;
 			targetProxy = C30000002FE996500072D4E8 /* PBXContainerItemProxy */;
+		};
+		D40000002FE997410072D4E8 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D40000002FE997300072D4E8 /* GampetooWatchWidgets */;
+			targetProxy = D40000002FE997400072D4E8 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -524,7 +615,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = App/App.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 6;
 				DEVELOPMENT_TEAM = YZ37YD3BVG;
 				INFOPLIST_FILE = App/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
@@ -532,7 +623,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.64;
+				MARKETING_VERSION = 1.0.65;
 				OTHER_SWIFT_FLAGS = "$(inherited) \"-D\" \"COCOAPODS\" \"-DDEBUG\"";
 				PRODUCT_BUNDLE_IDENTIFIER = com.gampetoo.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -548,7 +639,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = App/App.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 6;
 				DEVELOPMENT_TEAM = YZ37YD3BVG;
 				INFOPLIST_FILE = App/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
@@ -556,7 +647,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.64;
+				MARKETING_VERSION = 1.0.65;
 				PRODUCT_BUNDLE_IDENTIFIER = com.gampetoo.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "";
@@ -571,7 +662,7 @@
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CODE_SIGN_ENTITLEMENTS = GampetooWidgets/GampetooWidgets.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 6;
 				DEVELOPMENT_TEAM = YZ37YD3BVG;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = GampetooWidgets/Info.plist;
@@ -581,7 +672,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.0.64;
+				MARKETING_VERSION = 1.0.65;
 				PRODUCT_BUNDLE_IDENTIFIER = com.gampetoo.app.widgets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -598,7 +689,7 @@
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CODE_SIGN_ENTITLEMENTS = GampetooWidgets/GampetooWidgets.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 6;
 				DEVELOPMENT_TEAM = YZ37YD3BVG;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = GampetooWidgets/Info.plist;
@@ -608,7 +699,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.0.64;
+				MARKETING_VERSION = 1.0.65;
 				PRODUCT_BUNDLE_IDENTIFIER = com.gampetoo.app.widgets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -625,7 +716,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = GampetooWatch/GampetooWatch.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 6;
 				DEVELOPMENT_TEAM = YZ37YD3BVG;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = GampetooWatch/Info.plist;
@@ -633,7 +724,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.64;
+				MARKETING_VERSION = 1.0.65;
 				PRODUCT_BUNDLE_IDENTIFIER = com.gampetoo.app.watchkitapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = watchos;
@@ -652,7 +743,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = GampetooWatch/GampetooWatch.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 6;
 				DEVELOPMENT_TEAM = YZ37YD3BVG;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = GampetooWatch/Info.plist;
@@ -660,8 +751,64 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.64;
+				MARKETING_VERSION = 1.0.65;
 				PRODUCT_BUNDLE_IDENTIFIER = com.gampetoo.app.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Release;
+		};
+		D40000002FE997510072D4E8 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = GampetooWatchWidgets/GampetooWatchWidgets.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 6;
+				DEVELOPMENT_TEAM = YZ37YD3BVG;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = GampetooWatchWidgets/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0.65;
+				PRODUCT_BUNDLE_IDENTIFIER = com.gampetoo.app.watchkitapp.widgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Debug;
+		};
+		D40000002FE997520072D4E8 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = GampetooWatchWidgets/GampetooWatchWidgets.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 6;
+				DEVELOPMENT_TEAM = YZ37YD3BVG;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = GampetooWatchWidgets/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0.65;
+				PRODUCT_BUNDLE_IDENTIFIER = com.gampetoo.app.watchkitapp.widgets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = watchos;
 				SKIP_INSTALL = YES;
@@ -708,6 +855,15 @@
 			buildConfigurations = (
 				C30000002FE996610072D4E8 /* Debug */,
 				C30000002FE996620072D4E8 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D40000002FE997500072D4E8 /* Build configuration list for PBXNativeTarget "GampetooWatchWidgets" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D40000002FE997510072D4E8 /* Debug */,
+				D40000002FE997520072D4E8 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

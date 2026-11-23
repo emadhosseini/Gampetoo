@@ -4,8 +4,10 @@ import { NavLink, useNavigate } from "react-router-dom";
 import {
   Home,
   CalendarDays,
+  Dumbbell,
   NotebookPen,
   TrendingUp,
+  UtensilsCrossed,
   Plus,
 } from "lucide-react";
 
@@ -75,24 +77,28 @@ const items = [
     label: "خانه",
     shortLabel: "خانه",
     icon: Home,
+    iosIcon: Home,
   },
   {
     to: "/daily-program",
     label: "برنامه روزانه",
-    shortLabel: "برنامه",
+    shortLabel: "تمرین",
     icon: CalendarDays,
+    iosIcon: Dumbbell,
   },
   {
     to: "/daily-log",
     label: "ثبت روزانه",
-    shortLabel: "ثبت",
+    shortLabel: "تغذیه",
     icon: NotebookPen,
+    iosIcon: UtensilsCrossed,
   },
   {
     to: "/progress",
     label: "پیشرفت",
     shortLabel: "پیشرفت",
     icon: TrendingUp,
+    iosIcon: TrendingUp,
   },
 ];
 
@@ -259,7 +265,7 @@ export default function BottomNavigation({
                   className="ios-glass-dock relative flex h-[62px] flex-1 items-center justify-between overflow-hidden rounded-full p-1"
                 >
                   {items.map((item) => {
-                    const Icon = item.icon;
+                    const Icon = item.iosIcon;
                     return (
                       <NavLink
                         key={item.to}
