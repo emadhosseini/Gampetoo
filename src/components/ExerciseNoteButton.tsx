@@ -13,6 +13,7 @@ export interface ExerciseNoteButtonProps {
   variantId: string;
   exerciseId: string;
   exerciseName: string;
+  onSaved?: (note: string) => void;
 }
 
 // Read fresh on every render rather than held in state — same pattern as
@@ -24,6 +25,7 @@ export default function ExerciseNoteButton({
   variantId,
   exerciseId,
   exerciseName,
+  onSaved,
 }: ExerciseNoteButtonProps) {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState("");
@@ -38,6 +40,7 @@ export default function ExerciseNoteButton({
   function save() {
     setExerciseNote(workoutId, variantId, exerciseId, draft);
     setOpen(false);
+    onSaved?.(draft.trim());
   }
 
   return (

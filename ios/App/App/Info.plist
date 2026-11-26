@@ -32,9 +32,9 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSHealthShareUsageDescription</key>
-	<string>گمپتو برای نمایش دقیق کالری سوزانده‌شده، تعداد قدم‌ها، تمرین‌ها و وزن شما از داده‌های Apple Health استفاده می‌کند.</string>
+	<string>گامپتو برای نمایش دقیق کالری سوزانده‌شده، تعداد قدم‌ها، تمرین‌ها و وزن شما از داده‌های Apple Health استفاده می‌کند.</string>
 	<key>NSHealthUpdateUsageDescription</key>
-	<string>گمپتو برای ثبت تمرین‌های انجام‌شده، پیاده‌روی، آب مصرفی و وزن در Apple Health به این دسترسی نیاز دارد.</string>
+	<string>گامپتو برای ثبت تمرین‌های انجام‌شده، پیاده‌روی، آب مصرفی و وزن در Apple Health به این دسترسی نیاز دارد.</string>
 	<key>NSSupportsLiveActivities</key>
 	<true/>
 	<key>NSSupportsLiveActivitiesFrequentUpdates</key>

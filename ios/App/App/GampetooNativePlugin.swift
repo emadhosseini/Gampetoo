@@ -31,6 +31,7 @@ class GampetooViewController: CAPBridgeViewController {
         webView?.scrollView.backgroundColor = forestDark
         webView?.scrollView.bounces = false
         webView?.scrollView.contentInsetAdjustmentBehavior = .never
+        webView?.scrollView.keyboardDismissMode = .onDrag
     }
 
     override open func capacitorDidLoad() {
@@ -55,6 +56,7 @@ public class GampetooNativePlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "endRestTimerActivity", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "scheduleRestNotification", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "cancelRestNotification", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "clearDeliveredNotifications", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "updateWidgetSnapshot", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "getCapabilities", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "requestHealthKitAuth", returnType: CAPPluginReturnPromise),
@@ -116,11 +118,15 @@ public class GampetooNativePlugin: CAPPlugin, CAPBridgedPlugin {
             let content = ActivityContent(state: state, staleDate: staleDate)
 
             Task {
+                let isAppActive = await MainActor.run {
+                    UIApplication.shared.applicationState == .active
+                }
                 if let existing = Activity<GampetooRestTimerAttributes>.activities.first {
-                    if !isResting && notifyRestFinished {
-                        // AlertConfiguration triggers a haptic tap + banner on
-                        // iPhone AND Apple Watch Smart Stack (watchOS 11+) even
-                        // when iPhone is unlocked or the Watch app isn't open.
+                    if !isResting && notifyRestFinished && !isAppActive {
+                        // Only trigger an AlertConfiguration banner when the app
+                        // is NOT already active in the foreground — otherwise
+                        // banners stack up in Notification Center on top of the
+                        // in-app haptic feedback.
                         let alert = AlertConfiguration(
                             title: "زمان استراحت تمام شد ⏱️",
                             body: "آماده برای ست بعدی «\(exerciseName)»",
@@ -150,6 +156,11 @@ public class GampetooNativePlugin: CAPPlugin, CAPBridgedPlugin {
     }
 
     @objc func endRestTimerActivity(_ call: CAPPluginCall) {
+        let restId = "gampetoo_ios_rest_done"
+        let center = UNUserNotificationCenter.current()
+        center.removePendingNotificationRequests(withIdentifiers: [restId])
+        center.removeDeliveredNotifications(withIdentifiers: [restId])
+
         #if canImport(ActivityKit)
         if #available(iOS 16.2, *) {
             Task {
@@ -186,6 +197,7 @@ public class GampetooNativePlugin: CAPPlugin, CAPBridgedPlugin {
             let content = UNMutableNotificationContent()
             content.title = "زمان استراحت تمام شد ⏱️"
             content.body = "آماده برای ست بعدی «\(exerciseName)»"
+            content.threadIdentifier = "gampetoo_rest"
             // Use the real system UNNotificationSound.default (Capacitor's
             // LocalNotifications plugin maps "default" to UNNotificationSoundName("default")
             // which looks up a non-existent bundle file and breaks Watch haptics).
@@ -224,6 +236,19 @@ public class GampetooNativePlugin: CAPPlugin, CAPBridgedPlugin {
         let center = UNUserNotificationCenter.current()
         center.removePendingNotificationRequests(withIdentifiers: [identifier])
         center.removeDeliveredNotifications(withIdentifiers: [identifier])
+        call.resolve()
+    }
+
+    @objc func clearDeliveredNotifications(_ call: CAPPluginCall) {
+        let center = UNUserNotificationCenter.current()
+        center.removeAllDeliveredNotifications()
+        DispatchQueue.main.async {
+            if #available(iOS 16.0, *) {
+                center.setBadgeCount(0, withCompletionHandler: nil)
+            } else {
+                UIApplication.shared.applicationIconBadgeNumber = 0
+            }
+        }
         call.resolve()
     }
 
@@ -314,7 +339,7 @@ public class GampetooNativePlugin: CAPPlugin, CAPBridgedPlugin {
         let kind = call.getString("kind") ?? "workout"
         let durationMinutes = call.getDouble("durationMinutes") ?? 45.0
         let calories = call.getDouble("calories") ?? 0
-        let title = call.getString("title") ?? "تمرین گمپتو"
+        let title = call.getString("title") ?? "تمرین گامپتو"
 
         GampetooHealthManager.shared.logWorkout(
             kind: kind,

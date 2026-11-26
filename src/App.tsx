@@ -44,6 +44,7 @@ import {
   syncWatchContext,
 } from "@/native/watchBridge";
 import {
+  clearDeliveredNotifications,
   getNotificationPrefs,
   initNotificationListeners,
   registerForPushNotifications,
@@ -58,8 +59,10 @@ mergeExerciseIds();
 initSync();
 
 if (isNativeApp()) {
+  void clearDeliveredNotifications();
   void initNativeShell(
     () => {
+      void clearDeliveredNotifications();
       void drainPendingWatchActions().finally(() => {
         void syncNow();
         pushCurrentWidgetSnapshot();

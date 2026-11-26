@@ -1,6 +1,6 @@
 import { Fragment, useLayoutEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   Home,
   CalendarDays,
@@ -11,6 +11,7 @@ import {
   Plus,
 } from "lucide-react";
 
+import IosLiquidBubbleBar from "@/components/IosLiquidBubbleBar";
 import ActivityLogModal from "@/components/progress/ActivityLogModal";
 import WeightModal from "@/components/WeightModal";
 import WaterLogModal from "@/components/WaterLogModal";
@@ -113,7 +114,16 @@ export default function BottomNavigation({
   onDrawerOpenChange,
 }: BottomNavigationProps) {
   const navigate = useNavigate();
+  const { pathname } = useLocation();
   const nativeIos = isNativeIos();
+  const activeRouteId =
+    pathname === "/"
+      ? "/"
+      : (items.find(
+          (item) =>
+            item.to !== "/" &&
+            (pathname === item.to || pathname.startsWith(`${item.to}/`)),
+        )?.to ?? "");
   const [drawerOpen, setDrawerOpenState] = useState(false);
   const [activityModalOpen, setActivityModalOpen] = useState(false);
   const [weightModalOpen, setWeightModalOpen] = useState(false);
@@ -260,55 +270,40 @@ export default function BottomNavigation({
               </AnimatePresence>
 
               <div className="flex items-center gap-2.5">
-                <nav
-                  aria-label="ناوبری اصلی"
-                  className="ios-glass-dock relative flex h-[62px] flex-1 items-center justify-between overflow-hidden rounded-full p-1"
-                >
-                  {items.map((item) => {
+                <IosLiquidBubbleBar
+                  ariaLabel="ناوبری اصلی"
+                  activeId={activeRouteId}
+                  onSelect={(to) => {
+                    setDrawerOpen(false);
+                    if (to && to !== pathname) {
+                      navigate(to);
+                    }
+                  }}
+                  heightClass="h-[62px]"
+                  className="flex-1"
+                  items={items.map((item) => {
                     const Icon = item.iosIcon;
-                    return (
-                      <NavLink
-                        key={item.to}
-                        to={item.to}
-                        onClick={() => {
-                          hapticSelection();
-                          setDrawerOpen(false);
-                        }}
-                        className="relative z-10 flex h-full flex-1 items-center justify-center [-webkit-tap-highlight-color:transparent] touch-manipulation"
-                      >
-                        {({ isActive }) => (
-                          <>
-                            {isActive && (
-                              <motion.div
-                                layoutId="bottom-nav-selection"
-                                className="ios-glass-lens absolute inset-0.5 rounded-full"
-                                transition={{
-                                  type: "spring",
-                                  stiffness: 440,
-                                  damping: 32,
-                                  mass: 0.88,
-                                }}
-                              />
-                            )}
-                            <motion.span
-                              animate={isActive ? { scale: 1.04 } : { scale: 1 }}
-                              transition={{ type: "spring", stiffness: 500, damping: 28 }}
-                              className={`relative flex flex-col items-center gap-0.5 whitespace-nowrap text-[10.5px] font-medium transition-colors duration-150 ${
-                                isActive ? "text-avocado-yellow" : "text-white/80"
-                              }`}
-                            >
-                              <Icon size={20} strokeWidth={isActive ? 2.25 : 1.9} />
-                              <span>{item.shortLabel}</span>
-                            </motion.span>
-                          </>
-                        )}
-                      </NavLink>
-                    );
+                    return {
+                      id: item.to,
+                      ariaLabel: item.shortLabel,
+                      renderContent: ({ isActive }) => (
+                        <span
+                          className={`flex flex-col items-center gap-0.5 whitespace-nowrap text-[10.5px] font-medium transition-colors duration-150 ${
+                            isActive ? "text-avocado-yellow" : "text-white/80"
+                          }`}
+                        >
+                          <Icon size={20} strokeWidth={isActive ? 2.25 : 1.9} />
+                          <span>{item.shortLabel}</span>
+                        </span>
+                      ),
+                    };
                   })}
-                </nav>
+                />
 
-                <button
+                <motion.button
                   type="button"
+                  whileTap={{ scale: 0.86 }}
+                  transition={{ type: "spring", stiffness: 460, damping: 20 }}
                   onClick={() => {
                     hapticLight();
                     setDrawerOpen((open) => !open);
@@ -317,13 +312,13 @@ export default function BottomNavigation({
                   className="ios-glass-orb flex h-[60px] w-[60px] shrink-0 items-center justify-center rounded-full text-white [-webkit-tap-highlight-color:transparent] touch-manipulation"
                 >
                   <motion.span
-                    animate={{ rotate: drawerOpen ? 45 : 0 }}
-                    transition={{ type: "spring", stiffness: 420, damping: 26 }}
+                    animate={{ rotate: drawerOpen ? 45 : 0, scale: drawerOpen ? 1.08 : 1 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 20 }}
                     className="flex"
                   >
                     <Plus size={25} strokeWidth={2.2} />
                   </motion.span>
-                </button>
+                </motion.button>
               </div>
             </div>
           </div>

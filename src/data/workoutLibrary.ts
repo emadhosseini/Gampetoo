@@ -57,6 +57,9 @@ export interface Exercise {
   secondaryMuscles?: string[];
   equipment?: string;
   mechanic?: ExerciseMechanic;
+  // Shared identifier linking two or more exercises in the same workout plan
+  // into a superset (performed back-to-back). Absent for standalone exercises.
+  supersetGroupId?: string;
 }
 
 export interface ExerciseGroup {

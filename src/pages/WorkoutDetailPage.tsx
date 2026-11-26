@@ -1,4 +1,17 @@
-import { ChevronDown, ChevronRight, Minus, Pencil, Plus, Search, Trash2, X } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronRight,
+  CopyPlus,
+  Link2,
+  Minus,
+  Pencil,
+  Plus,
+  Search,
+  Trash2,
+  Unlink2,
+  X,
+  Zap,
+} from "lucide-react";
 import { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
@@ -7,8 +20,13 @@ import Toggle from "@/components/Toggle";
 import ModalOverlay from "@/components/ModalOverlay";
 import ExerciseSearchPicker from "@/components/ExerciseSearchPicker";
 import ExerciseNoteButton from "@/components/ExerciseNoteButton";
+import SupersetPickerModal from "@/components/SupersetPickerModal";
 import { navigateBackSafely } from "@/utils/navigationBack";
-import { movePlanNotes } from "@/store/exerciseNoteStore";
+import { getExerciseNote, movePlanNotes } from "@/store/exerciseNoteStore";
+import {
+  createDuplicateExerciseId,
+  isDuplicateExerciseId,
+} from "@/utils/exerciseIdentity";
 import {
   CANONICAL_EXERCISE_GROUPS,
   getDefaultPlanName,
@@ -112,7 +130,12 @@ function ExerciseEditRow({
   isWarmupWorkout,
   workoutId,
   variantId,
+  supersetPartnerNames = [],
   onUpdate,
+  onOpenSuperset,
+  onUnlinkSuperset,
+  onDuplicate,
+  onDeleteDuplicate,
 }: {
   exercise: Exercise;
   isWarmupWorkout: boolean;
@@ -121,7 +144,12 @@ function ExerciseEditRow({
   // exercise everywhere it's used.
   workoutId: string;
   variantId: string;
+  supersetPartnerNames?: string[];
   onUpdate: (patch: Partial<Exercise>) => void;
+  onOpenSuperset?: () => void;
+  onUnlinkSuperset?: () => void;
+  onDuplicate?: () => void;
+  onDeleteDuplicate?: () => void;
 }) {
   // Collapsed by default, exactly like the daily workout page's own
   // ExerciseCard — the sets/reps steppers used to always be on screen,
@@ -129,9 +157,15 @@ function ExerciseEditRow({
   // there. The general گرم کردن library has no sets/reps at all, so its
   // rows never expand (nothing to reveal).
   const [expanded, setExpanded] = useState(false);
+  const [, bumpNoteVersion] = useState(0);
   const canExpand = !isWarmupWorkout;
   const repsStep = exercise.unit === "seconds" ? 5 : 1;
   const isPyramid = Boolean(exercise.repsPerSet && exercise.repsPerSet.length > 0);
+  const isDuplicate = isDuplicateExerciseId(exercise.id);
+  const inSuperset = supersetPartnerNames.length > 0;
+  const planNote = isWarmupWorkout
+    ? ""
+    : getExerciseNote(workoutId, variantId, exercise.id);
 
   // Turning پیرامید on seeds one rep-target per current set (all starting
   // at the same reps count, so switching modes never silently changes what
@@ -184,12 +218,16 @@ function ExerciseEditRow({
   return (
     // Same shell as ExerciseCard: glass-panel + rounded-2xl + p-2.5, a
     // single text-sm row, toggle on the end.
-    <div className="glass-panel glass-static rounded-2xl p-2.5">
-      <div className="flex items-center gap-3">
+    <div
+      className={`glass-panel glass-static rounded-2xl p-2.5 ${
+        inSuperset ? "ring-1 ring-avocado-yellow/35" : ""
+      }`}
+    >
+      <div className="flex items-center gap-2">
         <button
           onClick={() => canExpand && setExpanded((prev) => !prev)}
           aria-expanded={canExpand ? expanded : undefined}
-          className="flex-1 text-right"
+          className="min-w-0 flex-1 text-right"
         >
           <h2 className="text-sm font-bold text-white">
             {exercise.name}
@@ -199,7 +237,38 @@ function ExerciseEditRow({
               </span>
             )}
           </h2>
+
+          {planNote && (
+            <p className="mt-0.5 truncate text-[11px] font-medium text-avocado-yellow/85">
+              {planNote}
+            </p>
+          )}
+
+          {inSuperset && (
+            <p className="mt-0.5 flex items-center gap-1 truncate text-[10.5px] font-semibold text-avocado-yellow">
+              <Zap size={11} className="shrink-0" />
+              <span className="truncate">
+                سوپرست با {supersetPartnerNames.join(" + ")}
+              </span>
+            </p>
+          )}
         </button>
+
+        {!isWarmupWorkout && onOpenSuperset && (
+          <button
+            type="button"
+            onClick={onOpenSuperset}
+            aria-label={inSuperset ? "مدیریت سوپرست" : "سوپرست با حرکت دیگر"}
+            title={inSuperset ? "مدیریت سوپرست" : "سوپرست با حرکت دیگر"}
+            className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
+              inSuperset
+                ? "bg-avocado-yellow/20 text-avocado-yellow"
+                : "glass-chip glass-static text-white/80"
+            }`}
+          >
+            <Link2 size={14} />
+          </button>
+        )}
 
         {!isWarmupWorkout && (
           <ExerciseNoteButton
@@ -207,6 +276,7 @@ function ExerciseEditRow({
             variantId={variantId}
             exerciseId={exercise.id}
             exerciseName={exercise.name}
+            onSaved={() => bumpNoteVersion((n) => n + 1)}
           />
         )}
 
@@ -333,6 +403,54 @@ function ExerciseEditRow({
                 ))}
               </div>
             )}
+
+            {(onOpenSuperset || onDuplicate || (isDuplicate && onDeleteDuplicate)) && (
+              <div className="mt-2.5 flex flex-wrap items-center gap-2 border-t border-white/10 pt-2.5">
+                {onOpenSuperset && (
+                  <button
+                    type="button"
+                    onClick={onOpenSuperset}
+                    className="glass-chip glass-static flex flex-1 items-center justify-center gap-1.5 rounded-xl px-2.5 py-2 text-[11px] font-semibold text-avocado-yellow"
+                  >
+                    <Link2 size={13} />
+                    {inSuperset ? "تغییر سوپرست" : "سوپرست با حرکت دیگر"}
+                  </button>
+                )}
+
+                {inSuperset && onUnlinkSuperset && (
+                  <button
+                    type="button"
+                    onClick={onUnlinkSuperset}
+                    className="glass-chip glass-static flex items-center justify-center gap-1 rounded-xl px-2.5 py-2 text-[11px] font-semibold text-red-300"
+                  >
+                    <Unlink2 size={13} />
+                    جدا کردن
+                  </button>
+                )}
+
+                {onDuplicate && (
+                  <button
+                    type="button"
+                    onClick={onDuplicate}
+                    className="glass-chip glass-static flex flex-1 items-center justify-center gap-1.5 rounded-xl px-2.5 py-2 text-[11px] font-semibold text-white"
+                  >
+                    <CopyPlus size={13} />
+                    افزودن نسخه دیگر
+                  </button>
+                )}
+
+                {isDuplicate && onDeleteDuplicate && (
+                  <button
+                    type="button"
+                    onClick={onDeleteDuplicate}
+                    className="glass-chip glass-static flex items-center justify-center gap-1 rounded-xl px-2.5 py-2 text-[11px] font-semibold text-red-400"
+                  >
+                    <Trash2 size={13} />
+                    حذف نسخه
+                  </button>
+                )}
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
@@ -414,6 +532,7 @@ export default function WorkoutDetailPage() {
   const [saved, setSaved] = useState(false);
 
   const [query, setQuery] = useState("");
+  const [supersetSourceId, setSupersetSourceId] = useState<string | null>(null);
 
   // Which of this workout's saved plans (workoutVariantStore) is currently
   // being viewed/edited — null means the library's own base workout
@@ -580,6 +699,24 @@ export default function WorkoutDetailPage() {
     return [...localMatches, ...catalogueMatches];
   }, [allCatalogueExercises, groups, isWarmupWorkout, presentExerciseIds, query]);
 
+  const allPlanExercises = useMemo(
+    () => groups.flatMap((group) => group.exercises),
+    [groups],
+  );
+
+  const enabledPlanExercises = useMemo(
+    () => allPlanExercises.filter((exercise) => exercise.enabled),
+    [allPlanExercises],
+  );
+
+  const supersetSourceExercise = useMemo(
+    () =>
+      supersetSourceId
+        ? (allPlanExercises.find((ex) => ex.id === supersetSourceId) ?? null)
+        : null,
+    [allPlanExercises, supersetSourceId],
+  );
+
   if (!workout) {
     return (
       <div className="py-10 text-center">
@@ -629,25 +766,241 @@ export default function WorkoutDetailPage() {
     });
   }
 
+  function getSupersetPartnerNames(exercise: Exercise): string[] {
+    if (!exercise.supersetGroupId) return [];
+    return allPlanExercises
+      .filter(
+        (other) =>
+          other.id !== exercise.id &&
+          other.enabled &&
+          other.supersetGroupId === exercise.supersetGroupId,
+      )
+      .map((other) => other.name);
+  }
+
+  function cleanupOrphanSupersets(nextGroups: ExerciseGroup[]): ExerciseGroup[] {
+    const counts = new Map<string, number>();
+    for (const g of nextGroups) {
+      for (const ex of g.exercises) {
+        if (ex.supersetGroupId) {
+          counts.set(ex.supersetGroupId, (counts.get(ex.supersetGroupId) ?? 0) + 1);
+        }
+      }
+    }
+    return nextGroups.map((g) => ({
+      ...g,
+      exercises: g.exercises.map((ex) =>
+        ex.supersetGroupId && (counts.get(ex.supersetGroupId) ?? 0) < 2
+          ? { ...ex, supersetGroupId: undefined }
+          : ex,
+      ),
+    }));
+  }
+
+  function handleDuplicateExercise(groupId: string, exercise: Exercise) {
+    setSaved(false);
+    const clone: Exercise = {
+      ...exercise,
+      id: createDuplicateExerciseId(exercise.id),
+      enabled: true,
+      supersetGroupId: undefined,
+      repsPerSet: exercise.repsPerSet ? [...exercise.repsPerSet] : undefined,
+    };
+
+    setDrafts((prev) => {
+      const base = prev[currentKey] ?? sourceGroupsFor(currentKey);
+      return {
+        ...prev,
+        [currentKey]: base.map((group) => {
+          if (group.id !== groupId) return group;
+          const idx = group.exercises.findIndex((ex) => ex.id === exercise.id);
+          const nextExercises = [...group.exercises];
+          if (idx >= 0) {
+            nextExercises.splice(idx + 1, 0, clone);
+          } else {
+            nextExercises.push(clone);
+          }
+          return { ...group, exercises: nextExercises };
+        }),
+      };
+    });
+  }
+
+  function handleDeleteDuplicateExercise(groupId: string, exerciseId: string) {
+    if (!isDuplicateExerciseId(exerciseId)) return;
+    setSaved(false);
+
+    setDrafts((prev) => {
+      const base = prev[currentKey] ?? sourceGroupsFor(currentKey);
+      const filtered = base
+        .map((group) =>
+          group.id !== groupId
+            ? group
+            : {
+                ...group,
+                exercises: group.exercises.filter((ex) => ex.id !== exerciseId),
+              },
+        )
+        .filter((group) => group.exercises.length > 0);
+      return {
+        ...prev,
+        [currentKey]: cleanupOrphanSupersets(filtered),
+      };
+    });
+  }
+
+  function handlePairExistingSuperset(sourceId: string, targetId: string) {
+    if (sourceId === targetId) return;
+    setSaved(false);
+
+    setDrafts((prev) => {
+      const base = prev[currentKey] ?? sourceGroupsFor(currentKey);
+      const flat = base.flatMap((g) => g.exercises);
+      const source = flat.find((ex) => ex.id === sourceId);
+      const target = flat.find((ex) => ex.id === targetId);
+      if (!source || !target) return prev;
+
+      const groupId =
+        source.supersetGroupId ?? target.supersetGroupId ?? `ss_${generateId().slice(0, 8)}`;
+      const mergeFromGroupId =
+        source.supersetGroupId && target.supersetGroupId && source.supersetGroupId !== target.supersetGroupId
+          ? target.supersetGroupId
+          : null;
+
+      return {
+        ...prev,
+        [currentKey]: base.map((group) => ({
+          ...group,
+          exercises: group.exercises.map((ex) => {
+            if (
+              ex.id === sourceId ||
+              ex.id === targetId ||
+              (mergeFromGroupId && ex.supersetGroupId === mergeFromGroupId)
+            ) {
+              return { ...ex, enabled: true, supersetGroupId: groupId };
+            }
+            return ex;
+          }),
+        })),
+      };
+    });
+  }
+
+  function handlePairFromCatalogueSuperset(sourceId: string, catalogueExercise: Exercise) {
+    setSaved(false);
+
+    setDrafts((prev) => {
+      const base = prev[currentKey] ?? sourceGroupsFor(currentKey);
+      const flat = base.flatMap((g) => g.exercises);
+      const source = flat.find((ex) => ex.id === sourceId);
+      if (!source) return prev;
+
+      const ssGroupId = source.supersetGroupId ?? `ss_${generateId().slice(0, 8)}`;
+
+      // If this exact catalogue exercise exists in the plan and is currently
+      // disabled (not used yet), enable & link it; if it's already enabled
+      // (or IS the source exercise itself!), create a fresh duplicate copy so
+      // users can even superset or repeat movements freely.
+      const existingDisabled = flat.find(
+        (ex) => ex.id === catalogueExercise.id && !ex.enabled && ex.id !== sourceId,
+      );
+
+      if (existingDisabled) {
+        return {
+          ...prev,
+          [currentKey]: base.map((group) => ({
+            ...group,
+            exercises: group.exercises.map((ex) => {
+              if (ex.id === sourceId || ex.id === existingDisabled.id) {
+                return { ...ex, enabled: true, supersetGroupId: ssGroupId };
+              }
+              return ex;
+            }),
+          })),
+        };
+      }
+
+      const idAlreadyPresent = flat.some((ex) => ex.id === catalogueExercise.id);
+      const addedExercise: Exercise = {
+        ...catalogueExercise,
+        id: idAlreadyPresent
+          ? createDuplicateExerciseId(catalogueExercise.id)
+          : catalogueExercise.id,
+        enabled: true,
+        supersetGroupId: ssGroupId,
+      };
+
+      const meta = resolveExerciseGroupMeta(catalogueExercise);
+      const hasGroup = base.some((g) => g.id === meta.id);
+
+      const withUpdatedSource = base.map((group) => ({
+        ...group,
+        exercises: group.exercises.map((ex) =>
+          ex.id === sourceId ? { ...ex, enabled: true, supersetGroupId: ssGroupId } : ex,
+        ),
+      }));
+
+      const nextGroups = hasGroup
+        ? withUpdatedSource.map((group) =>
+            group.id !== meta.id
+              ? group
+              : { ...group, exercises: [...group.exercises, addedExercise] },
+          )
+        : [
+            ...withUpdatedSource,
+            {
+              id: meta.id,
+              title: meta.title,
+              exercises: [addedExercise],
+            },
+          ];
+
+      return {
+        ...prev,
+        [currentKey]: nextGroups,
+      };
+    });
+  }
+
+  function handleUnlinkSuperset(exerciseId: string) {
+    setSaved(false);
+
+    setDrafts((prev) => {
+      const base = prev[currentKey] ?? sourceGroupsFor(currentKey);
+      const updated = base.map((group) => ({
+        ...group,
+        exercises: group.exercises.map((ex) =>
+          ex.id === exerciseId ? { ...ex, supersetGroupId: undefined } : ex,
+        ),
+      }));
+      return {
+        ...prev,
+        [currentKey]: cleanupOrphanSupersets(updated),
+      };
+    });
+  }
+
   // Pulls an exercise in from elsewhere in the catalogue (either into a
   // specific group or automatically into its canonical muscle group, e.g.
-  // adding "جلو بازو دمبل" into "پوش" creates a "جلو بازو" section). Persisted
-  // atomically on handleSave via syncWorkoutExtras (default plan) or
-  // updateVariantGroups / createVariant (variants).
+  // adding "جلو بازو دمبل" into "پوش" creates a "جلو بازو" section). When
+  // `allowDuplicateIfEnabled` is true and the movement is already active in
+  // this day, appends a unique duplicate copy so the user can select the same
+  // exercise multiple times with different notes.
   function handleAddExercise(
     targetGroupId: string | null,
     exercise: Exercise,
     patch: Partial<Exercise> = { enabled: true },
+    allowDuplicateIfEnabled = false,
   ) {
     setSaved(false);
 
     setDrafts((prev) => {
       const base = prev[currentKey] ?? sourceGroupsFor(currentKey);
-      const alreadyExists = base.some((g) =>
-        g.exercises.some((existing) => existing.id === exercise.id),
-      );
+      const existingMatch = base
+        .flatMap((g) => g.exercises)
+        .find((existing) => existing.id === exercise.id);
 
-      if (alreadyExists) {
+      if (existingMatch && (!allowDuplicateIfEnabled || !existingMatch.enabled)) {
         return {
           ...prev,
           [currentKey]: base.map((group) => ({
@@ -661,7 +1014,13 @@ export default function WorkoutDetailPage() {
 
       const meta = resolveExerciseGroupMeta(exercise);
       const resolvedGroupId = targetGroupId ?? meta.id;
-      const nextExercise: Exercise = { ...exercise, enabled: true, ...patch };
+      const nextExercise: Exercise = {
+        ...exercise,
+        id: existingMatch ? createDuplicateExerciseId(exercise.id) : exercise.id,
+        enabled: true,
+        supersetGroupId: undefined,
+        ...patch,
+      };
       const hasGroup = base.some((g) => g.id === resolvedGroupId);
 
       const nextGroups = hasGroup
@@ -1021,10 +1380,33 @@ export default function WorkoutDetailPage() {
                         isWarmupWorkout={isWarmupWorkout}
                         workoutId={workout!.id}
                         variantId={currentKey}
+                        supersetPartnerNames={
+                          fromCatalogue ? [] : getSupersetPartnerNames(exercise)
+                        }
                         onUpdate={(patch) =>
                           fromCatalogue
                             ? handleAddExercise(null, exercise, patch)
                             : updateExercise(group.id, exercise.id, patch)
+                        }
+                        onOpenSuperset={
+                          !isWarmupWorkout && !fromCatalogue
+                            ? () => setSupersetSourceId(exercise.id)
+                            : undefined
+                        }
+                        onUnlinkSuperset={
+                          !isWarmupWorkout && !fromCatalogue
+                            ? () => handleUnlinkSuperset(exercise.id)
+                            : undefined
+                        }
+                        onDuplicate={
+                          !isWarmupWorkout && !fromCatalogue
+                            ? () => handleDuplicateExercise(group.id, exercise)
+                            : undefined
+                        }
+                        onDeleteDuplicate={
+                          !isWarmupWorkout && !fromCatalogue
+                            ? () => handleDeleteDuplicateExercise(group.id, exercise.id)
+                            : undefined
                         }
                       />
                     </div>
@@ -1122,8 +1504,29 @@ export default function WorkoutDetailPage() {
                         isWarmupWorkout={isWarmupWorkout}
                         workoutId={workout!.id}
                         variantId={currentKey}
+                        supersetPartnerNames={getSupersetPartnerNames(exercise)}
                         onUpdate={(patch) =>
                           updateExercise(group.id, exercise.id, patch)
+                        }
+                        onOpenSuperset={
+                          !isWarmupWorkout
+                            ? () => setSupersetSourceId(exercise.id)
+                            : undefined
+                        }
+                        onUnlinkSuperset={
+                          !isWarmupWorkout
+                            ? () => handleUnlinkSuperset(exercise.id)
+                            : undefined
+                        }
+                        onDuplicate={
+                          !isWarmupWorkout
+                            ? () => handleDuplicateExercise(group.id, exercise)
+                            : undefined
+                        }
+                        onDeleteDuplicate={
+                          !isWarmupWorkout
+                            ? () => handleDeleteDuplicateExercise(group.id, exercise.id)
+                            : undefined
                         }
                       />
                     ))}
@@ -1132,7 +1535,10 @@ export default function WorkoutDetailPage() {
                       seeded with — see ExerciseSearchPicker. */}
                   <ExerciseSearchPicker
                     existingIds={[...presentExerciseIds]}
-                    onPick={(exercise) => handleAddExercise(group.id, exercise)}
+                    allowDuplicates={!isWarmupWorkout}
+                    onPick={(exercise) =>
+                      handleAddExercise(group.id, exercise, { enabled: true }, true)
+                    }
                   />
                 </div>
               )}
@@ -1220,7 +1626,10 @@ export default function WorkoutDetailPage() {
           <ExerciseSearchPicker
             label="افزودن سریع از همه دسته‌های عضلانی"
             existingIds={[...presentExerciseIds]}
-            onPick={(exercise) => handleAddExercise(null, exercise)}
+            allowDuplicates
+            onPick={(exercise) =>
+              handleAddExercise(null, exercise, { enabled: true }, true)
+            }
           />
         )}
       </div>
@@ -1254,6 +1663,29 @@ export default function WorkoutDetailPage() {
         initialName={editingVariantId ? (editingVariantName ?? "") : defaultPlanName}
         onClose={() => setNameModal(null)}
         onSubmit={handleRenameVariant}
+      />
+
+      <SupersetPickerModal
+        open={supersetSourceExercise !== null}
+        sourceExercise={supersetSourceExercise}
+        planExercises={enabledPlanExercises}
+        workoutId={workout!.id}
+        variantId={currentKey}
+        onClose={() => setSupersetSourceId(null)}
+        onPairExisting={(targetId) => {
+          if (supersetSourceExercise) {
+            handlePairExistingSuperset(supersetSourceExercise.id, targetId);
+          }
+        }}
+        onPairFromCatalogue={(catalogueExercise) => {
+          if (supersetSourceExercise) {
+            handlePairFromCatalogueSuperset(
+              supersetSourceExercise.id,
+              catalogueExercise,
+            );
+          }
+        }}
+        onUnlink={(exerciseId) => handleUnlinkSuperset(exerciseId)}
       />
     </div>
   );

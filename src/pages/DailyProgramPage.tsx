@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Activity, Dumbbell, UtensilsCrossed } from "lucide-react";
 
 import PillTabBar, { type PillTabBarItem } from "@/components/PillTabBar";
+import SwipeableTabView from "@/components/SwipeableTabView";
 import ActivityTabRoot from "@/components/progress/ActivityTabRoot";
 import { isNativeIos } from "@/native/platform";
 
@@ -10,6 +11,8 @@ import NutritionPage from "./NutritionPage";
 
 type WebTab = "workout" | "nutrition";
 type IosTab = "workout" | "activity";
+
+const IOS_TAB_ORDER: readonly IosTab[] = ["workout", "activity"];
 
 const webTabs: PillTabBarItem<WebTab>[] = [
   { id: "workout", label: "برنامه تمرینی", icon: Dumbbell },
@@ -36,7 +39,9 @@ export default function DailyProgramPage() {
           layoutId="daily-program-tab-selection"
         />
 
-        {iosTab === "workout" ? <WorkoutPage /> : <ActivityTabRoot />}
+        <SwipeableTabView tabs={IOS_TAB_ORDER} active={iosTab} onChange={setIosTab}>
+          {iosTab === "workout" ? <WorkoutPage /> : <ActivityTabRoot />}
+        </SwipeableTabView>
       </div>
     );
   }

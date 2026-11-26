@@ -261,7 +261,7 @@ export function completeWorkout(done: CompletedWorkoutDetails = {}) {
 
   saveSession(session);
   markCompleted(done);
-  pushWorkoutToHealthKit("workout", 45, 0, done.title ?? "تمرین گمپتو");
+  pushWorkoutToHealthKit("workout", 45, 0, done.title ?? "تمرین گامپتو");
 }
 
 export function completeWalk(done: CompletedWorkoutDetails = {}) {
@@ -271,7 +271,7 @@ export function completeWalk(done: CompletedWorkoutDetails = {}) {
 
   saveSession(session);
   markCompleted(done);
-  pushWorkoutToHealthKit("walk", 30, 0, done.title ?? "پیاده‌روی گمپتو");
+  pushWorkoutToHealthKit("walk", 30, 0, done.title ?? "پیاده‌روی گامپتو");
 }
 
 export function resetSession() {

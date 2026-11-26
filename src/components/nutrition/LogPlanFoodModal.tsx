@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import ModalOverlay from "@/components/ModalOverlay";
 import { macrosForServing } from "@/domain/nutrition/foodSearch";
+import { dismissKeyboard, parseLocalizedNumber } from "@/native/keyboard";
 import {
   findCatalogFood,
   findSeedFoodMacros,
@@ -108,8 +109,9 @@ export default function LogPlanFoodModal({
     return null;
   }
 
-  const quantity = Number(value);
-  const valid = value.trim() !== "" && Number.isFinite(quantity) && quantity > 0;
+  const parsedQuantity = parseLocalizedNumber(value);
+  const quantity = parsedQuantity ?? 0;
+  const valid = parsedQuantity !== null && parsedQuantity > 0;
   const effectiveQuantity = valid ? quantity : planned.quantity;
 
   const unitLabel = unit?.label ?? planned.unitLabel;
@@ -142,6 +144,7 @@ export default function LogPlanFoodModal({
   function handleLog() {
     if (!valid || !food || !meal) return;
 
+    dismissKeyboard();
     addLoggedEntry(resolveLogSlotId(meal.id), {
       name: food.name,
       amount: `${toFaDigits(quantity)} ${unitLabel}`,
@@ -170,15 +173,20 @@ export default function LogPlanFoodModal({
 
         <div className="glass-chip glass-static flex items-center gap-2 rounded-xl p-3">
           <input
-            type="number"
+            type="text"
             inputMode="decimal"
-            min={0}
-            step="any"
+            enterKeyHint="done"
             value={value}
             onChange={(e) => setValue(e.target.value)}
             onFocus={(e) => e.target.select()}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                dismissKeyboard();
+              }
+            }}
             aria-label="مقدار"
-            className="w-20 glass-chip glass-static rounded-lg px-2 py-2 text-center text-sm text-white"
+            className="w-20 glass-chip glass-static rounded-lg px-2 py-2 text-center text-sm text-white outline-none"
           />
 
           {catalogFood && unit ? (

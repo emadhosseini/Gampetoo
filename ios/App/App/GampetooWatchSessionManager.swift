@@ -25,6 +25,21 @@ final class GampetooWatchSessionManager: NSObject {
         super.init()
     }
 
+    private func todayLocalDateString() -> String {
+        let formatter = DateFormatter()
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = .current
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter.string(from: Date())
+    }
+
+    private func hasFreshContextForToday() -> Bool {
+        guard !lastContext.isEmpty else { return false }
+        guard let date = lastContext["date"] as? String, !date.isEmpty else { return false }
+        return date == todayLocalDateString()
+    }
+
     func activate() {
         #if canImport(WatchConnectivity)
         guard WCSession.isSupported() else { return }
@@ -159,7 +174,12 @@ final class GampetooWatchSessionManager: NSObject {
             guard let self = self else { return }
 
             if type == "requestRefresh" {
-                if !self.lastContext.isEmpty {
+                // Always ask the JS layer to rebuild today's workout fresh if
+                // the bridge is ready — otherwise a midnight rollover or a
+                // variant switch could serve yesterday's cached context.
+                if self.isBridgeReady, let listener = self.onWatchAction {
+                    listener(["type": "requestRefresh"])
+                } else if self.hasFreshContextForToday() {
                     self.pushContext(self.lastContext)
                 }
                 return
@@ -291,7 +311,13 @@ extension GampetooWatchSessionManager: WCSessionDelegate {
                     replyHandler(["ok": true])
                     return
                 }
-                replyHandler(self.lastContext.isEmpty ? ["ok": true] : self.lastContext)
+                // Trigger a fresh JS recomputation so any day rollover or plan
+                // change pushes immediately, and never reply with a stale
+                // previous-day context.
+                if self.isBridgeReady, let listener = self.onWatchAction {
+                    listener(["type": "requestRefresh"])
+                }
+                replyHandler(self.hasFreshContextForToday() ? self.lastContext : ["ok": true])
             }
             return
         }

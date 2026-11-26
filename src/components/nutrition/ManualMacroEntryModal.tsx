@@ -4,6 +4,7 @@ import { PenLine } from "lucide-react";
 import ModalOverlay from "@/components/ModalOverlay";
 import type { MealSlot } from "@/data/nutrition/foodCatalog";
 import { toEnDigits } from "@/domain/nutrition/mealTextParser";
+import { dismissKeyboard } from "@/native/keyboard";
 import { addLoggedEntry } from "@/utils/dailyLogEngine";
 import { toFaDigits } from "@/utils/numberFormat";
 
@@ -84,6 +85,7 @@ export default function ManualMacroEntryModal({
   function handleAdd() {
     if (!valid) return;
 
+    dismissKeyboard();
     const macros = {
       calories: Math.round(calories!),
       protein: protein !== undefined ? Math.round(protein) : undefined,
@@ -137,9 +139,16 @@ export default function ManualMacroEntryModal({
               <input
                 type="text"
                 inputMode="decimal"
+                enterKeyHint="done"
                 value={values[field.key]}
                 onChange={(e) => setValues({ ...values, [field.key]: e.target.value })}
                 onFocus={(e) => e.target.select()}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    dismissKeyboard();
+                  }
+                }}
                 placeholder={
                   field.key === "calories" && derivedCalories !== undefined
                     ? toFaDigits(derivedCalories)

@@ -17,6 +17,7 @@ import {
   type ReversibleMacro,
 } from "@/domain/nutrition/foodSearch";
 import { sortFoodsForMeal } from "@/domain/nutrition/mealFoodSuggestions";
+import { dismissKeyboard, parseLocalizedNumber } from "@/native/keyboard";
 import { addLoggedEntry } from "@/utils/dailyLogEngine";
 import { toFaDigits } from "@/utils/numberFormat";
 import type { FoodItem, ServingUnit } from "@/types/food";
@@ -68,7 +69,7 @@ export default function AddMealEntryModal({
 
   const [selected, setSelected] = useState<FoodItem | null>(null);
   const [unit, setUnit] = useState<ServingUnit | null>(null);
-  const [quantity, setQuantity] = useState(1);
+  const [quantityText, setQuantityText] = useState("1");
   // Whether the amount below is being sized by a macro target instead of a
   // typed quantity — see the calculator button next to the title. Reset
   // alongside everything else whenever `meal` changes, which covers both
@@ -77,7 +78,10 @@ export default function AddMealEntryModal({
   // user: the toggle only holds for as long as the sheet is open.
   const [macroMode, setMacroMode] = useState(false);
   const [macroKey, setMacroKey] = useState<ReversibleMacro>("calories");
-  const [macroValue, setMacroValue] = useState(0);
+  const [macroValueText, setMacroValueText] = useState("0");
+
+  const quantity = parseLocalizedNumber(quantityText) ?? 0;
+  const macroValue = parseLocalizedNumber(macroValueText) ?? 0;
   // Name of the food just added, or null. Adding clears `selected` (which
   // already returns to the food list, since that's what hides the
   // quantity picker), but gave no feedback that anything happened — this
@@ -126,11 +130,11 @@ export default function AddMealEntryModal({
     setResults([]);
     setSelected(null);
     setUnit(null);
-    setQuantity(1);
+    setQuantityText("1");
     setJustAdded(null);
     setMacroMode(false);
     setMacroKey("calories");
-    setMacroValue(0);
+    setMacroValueText("0");
   }, [meal]);
 
   useEffect(() => {
@@ -198,17 +202,18 @@ export default function AddMealEntryModal({
   }
 
   function selectFood(entry: FoodItem) {
+    dismissKeyboard();
     const defaultUnit = entry.servingUnits[0];
 
     setSelected(entry);
     setUnit(defaultUnit);
-    setQuantity(1);
+    setQuantityText("1");
 
     if (macroMode) {
       const key = usableMacro(entry, macroKey);
 
       setMacroKey(key);
-      setMacroValue(macrosForServing(entry, defaultUnit, 1)[key]);
+      setMacroValueText(String(macrosForServing(entry, defaultUnit, 1)[key]));
     }
   }
 
@@ -221,7 +226,7 @@ export default function AddMealEntryModal({
         const key = usableMacro(selected, macroKey);
 
         setMacroKey(key);
-        setMacroValue(macrosForServing(selected, unit, 1)[key]);
+        setMacroValueText(String(macrosForServing(selected, unit, 1)[key]));
       }
 
       return !wasOn;
@@ -231,6 +236,7 @@ export default function AddMealEntryModal({
   function handleAdd() {
     if (!selected || !unit || effectiveQuantity <= 0) return;
 
+    dismissKeyboard();
     const macros = macrosForServing(selected, unit, effectiveQuantity);
 
     addLoggedEntry(
@@ -251,7 +257,7 @@ export default function AddMealEntryModal({
     setJustAdded(selected.nameFa);
     setSelected(null);
     setUnit(null);
-    setQuantity(1);
+    setQuantityText("1");
     onChange();
   }
 
@@ -352,12 +358,20 @@ export default function AddMealEntryModal({
 
             <div className="flex items-center gap-2">
               <input
-                type="number"
-                min={0}
-                value={quantity}
-                onChange={(e) => setQuantity(Number(e.target.value))}
+                type="text"
+                inputMode="decimal"
+                enterKeyHint="done"
+                value={quantityText}
+                onChange={(e) => setQuantityText(e.target.value)}
                 onFocus={(e) => e.target.select()}
-                className="w-16 glass-chip glass-static rounded-lg px-2 py-2 text-center text-sm text-white"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    dismissKeyboard();
+                  }
+                }}
+                aria-label="مقدار"
+                className="w-20 glass-chip glass-static rounded-lg px-2 py-2 text-center text-sm text-white outline-none"
               />
 
               <select
@@ -420,7 +434,7 @@ export default function AddMealEntryModal({
                     disabled={disabled}
                     onClick={() => {
                       setMacroKey(key);
-                      setMacroValue(macrosForServing(selected, unit, 1)[key]);
+                      setMacroValueText(String(macrosForServing(selected, unit, 1)[key]));
                     }}
                     className={`rounded-lg px-1 py-2 text-xs font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-30 ${
                       macroKey === key ? "glass-selected text-avocado-lime" : "glass-chip text-white"
@@ -434,12 +448,20 @@ export default function AddMealEntryModal({
 
             <div className="flex items-center justify-center gap-2">
               <input
-                type="number"
-                min={0}
-                value={macroValue}
-                onChange={(e) => setMacroValue(Number(e.target.value))}
+                type="text"
+                inputMode="decimal"
+                enterKeyHint="done"
+                value={macroValueText}
+                onChange={(e) => setMacroValueText(e.target.value)}
                 onFocus={(e) => e.target.select()}
-                className="w-20 glass-chip glass-static rounded-lg px-2 py-2 text-center text-sm text-white"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    dismissKeyboard();
+                  }
+                }}
+                aria-label="مقدار ماکرو"
+                className="w-24 glass-chip glass-static rounded-lg px-2 py-2 text-center text-sm text-white outline-none"
               />
 
               <span className="text-sm text-white/70">

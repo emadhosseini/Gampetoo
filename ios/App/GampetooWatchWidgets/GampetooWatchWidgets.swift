@@ -142,7 +142,7 @@ struct GampetooWatchWidgetView: View {
         case .accessoryCircular:
             circularView
         case .accessoryInline:
-            Text(verbatim: "گمپتو · \(s.caloriesConsumed) کالری · \(s.proteinGrams)g")
+            Text(verbatim: "گامپتو · \(s.caloriesConsumed) کالری · \(s.proteinGrams)g")
         default:
             rectangularView
         }
@@ -151,7 +151,7 @@ struct GampetooWatchWidgetView: View {
     private var rectangularView: some View {
         VStack(spacing: 4) {
             HStack(spacing: 4) {
-                Text(s.workoutTitle.isEmpty ? "گمپتو" : s.workoutTitle)
+                Text(s.workoutTitle.isEmpty ? "گامپتو" : s.workoutTitle)
                     .font(.system(size: 11, weight: .bold))
                     .foregroundStyle(accentYellow)
                     .lineLimit(1)
@@ -243,7 +243,7 @@ struct GampetooWatchSummaryWidget: Widget {
         StaticConfiguration(kind: kind, provider: GampetooWatchTimelineProvider()) { entry in
             GampetooWatchWidgetView(entry: entry)
         }
-        .configurationDisplayName("گمپتو")
+        .configurationDisplayName("گامپتو")
         .description("خلاصه تمرین، کالری، پروتئین و آب روزانه")
         .supportedFamilies([.accessoryRectangular, .accessoryCircular, .accessoryInline])
     }

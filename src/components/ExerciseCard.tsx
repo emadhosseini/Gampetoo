@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import Toggle from "@/components/Toggle";
 import ExerciseSetLogger from "@/components/ExerciseSetLogger";
 import ExerciseNoteButton from "@/components/ExerciseNoteButton";
+import { getExerciseNote } from "@/store/exerciseNoteStore";
 import { confirmAllSets } from "@/utils/exerciseSetLogEngine";
 import type { Exercise } from "@/data/workoutLibrary";
 
@@ -16,6 +17,10 @@ type ExerciseCardProps = {
   workoutId: string;
   variantId: string;
   onToggleChecked: () => void;
+  /** True when rendered inside a shared superset container on WorkoutPage. */
+  nestedInSuperset?: boolean;
+  /** Next exercise name in the same superset (shown as a gentle cue while logging). */
+  supersetNextName?: string;
 };
 
 export default function ExerciseCard({
@@ -24,11 +29,16 @@ export default function ExerciseCard({
   workoutId,
   variantId,
   onToggleChecked,
+  nestedInSuperset = false,
+  supersetNextName,
 }: ExerciseCardProps) {
   // Tapping anywhere on the card except the toggle opens the set-logging
   // drawer (ExerciseSetLogger) — the toggle's own "done for today" state
   // is unrelated to whether the drawer showing its actual sets is open.
   const [expanded, setExpanded] = useState(false);
+  const [, bumpNoteVersion] = useState(0);
+
+  const planNote = getExerciseNote(workoutId, variantId, exercise.id);
 
   // Marking the exercise done closes its drawer too — any rest timer
   // running inside ExerciseSetLogger stops as soon as it unmounts (its own
@@ -58,9 +68,11 @@ export default function ExerciseCard({
     <motion.div
       layout
       transition={{ type: "spring", stiffness: 380, damping: 32 }}
-      className={`glass-panel glass-static rounded-2xl p-2.5 transition-opacity ${
-        checked ? "opacity-50" : ""
-      }`}
+      className={`${
+        nestedInSuperset
+          ? "glass-chip glass-static rounded-2xl p-2.5"
+          : "glass-panel glass-static rounded-2xl p-2.5"
+      } transition-opacity ${checked ? "opacity-50" : ""}`}
     >
       {/* Collapsed row is deliberately just the name and the toggle now —
           the configured sets/reps count used to show here too, but that
@@ -74,7 +86,7 @@ export default function ExerciseCard({
         <button
           onClick={() => setExpanded((prev) => !prev)}
           aria-expanded={expanded}
-          className="flex-1 text-right"
+          className="min-w-0 flex-1 text-right"
         >
           <h2 className="text-sm font-bold text-white">
             {exercise.name}
@@ -84,6 +96,12 @@ export default function ExerciseCard({
               </span>
             )}
           </h2>
+
+          {planNote && (
+            <p className="mt-0.5 text-[11px] font-medium leading-snug text-avocado-yellow/85">
+              {planNote}
+            </p>
+          )}
         </button>
 
         <ExerciseNoteButton
@@ -91,6 +109,7 @@ export default function ExerciseCard({
           variantId={variantId}
           exerciseId={exercise.id}
           exerciseName={exercise.name}
+          onSaved={() => bumpNoteVersion((n) => n + 1)}
         />
 
         <Toggle checked={checked} onChange={handleToggleChecked} />
@@ -111,6 +130,11 @@ export default function ExerciseCard({
             // Same fix as WeeklyScheduleModal's list.
             className="-mx-1 overflow-hidden px-1"
           >
+            {supersetNextName && (
+              <p className="mt-2.5 rounded-xl bg-avocado-yellow/10 px-3 py-1.5 text-[11px] font-medium text-avocado-yellow">
+                ⚡ سوپرست — بلافاصله بعدش: {supersetNextName}
+              </p>
+            )}
             <ExerciseSetLogger
               exerciseId={exercise.id}
               exerciseName={exercise.name}

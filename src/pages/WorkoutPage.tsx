@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, Link2, Zap } from "lucide-react";
+import { motion } from "framer-motion";
 
 import WorkoutHeader from "@/components/WorkoutHeader";
 import WeeklyScheduleModal from "@/components/WeeklyScheduleModal";
@@ -32,6 +33,7 @@ import {
   getWorkoutWithVariant,
 } from "@/store/workoutVariantStore";
 import { getSpecializedWarmup } from "@/store/warmupLibraryStore";
+import { getExerciseNote } from "@/store/exerciseNoteStore";
 import {
   applyExerciseOrder,
   getExerciseOrder,
@@ -39,6 +41,7 @@ import {
 } from "@/store/workoutOrderStore";
 import { walkCharacterIcon } from "@/data/characterIcons";
 import type { Exercise } from "@/data/workoutLibrary";
+import { toFaDigits } from "@/utils/numberFormat";
 
 import {
   getSession,
@@ -59,8 +62,67 @@ import {
   pushCurrentWidgetSnapshot,
   syncWorkoutLiveActivity,
 } from "@/native/nativeBridge";
+import {
+  cancelRestFinishedNotification,
+  clearDeliveredNotifications,
+} from "@/native/notifications";
 import { setActiveRestTimer } from "@/native/restTimerStore";
 import { syncWatchContext } from "@/native/watchBridge";
+
+type WorkoutDisplayBlock =
+  | { kind: "single"; key: string; exercise: Exercise; allChecked: boolean }
+  | {
+      kind: "superset";
+      key: string;
+      supersetGroupId: string;
+      exercises: Exercise[];
+      allChecked: boolean;
+    };
+
+function buildWorkoutDisplayBlocks(
+  orderedExercises: Exercise[],
+  checkedIds: Set<string>,
+): WorkoutDisplayBlock[] {
+  const countsBySuperset = new Map<string, number>();
+  for (const ex of orderedExercises) {
+    if (ex.supersetGroupId) {
+      countsBySuperset.set(
+        ex.supersetGroupId,
+        (countsBySuperset.get(ex.supersetGroupId) ?? 0) + 1,
+      );
+    }
+  }
+
+  const emittedSupersets = new Set<string>();
+  const blocks: WorkoutDisplayBlock[] = [];
+
+  for (const exercise of orderedExercises) {
+    const ssId = exercise.supersetGroupId;
+    if (ssId && (countsBySuperset.get(ssId) ?? 0) >= 2) {
+      if (emittedSupersets.has(ssId)) continue;
+      emittedSupersets.add(ssId);
+      const members = orderedExercises.filter((ex) => ex.supersetGroupId === ssId);
+      blocks.push({
+        kind: "superset",
+        key: `ss:${ssId}`,
+        supersetGroupId: ssId,
+        exercises: members,
+        allChecked: members.every((ex) => checkedIds.has(ex.id)),
+      });
+    } else {
+      blocks.push({
+        kind: "single",
+        key: exercise.id,
+        exercise,
+        allChecked: checkedIds.has(exercise.id),
+      });
+    }
+  }
+
+  // Stable sort: sink completed singles and fully-completed supersets to the
+  // bottom without ever splitting a superset in half.
+  return [...blocks].sort((a, b) => Number(a.allChecked) - Number(b.allChecked));
+}
 
 // Completing used to navigate home right after this, which is why it was
 // needed in the first place: a full page navigation tears down the JS
@@ -145,6 +207,8 @@ function WorkoutPage() {
 
     completeWalk({ title: "روز استراحت" });
     setActiveRestTimer(null);
+    void cancelRestFinishedNotification();
+    void clearDeliveredNotifications();
     void endRestLiveActivity();
     pushCurrentWidgetSnapshot();
     syncWatchContext();
@@ -235,9 +299,16 @@ function WorkoutPage() {
     ? (todaysRecord.variantId ?? null)
     : resolvedVariantId;
 
-const workout = effectiveWorkoutType
-  ? getWorkoutWithVariant(effectiveWorkoutType, effectiveVariantId)
-  : undefined;
+  const workout = effectiveWorkoutType
+    ? getWorkoutWithVariant(effectiveWorkoutType, effectiveVariantId)
+    : undefined;
+
+  // Keep Apple Watch & Widgets aligned with whatever workout/variant today
+  // actually resolved to whenever the workout screen mounts or switches day.
+  useEffect(() => {
+    syncWatchContext();
+    pushCurrentWidgetSnapshot();
+  }, [effectiveWorkoutType, effectiveVariantId, day.activity, session.completed]);
 
   // Only a real pick gets a label — the generic "برنامه پیش‌فرض" reads as
   // noise next to a workout title that already says what it is, but once
@@ -473,13 +544,7 @@ const workout = effectiveWorkoutType
   );
 
   const checkedExerciseIds = new Set(session.checkedExercises);
-  // A stable sort just sinks checked-off exercises to the bottom, keeping
-  // both groups in their original relative order — no re-shuffling within
-  // "still to do" or "already done" as you check more of them off.
-  const sortedExercises = [...orderedExercises].sort(
-    (a, b) =>
-      Number(checkedExerciseIds.has(a.id)) - Number(checkedExerciseIds.has(b.id)),
-  );
+  const displayBlocks = buildWorkoutDisplayBlocks(orderedExercises, checkedExerciseIds);
 
   function startReorder() {
     setReorderList(orderedExercises);
@@ -531,16 +596,62 @@ const workout = effectiveWorkoutType
 
       {!reorderMode && (
         <div className="space-y-4">
-          {sortedExercises.map((exercise) => (
-            <ExerciseCard
-              key={exercise.id}
-              exercise={exercise}
-              checked={checkedExerciseIds.has(exercise.id)}
-              workoutId={effectiveWorkoutType ?? ""}
-              variantId={effectiveVariantId ?? DEFAULT_VARIANT_ID}
-              onToggleChecked={() => handleToggleExercise(exercise)}
-            />
-          ))}
+          {displayBlocks.map((block) =>
+            block.kind === "single" ? (
+              <ExerciseCard
+                key={block.key}
+                exercise={block.exercise}
+                checked={checkedExerciseIds.has(block.exercise.id)}
+                workoutId={effectiveWorkoutType ?? ""}
+                variantId={effectiveVariantId ?? DEFAULT_VARIANT_ID}
+                onToggleChecked={() => handleToggleExercise(block.exercise)}
+              />
+            ) : (
+              <motion.div
+                key={block.key}
+                layout
+                transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                className={`glass-panel glass-static space-y-2 rounded-3xl border border-avocado-yellow/30 p-3 transition-opacity ${
+                  block.allChecked ? "opacity-55" : ""
+                }`}
+              >
+                <div className="flex items-center justify-between px-1">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-avocado-yellow/15 px-2.5 py-0.5 text-[11px] font-bold text-avocado-yellow">
+                    <Zap size={12} />
+                    سوپرست · {toFaDigits(block.exercises.length)} حرکت
+                  </span>
+                  <span className="text-[10.5px] text-white/50">پشت‌سرهم انجام بده</span>
+                </div>
+
+                <div className="space-y-1.5">
+                  {block.exercises.map((exercise, idx) => {
+                    const nextPartner = block.exercises[idx + 1]?.name;
+                    return (
+                      <Fragment key={exercise.id}>
+                        <ExerciseCard
+                          exercise={exercise}
+                          checked={checkedExerciseIds.has(exercise.id)}
+                          workoutId={effectiveWorkoutType ?? ""}
+                          variantId={effectiveVariantId ?? DEFAULT_VARIANT_ID}
+                          onToggleChecked={() => handleToggleExercise(exercise)}
+                          nestedInSuperset
+                          supersetNextName={nextPartner}
+                        />
+                        {idx < block.exercises.length - 1 && (
+                          <div className="flex items-center justify-center py-0.5">
+                            <span className="inline-flex items-center gap-1 rounded-full bg-avocado-yellow/12 px-2 py-0.5 text-[10px] font-semibold text-avocado-yellow/90">
+                              <Link2 size={10} />
+                              سوپرست
+                            </span>
+                          </div>
+                        )}
+                      </Fragment>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            ),
+          )}
         </div>
       )}
 
@@ -550,34 +661,54 @@ const workout = effectiveWorkoutType
           user's saved order, not the checklist itself. */}
       {reorderMode && (
         <div className="space-y-2">
-          {reorderList.map((exercise, index) => (
-            <div
-              key={exercise.id}
-              className="glass-chip glass-static flex items-center gap-3 rounded-xl p-3"
-            >
-              <span className="flex-1 text-sm font-medium text-white">
-                {exercise.name}
-              </span>
+          {reorderList.map((exercise, index) => {
+            const note = getExerciseNote(
+              effectiveWorkoutType ?? "",
+              effectiveVariantId ?? DEFAULT_VARIANT_ID,
+              exercise.id,
+            );
+            return (
+              <div
+                key={exercise.id}
+                className="glass-chip glass-static flex items-center gap-3 rounded-xl p-3"
+              >
+                <div className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-medium text-white">
+                    {exercise.name}
+                  </span>
+                  {note && (
+                    <span className="block truncate text-[11px] text-avocado-yellow/80">
+                      {note}
+                    </span>
+                  )}
+                  {exercise.supersetGroupId && (
+                    <span className="mt-0.5 inline-flex items-center gap-1 text-[10px] font-semibold text-avocado-yellow">
+                      <Zap size={10} />
+                      سوپرست
+                    </span>
+                  )}
+                </div>
 
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={() => moveReorderItem(index, -1)}
-                  disabled={index === 0}
-                  className="glass-chip glass-static rounded-lg p-2 text-white disabled:opacity-30"
-                >
-                  <ChevronUp size={16} />
-                </button>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => moveReorderItem(index, -1)}
+                    disabled={index === 0}
+                    className="glass-chip glass-static rounded-lg p-2 text-white disabled:opacity-30"
+                  >
+                    <ChevronUp size={16} />
+                  </button>
 
-                <button
-                  onClick={() => moveReorderItem(index, 1)}
-                  disabled={index === reorderList.length - 1}
-                  className="glass-chip glass-static rounded-lg p-2 text-white disabled:opacity-30"
-                >
-                  <ChevronDown size={16} />
-                </button>
+                  <button
+                    onClick={() => moveReorderItem(index, 1)}
+                    disabled={index === reorderList.length - 1}
+                    className="glass-chip glass-static rounded-lg p-2 text-white disabled:opacity-30"
+                  >
+                    <ChevronDown size={16} />
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
@@ -651,6 +782,8 @@ const workout = effectiveWorkoutType
             variantName: resolvedVariantName,
           });
           setActiveRestTimer(null);
+          void cancelRestFinishedNotification();
+          void clearDeliveredNotifications();
           void endRestLiveActivity();
           pushCurrentWidgetSnapshot();
           syncWatchContext();

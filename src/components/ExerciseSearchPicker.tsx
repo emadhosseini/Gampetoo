@@ -11,14 +11,18 @@ import {
   flattenExercises,
   matchesSearch,
 } from "@/domain/services/exerciseService";
+import { getBaseExerciseId } from "@/utils/exerciseIdentity";
+import { toFaDigits } from "@/utils/numberFormat";
 import type { Exercise } from "@/data/workoutLibrary";
 
 export interface ExerciseSearchPickerProps {
-  // Ids already in the group/workout being edited — shown as "اضافه شده"
-  // rather than offered again, so the same exercise can't be added twice.
+  // Ids already in the group/workout being edited — when `allowDuplicates`
+  // is false, shown as disabled "اضافه شده"; when true, shows the current
+  // occurrence count and still lets the user add another copy with its own note.
   existingIds: string[];
   onPick: (exercise: Exercise) => void;
   label?: string;
+  allowDuplicates?: boolean;
 }
 
 /**
@@ -31,13 +35,13 @@ export default function ExerciseSearchPicker({
   existingIds,
   onPick,
   label = "جست‌وجو از تمرین‌های دیگه",
+  allowDuplicates = false,
 }: ExerciseSearchPickerProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [groupFilter, setGroupFilter] = useState<string | null>(null);
-  // Ids added during this session, so a picked row can flip to a
-  // confirmation immediately without the parent having to re-render the
-  // whole page first.
+  // Ids added during this session, so a picked row can show immediate feedback
+  // without waiting for a full parent re-render.
   const [justAdded, setJustAdded] = useState<string[]>([]);
 
   const all = useMemo(() => (open ? flattenExercises(getLibrary()) : []), [open]);
@@ -53,7 +57,14 @@ export default function ExerciseSearchPicker({
     [all, groupFilter, query],
   );
 
-  const taken = new Set([...existingIds, ...justAdded]);
+  const countByBaseId = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const id of [...existingIds, ...justAdded]) {
+      const base = getBaseExerciseId(id);
+      counts.set(base, (counts.get(base) ?? 0) + 1);
+    }
+    return counts;
+  }, [existingIds, justAdded]);
 
   function handlePick(exercise: Exercise) {
     setJustAdded((prev) => [...prev, exercise.id]);
@@ -132,17 +143,19 @@ export default function ExerciseSearchPicker({
                 <p className="py-6 text-center text-sm text-white/50">حرکتی پیدا نشد.</p>
               ) : (
                 results.map((exercise) => {
-                  const added = taken.has(exercise.id);
+                  const count = countByBaseId.get(getBaseExerciseId(exercise.id)) ?? 0;
+                  const added = count > 0;
+                  const isDisabled = !allowDuplicates && added;
                   const groupTitle = resolveExerciseGroupMeta(exercise).title;
 
                   return (
                     <button
                       key={exercise.id}
                       type="button"
-                      disabled={added}
+                      disabled={isDisabled}
                       onClick={() => handlePick(exercise)}
                       className={`glass-chip glass-static flex w-full items-center gap-2 rounded-2xl p-2.5 text-right ${
-                        added ? "opacity-50" : ""
+                        isDisabled ? "opacity-50" : ""
                       }`}
                     >
                       <span className="min-w-0 flex-1">
@@ -156,18 +169,28 @@ export default function ExerciseSearchPicker({
                         </span>
 
                         <span className="block text-[10px] text-white/40">
-                          {[groupTitle, exercise.equipment].filter(Boolean).join(" · ")}
+                          {[
+                            groupTitle,
+                            exercise.equipment,
+                            allowDuplicates && added
+                              ? `${toFaDigits(count)} بار اضافه شده`
+                              : null,
+                          ]
+                            .filter(Boolean)
+                            .join(" · ")}
                         </span>
                       </span>
 
                       <span
                         className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${
-                          added
+                          isDisabled
                             ? "bg-avocado-lime/20 text-avocado-lime"
-                            : "glass-action glass-action-static text-white"
+                            : added && allowDuplicates
+                              ? "bg-avocado-yellow/20 text-avocado-yellow"
+                              : "glass-action glass-action-static text-white"
                         }`}
                       >
-                        {added ? <Check size={14} /> : <Plus size={14} />}
+                        {isDisabled ? <Check size={14} /> : <Plus size={14} />}
                       </span>
                     </button>
                   );

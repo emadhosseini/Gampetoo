@@ -102,6 +102,7 @@ export default function SlideToCompleteButton({
       ref={trackRef}
       role="button"
       aria-label={label}
+      data-no-tab-swipe="true"
       className="glass-panel glass-static relative mt-6 h-17 w-full overflow-hidden rounded-full"
     >
       {/* The stretching capsule: a circle at rest that elongates with the

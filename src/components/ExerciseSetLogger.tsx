@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { BarChart3, Check, Minus, NotebookText, Plus, Timer, Trash2, X } from "lucide-react";
 
+import DecimalNumberInput from "@/components/DecimalNumberInput";
 import ExerciseProgressChartModal from "@/components/progress/ExerciseProgressChartModal";
 import ModalOverlay from "@/components/ModalOverlay";
 import { hapticLight, hapticMedium, hapticSuccess } from "@/native/haptics";
@@ -65,14 +66,10 @@ function NumberStepper({
         <Minus size={12} />
       </button>
 
-      <input
-        type="number"
-        inputMode="decimal"
-        min={0}
+      <DecimalNumberInput
         value={value}
         disabled={disabled}
-        onChange={(e) => onChange(Number(e.target.value) || 0)}
-        onFocus={(e) => e.target.select()}
+        onChange={onChange}
         className="w-full bg-transparent text-center text-sm text-white outline-none disabled:opacity-70"
       />
 
@@ -203,6 +200,9 @@ export default function ExerciseSetLogger({
         setRestEndAt(null);
         setActiveRestTimer(null);
         hapticSuccess();
+        // Cancel/clear the scheduled rest notification so it doesn't ALSO fire
+        // or sit in Notification Center after the rest timer already finished.
+        void cancelRestFinishedNotification();
         void syncWorkoutLiveActivity({
           exerciseId,
           exerciseName,

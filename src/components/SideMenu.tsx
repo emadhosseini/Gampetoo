@@ -336,17 +336,21 @@ export default function SideMenu({ children }: SideMenuProps) {
                 <p className="mb-1.5 px-3 text-[11px] font-semibold text-white/45">
                   برنامه‌ریزی
                 </p>
-                <div className="ios-inset-group overflow-hidden rounded-[24px] divide-y divide-white/8">
+                <div className="ios-inset-group space-y-1 overflow-hidden rounded-[26px] p-1.5">
                   <div>
-                    <button
+                    <motion.button
+                      whileTap={{ scale: 0.96 }}
+                      transition={{ type: "spring", stiffness: 460, damping: 24 }}
                       onClick={() => {
                         hapticLight();
                         setTrainingOpen((prev) => !prev);
                       }}
                       aria-expanded={trainingOpen}
-                      className="flex w-full items-center gap-3 px-4 py-3.5 transition-colors active:bg-white/6"
+                      className={`flex w-full items-center gap-3 rounded-[20px] px-3 py-3 transition-all ${
+                        trainingOpen ? "ios-glass-lens" : "active:bg-white/8"
+                      }`}
                     >
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-avocado-lime/20 text-avocado-lime">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-avocado-lime/20 text-avocado-lime">
                         <Dumbbell size={16} />
                       </div>
                       <span className="flex-1 text-right text-sm font-semibold text-white">
@@ -358,7 +362,7 @@ export default function SideMenu({ children }: SideMenuProps) {
                           trainingOpen ? "rotate-180" : ""
                         }`}
                       />
-                    </button>
+                    </motion.button>
 
                     <AnimatePresence initial={false}>
                       {trainingOpen && (
@@ -366,27 +370,34 @@ export default function SideMenu({ children }: SideMenuProps) {
                           initial={{ height: 0, opacity: 0 }}
                           animate={{ height: "auto", opacity: 1 }}
                           exit={{ height: 0, opacity: 0 }}
-                          transition={{ type: "spring", stiffness: 400, damping: 34 }}
-                          className="overflow-hidden border-t border-white/6 bg-black/15"
+                          transition={{ type: "spring", stiffness: 360, damping: 26 }}
+                          className="overflow-hidden"
                         >
-                          <div className="divide-y divide-white/6">
+                          <div className="mt-1 space-y-1 px-1 pb-1">
                             {trainingLinks.map((item) => {
                               const Icon = item.icon;
+                              const isCurrent = pathname.startsWith(item.to);
                               return (
-                                <button
+                                <motion.button
                                   key={item.to}
+                                  whileTap={{ scale: 0.95 }}
+                                  transition={{ type: "spring", stiffness: 460, damping: 22 }}
                                   onClick={() => {
                                     hapticLight();
                                     goTo(item.to);
                                   }}
-                                  className="flex w-full items-center gap-3 py-3 pe-4 ps-12 transition-colors active:bg-white/6"
+                                  className={`flex w-full items-center gap-3 rounded-full py-2.5 pe-3.5 ps-9 transition-all ${
+                                    isCurrent
+                                      ? "ios-glass-lens text-avocado-yellow"
+                                      : "text-white/90 active:bg-white/8"
+                                  }`}
                                 >
-                                  <Icon size={15} className="text-white/60" />
-                                  <span className="flex-1 text-right text-xs font-medium text-white/90">
+                                  <Icon size={15} className={isCurrent ? "text-avocado-yellow" : "text-white/60"} />
+                                  <span className="flex-1 text-right text-xs font-medium">
                                     {item.label}
                                   </span>
                                   <ChevronLeft size={14} className="text-white/35" />
-                                </button>
+                                </motion.button>
                               );
                             })}
                           </div>
@@ -397,23 +408,32 @@ export default function SideMenu({ children }: SideMenuProps) {
 
                   {menuLinks.map((item) => {
                     const Icon = item.icon;
+                    const isCurrent = pathname.startsWith(item.to);
                     return (
-                      <button
+                      <motion.button
                         key={item.to}
+                        whileTap={{ scale: 0.96 }}
+                        transition={{ type: "spring", stiffness: 460, damping: 24 }}
                         onClick={() => {
                           hapticLight();
                           goTo(item.to);
                         }}
-                        className="flex w-full items-center gap-3 px-4 py-3.5 transition-colors active:bg-white/6"
+                        className={`flex w-full items-center gap-3 rounded-[20px] px-3 py-3 transition-all ${
+                          isCurrent ? "ios-glass-lens" : "active:bg-white/8"
+                        }`}
                       >
-                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-avocado-yellow/18 text-avocado-yellow">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-avocado-yellow/18 text-avocado-yellow">
                           <Icon size={16} />
                         </div>
-                        <span className="flex-1 text-right text-sm font-semibold text-white">
+                        <span
+                          className={`flex-1 text-right text-sm font-semibold ${
+                            isCurrent ? "text-avocado-yellow" : "text-white"
+                          }`}
+                        >
                           {item.label}
                         </span>
                         <ChevronLeft size={16} className="text-white/50" />
-                      </button>
+                      </motion.button>
                     );
                   })}
                 </div>

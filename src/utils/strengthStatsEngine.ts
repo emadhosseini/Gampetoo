@@ -1,5 +1,10 @@
 import { getLibrary } from "@/store/workoutLibraryStore";
-import { getPersonalRecord, getPersonalRecordByDuration } from "./exerciseSetLogEngine";
+import { getBaseExerciseId } from "./exerciseIdentity";
+import {
+  getLoggedExerciseIds,
+  getPersonalRecord,
+  getPersonalRecordByDuration,
+} from "./exerciseSetLogEngine";
 import {
   calculate1RM,
   calculateIsometricScore,
@@ -133,12 +138,13 @@ function buildExerciseMetaMap(): Map<string, ExerciseStrengthMeta> {
       const groupCategory = categorizeGroupTitle(group.title);
 
       for (const exercise of group.exercises) {
+        const baseId = getBaseExerciseId(exercise.id);
         // First match wins — the same exercise can appear in more than one
         // workout's groups (e.g. a compound move filed under both a push
         // and an upper-body day, or reused wholesale by تمام بدن); it
         // should only count once per spoke, not once per place it happens
         // to be listed.
-        if (map.has(exercise.id)) continue;
+        if (map.has(baseId)) continue;
 
         // primaryMuscle first — it's what the exercise actually says it
         // trains. The group title comes next (a per-muscle group like
@@ -151,7 +157,7 @@ function buildExerciseMetaMap(): Map<string, ExerciseStrengthMeta> {
           categorizeExerciseName(exercise.name);
 
         if (category) {
-          map.set(exercise.id, { category, unit: exercise.unit ?? "reps" });
+          map.set(baseId, { category, unit: exercise.unit ?? "reps" });
         }
       }
     }
@@ -171,24 +177,40 @@ function buildExerciseMetaMap(): Map<string, ExerciseStrengthMeta> {
  */
 function getStrengthCategoryLogs(): StrengthCategoryLog[] {
   const metaByExerciseId = buildExerciseMetaMap();
+  // Group all logged keys (including duplicate per-day instances like
+  // `cable_fly__dup_xxxx`) by canonical base exercise id so each movement
+  // contributes its single best PR once without double-counting.
+  const loggedIdsByBase = new Map<string, string[]>();
+  for (const loggedId of getLoggedExerciseIds()) {
+    const baseId = getBaseExerciseId(loggedId);
+    const list = loggedIdsByBase.get(baseId) ?? [];
+    list.push(loggedId);
+    loggedIdsByBase.set(baseId, list);
+  }
+
   const logs: StrengthCategoryLog[] = [];
 
-  for (const [exerciseId, meta] of metaByExerciseId) {
-    if (meta.unit !== "reps") {
-      const pr = getPersonalRecordByDuration(exerciseId);
+  for (const [baseId, meta] of metaByExerciseId) {
+    const candidateIds = loggedIdsByBase.get(baseId);
+    if (!candidateIds || candidateIds.length === 0) continue;
 
-      if (!pr) continue;
+    let bestScore: number | null = null;
+    for (const id of candidateIds) {
+      if (meta.unit !== "reps") {
+        const pr = getPersonalRecordByDuration(id);
+        if (!pr) continue;
+        const score = calculateIsometricScore(pr.reps, pr.weight);
+        if (bestScore === null || score > bestScore) bestScore = score;
+      } else {
+        const pr = getPersonalRecord(id);
+        if (!pr) continue;
+        const score = calculate1RM(pr.weight, pr.reps);
+        if (bestScore === null || score > bestScore) bestScore = score;
+      }
+    }
 
-      logs.push({
-        category: meta.category,
-        score: calculateIsometricScore(pr.reps, pr.weight),
-      });
-    } else {
-      const pr = getPersonalRecord(exerciseId);
-
-      if (!pr) continue;
-
-      logs.push({ category: meta.category, score: calculate1RM(pr.weight, pr.reps) });
+    if (bestScore !== null) {
+      logs.push({ category: meta.category, score: bestScore });
     }
   }
 

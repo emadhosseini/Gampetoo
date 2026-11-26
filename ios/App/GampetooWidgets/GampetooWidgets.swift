@@ -366,9 +366,55 @@ struct GampetooDailyWidget: Widget {
         StaticConfiguration(kind: kind, provider: GampetooTimelineProvider()) { entry in
             GampetooDailyWidgetView(entry: entry)
         }
-        .configurationDisplayName("برنامه امروز گمپتو")
+        .configurationDisplayName("برنامه امروز گامپتو")
         .description("خلاصه تمرین امروز، کالری، پروتئین و آب")
         .supportedFamilies([.systemSmall, .systemMedium])
+    }
+}
+
+/// Non-greedy live countdown text for Dynamic Island & Lock Screen.
+///
+/// SwiftUI's `Text(timerInterval:countsDown:)` normally proposes infinite
+/// horizontal width, causing Dynamic Island's compact & expanded slots to
+/// overflow on both sides and apply bilateral fade-truncation. Sizing against
+/// a hidden `"00:00"` reference in the exact same monospaced font gives
+/// ActivityKit a tight, exact intrinsic width with zero clipping or fading.
+@available(iOS 16.2, *)
+private struct BoundedCountdownText: View {
+    let range: ClosedRange<Date>
+    let font: Font
+    let color: Color
+    var alignment: Alignment = .center
+    var textAlignment: TextAlignment = .center
+    var placeholder: String = "00:00"
+
+    var body: some View {
+        Text(verbatim: placeholder)
+            .font(font)
+            .monospacedDigit()
+            .lineLimit(1)
+            .hidden()
+            .overlay(alignment: alignment) {
+                countdownLabel
+            }
+            .environment(\.layoutDirection, .leftToRight)
+    }
+
+    @ViewBuilder
+    private var countdownLabel: some View {
+        let base = Text(timerInterval: range, pauseTime: nil, countsDown: true, showsHours: false)
+            .font(font)
+            .monospacedDigit()
+            .foregroundStyle(color)
+            .multilineTextAlignment(textAlignment)
+            .lineLimit(1)
+            .minimumScaleFactor(0.72)
+
+        if #available(iOSApplicationExtension 17.0, *) {
+            base.contentTransition(.numericText(countsDown: true))
+        } else {
+            base
+        }
     }
 }
 
@@ -424,11 +470,13 @@ struct GampetooRestLiveActivity: Widget {
                             Text("استراحت")
                                 .font(.system(size: 10, weight: .semibold))
                                 .foregroundStyle(.white.opacity(0.7))
-                            Text(timerInterval: restRange, countsDown: true)
-                                .font(.title2.monospacedDigit().bold())
-                                .foregroundStyle(accentYellow)
-                                .multilineTextAlignment(.trailing)
-                                .frame(minWidth: 56, alignment: .trailing)
+                            BoundedCountdownText(
+                                range: restRange,
+                                font: .title2.bold(),
+                                color: accentYellow,
+                                alignment: .trailing,
+                                textAlignment: .trailing
+                            )
                         }
                     } else {
                         VStack(alignment: .trailing, spacing: 2) {
@@ -483,14 +531,21 @@ struct GampetooRestLiveActivity: Widget {
                 }
                 DynamicIslandExpandedRegion(.trailing) {
                     if let restRange {
-                        Text(timerInterval: restRange, countsDown: true)
-                            .font(.headline.monospacedDigit().bold())
-                            .foregroundStyle(accentYellow)
-                            .frame(minWidth: 48, alignment: .trailing)
+                        BoundedCountdownText(
+                            range: restRange,
+                            font: .system(size: 16, weight: .bold, design: .rounded),
+                            color: accentYellow,
+                            alignment: .trailing,
+                            textAlignment: .trailing
+                        )
+                        .padding(.trailing, 2)
                     } else if state.totalExercises > 0 {
                         Text(verbatim: "\(state.completedExercises)/\(state.totalExercises)")
                             .font(.headline.monospacedDigit().bold())
                             .foregroundStyle(accentLime)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.75)
+                            .fixedSize()
                     } else {
                         Image(systemName: "figure.strengthtraining.traditional")
                             .foregroundStyle(accentLime)
@@ -518,17 +573,29 @@ struct GampetooRestLiveActivity: Widget {
                 }
             } compactLeading: {
                 Image(systemName: restRange != nil ? "timer" : "figure.strengthtraining.traditional")
+                    .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(restRange != nil ? accentYellow : accentLime)
+                    .padding(.leading, 2)
             } compactTrailing: {
                 if let restRange {
-                    Text(timerInterval: restRange, countsDown: true)
-                        .font(.caption.monospacedDigit().bold())
-                        .foregroundStyle(accentYellow)
-                        .frame(width: 44)
+                    BoundedCountdownText(
+                        range: restRange,
+                        font: .system(size: 12, weight: .bold, design: .rounded),
+                        color: accentYellow,
+                        alignment: .center,
+                        textAlignment: .center,
+                        placeholder: "00:00"
+                    )
+                    .padding(.trailing, 2)
                 } else if state.totalExercises > 0 {
                     Text(verbatim: "\(state.completedExercises)/\(state.totalExercises)")
-                        .font(.caption.monospacedDigit().bold())
+                        .font(.system(size: 12, weight: .bold, design: .rounded))
+                        .monospacedDigit()
                         .foregroundStyle(accentLime)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.75)
+                        .fixedSize()
+                        .padding(.trailing, 2)
                 } else {
                     Text("💪")
                         .font(.caption)

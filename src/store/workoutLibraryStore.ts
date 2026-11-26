@@ -1,4 +1,5 @@
 import { workoutLibrary } from "../data/workoutLibrary";
+import { getBaseExerciseId } from "../utils/exerciseIdentity";
 import { scopedKey } from "../utils/userEngine";
 
 import type {
@@ -18,6 +19,7 @@ interface ExerciseOverride {
   reps?: number;
   enabled?: boolean;
   repsPerSet?: number[];
+  supersetGroupId?: string;
 }
 
 type OverridesMap = Record<string, ExerciseOverride>;
@@ -218,6 +220,7 @@ export function syncWorkoutExtras(workoutId: string, groups: ExerciseGroup[]) {
 
   const extras = readExtras();
   const prefix = `${workoutId}:`;
+  const activeKeys = new Set<string>();
 
   for (const group of groups) {
     const seedIds = seedIdsByGroup.get(group.id) ?? new Set<string>();
@@ -226,9 +229,16 @@ export function syncWorkoutExtras(workoutId: string, groups: ExerciseGroup[]) {
       .map((exercise) => exercise.id);
 
     const key = `${prefix}${group.id}`;
+    activeKeys.add(key);
     if (nonSeedIds.length > 0) {
       extras[key] = nonSeedIds;
     } else if (key in extras) {
+      delete extras[key];
+    }
+  }
+
+  for (const key of Object.keys(extras)) {
+    if (key.startsWith(prefix) && !activeKeys.has(key)) {
       delete extras[key];
     }
   }
@@ -273,7 +283,10 @@ function applyExtras(
       const present = new Set(group.exercises.map((exercise) => exercise.id));
       const resolved = added
         .filter((id) => !present.has(id))
-        .map((id) => canonical.get(id))
+        .map((id) => {
+          const template = canonical.get(getBaseExerciseId(id));
+          return template ? { ...template, id } : undefined;
+        })
         .filter((exercise): exercise is Exercise => exercise !== undefined);
 
       return { ...group, exercises: [...group.exercises, ...resolved] };
@@ -291,7 +304,10 @@ function applyExtras(
 
       const resolved = addedIds
         .filter((id) => !allPresentIds.has(id))
-        .map((id) => canonical.get(id))
+        .map((id) => {
+          const template = canonical.get(getBaseExerciseId(id));
+          return template ? { ...template, id } : undefined;
+        })
         .filter((exercise): exercise is Exercise => exercise !== undefined);
 
       if (resolved.length === 0) continue;
@@ -372,6 +388,7 @@ export function saveWorkoutExercises(
         reps: exercise.reps,
         enabled: exercise.enabled,
         repsPerSet: exercise.repsPerSet,
+        supersetGroupId: exercise.supersetGroupId,
       };
     }
   }

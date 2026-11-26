@@ -294,6 +294,10 @@ export function getExerciseHistory(exerciseId: string): ExerciseHistoryPoint[] {
     .sort((a, b) => (a.date < b.date ? -1 : 1));
 }
 
+export function getLoggedExerciseIds(): string[] {
+  return Object.keys(readLog());
+}
+
 export function resetExerciseSetLog() {
   localStorage.removeItem(storageKey());
 }

@@ -55,6 +55,9 @@ export async function initNativeShell(
 
   try {
     await Keyboard.setStyle({ style: KeyboardStyle.Dark });
+    // Keep iOS's native Done/toolbar visible above decimal/numeric keypads,
+    // which otherwise have no Return key to dismiss the keyboard.
+    await Keyboard.setAccessoryBarVisible({ isVisible: true });
   } catch {
     // Ignore if Keyboard plugin is not active.
   }

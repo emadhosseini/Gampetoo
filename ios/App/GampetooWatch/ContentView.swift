@@ -193,7 +193,7 @@ private struct TodaySummaryWatchView: View {
         ScrollView {
             VStack(spacing: 10) {
                 HStack {
-                    Text("گمپتو")
+                    Text("گامپتو")
                         .font(.caption.bold())
                         .foregroundStyle(GampetooColors.yellow)
                     Spacer()
@@ -271,7 +271,7 @@ private struct WorkoutWatchView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 8) {
-                    HStack {
+                    HStack(spacing: 6) {
                         Text(store.state.workoutTitle.isEmpty ? "تمرین امروز" : store.state.workoutTitle)
                             .font(.caption.bold())
                             .foregroundStyle(GampetooColors.yellow)
@@ -283,6 +283,14 @@ private struct WorkoutWatchView: View {
                                 .monospacedDigit()
                                 .foregroundStyle(GampetooColors.lime)
                         }
+                        Button {
+                            store.requestRefresh()
+                        } label: {
+                            Image(systemName: "arrow.clockwise")
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundStyle(.white.opacity(0.65))
+                        }
+                        .buttonStyle(.plain)
                     }
 
                     WatchRestBannerView()
@@ -307,9 +315,7 @@ private struct WorkoutWatchView: View {
                         .padding(.vertical, 12)
                     } else {
                         ForEach(store.state.exercises) { exercise in
-                            NavigationLink {
-                                ExerciseDetailWatchView(exerciseId: exercise.id)
-                            } label: {
+                            NavigationLink(value: exercise.id) {
                                 ExerciseRowWatchView(exercise: exercise)
                             }
                             .buttonStyle(.plain)
@@ -334,6 +340,13 @@ private struct WorkoutWatchView: View {
                 LinearGradient(colors: [GampetooColors.forestTop, GampetooColors.forestBottom], startPoint: .top, endPoint: .bottom),
                 for: .tabView
             )
+            .navigationDestination(for: String.self) { exerciseId in
+                ExerciseDetailWatchView(exerciseId: exerciseId)
+                    .id(exerciseId)
+            }
+            .onAppear {
+                store.requestRefresh()
+            }
         }
     }
 }
@@ -367,11 +380,25 @@ private struct ExerciseRowWatchView: View {
     var body: some View {
         HStack(spacing: 8) {
             VStack(alignment: .leading, spacing: 3) {
-                Text(exercise.name)
-                    .font(.system(size: 13, weight: .bold))
-                    .foregroundStyle(isDone ? .white.opacity(0.6) : .white)
-                    .lineLimit(2)
-                    .multilineTextAlignment(.leading)
+                HStack(spacing: 4) {
+                    Text(exercise.name)
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundStyle(isDone ? .white.opacity(0.6) : .white)
+                        .lineLimit(2)
+                        .multilineTextAlignment(.leading)
+
+                    if let badge = exercise.supersetBadge, !badge.isEmpty {
+                        Text("⚡")
+                            .font(.system(size: 10))
+                    }
+                }
+
+                if let note = exercise.note, !note.isEmpty {
+                    Text(note)
+                        .font(.system(size: 9.5, weight: .medium))
+                        .foregroundStyle(GampetooColors.yellow.opacity(0.85))
+                        .lineLimit(1)
+                }
 
                 HStack(spacing: 5) {
                     Text(verbatim: "\(exercise.confirmedSetsCount)/\(exercise.totalSetsCount) ست")
@@ -456,6 +483,17 @@ private struct ExerciseDetailWatchView: View {
                                 .font(.system(size: 13.5, weight: .bold))
                                 .foregroundStyle(.white)
                                 .lineLimit(2)
+                            if let note = ex.note, !note.isEmpty {
+                                Text(note)
+                                    .font(.system(size: 10, weight: .medium))
+                                    .foregroundStyle(GampetooColors.yellow.opacity(0.9))
+                                    .lineLimit(2)
+                            }
+                            if let badge = ex.supersetBadge, !badge.isEmpty {
+                                Text("⚡ \(badge)")
+                                    .font(.system(size: 9.5, weight: .bold))
+                                    .foregroundStyle(GampetooColors.yellow)
+                            }
                             Text(verbatim: "\(ex.confirmedSetsCount) از \(ex.totalSetsCount) ست ثبت شده")
                                 .font(.system(size: 10))
                                 .foregroundStyle(.white.opacity(0.65))

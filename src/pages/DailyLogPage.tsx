@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 
 import PillTabBar, { type PillTabBarItem } from "@/components/PillTabBar";
+import SwipeableTabView from "@/components/SwipeableTabView";
 import MealLogCard from "@/components/nutrition/MealLogCard";
 import DailyTotalsCard from "@/components/nutrition/DailyTotalsCard";
 import WeeklyDatePicker from "@/components/nutrition/WeeklyDatePicker";
@@ -40,6 +41,8 @@ import { getTodayLocalDate, isoToLocalDate } from "@/utils/dateFormat";
 type WebTab = "meal" | "activity";
 type IosTab = "meal" | "nutrition";
 
+const IOS_TAB_ORDER: readonly IosTab[] = ["meal", "nutrition"];
+
 const webTabs: PillTabBarItem<WebTab>[] = [
   { id: "meal", label: "وعده غذایی", icon: UtensilsCrossed },
   { id: "activity", label: "فعالیت", icon: Activity },
@@ -68,7 +71,9 @@ export default function DailyLogPage() {
           layoutId="daily-log-tab-selection"
         />
 
-        {iosTab === "meal" ? <MealTabRoot /> : <NutritionPage />}
+        <SwipeableTabView tabs={IOS_TAB_ORDER} active={iosTab} onChange={setIosTab}>
+          {iosTab === "meal" ? <MealTabRoot /> : <NutritionPage />}
+        </SwipeableTabView>
       </div>
     );
   }

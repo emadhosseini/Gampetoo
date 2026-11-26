@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { AlertTriangle, ClipboardPaste, Sparkles, Trash2 } from "lucide-react";
 
+import DecimalNumberInput from "@/components/DecimalNumberInput";
 import ModalOverlay from "@/components/ModalOverlay";
 import WaitingDots from "@/components/WaitingDots";
 import { getMealSlots } from "@/data/nutrition/foodCatalog";
@@ -363,19 +364,13 @@ export default function PlanTextImportModal({
                       </div>
 
                       <div className="flex items-center gap-2">
-                        <input
-                          type="number"
-                          min={0}
-                          step="any"
+                        <DecimalNumberInput
                           value={item.quantity}
-                          onChange={(e) =>
-                            updateItem(mealIndex, item.key, {
-                              quantity: Number(e.target.value),
-                            })
+                          onChange={(quantity) =>
+                            updateItem(mealIndex, item.key, { quantity })
                           }
-                          onFocus={(e) => e.target.select()}
-                          aria-label="مقدار"
-                          className="w-16 glass-chip rounded-lg px-2 py-1 text-center text-sm text-white"
+                          ariaLabel="مقدار"
+                          className="w-16 glass-chip glass-static rounded-lg px-2 py-1 text-center text-sm text-white outline-none"
                         />
 
                         <select

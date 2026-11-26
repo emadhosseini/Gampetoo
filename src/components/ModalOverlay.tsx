@@ -1,6 +1,7 @@
 import { useEffect, useState, type MouseEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 
+import { dismissKeyboard, useKeyboardHeight } from "@/native/keyboard";
 import { isNativeIos } from "@/native/platform";
 
 // Computed once at module load, not per-render — this doesn't change during
@@ -139,11 +140,42 @@ export default function ModalOverlay({
     return unlockBackgroundScroll;
   }, []);
 
-  function stopPropagation(e: MouseEvent) {
-    e.stopPropagation();
+  const nativeIos = isNativeIos();
+  const keyboardHeight = useKeyboardHeight(true);
+
+  function isTextFieldFocused(): boolean {
+    const active = document.activeElement;
+    return (
+      active instanceof HTMLInputElement ||
+      active instanceof HTMLTextAreaElement ||
+      active instanceof HTMLSelectElement
+    );
   }
 
-  const nativeIos = isNativeIos();
+  function handleBackdropClick() {
+    // On iOS, numeric/decimal keypads have no Return key — tapping outside the
+    // card while a field is focused should dismiss the keyboard first rather
+    // than discarding the modal and whatever the user just typed.
+    if (nativeIos && (keyboardHeight > 0 || isTextFieldFocused())) {
+      dismissKeyboard();
+      return;
+    }
+    onClose();
+  }
+
+  function handleCardClick(e: MouseEvent) {
+    e.stopPropagation();
+    if (!nativeIos || (!keyboardHeight && !isTextFieldFocused())) return;
+
+    const target = e.target as HTMLElement | null;
+    if (
+      target &&
+      !target.closest("input, textarea, select, button, label, a, [contenteditable='true']")
+    ) {
+      dismissKeyboard();
+    }
+  }
+
   const blur = blurOn
     ? nativeIos
       ? "blur(28px) saturate(160%)"
@@ -164,25 +196,37 @@ export default function ModalOverlay({
           transition:
             "background-color 250ms ease, backdrop-filter 250ms ease, -webkit-backdrop-filter 250ms ease",
         }}
-        onClick={onClose}
+        onClick={handleBackdropClick}
       />
 
       <div
         className={`${paddingTop} pointer-events-none fixed inset-0 ${zIndexClass} flex items-center justify-center px-6`}
+        style={
+          keyboardHeight > 0
+            ? {
+                paddingBottom: keyboardHeight + 12,
+                transition: "padding-bottom 220ms cubic-bezier(0.22, 1, 0.36, 1)",
+              }
+            : { transition: "padding-bottom 200ms ease" }
+        }
       >
         <div
-          onClick={stopPropagation}
+          onClick={handleCardClick}
+          data-keyboard-open={keyboardHeight > 0 ? "true" : undefined}
           className={`pointer-events-auto w-full max-w-sm ${nativeIos ? "ios-modal-card" : ""}`}
-          style={
-            nativeIos
+          style={{
+            ...(keyboardHeight > 0
+              ? { maxHeight: `calc(100dvh - ${keyboardHeight + 36}px)` }
+              : {}),
+            ...(nativeIos
               ? {
                   opacity: blurOn ? 1 : 0,
                   transform: blurOn ? "scale(1) translateY(0)" : "scale(0.93) translateY(16px)",
                   transition:
                     "opacity 220ms ease, transform 340ms cubic-bezier(0.22, 1, 0.36, 1)",
                 }
-              : undefined
-          }
+              : {}),
+          }}
         >
           {children}
         </div>

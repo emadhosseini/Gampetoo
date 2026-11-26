@@ -2,6 +2,7 @@ import { ChevronDown, ChevronRight, FileText, Search, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
+import DecimalNumberInput from "@/components/DecimalNumberInput";
 import PlanTextImportModal from "@/components/nutrition/PlanTextImportModal";
 import { navigateBackSafely } from "@/utils/navigationBack";
 import Toggle from "@/components/Toggle";
@@ -201,15 +202,13 @@ function MealFoodList({
 
               {selected && (
                 <div className="flex items-center gap-2">
-                  <input
-                    type="number"
-                    min={0}
+                  <DecimalNumberInput
                     value={quantity}
-                    onChange={(e) =>
-                      onUpdateQuantity(entry, Number(e.target.value), selectedUnit)
+                    onChange={(next) =>
+                      onUpdateQuantity(entry, next, selectedUnit)
                     }
-                    onFocus={(e) => e.target.select()}
-                    className="w-14 glass-chip glass-static rounded-lg px-2 py-1 text-center text-sm text-white"
+                    ariaLabel="مقدار"
+                    className="w-16 glass-chip glass-static rounded-lg px-2 py-1 text-center text-sm text-white outline-none"
                   />
 
                   <select

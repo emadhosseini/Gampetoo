@@ -34,6 +34,8 @@ import { getActiveRestTimer } from "./restTimerStore";
 export type { GampetooWidgetSnapshot };
 
 export interface ResolvedTodaysWorkout {
+  workoutId: string | null;
+  variantId: string;
   title: string;
   activity: "workout" | "rest";
   completed: boolean;
@@ -80,10 +82,12 @@ export function resolveTodaysWorkout(): ResolvedTodaysWorkout {
     ? (todaysRecord.variantId ?? null)
     : resolvedVariantId;
 
-  const workout = effectiveWorkoutType
-    ? (getWorkoutWithVariant(effectiveWorkoutType, effectiveVariantId) ??
-        getWorkout(effectiveWorkoutType))
-    : undefined;
+  const isWorkoutDay = day?.activity === "workout";
+  const workout =
+    isWorkoutDay && effectiveWorkoutType
+      ? (getWorkoutWithVariant(effectiveWorkoutType, effectiveVariantId) ??
+          getWorkout(effectiveWorkoutType))
+      : undefined;
 
   const rawExercises = (workout?.groups ?? [])
     .flatMap((group) => group.exercises ?? [])
@@ -99,8 +103,12 @@ export function resolveTodaysWorkout(): ResolvedTodaysWorkout {
   );
 
   return {
-    title: workout?.title ?? day?.title ?? "برنامه تنظیم نشده",
-    activity: day?.activity === "workout" ? "workout" : "rest",
+    workoutId: effectiveWorkoutType ?? null,
+    variantId: effectiveVariantId ?? DEFAULT_VARIANT_ID,
+    title: isWorkoutDay
+      ? (workout?.title ?? day?.title ?? "برنامه تنظیم نشده")
+      : (day?.title ?? "روز استراحت"),
+    activity: isWorkoutDay ? "workout" : "rest",
     completed: session.completed === true,
     exercises,
     checkedIds: new Set(session.checkedExercises),

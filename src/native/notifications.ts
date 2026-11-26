@@ -13,7 +13,7 @@ const REST_TIMER_NOTIFICATION_ID = 1001;
 const WORKOUT_REMINDER_ID = 2001;
 const WATER_REMINDER_SCHEDULE = [
   { id: 3001, hour: 10, minute: 0, body: "وقت یه لیوان آب خنکه 💧" },
-  { id: 3002, hour: 13, minute: 0, body: "یادت نره آب بنوشی و توی گمپتو ثبتش کنی 💧" },
+  { id: 3002, hour: 13, minute: 0, body: "یادت نره آب بنوشی و توی گامپتو ثبتش کنی 💧" },
   { id: 3003, hour: 16, minute: 0, body: "یه لیوان آب برای حفظ انرژی بعدازظهر 💧" },
   { id: 3004, hour: 19, minute: 0, body: "آب امروزت رو چک کردی؟ 💧" },
   { id: 3005, hour: 21, minute: 0, body: "آخرین یادآور آب امروز قبل از خواب 💧" },
@@ -148,8 +148,34 @@ export async function cancelRestFinishedNotification(): Promise<void> {
     await LocalNotifications.cancel({
       notifications: [{ id: REST_TIMER_NOTIFICATION_ID }],
     });
+    await LocalNotifications.removeDeliveredNotifications({
+      notifications: [{ id: REST_TIMER_NOTIFICATION_ID, title: "", body: "" }],
+    });
   } catch {
     // Ignore cancel errors.
+  }
+}
+
+/**
+ * Clears delivered notifications from Notification Center (and resets app badge)
+ * so completed rest timers, water reminders, and daily workout alerts never
+ * pile up once finished or once the user opens the app.
+ */
+export async function clearDeliveredNotifications(): Promise<void> {
+  if (!isNativeApp()) return;
+
+  if (isNativeIos()) {
+    try {
+      await GampetooNative.clearDeliveredNotifications();
+    } catch {
+      // Ignore native clear failures.
+    }
+  }
+
+  try {
+    await LocalNotifications.removeAllDeliveredNotifications();
+  } catch {
+    // Ignore plugin clear failures.
   }
 }
 
@@ -191,7 +217,8 @@ export async function syncDailyReminders(
     notifications.push({
       id: WORKOUT_REMINDER_ID,
       title: "وقت تمرین امروزه 💪",
-      body: "برنامه امروز گمپتو منتظرته — بزن بریم!",
+      body: "برنامه امروز گامپتو منتظرته — بزن بریم!",
+      threadIdentifier: "gampetoo-workout-reminder",
       schedule: {
         on: {
           hour: prefs.workoutReminderHour,
@@ -208,8 +235,9 @@ export async function syncDailyReminders(
     for (const slot of WATER_REMINDER_SCHEDULE) {
       notifications.push({
         id: slot.id,
-        title: "یادآور آب گمپتو",
+        title: "یادآور آب گامپتو",
         body: slot.body,
+        threadIdentifier: "gampetoo-water-reminder",
         schedule: {
           on: { hour: slot.hour, minute: slot.minute },
           repeats: true,

@@ -33,7 +33,7 @@ export default function DomainMigrationNotice() {
         </h2>
 
         <p className="mt-2 text-sm leading-7 text-white">
-          گمپتو به آدرس جدید منتقل شده. لطفاً از این به بعد از{" "}
+          گامپتو به آدرس جدید منتقل شده. لطفاً از این به بعد از{" "}
           <span dir="ltr" className="font-bold">
             pwa.gampetoo.com
           </span>{" "}

@@ -21,6 +21,8 @@ struct WatchSetEntry: Identifiable, Codable, Hashable {
 struct WatchExerciseItem: Identifiable, Codable, Hashable {
     var id: String
     var name: String
+    var note: String? = nil
+    var supersetBadge: String? = nil
     var unit: String
     var sets: Int
     var reps: Int
@@ -111,9 +113,26 @@ final class GampetooWatchStore: NSObject, ObservableObject {
         requestNotificationAuthIfNeeded()
     }
 
+    private func todayLocalDateString() -> String {
+        let formatter = DateFormatter()
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = .current
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter.string(from: Date())
+    }
+
     func handleScenePhaseChange(_ phase: ScenePhase) {
         if phase == .active {
+            UNUserNotificationCenter.current().removeAllDeliveredNotifications()
             requestNotificationAuthIfNeeded()
+            if WCSession.isSupported(), WCSession.default.activationState == .activated {
+                let ctx = WCSession.default.receivedApplicationContext
+                if !ctx.isEmpty {
+                    applyIncoming(ctx)
+                }
+                requestRefresh()
+            }
             if let endAt = restEndAt {
                 if endAt.timeIntervalSinceNow <= 0 {
                     tickRestTimer()
@@ -133,7 +152,20 @@ final class GampetooWatchStore: NSObject, ObservableObject {
         let store = sharedDefaults()
         if let data = store.data(forKey: gampetooWatchStateKey)
             ?? UserDefaults.standard.data(forKey: gampetooWatchStateKey),
-           let decoded = try? JSONDecoder().decode(WatchDailyState.self, from: data) {
+           var decoded = try? JSONDecoder().decode(WatchDailyState.self, from: data) {
+            let today = todayLocalDateString()
+            if !decoded.date.isEmpty && decoded.date != today {
+                // Cached snapshot is from an earlier calendar day — never open
+                // yesterday's workout while waiting for today's sync.
+                decoded.workoutTitle = "برنامه امروز"
+                decoded.workoutCompleted = false
+                decoded.completedExercises = 0
+                decoded.totalExercises = 0
+                decoded.exercises = []
+                decoded.waterGlasses = 0
+                decoded.caloriesConsumed = 0
+                decoded.proteinGrams = 0
+            }
             state = decoded
         }
     }
@@ -300,6 +332,7 @@ final class GampetooWatchStore: NSObject, ObservableObject {
         lastWorkoutMutationAt = Date()
         state.workoutCompleted = true
         stopRestTimer(broadcastToPhone: false)
+        UNUserNotificationCenter.current().removeAllDeliveredNotifications()
         saveCache()
         sendAction([
             "type": "completeWorkout",
@@ -478,7 +511,9 @@ final class GampetooWatchStore: NSObject, ObservableObject {
 
         let center = UNUserNotificationCenter.current()
         let scheduleBlock = {
-            center.removePendingNotificationRequests(withIdentifiers: ["gampetoo_watch_rest_done"])
+            let ids = ["gampetoo_watch_rest_done"]
+            center.removePendingNotificationRequests(withIdentifiers: ids)
+            center.removeDeliveredNotifications(withIdentifiers: ids)
             let content = UNMutableNotificationContent()
             content.title = "استراحت تموم شد 💪"
             content.body = exerciseName.isEmpty ? "وقت ست بعدی!" : "ست بعدی: \(exerciseName)"
@@ -504,9 +539,10 @@ final class GampetooWatchStore: NSObject, ObservableObject {
     }
 
     private func cancelWatchRestNotification() {
-        UNUserNotificationCenter.current().removePendingNotificationRequests(
-            withIdentifiers: ["gampetoo_watch_rest_done"]
-        )
+        let center = UNUserNotificationCenter.current()
+        let ids = ["gampetoo_watch_rest_done"]
+        center.removePendingNotificationRequests(withIdentifiers: ids)
+        center.removeDeliveredNotifications(withIdentifiers: ids)
     }
 
     // MARK: - WatchConnectivity Transport
@@ -537,6 +573,18 @@ final class GampetooWatchStore: NSObject, ObservableObject {
         guard dict["workoutTitle"] != nil || dict["waterGlasses"] != nil || dict["restEndAtUnix"] != nil else { return }
 
         DispatchQueue.main.async {
+            let today = self.todayLocalDateString()
+            if let incomingDate = dict["date"] as? String, !incomingDate.isEmpty {
+                // Reject stale payloads from previous calendar days so an old
+                // applicationContext never overwrites today's workout.
+                if incomingDate < today {
+                    return
+                }
+                if !self.state.date.isEmpty && incomingDate < self.state.date {
+                    return
+                }
+            }
+
             var next = self.state
             if let date = dict["date"] as? String { next.date = date }
             if let title = dict["workoutTitle"] as? String { next.workoutTitle = title }
@@ -572,6 +620,8 @@ final class GampetooWatchStore: NSObject, ObservableObject {
                         let completedSets = item["completedSets"] as? Int ?? 0
                         let checked = item["checked"] as? Bool ?? false
                         let unit = item["unit"] as? String ?? "reps"
+                        let note = item["note"] as? String
+                        let supersetBadge = item["supersetBadge"] as? String
 
                         var entries: [WatchSetEntry] = []
                         if let rawEntries = item["entries"] as? [[String: Any]] {
@@ -605,6 +655,8 @@ final class GampetooWatchStore: NSObject, ObservableObject {
                         return WatchExerciseItem(
                             id: id,
                             name: name,
+                            note: note,
+                            supersetBadge: supersetBadge,
                             unit: unit,
                             sets: max(setsCount, entries.count),
                             reps: defaultReps,
@@ -710,6 +762,9 @@ extension GampetooWatchStore: WCSessionDelegate {
     func sessionReachabilityDidChange(_ session: WCSession) {
         DispatchQueue.main.async {
             self.isReachable = session.isReachable
+        }
+        if session.isReachable {
+            requestRefresh()
         }
     }
 

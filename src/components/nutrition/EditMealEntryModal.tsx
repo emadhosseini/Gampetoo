@@ -3,6 +3,7 @@ import { Trash2 } from "lucide-react";
 
 import ModalOverlay from "@/components/ModalOverlay";
 import type { MealSlot } from "@/data/nutrition/foodCatalog";
+import { dismissKeyboard, parseLocalizedNumber } from "@/native/keyboard";
 import { isEntryEditable, type LoggedFoodEntry } from "@/utils/dailyLogEngine";
 import { toFaDigits } from "@/utils/numberFormat";
 
@@ -40,8 +41,9 @@ export default function EditMealEntryModal({
   }
 
   const editable = isEntryEditable(entry);
-  const quantity = Number(value);
-  const valid = value.trim() !== "" && Number.isFinite(quantity) && quantity > 0;
+  const parsedQuantity = parseLocalizedNumber(value);
+  const quantity = parsedQuantity ?? 0;
+  const valid = parsedQuantity !== null && parsedQuantity > 0;
 
   // Same linear scale from the same untouched basis the engine uses, so this
   // preview can't disagree with what gets written.
@@ -66,15 +68,21 @@ export default function EditMealEntryModal({
           <>
             <div className="glass-chip glass-static flex items-center gap-2 rounded-xl p-3">
               <input
-                type="number"
+                type="text"
                 inputMode="decimal"
-                min={0}
-                step="any"
+                enterKeyHint="done"
                 value={value}
                 onChange={(e) => setValue(e.target.value)}
                 onFocus={(e) => e.target.select()}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    dismissKeyboard();
+                    if (valid) onSave(quantity);
+                  }
+                }}
                 aria-label="مقدار"
-                className="w-20 glass-chip glass-static rounded-lg px-2 py-2 text-center text-sm text-white"
+                className="w-20 glass-chip glass-static rounded-lg px-2 py-2 text-center text-sm text-white outline-none"
               />
 
               <span className="flex-1 text-sm text-white">
@@ -87,7 +95,10 @@ export default function EditMealEntryModal({
             </div>
 
             <button
-              onClick={() => onSave(quantity)}
+              onClick={() => {
+                dismissKeyboard();
+                onSave(quantity);
+              }}
               disabled={!valid}
               className="w-full glass-action rounded-2xl py-3 font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
             >

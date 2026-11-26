@@ -3,6 +3,7 @@ import {
   type Exercise,
   type WorkoutDefinition,
 } from "../../data/workoutLibrary";
+import { getBaseExerciseId, isDuplicateExerciseId } from "../../utils/exerciseIdentity";
 
 /**
  * Pure query/selection logic over the exercise database — no storage, no
@@ -79,6 +80,7 @@ export function flattenExercises(library: WorkoutDefinition[]): Exercise[] {
   for (const workout of library) {
     for (const group of workout.groups) {
       for (const exercise of group.exercises) {
+        if (isDuplicateExerciseId(exercise.id)) continue;
         if (!byId.has(exercise.id)) byId.set(exercise.id, exercise);
       }
     }
@@ -127,7 +129,7 @@ export function matchesSearch(exercise: Exercise, query: string): boolean {
 
   const aliases = [
     ...(exercise.aliases ?? []),
-    ...getExerciseAliases(exercise.id),
+    ...getExerciseAliases(getBaseExerciseId(exercise.id)),
   ];
 
   return aliases.some((alias) => matchesCandidate(alias, q, tokens));

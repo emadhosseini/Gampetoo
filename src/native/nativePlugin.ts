@@ -26,6 +26,8 @@ export interface WatchSetPayload {
 export interface WatchExercisePayload {
   id: string;
   name: string;
+  note?: string;
+  supersetBadge?: string;
   unit: "reps" | "seconds" | "minutes";
   sets: number;
   reps: number;
@@ -99,6 +101,7 @@ export interface GampetooNativePluginInterface {
     exerciseName: string;
   }): Promise<{ scheduled: boolean }>;
   cancelRestNotification(): Promise<void>;
+  clearDeliveredNotifications(): Promise<void>;
   updateWidgetSnapshot(snapshot: GampetooWidgetSnapshot): Promise<void>;
   getCapabilities(): Promise<{
     liveActivitiesEnabled: boolean;

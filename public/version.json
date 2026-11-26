@@ -1,6 +1,18 @@
 {
-  "current": "1.0.66",
+  "current": "1.0.67",
   "history": [
+    {
+      "version": "1.0.67",
+      "date": "2026-11-26",
+      "description": "اضافه شدن سوپرست و تکرار حرکات مشابه با یادداشت جداگانه، بهبود حس حبابی منوهای iOS، سوایپ بین تب‌ها، رفع باگ کیبورد غذا، کادر رنگی ماکروها، اپل‌واچ، نوتیفیکیشن‌ها و داینامیک آیلند.",
+      "highlights": [
+        "⚡ پشتیبانی کامل از تمرین‌های سوپرست: امکان متصل کردن هر حرکت به حرکت دیگر و نمایش یکپارچه در برنامه تمرین",
+        "📝 امکان انتخاب چندباره یک حرکت مشابه در یک روز با یادداشت، ست و تکرار مستقل",
+        "🫧 نوار پایین و منوهای iOS با حس حبابی شیشه‌ای اپل (Liquid Glass) + جابه‌جایی تب‌های تغذیه و تمرین با سوایپ وسط صفحه",
+        "⌨️ رفع مشکل کیبورد و ورود اعداد فارسی در فرم‌های غذا + نمایش کادرهای رنگی ماکروها در نسخه iOS",
+        "⌚ رفع باز شدن تمرین اشتباه روی اپل‌واچ، رفع بیرون‌زدگی اعداد داینامیک آیلند، جلوگیری از تلنبار شدن نوتیفیکیشن‌ها و اصلاح نام گامپتو"
+      ]
+    },
     {
       "version": "1.0.66",
       "date": "2026-11-23",
@@ -655,7 +667,7 @@
       "date": "2026-08-05",
       "description": "First public release. The beta-v3 line becomes the app everyone gets, and the version number resets to 1.0.0 to mark it — note this is a lower number than the 2.0.1 it replaces, which is fine: nothing in the app orders versions, it only asks whether the running one differs from the deployed one. Every piece of account data is stored on the server and follows the account between devices; the only things that stay on a device are the ones that describe the device rather than the account — which account is signed in here, whether this browser has dismissed the install hint, and which changelog it has already shown. A device picks changes up whenever the app returns to the foreground, not only at a cold start — but never while it still has edits of its own the server hasn't accepted, since taking an older snapshot then would lose a write outright.",
       "highlights": [
-        "🎉 اولین نسخه‌ی رسمی گمپتو",
+        "🎉 اولین نسخه‌ی رسمی گامپتو",
         "☁️ همه‌ی اطلاعات حساب روی سرور ذخیره می‌شن و بین دستگاه‌ها همگام می‌مونن",
         "🔄 تغییرات دستگاه دیگه با برگشتن به برنامه نمایش داده می‌شن، بدون نیاز به بستن و باز کردن"
       ]

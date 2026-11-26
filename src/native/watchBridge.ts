@@ -1,3 +1,4 @@
+import { getExerciseNote } from "@/store/exerciseNoteStore";
 import { getAppSettings } from "@/utils/appSettingsEngine";
 import { getCalorieGoal, getEffectiveProteinTarget } from "@/utils/calorieEngine";
 import {
@@ -64,6 +65,16 @@ function buildWatchContext(): WatchContextPayload | null {
   const settings = getAppSettings();
   const restTimer = getActiveRestTimer();
 
+  const supersetCounts = new Map<string, number>();
+  for (const ex of resolved.exercises) {
+    if (ex.supersetGroupId) {
+      supersetCounts.set(
+        ex.supersetGroupId,
+        (supersetCounts.get(ex.supersetGroupId) ?? 0) + 1,
+      );
+    }
+  }
+
   const exercises: WatchExercisePayload[] = resolved.exercises
     .slice(0, 30)
     .map((ex) => {
@@ -93,10 +104,18 @@ function buildWatchContext(): WatchContextPayload | null {
       }
 
       const completedSets = entries.filter((s) => s.confirmed).length;
+      const note = resolved.workoutId
+        ? getExerciseNote(resolved.workoutId, resolved.variantId, ex.id)
+        : "";
+      const hasSuperset =
+        Boolean(ex.supersetGroupId) &&
+        (supersetCounts.get(ex.supersetGroupId!) ?? 0) >= 2;
 
       return {
         id: ex.id,
         name: ex.name,
+        ...(note ? { note } : {}),
+        ...(hasSuperset ? { supersetBadge: "سوپرست" } : {}),
         unit: ex.unit ?? "reps",
         sets: entries.length,
         reps: ex.reps,
